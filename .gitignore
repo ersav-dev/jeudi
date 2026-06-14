@@ -1,0 +1,27 @@
+# dépendances
+node_modules/
+app/node_modules/
+
+# build
+dist/
+app/dist/
+*.tsbuildinfo
+
+# vercel
+.vercel/
+app/.vercel/
+
+# secrets / env
+.env
+.env.*
+!.env.example
+
+# logs / divers
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# backups locaux (volumineux, pas besoin sur GitHub)
+_backups/
+_trash/

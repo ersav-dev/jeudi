@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — « je dis où. »</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&family=Satoshi&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #15130F;
+    --paper-2: #1B1813;
+    --ivory: #F0EAD9;
+    --ivory-faded: rgba(240,234,217,0.55);
+    --red: #A8322A;
+    --print-white: #FBF8F1;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ivory);
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
+    /* dot grid du carnet */
+    background-image: radial-gradient(rgba(240,234,217,0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .page { max-width: 760px; margin: 0 auto; padding: 60px 28px 90px; }
+
+  /* ——— animations ——— */
+  @keyframes stampIn { 0% { transform: rotate(-2deg) scale(1.6); opacity: 0; } 60% { transform: rotate(-2deg) scale(0.96); opacity: 1; } 100% { transform: rotate(-2deg) scale(1); opacity: 1; } }
+  @keyframes inkIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes circleDraw { from { stroke-dashoffset: 320; } to { stroke-dashoffset: 0; } }
+  .reveal { animation: inkIn .9s ease-out both; }
+  .reveal.d1 { animation-delay: .15s } .reveal.d2 { animation-delay: .3s } .reveal.d3 { animation-delay: .45s }
+
+  /* ——— couverture ——— */
+  .cover { min-height: 92vh; display: flex; flex-direction: column; justify-content: center; }
+  .stamp {
+    align-self: flex-start;
+    color: var(--red);
+    border: 4px solid var(--red);
+    padding: 6px 26px 10px;
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    transform: rotate(-2deg);
+    animation: stampIn .5s cubic-bezier(.2,1.4,.4,1) both .3s;
+    border-radius: 4px;
+    box-shadow: inset 0 0 18px rgba(168,50,42,.25);
+  }
+  .cover .tagline { font-style: italic; font-size: 30px; margin: 26px 0 6px; }
+  .cover .meta { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ivory-faded); letter-spacing: .5px; }
+
+  /* ——— titres ——— */
+  h2 { font-size: 30px; font-weight: 400; font-style: italic; margin: 90px 0 18px; padding-bottom: 8px; border-bottom: 1px solid rgba(240,234,217,.18); page-break-after: avoid; }
+  h2::before { content: attr(data-n) " — "; font-family: 'JetBrains Mono', monospace; font-style: normal; font-size: 14px; color: var(--red); vertical-align: middle; }
+  h3 { font-size: 20px; font-weight: 400; color: var(--ivory); margin: 34px 0 10px; page-break-after: avoid; }
+  h3::before { content: "◆ "; color: var(--red); font-size: 11px; vertical-align: middle; }
+  p, li { margin: 0 0 12px; color: var(--ivory); }
+  em { color: var(--ivory-faded); }
+  strong { color: var(--ivory); font-weight: 700; }
+  .hand { font-family: 'Caveat', cursive; font-size: 24px; line-height: 1.35; color: var(--ivory); }
+  .sign { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ivory-faded); letter-spacing: 1px; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ivory-faded); }
+  .redword { color: var(--red); font-weight: 700; }
+
+  /* ——— la grande question ——— */
+  .bigq { font-style: italic; font-size: 42px; text-align: center; margin: 50px 0; position: relative; }
+  .bigq svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 118%; height: 170%; pointer-events: none; }
+  .bigq svg ellipse { fill: none; stroke: var(--red); stroke-width: 2.5; stroke-dasharray: 320; animation: circleDraw 1.4s ease-out both 1s; opacity: .9; }
+
+  /* ——— lexique / chips ——— */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; margin: 14px 0 22px; }
+  .chips .lbl { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--red); letter-spacing: 2px; text-transform: uppercase; }
+  .chip { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--ivory); }
+  .chip + .chip::before { content: "· "; color: var(--ivory-faded); margin-right: 10px; }
+  .chip.on { position: relative; padding: 2px 12px; }
+  .chip.on::after { content: ""; position: absolute; inset: -4px -6px; border: 2px solid var(--red); border-radius: 50%; transform: rotate(-4deg); }
+  .meteo { font-size: 20px; }
+
+  /* ——— polaroids ——— */
+  .prints { display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; margin: 36px 0; }
+  .print {
+    background: var(--print-white);
+    padding: 12px 12px 16px;
+    width: 215px;
+    box-shadow: 3px 4px 0 rgba(0,0,0,.55);
+    transform: rotate(-2.5deg);
+    transition: transform .35s cubic-bezier(.2,1.2,.4,1);
+    page-break-inside: avoid;
+  }
+  .print:nth-child(2) { transform: rotate(1.8deg) translateY(14px); }
+  .print:nth-child(3) { transform: rotate(-1deg) translateY(4px); }
+  .print:hover { transform: rotate(0deg) scale(1.06); z-index: 2; }
+  .print img { width: 100%; height: 190px; object-fit: cover; display: block; filter: sepia(.22) contrast(1.05) brightness(.92); }
+  .print .cap { font-family: 'Caveat', cursive; color: #211D19; font-size: 19px; text-align: center; margin-top: 9px; line-height: 1.15; }
+  .print .who { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: #78716C; text-align: center; letter-spacing: 1px; margin-top: 2px; }
+  .print.stamped { position: relative; }
+  .print.stamped::after {
+    content: "VALIDÉ";
+    position: absolute; top: 38%; left: 50%;
+    transform: translate(-50%,-50%) rotate(-14deg);
+    color: var(--red); border: 4px solid var(--red);
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 26px;
+    padding: 4px 16px; letter-spacing: 4px; border-radius: 3px;
+    opacity: .92; box-shadow: inset 0 0 12px rgba(168,50,42,.3);
+  }
+
+  /* ——— note manuscrite ——— */
+  .note { margin: 30px auto; max-width: 540px; text-align: center; }
+  .note .hand { font-size: 27px; }
+
+  /* ——— citation tampon ——— */
+  blockquote { margin: 34px 0; padding: 4px 0 4px 22px; border-left: 3px solid var(--red); font-style: italic; font-size: 21px; color: var(--ivory); }
+
+  /* ——— tableau ——— */
+  table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 15px; }
+  th, td { border: 1px solid rgba(240,234,217,.22); padding: 10px 14px; text-align: left; vertical-align: top; }
+  th { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--red); font-weight: 400; }
+
+  /* ——— règles maison ——— */
+  .rules li { margin-bottom: 14px; }
+  .rules li::marker { content: "✕  "; color: var(--red); }
+
+  /* ——— taglines finales ——— */
+  .taglines { text-align: center; margin: 60px 0; }
+  .taglines div { font-style: italic; font-size: 26px; margin: 14px 0; }
+  .taglines .last { color: var(--red); font-size: 32px; }
+
+  .footer { margin-top: 100px; padding-top: 16px; border-top: 1px solid rgba(240,234,217,.18); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ivory-faded); display: flex; justify-content: space-between; }
+
+  @media print {
+    body { background: var(--paper) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { min-height: 90vh; }
+    h2 { margin-top: 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══ COUVERTURE ═══ -->
+  <div class="cover">
+    <div class="stamp">jeudi.</div>
+    <div class="tagline reveal d1">« je dis où. »</div>
+    <div class="meta reveal d2">l'app pour sortir, seul ou accompagné · document de concept · 11 juin 2026 · confidentiel</div>
+  </div>
+
+  <!-- ═══ 01 LE CONSTAT ═══ -->
+  <h2 data-n="01">le constat</h2>
+  <p>Tu as cinq cents adresses enregistrées dans une carte qui ne te répond jamais. Quatre mille avis écrits par des inconnus pour te vendre une moyenne. Et pourtant, le soir où tu veux vraiment un bon plan, tu fais quoi ?</p>
+  <div class="note">
+    <div class="hand">« dis, tu connais un truc vers Oberkampf ? »</div>
+    <div class="sign">— toi, à un pote, chaque semaine</div>
+  </div>
+  <p><strong>C'est cette conversation-là qu'on transforme en app.</strong></p>
+
+  <!-- ═══ 02 LE PRINCIPE ═══ -->
+  <h2 data-n="02">le principe</h2>
+  <p><strong>jeudi</strong>, c'est le carnet d'adresses de tes vrais potes — et de quelques éclaireurs au goût prouvé — qui répond à une seule question :</p>
+  <div class="bigq">
+    ça dit quoi ce soir ?
+    <svg viewBox="0 0 400 100" preserveAspectRatio="none"><ellipse cx="200" cy="50" rx="190" ry="42"/></svg>
+  </div>
+  <p>Tu réponds en deux gestes : <strong>avec qui</strong> tu sors, <strong>pour quoi faire</strong>. Ton porte-monnaie est déjà réglé, discrètement. Et l'app te tend ses cartes — huit maximum, une à la fois, toutes validées par des gens qui y sont vraiment allés. Tu swipes. Tu choisis. Tu sors.</p>
+  <p>Pas de notes. Pas d'étoiles. Pas de liste infinie. <strong>Une décision, pas un catalogue.</strong></p>
+
+  <!-- ═══ 03 L'EXPÉRIENCE ═══ -->
+  <h2 data-n="03">l'expérience</h2>
+
+  <h3>trois questions, deux secondes chacune</h3>
+  <div class="chips">
+    <span class="lbl">1 · avec qui ?</span>
+    <span class="chip on">solo</span><span class="chip">duo</span><span class="chip">potos</span><span class="chip">pro</span>
+  </div>
+  <div class="chips">
+    <span class="lbl">2 · pour quoi faire ?</span>
+    <span class="chip">tranquilo</span><span class="chip">alloco</span><span class="chip">resto</span><span class="chip">gastro</span><span class="chip">incognito</span><span class="chip">apéro</span><span class="chip">turbo</span>
+  </div>
+  <div class="chips">
+    <span class="lbl">3 · la météo du porte-monnaie</span>
+    <span class="chip meteo">☀️ grand soleil</span><span class="chip meteo">⛅ nuageux</span><span class="chip meteo">🌧️ pluie</span>
+  </div>
+  <p>Sortir seul est ici un mode de vie, pas un échec — <em>jeudi</em> est la première app qui l'assume en première position. Et le budget n'est jamais demandé à voix haute : tu règles ta météo, et <strong>tout ce qui sort est déjà dans tes moyens.</strong> Fin de mois pluvieuse ? <em>« il pleut sur ton porte-monnaie, je t'ai trouvé trois comptoirs. »</em></p>
+
+  <h3>le deck — huit cartes, deux axes</h3>
+  <p>Une carte = un lieu = un <strong>témoignage complet</strong> : la photo d'un membre, son mot, son nom.</p>
+  <div class="prints">
+    <div class="print stamped">
+      <img src="https://picsum.photos/seed/bar-comptoir/430/380" alt="Le Bisou">
+      <div class="cap">comptoir au fond, lumière parfaite.</div>
+      <div class="who">— karim · éclaireur du 10e</div>
+    </div>
+    <div class="print">
+      <img src="https://picsum.photos/seed/table-vin/430/380" alt="Chez Suzanne">
+      <div class="cap">la table du fond à droite. évite le vendredi.</div>
+      <div class="who">— léa · 47 spots</div>
+    </div>
+    <div class="print">
+      <img src="https://picsum.photos/seed/wc-propre/430/380" alt="les WC">
+      <div class="cap">même les wc sont impeccables.</div>
+      <div class="who">— karim · fiche complète ✓</div>
+    </div>
+  </div>
+  <ul>
+    <li><strong>Swipe la photo</strong> → lieu suivant. Tu changes de spot.</li>
+    <li><strong>Swipe le tip</strong> → même lieu, <span class="redword">autre voix</span>. Le Bisou reste, mais c'est maintenant Karim qui te le dit, puis Léa, puis un éclaireur — chacun avec ses propres photos : sa salle, son verre… et ses WC. Tu fais tourner les témoins, comme dans la vraie vie.</li>
+  </ul>
+  <p>Le deck a une fin. Huit cartes, pas une de plus — et si tu fais le difficile : <em>« t'es difficile ce soir. »</em> À la dernière : <em>« c'est tout ce que j'ai. reviens demain. »</em> <strong>Une app qui sait dire « j'ai plus rien » est une app qui a du goût.</strong></p>
+
+  <h3>le récap — décider d'abord, explorer ensuite</h3>
+  <p>Après le deck, la page se pose : les huit lieux, validés ou écartés. Là seulement, tu fouilles — toutes les photos des membres, tous leurs tips, leurs profils. <strong>Pendant le deck on décide. Au récap on explore.</strong> Deux rythmes, jamais mélangés.</p>
+
+  <h3>des tips, pas des avis</h3>
+  <p>Personne ne « note » un restaurant ici. Un membre te passe <strong>les codes</strong> :</p>
+  <div class="note">
+    <div class="hand">« prends le plat du jour, pas la carte. et demande Momo au comptoir. »</div>
+    <div class="sign">— sofiane · curateur</div>
+  </div>
+  <p>Le mot « avis » n'existe nulle part dans l'app. Un avis juge le lieu ; <strong>un tip t'aide à le réussir.</strong></p>
+
+  <!-- ═══ 04 LE LEXIQUE VIVANT ═══ -->
+  <h2 data-n="04">le lexique vivant</h2>
+  <p>L'app vit à l'heure de ta soirée :</p>
+  <ul>
+    <li><strong>18 h</strong> <em>(17 h le vendredi)</em> — le chip <strong>apéro</strong> se renomme <span class="redword">alcolo</span> sous tes yeux. On n'est plus dans la projection, on est dans le vif.</li>
+    <li><strong>21 h</strong> — <strong>disco</strong> s'allume en bout de rangée.</li>
+    <li><strong>23 h 30</strong> — tout fond. Il ne reste que les <strong>4 vérités de la nuit : dodo · alcolo · disco · gastro</strong>. Et gastro a changé de camp : ce n'est plus la grande table, c'est <em>ce qui est encore ouvert et qui te nourrira</em>. Swipe sur dodo → <em>« sage. à jeudi. »</em></li>
+  </ul>
+  <p>L'app réduit ses options au fil de la nuit, comme la vraie vie. Et chaque lundi, le chip street-food change de nationalité : semaine <strong>alloco</strong>, puis <strong>bocadillo</strong>, <strong>taco</strong>, <strong>panino</strong>, <strong>bento</strong>, <strong>burrito</strong>, <strong>gyro</strong>… jusqu'à la mythique semaine <strong>mcdo</strong> — <em>« on juge pas. dis-nous lequel a les frites chaudes. »</em> Une seule notification par semaine, celle du lundi : <em>« cette semaine, ça dit taco. »</em></p>
+
+  <!-- ═══ 05 TES ADRESSES ═══ -->
+  <h2 data-n="05">tes adresses</h2>
+  <h3>capturer — deux secondes</h3>
+  <p>Tu marches, tu passes devant un endroit qui te parle : un geste, c'est dans ton carnet. La géoloc fait le travail, tu tagues plus tard. Et à l'arrivée, <strong>tes spots Google Maps s'importent en deux minutes</strong> — des années de pins endormis deviennent ta collection.</p>
+  <h3>ton carnet, tes règles</h3>
+  <p>Chaque adresse a sa visibilité : <strong>pour toi</strong> (tes solo dates, tes spots secrets) · <strong>ton cercle</strong> · <strong>public autour de toi</strong>. Privé par défaut. On publie par choix, adresse par adresse.</p>
+  <h3>publier = prouver</h3>
+  <p>Partager une adresse exige <strong>tes propres photos</strong> — jamais une photo Google, jamais une photo pro : <strong>1) le lieu</strong>, <strong>2) ton plat ou ton verre</strong>, et <strong>3) les WC</strong> — encouragée, badge « fiche complète » à la clé. <em>On juge un endroit à ses toilettes — c'est le détail que les guides ne montrent jamais.</em></p>
+  <blockquote>« le lieu, ton verre… et les chiottes. on veut la vérité. »</blockquote>
+  <h3>ton critère perso</h3>
+  <p>Chaque membre a son obsession — le détail qu'il remarque partout : la lumière, le bruit, les chaises, la playlist, le staff. Sa <strong>signature de curateur</strong> (<em>« Karim — juge tout au bruit »</em>), sa ligne d'expertise sur chaque fiche (<em>« lumière : parfaite à 19 h, néons tristes après 22 h »</em>). Sur quarante spots, chaque membre dessine la carte de la ville selon SON critère. En texte, dans sa voix — jamais en note chiffrée.</p>
+  <h3>la carte respire</h3>
+  <p>Un carnet vivant n'est pas un cimetière de pins. L'app te souffle : <em>« ces 5 lieux dorment, on les archive ? »</em> — swipe garder/archiver. Ta carte visible ne montre que ce que tu assumes encore.</p>
+
+  <!-- ═══ 06 LA BOUCLE DE CONFIANCE ═══ -->
+  <h2 data-n="06">la boucle de confiance</h2>
+  <h3>le swipe de sortie</h3>
+  <p>Le lendemain d'une sortie, l'air de rien : <em>« alors, Le Bisou ? »</em> Tu recommandes, ou pas. Si oui : <em>« pour une première date ? en solo ? avec les potes ? »</em> — cinq secondes de swipe, et c'est dit. C'est ainsi que l'app apprend : un lieu est « première date » parce que des humains l'ont <strong>validé en conditions réelles</strong>. Cette donnée-là n'existe nulle part ailleurs.</p>
+  <h3>les éclaireurs — mérités, jamais recrutés</h3>
+  <p>Le statut se prouve par la carte : <strong>Éclaireurs</strong> (les premiers sur les lieux que les autres valident ensuite — le flair, intruquable), <strong>Curateurs</strong> (les collections qu'on suit comme des guides), <strong>Fiables</strong> (ceux dont les recos marchent). <strong>Des titres, pas des scores</strong> : <em>« Éclaireur du 11e »</em>, jamais <em>« #12 à Paris »</em>. La récompense : la visibilité.</p>
+  <h3>le cercle — petit, exprès</h3>
+  <p>Tu vois les adresses de <strong>20 à 50 potes maximum</strong>. Pas 900 contacts : des gens dont le goût compte vraiment. L'entrée se fait sur invitation — et qui invite répond un peu de ses invités.</p>
+  <h3>les règles de la maison</h3>
+  <ul class="rules">
+    <li><strong>Aucun lieu ne peut payer pour apparaître. Jamais.</strong> Pas de pub, pas de sponsoring, pas de vente de données.</li>
+    <li><strong>Les visages des inconnus sont automatiquement masqués</strong> sur les photos — un petit sticker à l'encre, dans le style du carnet. On montre les lieux, on protège les gens.</li>
+    <li><strong>Charte photo WC</strong> : on documente l'état des lieux, cadrage propre. Premier écart : <em>« on a dit les toilettes, pas TES toilettes. dernier avertissement. »</em> Deuxième : <strong>banni.</strong></li>
+    <li>Sortir un lieu de sa carte est un acte visible. <strong>Être dans la carte EST la validation.</strong></li>
+  </ul>
+
+  <!-- ═══ 07 LE MATCH ═══ -->
+  <h2 data-n="07">sortir à plusieurs — le match</h2>
+  <p><em>« On se voit où ? »</em> — la question qui mange vingt-cinq minutes de WhatsApp. Ici :</p>
+  <ol>
+    <li>Tu lances une sortie, tu invites tes potes. Chacun pose son point de départ (<em>« République à 19 h »</em>), le mood se choisit ensemble.</li>
+    <li>L'app triangule — au milieu, près de l'un, près de l'autre — <strong>en piochant d'abord dans vos collections combinées</strong>.</li>
+    <li>Chacun swipe les propositions. <strong>Le premier lieu qui matche pour tout le monde gagne.</strong> Personne ne fait le chef.</li>
+    <li>La sortie vit dans l'app, la conversation avec — et le lendemain, le petit swipe : <em>« alors ? »</em></li>
+  </ol>
+
+  <!-- ═══ 08 L'IDENTITÉ ═══ -->
+  <h2 data-n="08">l'identité</h2>
+  <p><strong>Le contenu des membres est l'œuvre. L'interface est le cadre.</strong></p>
+  <p><em>jeudi</em> ressemble à un objet : <strong>un carnet de nuit</strong> — papier charbon, encre ivoire, un seul rouge cire par page, posé comme un coup de tampon. Les photos des membres sont des tirages collés à bord blanc, les tips sont manuscrits et signés. Rien ne brille, rien ne clignote : la matière, la retenue, la nuit.</p>
+  <p><strong>Le logo est un tampon.</strong> <em>jeudi</em> en minuscules, frappé en rouge, légèrement de travers — parce que le geste de la marque EST le geste du membre : valider. <em>« c'est dit. »</em></p>
+  <h3>le nom</h3>
+  <p><strong>jeudi</strong> — le soir où la semaine bascule, le rituel français (<em>« on se fait un jeudi ? »</em>)… et le double sens qui porte tout le produit : <strong>jeudi = « je dis »</strong>. L'app où les tiens te disent où aller. On ne poste pas, on ne note pas : on <strong>dit</strong> une adresse.</p>
+  <div class="taglines">
+    <div>« pas des avis. des preuves. »</div>
+    <div>« notée par personne. validée par les tiens. »</div>
+    <div class="last">« jeudi. je dis où. »</div>
+  </div>
+
+  <!-- ═══ 09 LE MODÈLE ═══ -->
+  <h2 data-n="09">le modèle</h2>
+  <p><strong>Gratuit, sans pub, aucun lieu ne peut payer pour apparaître.</strong> On gagne de l'argent uniquement quand les gens sortent vraiment : réservation et billetterie en partenariat d'apport (le lieu ne nous paie rien — la reco reste pure), et plus tard un premium léger pour le confort — jamais pour la confiance. Le cœur — capturer, collectionner, chercher, valider, le cercle — <strong>gratuit à vie.</strong></p>
+
+  <!-- ═══ 10 LA SUITE ═══ -->
+  <h2 data-n="10">la suite</h2>
+  <table>
+    <tr><th>phase</th><th>ce qui existe</th></tr>
+    <tr><td class="mono">week-end 1-2</td><td>Le carnet : capture 2 secondes, collection, visibilités, import Google Maps</td></tr>
+    <tr><td class="mono">semaines 3-4</td><td>Le moteur : « ça dit quoi ce soir ? », le deck à deux axes, le swipe de sortie</td></tr>
+    <tr><td class="mono">semaines 5-6</td><td>Le cercle : invitations, cartes des potes, partage WhatsApp</td></tr>
+    <tr><td class="mono">ensuite</td><td>Le match de groupe, les éclaireurs, le public-local</td></tr>
+  </table>
+
+  <div class="footer">
+    <span>jeudi — « je dis où. »</span>
+    <span>document de travail privé · 11 juin 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

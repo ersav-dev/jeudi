@@ -1,0 +1,4630 @@
+/* ── jeudi · le carnet de nuit ─────────────────────────────── */
+/* (fonts chargées via <link> dans index.html — pas d'@import bloquant) */
+
+:root {
+  --paper: #15130f;
+  --paper-2: #1b1813;
+  --ivory: #f0ead9;
+  --ivory-faded: rgba(240, 234, 217, 0.55);
+  --red: #a8322a;
+  --print-white: #fbf8f1;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ivory);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 18px;
+  /* le dot-grid du carnet */
+  background-image: radial-gradient(rgba(240, 234, 217, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: calc(20px + env(safe-area-inset-top)) 20px calc(90px + env(safe-area-inset-bottom));
+  position: relative;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ivory-faded);
+  letter-spacing: 0.5px;
+}
+
+.hand {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* ── splash ── */
+@keyframes stampIn {
+  0% { transform: rotate(-2deg) scale(1.6); opacity: 0; }
+  60% { transform: rotate(-2deg) scale(0.96); opacity: 1; }
+  100% { transform: rotate(-2deg) scale(1); opacity: 1; }
+}
+@keyframes inkIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--paper);
+  background-image: radial-gradient(rgba(240, 234, 217, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  cursor: pointer;
+}
+.splash-tampon {
+  color: var(--red);
+  border: 4px solid var(--red);
+  padding: 6px 26px 10px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 54px;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--red) 25%, transparent);
+  animation: stampIn 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both 0.25s;
+}
+.splash-tagline {
+  font-style: italic;
+  font-size: 24px;
+  color: var(--ivory);
+  animation: inkIn 0.8s ease-out both 0.8s;
+}
+.splash-pitch {
+  font-family: 'Caveat', cursive;
+  font-size: 19px;
+  color: var(--ivory-faded);
+  text-align: center;
+  line-height: 1.4;
+  animation: inkIn 0.8s ease-out both 1.4s;
+}
+
+/* ── la pile derrière la carte du deck ── */
+.pile {
+  position: relative;
+}
+.pile::before,
+.pile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  max-width: 330px;
+  background: var(--print-white);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45);
+  z-index: -1;
+}
+.pile::before {
+  transform: rotate(2.5deg) translateY(5px);
+  opacity: 0.55;
+}
+.pile::after {
+  transform: rotate(-3deg) translateY(9px);
+  opacity: 0.3;
+}
+
+/* ── tirage vide (placeholder photo composé) ── */
+.tirage-vide {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed rgba(240, 234, 217, 0.3);
+}
+.tirage-vide .croix {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  color: rgba(240, 234, 217, 0.35);
+}
+
+/* ── toast "archivé · annuler" ── */
+.toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  z-index: 8;
+  background: var(--paper-2);
+  border: 1px solid rgba(240, 234, 217, 0.3);
+  border-radius: 2px;
+  padding: 10px 14px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.5);
+  animation: inkIn 0.25s ease-out both;
+}
+
+/* ── desktop : les fixed se calent sur le conteneur 480px ── */
+@media (min-width: 480px) {
+  .fab {
+    right: calc(50% - 240px + 20px);
+  }
+  .meteo-bas {
+    left: calc(50% - 240px + 20px);
+  }
+}
+
+/* ── transitions de pages — fondu PUR : un transform sur un parent
+   casserait le position:fixed des enfants (météo, fab, nav) ── */
+@keyframes pageIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page > * {
+  animation: pageIn 0.25s ease-out both;
+}
+
+/* ── le tampon logo ── */
+.tampon-logo {
+  display: inline-block;
+  color: var(--red);
+  border: 2.5px solid var(--red);
+  padding: 1px 12px 3px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+  transform: rotate(-2deg);
+  border-radius: 3px;
+  box-shadow: inset 0 0 8px color-mix(in srgb, var(--red) 25%, transparent);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── notifications (haut-droite, opposé du logo) ── */
+.notif-btn {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 20;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 19, 15, 0.6);
+  border: 1px solid rgba(240, 234, 217, 0.2);
+  border-radius: 50%;
+  color: var(--ivory);
+  cursor: pointer;
+}
+.notif-pastille {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--red);
+  color: var(--print-white);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 1px solid var(--paper);
+}
+.notif-voile {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(10, 9, 7, 0.5);
+}
+.notif-panneau {
+  position: fixed;
+  top: calc(62px + env(safe-area-inset-top));
+  right: 12px;
+  left: 12px;
+  max-width: 360px;
+  margin-left: auto;
+  z-index: 26;
+  /* borné en hauteur + scroll interne : ne déborde plus de l'écran */
+  max-height: 72vh;
+  overflow-y: auto;
+  background: var(--paper-2, #1c1a15);
+  border: 1px solid rgba(240, 234, 217, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  padding: 12px 14px;
+  animation: sheet-monte 0.18s ease;
+}
+.notif-section + .notif-section {
+  margin-top: 14px;
+  border-top: 1px dotted rgba(240, 234, 217, 0.2);
+  padding-top: 12px;
+}
+.notif-titre {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+.notif-vide {
+  color: var(--ivory-faded);
+  font-size: 16px;
+  margin: 2px 0;
+}
+.notif-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.12);
+  color: var(--ivory);
+  text-align: left;
+}
+.notif-qui {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+.notif-titre-pers {
+  color: var(--ivory-faded);
+}
+.notif-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.notif-ok {
+  background: none;
+  border: 1px solid var(--red);
+  color: var(--red);
+  border-radius: 3px;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.notif-non {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  cursor: pointer;
+}
+.notif-anoter {
+  font-family: 'Caveat', cursive;
+  font-size: 19px;
+  cursor: pointer;
+}
+/* vider le centre + garde-fou */
+.notif-pied {
+  position: sticky;
+  bottom: -12px;
+  margin: 12px -14px -12px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(240, 234, 217, 0.2);
+  background: var(--paper-2, #1c1a15);
+  text-align: right;
+}
+.notif-vider {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.notif-confirm p {
+  font-size: 17px;
+  color: var(--ivory);
+  margin: 0 0 10px;
+  text-align: left;
+}
+.notif-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ── lignes d'index avec vignette ── */
+.lieu-ligne {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  cursor: pointer;
+}
+.lieu-texte {
+  flex: 1;
+  min-width: 0;
+}
+.lieu-vignette {
+  width: 45%;
+  max-width: 170px;
+  background: var(--print-white);
+  padding: 4px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(1.5deg);
+  align-self: center;
+}
+.lieu-vignette img {
+  width: 100%;
+  height: 76px;
+  object-fit: cover;
+  display: block;
+}
+
+/* popup carte = mini-polaroid : grande photo en haut, infos sous le tirage */
+.popup-photo {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+.popup-sansphoto {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a261f;
+  color: rgba(240, 234, 217, 0.5);
+  font-family: 'Caveat', cursive;
+  font-size: 15px;
+}
+.popup-corps {
+  padding: 8px 2px 2px;
+}
+
+/* ── le cercle ── */
+.cercle-compteur {
+  margin: -8px 0 18px;
+}
+.membres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.membre {
+  padding: 16px 0;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.25);
+}
+.membre-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.membre-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+}
+.membre-titre {
+  font-size: 10px;
+  color: var(--red);
+}
+.membre-bio {
+  margin: 4px 0;
+}
+.membre-critere {
+  font-size: 10px;
+}
+/* un membre est cliquable : on va voir sa carte */
+.membre[role='button'] {
+  cursor: pointer;
+}
+.carte-curateur .fiche-retour {
+  margin-bottom: 8px;
+}
+.curateur-tip {
+  font-size: 16px;
+  color: var(--ivory-faded);
+  margin: 2px 0 0;
+}
+
+/* ── les fiches recto/verso de l'index ── */
+.idx-carte {
+  list-style: none;
+  background: var(--paper);
+  border: 1px solid rgba(240, 234, 217, 0.15);
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 12px;
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+}
+/* un spot du cercle (lecture seule) : liseré rouge cire à gauche */
+.idx-carte.idx-cercle {
+  border-left: 3px solid var(--red);
+}
+/* à découvrir (jamais sorti) : un petit tag en haut à GAUCHE (loin du menu ⋯),
+   sur fond charbon pour qu'il ne déborde pas / ne soit pas coupé */
+/* « à tester » : à droite de la rangée des pastilles, même hauteur */
+.idx-points-tester {
+  margin-left: auto;
+  margin-right: 2px;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--red);
+}
+.idx-carte:not(.idx-adecouvrir) {
+  opacity: 0.82;
+}
+
+/* le filtre de l'index : tout · à découvrir · faits */
+.idx-filtres {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 14px;
+}
+.idx-filtre {
+  background: none;
+  /* I8 : bordure + texte plus contrastés pour la lisibilité sur charbon */
+  border: 1px solid rgba(240, 234, 217, 0.4);
+  color: var(--ivory);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.idx-filtre.on {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--print-white);
+}
+/* les chips Coupe du monde portent leur icône à l'encre */
+.idx-filtres {
+  flex-wrap: wrap;
+}
+.idx-filtre-match,
+.idx-filtre-refuge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.idx-filtre-match svg,
+.idx-filtre-refuge svg {
+  display: block;
+}
+/* appui long = « anti-foot » : le mot « match » est barré, chip grisée */
+.idx-filtre-match.barre {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  color: var(--ivory-faded);
+  border-color: rgba(240, 234, 217, 0.35);
+  background: none;
+}
+.idx-filtre-match.barre svg {
+  opacity: 0.5;
+}
+
+/* le sélecteur de collection sur "ma carte" : moi · @curateurs */
+/* la rangée « qui » : légère, en texte (≠ les pilules de filtre = « quoi ») */
+.coll-switch {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 2px 0 10px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.coll-switch::-webkit-scrollbar {
+  display: none;
+}
+.coll-lbl {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ivory-faded);
+  opacity: 0.6;
+}
+.coll-chip {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  padding: 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+}
+.coll-chip.on {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+
+/* voir + trier + filtres : 3 menus compacts sur une ligne (popover au tap) */
+.idx-reglages {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 14px;
+  flex-wrap: nowrap;
+  /* au-dessus de la carte, des photos ET de la barre « à comparer » (z6) :
+     sinon les popovers voir/trier/filtres passent sous la barre comparer. */
+  position: relative;
+  z-index: 20;
+}
+.menu-critere {
+  position: relative;
+}
+.menu-critere-btn {
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+.menu-critere-lbl {
+  color: var(--ivory-faded);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+.menu-critere-chevron {
+  color: var(--red);
+}
+.menu-critere-voile {
+  position: fixed;
+  inset: 0;
+  z-index: 38;
+}
+.menu-critere-pop {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 15;
+  margin-top: 5px;
+  min-width: 160px;
+  z-index: 40;
+  background: #14110d;
+  border: 1px solid rgba(240, 234, 217, 0.28);
+  border-radius: 5px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  padding: 5px;
+  animation: sheet-monte 0.14s ease;
+}
+/* le menu le plus à droite (« filtres ») s'ouvre vers la gauche */
+.menu-critere-droite .menu-critere-pop {
+  left: auto;
+  right: 0;
+}
+.menu-critere-opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.menu-critere-opt.on {
+  color: var(--red);
+}
+/* « foot » barré = sans foot (appui long) : couleur active + texte barré */
+.menu-critere-opt.barre {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.menu-critere-nb {
+  color: var(--red);
+  font-weight: 700;
+}
+/* les lignes toggle du menu « filtres » (avec une pastille ●/○) */
+.menu-filtre-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.menu-filtre-opt.on {
+  color: var(--ivory);
+}
+.menu-filtre-case {
+  color: var(--red);
+  font-size: 12px;
+}
+.idx-reglages-compteur {
+  margin-left: auto;
+  color: var(--ivory-faded);
+  opacity: 0.5;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* phase 2 : la rangée envie, en scroll horizontal */
+.idx-envies {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  margin: -4px 0 14px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 5;
+}
+.idx-envies::-webkit-scrollbar {
+  display: none;
+}
+.idx-envies-lbl {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ivory-faded);
+  opacity: 0.75;
+}
+.idx-envie {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.4);
+  color: var(--ivory);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.idx-envie.on {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--print-white);
+}
+
+.idx-menu-info {
+  color: var(--ivory-faded);
+  font-style: italic;
+}
+
+/* le Grand Jeudi */
+.grand-jeudi-bandeau {
+  text-align: center;
+  background: var(--red);
+  color: var(--print-white);
+  padding: 6px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.grand-jeudi-bloc {
+  margin-top: 20px;
+  border-top: 1px dotted rgba(240, 234, 217, 0.2);
+  padding-top: 16px;
+}
+.grand-jeudi-bloc .valider {
+  margin-top: 10px;
+}
+
+.idx-haut {
+  display: flex;
+  gap: 12px;
+}
+.idx-polaroid {
+  flex: 0 0 96px;
+}
+.idx-photo {
+  background: #f0ead9;
+  padding: 5px 5px 12px;
+  transform: rotate(-2deg);
+  position: relative;
+}
+.idx-photo > img,
+.idx-photo > .idx-sansphoto {
+  display: block;
+  width: 100%;
+  height: 78px;
+  object-fit: cover;
+  background: #2a261f;
+}
+.idx-sansphoto {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: rgba(240, 234, 217, 0.45);
+  font-size: 14px;
+}
+/* même allure que le tampon de validation : encadré épais, 2 lignes, incliné */
+.idx-tampon {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  transform: rotate(-8deg);
+  border: 2.5px solid var(--red);
+  border-radius: 3px;
+  color: var(--red);
+  background: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 3px 9px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+  z-index: 2;
+}
+.idx-tampon .tampon-qui {
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.idx-tampon .tampon-date {
+  font-size: 8px;
+  letter-spacing: 2px;
+  opacity: 0.85;
+}
+/* tampon de provenance : même rouge cire que le logo "jeudi", sans fond */
+.idx-tampon.idx-tampon-suggere {
+  border-color: var(--red);
+  color: var(--red);
+  background: none;
+  transform: rotate(6deg);
+}
+.idx-tampon .tampon-recopar {
+  font-size: 7px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+/* version posée sur la grande photo : un cran plus grand */
+.idx-tampon.idx-tampon-grand {
+  bottom: 16px;
+}
+.idx-tampon.idx-tampon-grand .tampon-qui {
+  font-size: 13px;
+}
+.idx-infos {
+  flex: 1;
+  min-width: 0;
+}
+.idx-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  color: var(--ivory);
+  line-height: 1.1;
+}
+.idx-dist {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.6);
+  margin-top: 3px;
+}
+.idx-sig {
+  font-size: 10px;
+  color: #d9913b;
+  margin-top: 6px;
+}
+.idx-sig-toi {
+  color: rgba(240, 234, 217, 0.5);
+}
+.idx-pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.idx-pill {
+  border: 1px solid rgba(240, 234, 217, 0.4);
+  border-radius: 3px;
+  padding: 2px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ivory);
+}
+.idx-pill-meteo {
+  display: inline-flex;
+  align-items: center;
+}
+.idx-photo-cat {
+  color: var(--red);
+}
+/* #22 : tri (au plus proche / propreté wc) */
+.idx-tri {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 14px;
+  font-size: 11px;
+}
+.idx-tri-lbl {
+  color: var(--red);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.idx-tri-opt {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  cursor: pointer;
+  padding: 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.idx-tri-opt.on {
+  color: var(--ivory);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* #22 : propreté des wc sur la carte index */
+.idx-wc {
+  color: var(--ivory-faded);
+}
+.idx-wc-pts {
+  color: var(--red);
+  letter-spacing: 1px;
+}
+/* #18 : la chip d'envie, plus affirmée (encre ivoire pleine) */
+.idx-pill-envie {
+  border-color: var(--ivory-faded);
+  color: var(--ivory);
+}
+/* #17 : "référence" — recommandé par plusieurs, jamais une étoile */
+.idx-pill-ref {
+  border-color: var(--red);
+  color: var(--red);
+  letter-spacing: 1.5px;
+}
+/* #7 : match (on diffuse) / refuge (no foot) avec leur icône */
+.idx-pill-match,
+.idx-pill-refuge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.idx-pill-match {
+  border-color: #c99a2e;
+  color: #d8ad44;
+}
+.idx-pill-refuge {
+  border-color: #6b9e8c;
+  color: #84b6a3;
+}
+.idx-pill-match svg,
+.idx-pill-refuge svg {
+  display: block;
+}
+/* fiche détail : les signaux match / refuge / référence */
+.fiche-signaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.fiche-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 5px 10px;
+  border: 1px solid;
+  border-radius: 3px;
+}
+.fiche-signal.ref {
+  color: var(--red);
+  border-color: var(--red);
+}
+.fiche-signal.match {
+  color: #d8ad44;
+  border-color: #c99a2e;
+}
+.fiche-signal.refuge {
+  color: #84b6a3;
+  border-color: #6b9e8c;
+}
+/* #22 : la propreté des wc sur la fiche (le seul score) */
+.fiche-wc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 4px;
+  font-size: 12px;
+}
+.fiche-wc-lbl {
+  color: var(--red);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.fiche-wc-pts {
+  color: var(--red);
+  letter-spacing: 2px;
+  font-size: 14px;
+}
+.fiche-wc-mot {
+  color: var(--ivory-faded);
+}
+/* #22 : le critère perso du curateur, exploité sur sa signature */
+.tip-critere {
+  color: var(--ivory-faded);
+  font-style: italic;
+}
+.idx-tip {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: var(--ivory);
+  margin-top: 10px;
+  line-height: 1.25;
+}
+.idx-pied {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  border-top: 1px dotted rgba(240, 234, 217, 0.2);
+  padding-top: 8px;
+}
+.idx-horaire {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.5);
+}
+.idx-horaire.ouvert {
+  color: #7cb342;
+}
+.idx-horaire.ferme {
+  color: var(--red);
+}
+.idx-complete {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.5);
+}
+.idx-swipe-aide {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(240, 234, 217, 0.35);
+  margin-top: 10px;
+}
+
+/* le verso : le plan */
+.idx-plan {
+  height: 120px;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, #1c1a15, #1c1a15 22px, #15130f 22px, #15130f 44px),
+    repeating-linear-gradient(
+      90deg,
+      rgba(240, 234, 217, 0.06),
+      rgba(240, 234, 217, 0.06) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+}
+.idx-plan-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  color: var(--red);
+}
+.idx-plan-attr {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.45);
+}
+.idx-verso-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  gap: 8px;
+}
+.idx-adresse {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.6);
+  text-align: right;
+}
+.idx-cases {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.idx-case {
+  flex: 1;
+  background: #1c1a15;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+}
+.idx-case-gros {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  color: var(--ivory);
+}
+.idx-case-gros.ouvert {
+  color: #7cb342;
+}
+.idx-case-lbl {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.5);
+  letter-spacing: 1px;
+}
+.idx-itineraire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border: 1px solid var(--red);
+  border-radius: 4px;
+  padding: 10px;
+  color: var(--red);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+/* le formulaire de capture : section détail */
+.form-section {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--red);
+  margin: 18px 0 4px;
+}
+.form-horaires,
+.form-meteo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.form-horaires .lbl,
+.form-meteo .lbl {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.form-heure {
+  width: 72px;
+}
+.form-heure-aide {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.45);
+}
+
+/* les 3 pages occupent STRICTEMENT la même boîte : la carte ne bouge pas au swipe */
+.idx-recto,
+.idx-photos,
+.idx-verso {
+  height: 264px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* page photos : le tirage en grand remplit l'espace dispo */
+.idx-grande {
+  position: relative;
+  background: #2a261f;
+  border-radius: 4px;
+  overflow: hidden;
+  touch-action: none;
+  flex: 1;
+}
+.idx-grande > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* le tampon posé sur la grande photo : plus gros, sans fond (juste le contour) */
+.idx-tampon.idx-tampon-grand {
+  top: 14px;
+  bottom: auto; /* sinon top+bottom → le tampon s'étire sur toute la photo */
+  padding: 3px 9px;
+}
+.idx-grande-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(240, 234, 217, 0.45);
+  font-size: 18px;
+}
+.idx-photos .idx-nom {
+  margin-top: 8px;
+}
+
+/* l'indicateur de pages : infos · photos · plan */
+.idx-points {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.idx-points > span:not(.idx-points-lbl):not(.idx-points-tester) {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(240, 234, 217, 0.25);
+}
+.idx-points > span:not(.idx-points-lbl):not(.idx-points-tester) {
+  opacity: 0.45;
+}
+/* même niveau de spécificité que la règle de base, sinon le :not():not() l'écrase */
+.idx-points > span:not(.idx-points-lbl):not(.idx-points-tester).on {
+  background: var(--ivory);
+  opacity: 0.85;
+  transform: scale(1.2);
+}
+.idx-points-lbl {
+  margin-left: 6px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(240, 234, 217, 0.4);
+}
+
+/* le signet (favori) : posé juste à côté du nom du lieu (bien visible) */
+.idx-nom-rang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.idx-favori {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  line-height: 0;
+  cursor: pointer;
+  color: var(--ivory);
+  opacity: 0.5;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+.idx-favori:hover {
+  opacity: 0.85;
+}
+.idx-favori.on {
+  color: var(--red);
+  opacity: 1;
+}
+.idx-favori.on:active {
+  transform: scale(0.85);
+}
+
+/* le menu d'options "⋯" en haut à droite de la fiche */
+.idx-menu-zone {
+  position: absolute;
+  top: 20px;
+  right: 12px;
+  z-index: 3;
+}
+.idx-menu-btn {
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.idx-menu-btn:hover {
+  opacity: 1;
+}
+.idx-menu {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  min-width: 180px;
+  background: #1c1a15;
+  border: 1px solid rgba(240, 234, 217, 0.2);
+  border-radius: 5px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+.idx-menu-item {
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 9px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.idx-menu-item:hover {
+  background: rgba(240, 234, 217, 0.08);
+}
+.idx-menu-item.danger {
+  color: #c47b6a;
+}
+.idx-menu-item.danger.confirm {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 15%, transparent);
+}
+
+/* ── entête ── */
+.entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+/* la barre du haut : logo (gauche) · index/carte (gros, centré) · cloche (fixe, droite) */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 42px;
+  margin-bottom: 16px;
+  z-index: 2;
+}
+.topbar .tampon-logo {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(-2deg);
+  margin: 0;
+}
+/* titres du haut : serif DROIT (roman), 22px → l'italique reste pour la marque,
+   la grande question et le mot géant. préfixe .topbar pour battre .mono / .basculer */
+.topbar .topbar-titre,
+.topbar .topbar-basculer {
+  font-family: 'Instrument Serif', serif;
+  font-style: normal;
+  font-size: 22px;
+  color: var(--ivory);
+}
+.topbar .topbar-basculer button {
+  font-family: 'Instrument Serif', serif;
+  font-style: normal;
+  font-size: 22px;
+  text-transform: none;
+  padding: 8px 6px;
+}
+.topbar .topbar-basculer button.on {
+  text-decoration-thickness: 2.5px;
+  text-underline-offset: 6px;
+}
+/* le compteur de spots, au bout de la ligne « trier » : discret */
+.idx-tri-compteur {
+  margin-left: auto;
+  color: var(--ivory-faded);
+  opacity: 0.5;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.entete h1 {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 34px;
+  margin: 0;
+}
+
+/* ── état vide ── */
+.vide {
+  margin-top: 30vh;
+  text-align: center;
+  color: var(--ivory);
+}
+
+/* ── la liste façon index de carnet ── */
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lieu {
+  padding: 16px 0 10px;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.25);
+}
+.lieu-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.lieu-nom {
+  font-size: 22px;
+}
+.lieu-note {
+  color: var(--ivory);
+  font-size: 21px;
+  margin-top: 2px;
+}
+.archiver {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+/* ── boutons ── */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+.lien {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-decoration: underline;
+  padding: 6px 0;
+}
+.valider {
+  background: var(--red);
+  color: var(--print-white);
+  border: none;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+  padding: 10px 26px;
+  border-radius: 2px;
+  transform: rotate(-1deg);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.25);
+}
+.valider:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.valider:active {
+  transform: rotate(-1deg) translateY(1px);
+}
+
+/* ── le + de capture ── */
+.fab {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  width: 58px;
+  height: 58px;
+  border-radius: 4px;
+  border: none;
+  background: var(--red);
+  color: var(--print-white);
+  font-size: 34px;
+  line-height: 0;
+  transform: rotate(-2deg);
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.55);
+}
+.fab:active {
+  transform: rotate(-2deg) scale(0.94);
+}
+
+/* ── le formulaire de capture ── */
+.form {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 40;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--paper-2);
+  border-top: 1px solid rgba(240, 234, 217, 0.18);
+  padding: calc(18px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.geo {
+  min-height: 16px;
+}
+.form input,
+.form textarea {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.3);
+  color: var(--ivory);
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  padding: 8px 2px;
+  outline: none;
+  resize: none;
+}
+.form textarea {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+}
+.form input:focus,
+.form textarea:focus {
+  border-bottom-color: var(--red);
+}
+.visi {
+  display: flex;
+  gap: 10px;
+}
+.visi-choix {
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 12px 14px;
+  border-radius: 2px;
+}
+/* compteur de photos sur le tirage de la fiche (1/3, à l'encre) */
+.photo-compteur {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ivory);
+  background: rgba(21, 19, 15, 0.65);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+/* retour d'étape dans la validation : discret, mais là */
+.retour-etape {
+  align-self: flex-start;
+  margin: 0 0 2px;
+  padding: 10px 12px 10px 0;
+}
+.visi-choix.choisi {
+  border-color: var(--red);
+  color: var(--ivory);
+}
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ── la carte ── */
+.carte {
+  /* maplibre.css est importée AVANT la nôtre (main.tsx) : nos règles gagnent */
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  z-index: 0;
+}
+/* P1 — on tire le fond Carto (gris-bleu générique) vers le charbon du carnet */
+.carte .maplibregl-canvas {
+  filter: brightness(0.72) saturate(0.6) sepia(0.4) hue-rotate(-12deg) contrast(1.08);
+}
+/* grain papier + vignette nuit, posés par-dessus, sans bloquer les gestes */
+.carte::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at center, transparent 52%, rgba(21, 19, 15, 0.55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+/* "moi" : un point ivoire qui pulse doucement, distinct des spots rouges */
+.pin-moi {
+  width: 16px;
+  height: 16px;
+  background: var(--ivory);
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--ivory), 0 0 12px 2px rgba(240, 234, 217, 0.6);
+}
+.pin {
+  width: 18px;
+  height: 18px;
+  background: var(--red);
+  border: 2px solid var(--print-white);
+  border-radius: 50%;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  /* PAS de position ici : maplibre applique position:absolute + transform
+     sur le pin pour l'ancrer à la carte. L'écraser le fait "flotter". */
+}
+/* zone de tap invisible de 44px : on vise un pin avec le pouce, de nuit */
+.pin::after {
+  content: '';
+  position: absolute;
+  inset: -13px;
+  border-radius: 50%;
+}
+/* le nom du spot, en label sous le pin (carnet annoté) */
+.pin::before {
+  content: attr(data-nom);
+  position: absolute;
+  top: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--ivory);
+  background: rgba(21, 19, 15, 0.78);
+  padding: 1px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+  /* masqué par défaut : seul .label-on (anti-collision) l'affiche */
+  display: none;
+}
+/* le label n'apparaît que si l'anti-collision l'a retenu (ou pin actif) */
+.pin.label-on::before {
+  display: block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pin.label-on::before {
+    animation: inkIn 0.18s ease both;
+  }
+}
+/* feedback au survol : un halo, sans bouger l'ancre du pin */
+.pin:hover {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--red) 25%, transparent), 1px 2px 0 rgba(0, 0, 0, 0.6);
+}
+.pin-curateur:hover {
+  box-shadow: 0 0 0 6px rgba(240, 234, 217, 0.25);
+}
+/* spot photographié : un mini-polaroid épinglé sur la carte, dès le départ */
+.pin-photo {
+  width: 46px;
+  height: 46px;
+  background: var(--print-white);
+  padding: 3px 3px 6px;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  transform: rotate(-3deg);
+}
+.pin-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.pin-photo::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.pin-photo::before {
+  content: attr(data-nom);
+  position: absolute;
+  top: 108%;
+  left: 50%;
+  transform: translateX(-50%) rotate(3deg);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ivory);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+.carte.labels-off .pin-photo::before {
+  display: none;
+}
+.pin-photo:hover {
+  box-shadow: 0 0 0 3px var(--red), 1px 2px 8px rgba(0, 0, 0, 0.8);
+}
+.pin-photo.pin-valide {
+  box-shadow: 0 0 0 3px var(--red), 1px 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+/* lieu fermé maintenant : discret, on met en avant ce qui est ouvert */
+.pin-ferme {
+  opacity: 0.4;
+  filter: grayscale(0.7);
+}
+.pin-ferme::before {
+  opacity: 0.6;
+}
+/* spot d'un curateur : pastille ivoire avec son initiale à l'encre */
+.pin-curateur {
+  width: 22px;
+  height: 22px;
+  background: var(--print-white);
+  color: #15130f;
+  border-color: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+/* recommandé par plusieurs : badge compteur de voix sur le pin */
+.pin-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background: var(--red);
+  color: var(--print-white);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  border: 1px solid var(--paper);
+}
+/* Coupe du monde : pastille ballon ivoire en haut-gauche du pin */
+.pin-ballon {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--ivory);
+  border: 1px solid var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pin-ballon svg {
+  width: 13px;
+  height: 13px;
+}
+/* déjà consulté : un halo cyan + légère atténuation, pour le reconnaître
+   (distinct du rouge "validé" et du gris "fermé"). outline = ne touche pas au
+   box-shadow de l'anneau validé. */
+.pin-vu {
+  outline: 2px solid #5fb0c9;
+  outline-offset: 2px;
+  opacity: 0.8;
+}
+/* spot validé : un anneau rouge autour du pin */
+.pin-valide {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--red), 1px 2px 0 rgba(0, 0, 0, 0.6);
+}
+/* qui a recommandé, dans la popup */
+.popup-qui {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--red);
+  margin: 2px 0 4px;
+}
+.popup-plus {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(33, 29, 25, 0.55);
+  margin-top: 5px;
+}
+.popup-h {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.popup-h.ouvert {
+  color: #4f7a2a;
+}
+.popup-h.ferme {
+  color: var(--red);
+}
+/* le pin sélectionné grandit (feedback de sélection, façon Airbnb) */
+.carte .pin-actif {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 30%, transparent), 1px 2px 4px rgba(0, 0, 0, 0.7);
+  z-index: 5 !important;
+  transform: scale(1.3);
+  /* on sature et on éclaire le sélectionné pour qu'il claque au milieu des effacés */
+  filter: saturate(1.7) brightness(1.12) !important;
+  opacity: 1 !important;
+}
+.pin-curateur.pin-actif {
+  box-shadow: 0 0 0 4px rgba(240, 234, 217, 0.35), 1px 2px 4px rgba(0, 0, 0, 0.7);
+}
+/* #11 : quand un lieu est sélectionné, les autres pins s'effacent presque
+   (transparents) pour faire ressortir le sélectionné */
+.carte .pin-grise {
+  filter: grayscale(1) brightness(0.7) !important;
+  opacity: 0.15 !important;
+  z-index: 1 !important;
+}
+/* l'accroche d'entrée : une carte muette devient une invitation */
+.carte-accroche {
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--ivory);
+  background: rgba(21, 19, 15, 0.82);
+  border: 1px solid color-mix(in srgb, var(--red) 50%, transparent);
+  border-radius: 3px;
+  padding: 7px 14px;
+}
+
+/* la légende de lecture de la carte */
+.carte-legende {
+  position: fixed;
+  left: 12px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(21, 19, 15, 0.82);
+  border: 1px solid rgba(240, 234, 217, 0.18);
+  border-radius: 4px;
+  padding: 6px 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ivory);
+}
+.carte-legende span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lg-pastille {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 12px;
+}
+.lg-pastille.moi {
+  background: var(--red);
+  border: 1.5px solid var(--print-white);
+}
+.lg-pastille.cur {
+  background: var(--print-white);
+  border: 1.5px solid var(--red);
+}
+.lg-pastille.val {
+  background: var(--red);
+  border: 1.5px solid var(--print-white);
+  box-shadow: 0 0 0 1.5px var(--paper), 0 0 0 3px var(--red);
+}
+
+/* #11 : le bottom-sheet (nom + description du lieu choisi), au-dessus du carrousel */
+.carte-sheet {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(64px + 96px + env(safe-area-inset-bottom));
+  z-index: 4;
+  /* taille FIXE — le cadre ne bouge pas d'une page à l'autre */
+  height: 112px;
+  background: rgba(21, 19, 15, 0.94);
+  border: 1px solid rgba(240, 234, 217, 0.18);
+  border-left: 3px solid var(--red);
+  border-radius: 4px;
+  padding: 12px 14px 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  animation: sheet-monte 0.22s ease;
+  overflow: hidden;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+@keyframes sheet-monte {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.carte-sheet-x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 15px;
+  cursor: pointer;
+}
+/* la photo occupe TOUT le cadre, en fond ; le texte reste lisible par-dessus */
+.carte-sheet-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+.carte-sheet-voile {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* sombre en bas-gauche (sous le texte), plus clair en haut-droite */
+  background:
+    linear-gradient(to right, rgba(21, 19, 15, 0.92) 0%, rgba(21, 19, 15, 0.45) 60%, rgba(21, 19, 15, 0.25) 100%),
+    linear-gradient(to top, rgba(21, 19, 15, 0.85) 0%, rgba(21, 19, 15, 0.1) 80%);
+}
+.carte-sheet-tirets {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: auto;
+  z-index: 3;
+}
+.carte-sheet-txt {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+.carte-sheet-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 23px;
+  color: var(--print-white);
+  padding-right: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+}
+.carte-sheet-desc {
+  font-size: 16px;
+  color: var(--ivory);
+  margin: 2px 0 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.95);
+}
+/* les pages d'infos (swipe gauche/droite) : le mot · recommandé · pratique */
+.carte-sheet-recos,
+.carte-sheet-pratique {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ivory);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.95);
+  height: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.carte-sheet-recos > span,
+.carte-sheet-pratique > span {
+  flex: 0 0 auto;
+}
+.carte-sheet-reco-liste {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.carte-sheet-lbl {
+  color: var(--red);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.carte-sheet-reco-liste {
+  color: var(--ivory);
+}
+.carte-sheet-pratique .ouvert {
+  color: #9ed3bf;
+}
+.carte-sheet-pratique .ferme {
+  color: #e58a82;
+}
+.carte-sheet-wc {
+  letter-spacing: 0.5px;
+  color: #f0c95a;
+}
+/* le pied : distance · pastilles de pages · bouton fiche */
+.carte-sheet-pied {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ivory);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+}
+/* page 0 (photo claire) : juste les pastilles, centrées */
+.carte-sheet-pied.nu {
+  justify-content: center;
+}
+.carte-sheet-pagedots {
+  display: flex;
+  gap: 4px;
+}
+.carte-sheet-pagedots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(240, 234, 217, 0.4);
+}
+.carte-sheet-pagedots span.on {
+  background: var(--red);
+}
+.carte-sheet-fiche {
+  margin-left: auto;
+  background: rgba(21, 19, 15, 0.55);
+  border: 1px solid var(--red);
+  color: var(--print-white);
+  border-radius: 3px;
+  padding: 4px 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+}
+/* lieu sélectionné « à comparer » : le bouton devient « comparer » en jaune */
+.carte-sheet-fiche.comparer {
+  border-color: #d8ad44;
+  color: #f0c95a;
+  background: rgba(216, 173, 68, 0.14);
+}
+
+/* #11 : le carrousel horizontal des lieux, en bas */
+.carte-carrousel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(to top, rgba(21, 19, 15, 0.9), transparent);
+}
+.carte-carrousel::-webkit-scrollbar {
+  display: none;
+}
+.carte-card {
+  position: relative;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 150px;
+  max-width: 190px;
+  height: 78px;
+  text-align: left;
+  background: rgba(21, 19, 15, 0.92);
+  border: 1px solid rgba(240, 234, 217, 0.2);
+  border-radius: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+  overflow: hidden;
+}
+/* la photo du lieu en fond : floue + sombre, pour que le nom reste lisible */
+.carte-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(2px) brightness(0.42) saturate(0.85);
+  z-index: 0;
+  pointer-events: none;
+}
+/* un voile dégradé en plus, du bas vers le haut, sous le texte */
+.carte-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(21, 19, 15, 0.85) 10%, rgba(21, 19, 15, 0.15) 90%);
+  pointer-events: none;
+}
+.carte-card.on {
+  border-color: var(--red);
+}
+.carte-card.on .carte-card-bg {
+  filter: blur(1.5px) brightness(0.5) saturate(1);
+}
+.carte-card-nom {
+  position: relative;
+  z-index: 2;
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  color: var(--print-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+.carte-card-dist {
+  position: relative;
+  z-index: 2;
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  color: var(--ivory);
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.carte-card-min {
+  opacity: 0.6;
+}
+/* #11+ : carte marquée « à comparer » (clic long) */
+.carte-card.a-comparer {
+  border-color: #c99a2e;
+}
+.carte-card-vs {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: #15130f;
+  background: #d8ad44;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+/* #11+ : la barre « à comparer », en haut de la carte */
+.carte-comparer {
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(21, 19, 15, 0.92);
+  border: 1px solid rgba(216, 173, 68, 0.5);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+.carte-comparer-titre {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d8ad44;
+}
+.carte-comparer-chips {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  min-width: 0;
+}
+.carte-comparer-chip {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.3);
+  color: var(--ivory);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.carte-comparer-x {
+  color: var(--ivory-faded);
+  margin-left: 2px;
+}
+.carte-comparer-vider {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 10px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.carte-comparer-go {
+  flex: 0 0 auto;
+  background: #d8ad44;
+  border: none;
+  color: #15130f;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+/* chantier 1 : carte d'index sélectionnée « à comparer » (clic long) */
+.idx-acomparer {
+  box-shadow: inset 0 0 0 1.5px #d8ad44;
+}
+
+/* chantier 1 : pins « à comparer » sur la carte = dorés et moins transparents.
+   le pin ACTIF reste bleu (d'où le :not(.pin-actif)) ; on bat .pin-grise/.pin-vu. */
+.carte .pin-acomparer:not(.pin-actif) {
+  background: #d8ad44 !important;
+  opacity: 0.95 !important;
+  filter: none !important;
+  box-shadow: 0 0 0 2px #15130f, 0 0 7px rgba(216, 173, 68, 0.7) !important;
+}
+
+/* chantier 1 : dernière page du bloc détails = accès à la table */
+.carte-sheet-compa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.carte-sheet-compa-go {
+  background: #d8ad44;
+  border: none;
+  color: #15130f;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+/* chantier 1 : incitation à passer en paysage — cachée par défaut,
+   montrée seulement en portrait (où 3 colonnes sont serrées) */
+.tc-paysage {
+  display: none;
+}
+@media (orientation: portrait) {
+  .tc-paysage {
+    display: block;
+    padding: 6px 16px 2px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: #d8ad44;
+    opacity: 0.85;
+  }
+}
+
+/* lot B : carte du deck (polaroïd crème) — distance/temps + description sous
+   le nom. couleurs FONCÉES (fond clair) → lisibles, comme le reste du tirage. */
+.carte-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #78716c;
+  margin-top: 4px;
+}
+.carte-meta .ouvert {
+  color: #2e7d32;
+}
+.carte-meta .ferme {
+  color: #b04a3a;
+}
+.carte-desc {
+  font-size: 12px;
+  color: #57534e;
+  margin: 3px 0 0;
+}
+/* lot B : description dans le tirage « en grand » du récap */
+.recap-tirage-desc {
+  font-size: 11px;
+  color: var(--ivory);
+  opacity: 0.8;
+  margin: 0 0 2px;
+}
+
+/* récap « ce soir » : comparer tout le récap d'un coup */
+.recap-comparer-go {
+  display: block;
+  margin: 8px auto 0;
+  background: #d8ad44;
+  border: none;
+  color: #15130f;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+/* fiche : bouton « + ajouter à ma carte » (spots pas à moi) — bien visible */
+.fiche-adopter {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* réglages : sélecteur de ville (façon Citymapper) */
+.reglages-villes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.reglages-ville {
+  width: auto;
+  margin: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  background: rgba(240, 234, 217, 0.04);
+  border: 1px solid rgba(240, 234, 217, 0.15);
+  border-radius: 4px;
+  color: var(--ivory);
+  cursor: pointer;
+  text-align: left;
+}
+.reglages-ville.on {
+  border-color: var(--red);
+  box-shadow: inset 0 0 0 1px var(--red);
+}
+.reglages-ville.bientot {
+  opacity: 0.4;
+  cursor: default;
+}
+.reglages-ville-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+}
+.reglages-ville-sous {
+  font-size: 10px;
+  color: var(--ivory-faded);
+}
+/* réglages : données + bientôt */
+.reglages-donnees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+.reglages-action {
+  margin: 0;
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(240, 234, 217, 0.04);
+  border: 1px solid rgba(240, 234, 217, 0.15);
+  border-radius: 4px;
+  color: var(--ivory);
+  font-size: 13px;
+  cursor: pointer;
+}
+.reglages-action.danger {
+  color: #c87a6b;
+  border-color: rgba(200, 122, 107, 0.4);
+}
+.reglages-action.danger.confirm {
+  background: rgba(200, 122, 107, 0.15);
+}
+.reglages-bientot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.reglages-bientot-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: var(--ivory-faded);
+  font-size: 13px;
+  opacity: 0.6;
+}
+.reglages-bientot-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #d8ad44;
+  border: 1px solid rgba(216, 173, 68, 0.5);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+/* profil : la phrase d'accroche (tagline) — éditable, sous le prénom */
+.profil-tagline-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.profil-tagline {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.15);
+  color: var(--ivory);
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  font-style: italic;
+  padding: 4px 2px;
+}
+.profil-tagline-compteur {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--ivory-faded);
+}
+/* affichage de la tagline (page d'un pote) — italique, l'exemple en gris si vide */
+.profil-tagline-vue {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ivory);
+  margin: 6px 0 2px;
+}
+.tagline-exemple {
+  color: var(--ivory-faded);
+  opacity: 0.5;
+}
+
+/* #4 : fiche d'identité de carnet du curateur (page d'un pote) */
+.curateur-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 12px;
+}
+.curateur-portrait {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: #15130f;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transform: rotate(-3deg);
+}
+.curateur-id-txt {
+  min-width: 0;
+}
+.curateur-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  margin: 0;
+  color: var(--ivory);
+}
+.curateur-meta {
+  font-size: 11px;
+  color: var(--ivory-faded);
+  margin: 1px 0 0;
+}
+.curateur-bio {
+  font-size: 13px;
+  color: var(--ivory);
+  opacity: 0.85;
+  margin: 4px 0 0;
+}
+.curateur-basculer {
+  display: inline-flex;
+  margin-bottom: 8px;
+}
+
+/* lot B : description factuelle du lieu, au-dessus des tips */
+.fiche-description {
+  color: var(--ivory);
+  opacity: 0.85;
+  font-size: 12px;
+  margin: 2px 0 0;
+}
+/* lot B : critères non possédés par le lieu, montrés mais estompés */
+.mot.estompe {
+  opacity: 0.32;
+}
+
+/* chantier 1 : « comparer → » dans l'entête de la fiche (mode comparaison) */
+.fiche-compa-go {
+  background: #d8ad44;
+  border: none;
+  color: #15130f;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+/* chantier 1 : la barre « à comparer » en vue liste (index) */
+.idx-comparer {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  background: rgba(21, 19, 15, 0.92);
+  border: 1px solid rgba(216, 173, 68, 0.5);
+  border-radius: 4px;
+}
+.idx-comparer-titre {
+  flex: 1;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d8ad44;
+}
+.idx-comparer-go {
+  flex: 0 0 auto;
+  background: #d8ad44;
+  border: none;
+  color: #15130f;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.idx-comparer-vider {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 10px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── chantier 1 : la table de comparaison côte-à-côte ── */
+.tc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--charcoal, #15130f);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tc-tete {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.12);
+}
+.tc-titre {
+  color: var(--ivory);
+}
+/* ✕ de fermeture : flotte en haut à droite (plus de ligne titre dédiée) */
+.tc-fermer {
+  position: absolute;
+  top: calc(4px + env(safe-area-inset-top));
+  right: 8px;
+  z-index: 70;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 18px;
+  cursor: pointer;
+  width: 36px;
+  height: 28px;
+}
+.tc-grille {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: 0;
+  overflow: auto;
+  padding: calc(36px + env(safe-area-inset-top)) 8px 24px;
+}
+/* libellé de ligne (1ʳᵉ colonne) */
+.tc-lbl {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 8px 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ivory-faded);
+  background: var(--charcoal, #15130f);
+  border-top: 1px solid rgba(240, 234, 217, 0.08);
+}
+.tc-coin {
+  border-top: none;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.18);
+  color: #d8ad44;
+}
+/* le nom de colonne : NON sticky → il reste collé à sa colonne (sinon il flotte
+   et on ne sait plus quelle colonne on lit). */
+.tc-col-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 8px 8px 10px;
+  background: var(--charcoal, #15130f);
+  border-bottom: 1px solid rgba(240, 234, 217, 0.18);
+}
+.tc-nom {
+  font-family: var(--serif, serif);
+  font-size: 15px;
+  color: var(--ivory);
+  line-height: 1.15;
+}
+.tc-retirer {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.tc-cell {
+  padding: 8px;
+  font-size: 12px;
+  color: var(--ivory);
+  border-top: 1px solid rgba(240, 234, 217, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+}
+.tc-sous {
+  font-size: 10px;
+  color: var(--ivory-faded);
+}
+.tc-cell-photo img {
+  width: 100%;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.tc-vide {
+  color: var(--ivory-faded);
+  opacity: 0.6;
+}
+.tc-cell .ouvert {
+  color: #7fc08a;
+}
+.tc-cell .ferme {
+  color: #c87a6b;
+}
+.tc-wc-pts {
+  letter-spacing: 1px;
+}
+.tc-envies {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tc-chip {
+  background: rgba(240, 234, 217, 0.08);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10px;
+}
+.tc-cell-tip .hand {
+  font-size: 13px;
+  line-height: 1.3;
+}
+/* la meilleure valeur de la ligne : surlignée à l'or doux */
+.tc-best {
+  background: rgba(216, 173, 68, 0.16);
+  box-shadow: inset 2px 0 0 #d8ad44;
+}
+.tc-fiche {
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.3);
+  color: var(--ivory);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+/* contrôles zoom/boussole/géoloc : on garde le rendu natif maplibre,
+   on agrandit juste un peu la cible tactile sans déformer les icônes */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button {
+  width: 38px;
+  height: 38px;
+}
+/* contrôles de carte : en bas à droite (zone du pouce), au-dessus du + */
+.maplibregl-ctrl-bottom-right {
+  /* au-dessus du carrousel (~96px) — rien ne se superpose */
+  bottom: calc(176px + env(safe-area-inset-bottom));
+  right: 20px;
+}
+/* quand un lieu est sélectionné, le bottom-sheet apparaît : on remonte encore */
+.carte-sel ~ .maplibregl-ctrl-bottom-right,
+.carte-sel .maplibregl-ctrl-bottom-right {
+  bottom: calc(280px + env(safe-area-inset-bottom));
+}
+@media (min-width: 480px) {
+  .maplibregl-ctrl-bottom-right {
+    right: calc(50% - 240px + 20px);
+  }
+}
+/* espacement uniforme entre les groupes (zoom+boussole / géoloc) */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
+  margin: 0 0 8px 0;
+}
+
+/* bandeau dégradé derrière l'entête en vue carte */
+.voile-haut {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 110px;
+  background: linear-gradient(var(--paper) 30%, rgba(21, 19, 15, 0.75) 65%, transparent);
+  z-index: 1;
+  pointer-events: none;
+}
+.maplibregl-ctrl-group {
+  background: var(--paper-2) !important;
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  border-radius: 3px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.5) !important;
+}
+.maplibregl-ctrl-group button {
+  width: 40px;
+  height: 40px;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px dotted rgba(240, 234, 217, 0.25) !important;
+}
+.maplibregl-ctrl button .maplibregl-ctrl-icon {
+  filter: invert(0.9) sepia(0.2);
+}
+.maplibregl-popup-content {
+  background: var(--print-white);
+  color: #211d19;
+  font-family: 'Instrument Serif', serif;
+  border-radius: 2px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.5);
+}
+.maplibregl-popup-content em {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+}
+.entete,
+.fab,
+.navbas {
+  position: relative;
+  /* au-dessus des cartes (menu ⋯ z:3, pastilles, idx-reglages z:6) */
+  z-index: 12;
+}
+.fab,
+.navbas {
+  position: fixed;
+}
+.basculer button {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 12px 10px; /* cible tactile ≥ 44px */
+}
+.basculer button.on {
+  color: var(--ivory);
+  text-decoration: underline;
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+/* ── suggestions d'adresse ── */
+.suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(240, 234, 217, 0.18);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.suggestions li + li {
+  border-top: 1px dotted rgba(240, 234, 217, 0.18);
+}
+.suggestions button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  color: var(--ivory);
+}
+.suggestions button:active {
+  background: rgba(240, 234, 217, 0.08);
+}
+.sugg-nom {
+  display: block;
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px;
+}
+.sugg-adresse {
+  display: block;
+  font-size: 10px;
+}
+.lieu-adresse {
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+/* ── ça dit quoi ce soir ? ── */
+.cesoir {
+  padding-bottom: 40px;
+}
+/* #10 : la phase questions en plein swipe */
+.qs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 10px;
+}
+.qs-titre {
+  text-align: center;
+  margin-bottom: 4px;
+}
+.qs-sous {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 18px;
+}
+.qs-scene {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  touch-action: none;
+  user-select: none;
+}
+.qs-choix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+}
+/* le carousel : mot central net + voisins estompés (on voit ce qui vient) */
+.qs-roue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  overflow: hidden;
+}
+.qs-mot {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 54px;
+  line-height: 1;
+  color: var(--ivory);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.qs-mot-cote {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ivory);
+  opacity: 0.28;
+  white-space: nowrap;
+}
+.qs-glose {
+  font-size: 18px;
+  color: var(--ivory-faded);
+  line-height: 1.25;
+  white-space: nowrap; /* une seule ligne */
+}
+.qs-fleche {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 40px;
+  line-height: 1;
+  cursor: pointer;
+  /* A3 : cible tactile généreuse (≥ 48px) */
+  min-width: 52px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qs-fleche.gauche {
+  left: 0;
+}
+.qs-fleche.droite {
+  right: 0;
+}
+.qs-points {
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 22px;
+}
+.qs-points span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(240, 234, 217, 0.28);
+}
+.qs-points span.on {
+  background: var(--red);
+  transform: scale(1.3);
+}
+.qs-valider {
+  background: none;
+  border: 1.5px solid var(--red);
+  color: var(--red);
+  border-radius: 3px;
+  padding: 10px 28px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, transform 0.12s;
+}
+/* A7 : on tire vers le haut → le bouton s'allume (relâcher = valider) */
+.qs-valider.pret {
+  background: var(--red);
+  color: var(--print-white);
+  transform: scale(1.06);
+}
+.qs-aide {
+  font-size: 10px;
+  color: var(--ivory-faded);
+  letter-spacing: 0.5px;
+  margin-top: 14px;
+}
+/* le rappel du choix une fois le deck affiché (tap = recommencer) */
+.cesoir-rappel {
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.28);
+  color: var(--ivory);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin: 6px auto 2px;
+  display: block;
+}
+.cesoir-rappel-x {
+  color: var(--red);
+  margin-left: 4px;
+}
+.rangée {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 4px;
+  margin: 18px 0;
+}
+.rangée .lbl {
+  width: 100%;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+.mot {
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  padding: 11px 10px;
+  position: relative;
+}
+.mot + .mot::before {
+  content: '·';
+  position: absolute;
+  left: -6px;
+  color: var(--ivory-faded);
+}
+/* une pastille figée (spot d'un pote, lecture seule) — pas un bouton */
+.mot.fige {
+  cursor: default;
+}
+.fiche-lecture-seule {
+  color: var(--ivory-faded);
+  font-style: italic;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+.fiche-modifier {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+.fiche-modifier-ok {
+  margin-top: 14px;
+}
+/* page photos de l'index : nom + distance (remplace la consigne 'swipe') */
+.idx-photos-bas {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+.idx-dist-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--ivory-faded);
+  white-space: nowrap;
+}
+.mot.entouré::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  transform: rotate(-4deg);
+}
+/* appui long : les conditions optimales, recommandées — à l'encre orange */
+.mot.entouré.reco::after {
+  border-color: #d9913b;
+}
+.mot.entouré.reco {
+  color: #e8b36a;
+}
+/* déjà dans le carnet : entouré au crayon gris, pas au rouge */
+.mot.entouré.deja {
+  color: var(--ivory-faded);
+}
+.mot.entouré.deja::after {
+  border-color: rgba(240, 234, 217, 0.35);
+}
+.validation-aide {
+  font-size: 12px;
+  color: rgba(240, 234, 217, 0.75);
+  margin: 2px 0 10px;
+}
+/* premier tap court : le mot souffle "reste appuyé" en orange, une fois */
+@keyframes pulseReco {
+  0%, 100% { border-color: var(--red); }
+  50% { border-color: #d9913b; }
+}
+.mot.entouré.pulse::after {
+  animation: pulseReco 0.6s ease-in-out 2;
+}
+
+/* le deck */
+.deck {
+  margin-top: 26px;
+  position: relative;
+}
+.deck-compteur {
+  position: absolute;
+  top: -16px;
+  right: 4px;
+}
+.deck-pique {
+  text-align: center;
+  margin: 0 0 8px;
+  color: var(--red);
+}
+.carte-lieu {
+  background: var(--print-white);
+  color: #211d19;
+  padding: 12px 12px 16px;
+  margin: 10px auto 0;
+  max-width: 330px;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 110%;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  position: relative;
+}
+.carte-lieu:active {
+  cursor: grabbing;
+}
+.carte-photo {
+  background: #2a261f;
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.carte-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.sans-photo {
+  color: rgba(240, 234, 217, 0.5);
+  font-size: 20px;
+}
+.carte-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  margin-top: 10px;
+}
+.carte-tip {
+  font-size: 21px;
+  color: #211d19;
+  margin: 2px 0 0;
+}
+.carte-adresse {
+  color: #78716c;
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+.tampon {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  z-index: 2;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 3px;
+  padding: 4px 14px;
+  border: 3px solid;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.tampon.valide {
+  color: var(--red);
+  border-color: var(--red);
+  font-size: 22px;
+  transform: translate(-50%, -50%) rotate(-14deg);
+}
+.tampon.bof {
+  color: #78716c;
+  border-color: #78716c;
+  font-size: 18px;
+  transform: translate(-50%, -50%) rotate(10deg);
+  text-decoration: line-through;
+}
+.deck-aide {
+  text-align: center;
+  margin-top: 14px;
+}
+.deck-vide {
+  text-align: center;
+  margin-top: 60px;
+}
+
+/* tirets de progression photos (façon stories) */
+.photo-tirets {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+.photo-tirets span {
+  flex: 1;
+  height: 3px;
+  background: rgba(251, 248, 241, 0.35);
+  border-radius: 2px;
+}
+.photo-tirets span.on {
+  background: var(--print-white);
+}
+.carte-photo {
+  position: relative;
+}
+
+/* le récap de fin de deck */
+.recap {
+  margin-top: 30px;
+}
+.recap-titre {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.recap-liste {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+}
+.recap-lieu {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.25);
+}
+.recap-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+}
+.recap-tampon {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1.5px solid;
+  border-radius: 2px;
+  transform: rotate(-3deg);
+}
+.recap-tampon.valide {
+  color: var(--red);
+  border-color: var(--red);
+}
+.recap-tampon.bof {
+  color: var(--ivory-faded);
+  border-color: var(--ivory-faded);
+  text-decoration: line-through;
+}
+.recap-tampon.passe {
+  border-color: transparent;
+  color: var(--ivory-faded);
+}
+.recap-bilan {
+  text-align: center;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  margin: -10px 0 16px;
+}
+/* le sélecteur de vue du récap (liste / en grand / carte) */
+.recap-vues {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.recap-vue {
+  background: none;
+  border: 1px solid rgba(240, 234, 217, 0.28);
+  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.recap-vue.on {
+  color: var(--red);
+  border-color: var(--red);
+}
+/* « en grand » : carrousel horizontal des tirages */
+.recap-grand {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 14px;
+  margin: 0 -4px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.recap-tirage {
+  flex: 0 0 78%;
+  max-width: 300px;
+  scroll-snap-align: center;
+  background: var(--print-white);
+  color: #211d19;
+  border: none;
+  padding: 10px 10px 14px;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.5);
+  text-align: left;
+  cursor: pointer;
+}
+.recap-tirage-photo {
+  position: relative;
+  height: 200px;
+  background: #2a261f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.recap-tirage-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.recap-stamp {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  background: rgba(240, 234, 217, 0.82);
+  padding: 2px 8px;
+  font-size: 11px;
+  transform: rotate(-4deg);
+}
+.recap-tirage-nom {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  margin-top: 8px;
+}
+.recap-tirage-tip {
+  font-size: 16px;
+  color: #4a443d;
+  margin: 2px 0 0;
+}
+.recap-tirage-cat {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--print-white);
+  background: rgba(21, 19, 15, 0.7);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+/* le bas du tirage : infos + accès fiche (tap) */
+.recap-tirage-bas {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 0 0;
+  cursor: pointer;
+}
+.recap-tirage-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b635a;
+}
+.recap-tirage-infos .ouvert {
+  color: #3e7d5a;
+}
+.recap-tirage-infos .ferme {
+  color: #a8322a;
+}
+.recap-tirage-wc {
+  letter-spacing: 1px;
+}
+.recap-tirage-plus {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.5px;
+}
+/* « sur la carte » : mini-carte des 8 suggestions */
+.recap-carte {
+  position: relative;
+  height: 320px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(240, 234, 217, 0.2);
+}
+.carte-mini {
+  position: absolute !important;
+  inset: 0 !important;
+  height: 100% !important;
+}
+/* placeholder pendant le chargement paresseux de la carte (A4) */
+.carte-chargement {
+  background: #15130f;
+}
+
+/* la météo du porte-monnaie */
+.meteo-bas {
+  position: fixed;
+  left: 20px;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+/* le libellé "situation du portefeuille ?" posé juste au-dessus de la météo fixe */
+.meteo-bas-lbl {
+  position: fixed;
+  left: 20px;
+  bottom: calc(118px + env(safe-area-inset-bottom));
+  z-index: 2;
+}
+.meteo-choix {
+  background: none;
+  border: none;
+  color: var(--ivory);
+  opacity: 0.35;
+  min-width: 52px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.meteo-choix.on {
+  opacity: 1;
+}
+.meteo-prix {
+  font-size: 10px;
+  color: var(--ivory-faded);
+  white-space: nowrap;
+}
+.meteo-choix.on .meteo-prix {
+  color: var(--red);
+}
+.meteo-sens {
+  display: block;
+  margin-top: 4px;
+  color: var(--ivory-faded);
+}
+/* la glose grise : la voix de l'app qui "répond" au critère choisi */
+.glose {
+  display: block;
+  margin: 4px 0 2px;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.85;
+}
+.meteo-sens .glose {
+  display: inline;
+  font-style: normal;
+}
+/* la réponse grise écrite juste après la question, sur la même ligne */
+.glose-inline {
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ivory-faded);
+  font-style: italic;
+  font-weight: 400;
+}
+.pluie-mot {
+  font-size: 10px;
+  color: var(--ivory-faded);
+}
+
+/* ── la fiche lieu ── */
+.fiche {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--paper);
+  background-image: radial-gradient(rgba(240, 234, 217, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  overflow-y: auto;
+  padding: calc(16px + env(safe-area-inset-top)) 20px calc(30px + env(safe-area-inset-bottom));
+  max-width: 480px;
+  margin: 0 auto;
+}
+.fiche-retour {
+  margin-bottom: 14px;
+}
+.fiche-carte {
+  cursor: pointer;
+  transform: rotate(-1.5deg);
+}
+/* swipe haut/bas sur la photo de la fiche = feuilleter (pas scroller la page) */
+.fiche-carte .carte-photo {
+  touch-action: pan-x;
+}
+/* l'adresse sort du polaroïd (juste le nom dans le blanc) → on voit mieux la photo */
+.fiche-adresse {
+  color: var(--ivory-faded);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  margin: 12px 2px 0;
+}
+/* signe « agrandir » (sans texte) posé en bas-droite du tirage, sur le blanc */
+.photo-agrandir {
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  color: #211d19;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.photo-agrandir:hover {
+  opacity: 1;
+}
+/* la visionneuse photo plein écran */
+.photo-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 9, 7, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  animation: sheet-monte 0.18s ease;
+}
+.photo-zoom img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.photo-zoom-x {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 2;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 20px;
+  cursor: pointer;
+}
+.photo-zoom-tirets {
+  position: absolute;
+  bottom: calc(54px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+}
+.photo-zoom-lbl {
+  position: absolute;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.lieu-tete {
+  cursor: pointer;
+}
+.fiche-tips {
+  margin-top: 26px;
+}
+.fiche-tips .lbl {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 10px;
+}
+.tip {
+  padding: 10px 0;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.25);
+}
+.tip-signature {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+/* le nom du recommandeur, cliquable → sa carte */
+.tip-auteur-lien {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+/* la barre du haut de la fiche : retour à gauche, navigation à droite */
+.fiche-haut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.fiche-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fiche-nav-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  border-radius: 50%;
+  background: none;
+  color: var(--ivory);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.fiche-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.fiche-nav-compteur {
+  font-size: 11px;
+  color: var(--ivory-faded);
+  min-width: 34px;
+  text-align: center;
+}
+.tip-vide {
+  color: var(--ivory-faded);
+}
+.tips-bientot {
+  margin-top: 14px;
+  font-size: 10px;
+  color: var(--ivory-faded);
+  font-style: italic;
+}
+.fiche-meta {
+  margin-top: 26px;
+  font-size: 10px;
+}
+
+/* ── onboarding ── */
+.onboard {
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(24px + env(safe-area-inset-top)) 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.onboard-sous {
+  margin: -6px 0 8px;
+}
+.onboard-carte {
+  background: var(--print-white);
+  color: #211d19;
+  width: 220px;
+  height: 250px;
+  margin: 18px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transform: rotate(-2deg);
+}
+.onboard-oui {
+  font-family: 'Instrument Serif', serif;
+  font-size: 52px;
+  pointer-events: none;
+}
+.onboard-boutons {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+.onboard-input {
+  background: transparent;
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  border-radius: 2px;
+  color: var(--ivory);
+  font-family: 'Caveat', cursive;
+  font-size: 19px;
+  padding: 10px 12px;
+  outline: none;
+}
+.onboard-chambre {
+  color: var(--red);
+}
+.onboard-criteres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* l'étape "tu sors comme qui ?" : suivre des curateurs */
+.onboard-curateurs {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.onboard-curateur {
+  border: 1px solid rgba(240, 234, 217, 0.18);
+  border-left: 3px solid rgba(240, 234, 217, 0.18);
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.onboard-curateur.suivi {
+  border-left-color: var(--red);
+}
+.onboard-curateur-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.onboard-curateur-truc {
+  display: block;
+  margin-top: 4px;
+  color: var(--ivory-faded);
+}
+.onboard-curateur.suivi .onboard-curateur-truc {
+  color: var(--red);
+}
+/* l'onglet profil : "mon tampon" */
+.profil-tete {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.profil-tampon {
+  flex: 0 0 auto;
+  border: 2.5px solid var(--red);
+  border-radius: 3px;
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  transform: rotate(-6deg);
+}
+.profil-critere {
+  color: var(--ivory-faded);
+  margin-top: 2px;
+}
+/* le portrait : photo d'identité glissée dans le carnet, retenue par un trombone
+   (pas un avatar rond, pas un polaroïd) */
+/* le portrait + sa fiche d'identité, côte à côte (vrai carnet) */
+.profil-carte {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 22px;
+  margin: 28px 0 34px;
+}
+.profil-id {
+  position: relative;
+  display: block;
+  flex: 0 0 138px;
+  width: 138px;
+  margin: 6px 0 0;
+  transform: rotate(-2deg);
+  cursor: pointer;
+}
+/* la fiche d'identité : champs alignés comme une carte de carnet */
+.profil-fiche {
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 120px;
+}
+.profil-fiche div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.18);
+  padding-bottom: 6px;
+}
+.profil-fiche dt {
+  flex: 0 0 58px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #c0584f; /* rouge éclairci : plus lisible en petit sur charbon (a11y) */
+}
+.profil-fiche dd {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ivory);
+  font-family: 'Instrument Serif', serif;
+}
+/* l'âge éditable : un vrai aspect de champ (fond + soulignement) pour qu'on
+   voie qu'on peut taper dedans */
+.profil-age {
+  width: 48px;
+  background: rgba(240, 234, 217, 0.06);
+  border: none;
+  border-bottom: 1.5px solid rgba(240, 234, 217, 0.45);
+  color: var(--ivory);
+  font-family: 'Instrument Serif', serif;
+  font-size: 15px;
+  padding: 1px 4px 1px;
+  border-radius: 2px 2px 0 0;
+}
+.profil-age:focus {
+  outline: none;
+  border-bottom-color: var(--red);
+  background: rgba(240, 234, 217, 0.1);
+}
+.profil-age::placeholder {
+  color: rgba(240, 234, 217, 0.45);
+  font-size: 11px;
+  font-style: italic;
+}
+/* âge calculé + date de naissance éditable (sélecteur natif sombre) */
+.profil-age-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profil-age-val {
+  font-family: 'Instrument Serif', serif;
+  font-size: 15px;
+  color: var(--ivory);
+}
+.profil-naissance {
+  color-scheme: dark;
+  background: rgba(240, 234, 217, 0.06);
+  border: none;
+  border-bottom: 1px dotted rgba(240, 234, 217, 0.4);
+  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 1px 3px;
+  border-radius: 2px 2px 0 0;
+}
+/* la date de naissance à l'onboarding */
+.onboard-naissance {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--ivory-faded);
+  text-transform: uppercase;
+}
+.onboard-naissance input {
+  color-scheme: dark;
+  background: rgba(240, 234, 217, 0.06);
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  border-radius: 3px;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  padding: 8px 10px;
+}
+.profil-id-photo {
+  display: block;
+  width: 100%;
+  height: 192px; /* ratio photo d'identité 35:45 */
+  object-fit: cover;
+  background: #2a261f;
+  border: 3px solid #f0ead9; /* fin liseré ivoire, comme une vraie photo d'identité */
+  box-shadow: 2px 5px 12px rgba(0, 0, 0, 0.55);
+  filter: grayscale(0.12) contrast(1.04);
+}
+/* le trombone qui pince le haut de la photo */
+.profil-trombone {
+  position: absolute;
+  top: -20px;
+  left: 26px;
+  width: 22px;
+  height: 56px;
+  transform: rotate(10deg);
+  z-index: 2;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+/* ton tampon frappé sur la photo, comme une validation */
+.profil-id-tampon {
+  position: absolute;
+  bottom: 10px;
+  right: -8px;
+  transform: rotate(7deg);
+  border: 2.5px solid var(--red);
+  border-radius: 3px;
+  color: var(--red);
+  background: rgba(21, 19, 15, 0.35);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+}
+.profil-id-changer {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%) rotate(2deg);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--ivory);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* les réglages (onglet profil) : sauvegarde auto */
+.reglages {
+  margin: 24px 0;
+  border-top: 1px dotted rgba(240, 234, 217, 0.2);
+  padding-top: 18px;
+}
+.reglages-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.reglages-sauve {
+  font-size: 10px;
+  color: #7cb342;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.reglages-sauve.on {
+  opacity: 1;
+}
+.reglages-section {
+  margin: 16px 0 8px;
+  color: var(--ivory-faded);
+  font-size: 11px;
+}
+/* sections de réglages repliables (#5) */
+.reglages-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  border-top: 1px dotted rgba(240, 234, 217, 0.15);
+  padding: 12px 0 8px;
+  color: var(--ivory-faded);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.reglages-chevron {
+  color: var(--red);
+  font-size: 16px;
+}
+/* bio + insta (#4) */
+.profil-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 6px;
+}
+.profil-bio-texte {
+  background: transparent;
+  border: 1px solid rgba(240, 234, 217, 0.2);
+  border-radius: 6px;
+  color: var(--ivory);
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  padding: 10px 12px;
+  resize: none;
+}
+.profil-insta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ivory-faded);
+  border-bottom: 1px solid rgba(240, 234, 217, 0.2);
+  padding-bottom: 4px;
+}
+.profil-insta input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.reglages-seuils {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reglages-seuils label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ivory);
+  font-size: 13px;
+}
+
+/* la palette de couleurs (choix de l'encre) */
+.palette {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin: 18px 0;
+}
+.palette-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.palette-swatch.on {
+  border-color: var(--ivory);
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ivory);
+}
+
+/* le picker couleur : suggestions Pantone + roue HSV */
+.picker {
+  margin: 18px 0;
+}
+.picker-suggestions {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+}
+.picker-toggle {
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  padding: 0;
+}
+.picker-roue-bloc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.picker-roue {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  cursor: crosshair;
+  touch-action: none;
+  /* teinte par l'angle (conic) + saturation par le rayon (radial blanc au centre) */
+  background:
+    radial-gradient(circle, #fff 0%, rgba(255, 255, 255, 0) 70%),
+    conic-gradient(
+      from 90deg,
+      hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%),
+      hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%)
+    );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.picker-curseur {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.picker-lum {
+  width: 200px;
+  accent-color: var(--red);
+}
+.picker-hex {
+  color: var(--ivory-faded);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+/* l'étape "porte-monnaie" : les seuils € + les règles */
+.onboard-seuils {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+.onboard-seuils label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ivory);
+  font-size: 13px;
+}
+.onboard-euro {
+  width: 64px;
+  background: #1c1a15;
+  border: 1px solid rgba(240, 234, 217, 0.25);
+  border-radius: 6px;
+  color: var(--ivory);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 18px;
+  text-align: center;
+  padding: 6px 4px;
+}
+.onboard-seuil-soleil {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ivory-faded);
+  font-size: 13px;
+}
+.onboard-erreur {
+  color: var(--red);
+  font-size: 11px;
+}
+.onboard-regles-titre {
+  margin-top: 8px;
+}
+.onboard-regles {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ivory-faded);
+}
+.onboard-regles li {
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.4;
+}
+.onboard-regles li::before {
+  content: '·';
+  position: absolute;
+  left: 4px;
+  color: var(--red);
+}
+.onboard .valider {
+  align-self: flex-start;
+}
+
+/* ── validation "alors ?" ── */
+.validation {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+.validation-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.validation .valider {
+  align-self: flex-start;
+}
+.validation-carte {
+  max-width: 280px;
+  margin: 0;
+}
+.validation-carte .carte-photo {
+  height: 150px;
+}
+.validation-tip {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(240, 234, 217, 0.3);
+  color: var(--ivory);
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  padding: 8px 2px;
+  outline: none;
+  resize: none;
+}
+.validation-tip:focus {
+  border-bottom-color: var(--red);
+}
+/* le tip-légende, écrit directement sous la photo dans le tirage */
+.validation-tip.legende {
+  width: 100%;
+  color: #211d19;
+  border-bottom-color: rgba(33, 29, 25, 0.25);
+  font-size: 20px;
+  margin-top: 4px;
+}
+.validation-tip.legende::placeholder {
+  color: rgba(33, 29, 25, 0.58);
+}
+/* le tampon perso posé sur la photo : le pseudo, la date en dessous */
+.tampon-perso {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border: 2.5px solid;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+}
+.tampon-perso .tampon-qui {
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.tampon-perso .tampon-date {
+  font-size: 10px;
+  letter-spacing: 3px;
+  opacity: 0.85;
+}
+/* le mode tampon : tout le tirage est tamponnable, marges blanches comprises */
+.carte-lieu.tampon-cible {
+  position: relative;
+  touch-action: none;
+  cursor: grab;
+}
+/* le tampon vit au niveau du tirage entier (fiche comprise) */
+.carte-lieu.fiche-carte {
+  position: relative;
+}
+.tampon-perso.valide {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(21, 19, 15, 0.25);
+}
+.tampon-perso.bof {
+  color: #9a948a;
+  border-color: #9a948a;
+  background: rgba(21, 19, 15, 0.25);
+}
+/* le coup de tampon : il claque en se posant */
+@keyframes tamponHit {
+  0% { transform: translate(-50%, -50%) rotate(-12deg) scale(1.5); opacity: 0; }
+  60% { transform: translate(-50%, -50%) rotate(-12deg) scale(0.95); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; }
+}
+.tampon-perso.claque {
+  animation: tamponHit 0.25s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+/* mini-aperçu de la photo prise dans le kit */
+.photo-mini {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+.validation-secondaires {
+  display: flex;
+  gap: 18px;
+}
+
+/* ── kit photos à la capture ── */
+/* #8 : le kit multi-photos — une colonne par catégorie, 2-3 vignettes chacune */
+.photos-kit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.photo-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.photo-cat-lbl {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--ivory-faded);
+}
+.photo-cat-n {
+  color: var(--ivory-faded);
+  opacity: 0.7;
+}
+.photo-cat-wc .photo-cat-lbl {
+  color: var(--red);
+}
+.photo-cat-vignettes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.photo-vignette {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.photo-vignette img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photo-vignette-x {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  font-size: 10px;
+  background: rgba(21, 19, 15, 0.8);
+  color: var(--ivory);
+  border-radius: 50%;
+}
+.photo-ajout {
+  width: 56px;
+  height: 56px;
+  border: 1px dashed rgba(240, 234, 217, 0.4);
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ivory-faded);
+  cursor: pointer;
+}
+.photo-cat-wc .photo-ajout {
+  border-color: var(--red);
+  color: var(--red);
+}
+.photo-wc-pousse {
+  font-size: 10px;
+  color: var(--red);
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+/* #22 : la note de propreté des wc à la capture (le seul score) */
+.photo-wc-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ivory-faded);
+}
+.photo-wc-dot {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 1px;
+  line-height: 1;
+}
+.photo-wc-dot.on {
+  color: var(--red);
+}
+.photo-kit-legacy {
+  display: flex;
+  gap: 8px;
+}
+.photo-bouton {
+  border: 1px dashed rgba(240, 234, 217, 0.35);
+  border-radius: 2px;
+  padding: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.photo-bouton.pris {
+  border-style: solid;
+  border-color: var(--red);
+  color: var(--ivory);
+}
+
+/* ── fiche : tags + partage ── */
+.fiche-tags {
+  margin-top: 22px;
+}
+.fiche-tags .lbl {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 6px;
+}
+/* infos pratiques sur la fiche : distance · ouvert/fermé */
+.fiche-infos {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.fiche-case {
+  flex: 1;
+  background: #1c1a15;
+  border-radius: 4px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.fiche-case-gros {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  color: var(--ivory);
+}
+.fiche-case-gros.ouvert {
+  color: #7cb342;
+}
+.fiche-case-gros.ferme {
+  color: var(--ivory-faded);
+}
+.fiche-case-lbl {
+  font-size: 10px;
+  color: rgba(240, 234, 217, 0.5);
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+/* les deux actions côte à côte */
+.fiche-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.fiche-actions .valider {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+}
+.fiche-emmener {
+  background: none;
+  border: 1px solid var(--red);
+  color: var(--red);
+}
+.fiche-partage {
+  margin-top: 0;
+}
+
+/* le choix des horaires : un cadran encastré (type réveil), esprit carnet */
+.compteur-horaires {
+  margin: 16px 0 6px;
+}
+/* un seul panneau, les deux molettes dedans, séparées d'un filet */
+.roues {
+  display: flex;
+  margin: 10px 0;
+  background: linear-gradient(180deg, #1a1712, #131009);
+  border: 1px solid rgba(240, 234, 217, 0.12);
+  border-radius: 14px;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.roue-borne {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 10px;
+}
+.roue-borne + .roue-borne {
+  border-left: 1px solid rgba(240, 234, 217, 0.08);
+}
+.compteur-lbl {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ivory-faded);
+  margin-bottom: 4px;
+}
+/* la molette : 5 lignes visibles (2 avant · centrée · 2 après) */
+.roue {
+  position: relative;
+  width: 100%;
+  height: 170px; /* 5 × 34 */
+}
+/* la bande centrale : une fente douce, pas des traits durs */
+.roue-bande {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 68px; /* 2 lignes */
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(240, 234, 217, 0.05);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 40%, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.roue-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  padding: 68px 0; /* pour que le 1er et le dernier cran puissent se centrer */
+  scrollbar-width: none;
+  -webkit-mask: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  mask: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+}
+.roue-scroll::-webkit-scrollbar {
+  display: none;
+}
+.roue-item {
+  height: 34px;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 21px;
+  color: var(--ivory);
+  opacity: 0.3;
+  transition: opacity 0.15s, color 0.15s;
+}
+.roue-item.sel {
+  color: var(--red);
+  opacity: 1;
+  font-size: 25px;
+}
+.roue-plus1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  opacity: 0.7;
+}
+/* borne inconnue : on touche pour révéler la molette */
+.roue-inconnu {
+  width: 100%;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 19px;
+  font-style: italic;
+  cursor: pointer;
+}
+.roue-definir {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+/* le petit "je sais pas" sous la molette : discret, en lien */
+.compteur-saispas {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-decoration: underline;
+  text-decoration-color: rgba(240, 234, 217, 0.3);
+  text-underline-offset: 3px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* import Google Takeout */
+.form-import {
+  margin-top: 16px;
+  border-top: 1px dotted rgba(240, 234, 217, 0.2);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-import-msg {
+  color: var(--ivory-faded);
+}
+
+/* ── écrans "bientôt" ── */
+.bientot {
+  margin-top: 26vh;
+}
+.grande-question {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 32px;
+  margin: 0 0 14px;
+}
+
+/* ── nav du bas ── */
+.navbas {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--paper) 35%);
+  font-size: 22px;
+}
+.nav-item {
+  opacity: 0.45;
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--ivory);
+  font-size: 22px;
+  padding: 8px 18px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+/* le libellé sous l'icône : on n'apprend pas trois hiéroglyphes par cœur */
+.nav-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.nav-item.actif {
+  opacity: 1;
+}
+.nav-item.actif::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -8px;
+  width: 22px;
+  height: 3px;
+  background: var(--red);
+  border-radius: 2px;
+}

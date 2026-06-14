@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#15130F"/>
+  <g transform="rotate(-8 256 256)">
+    <rect x="76" y="186" width="360" height="140" rx="14" fill="none" stroke="#A8322A" stroke-width="18"/>
+    <text x="256" y="288" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="96" fill="#A8322A">jeudi</text>
+  </g>
+</svg>
