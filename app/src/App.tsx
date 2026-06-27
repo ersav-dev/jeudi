@@ -12,6 +12,13 @@ import { srcPhoto } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
+import {
+  mesCriteres,
+  ajouterCritere,
+  supprimerCritere,
+  apercuCritere,
+  type TypeCritere,
+} from './criteres'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -513,6 +520,15 @@ export default function App() {
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
   const [labo, setLabo] = useState<'trouver' | 'potos'>('trouver')
+  // mes critères (ma façon de juger un lieu) — binaire / gradué ●●○
+  const [criteres, setCriteres] = useState(() => mesCriteres())
+  const [nouvCrit, setNouvCrit] = useState('')
+  const [nouvType, setNouvType] = useState<TypeCritere>('gradue')
+  const ajoutCritere = () => {
+    if (!nouvCrit.trim()) return
+    setCriteres(ajouterCritere(nouvCrit, nouvType))
+    setNouvCrit('')
+  }
   const [fiche, setFiche] = useState<Lieu | null>(null)
   // la liste de contexte pour naviguer précédent/suivant dans la fiche
   const [ficheListe, setFicheListe] = useState<Lieu[]>([])
@@ -1289,18 +1305,110 @@ export default function App() {
                 ton critère
               </span>
             </div>
+            {criteres.length > 0 && (
+              <div
+                style={{
+                  marginTop: 10,
+                  borderTop: '1px solid rgba(240,234,217,0.08)',
+                  paddingTop: 10,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 9,
+                }}
+              >
+                {criteres.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
+                  >
+                    <span style={{ fontStyle: 'italic', fontSize: 17 }}>{c.nom}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span
+                        style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 12,
+                          letterSpacing: 1,
+                          color: c.type === 'gradue' ? 'var(--red)' : 'var(--ivory)',
+                          opacity: c.type === 'gradue' ? 1 : 0.65,
+                        }}
+                      >
+                        {apercuCritere(c.type)}
+                      </span>
+                      <button
+                        onClick={() => setCriteres(supprimerCritere(c.id))}
+                        aria-label="supprimer"
+                        style={{ background: 'none', border: 'none', color: 'var(--ivory-faded)', cursor: 'pointer', fontSize: 14 }}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div
               style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 11,
-                opacity: 0.45,
-                marginTop: 10,
+                marginTop: 12,
                 borderTop: '1px solid rgba(240,234,217,0.08)',
-                paddingTop: 10,
-                lineHeight: 1.5,
+                paddingTop: 12,
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                flexWrap: 'wrap',
               }}
             >
-              bientôt : ajoute tes critères (le bruit ●●○, cocktails oui/non…) — et vois les lieux « selon Karim »
+              <input
+                value={nouvCrit}
+                onChange={(e) => setNouvCrit(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && ajoutCritere()}
+                placeholder="un critère… (le bruit, les cocktails)"
+                style={{
+                  flex: 1,
+                  minWidth: 130,
+                  padding: '8px 11px',
+                  borderRadius: 8,
+                  border: '1px solid var(--ivory-faded)',
+                  background: 'var(--paper)',
+                  color: 'var(--ivory)',
+                  fontFamily: "'Instrument Serif', serif",
+                  fontSize: 16,
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={() => setNouvType((t) => (t === 'gradue' ? 'binaire' : 'gradue'))}
+                title="bascule le type"
+                style={{
+                  padding: '7px 11px',
+                  borderRadius: 999,
+                  border: '1px solid var(--ivory-faded)',
+                  background: 'transparent',
+                  color: 'var(--ivory)',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {nouvType === 'gradue' ? '●●○ gradué' : 'oui/non'}
+              </button>
+              <button
+                onClick={ajoutCritere}
+                style={{
+                  padding: '7px 13px',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: 'var(--red)',
+                  color: 'var(--print-white)',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                + ajouter
+              </button>
             </div>
           </div>
 
