@@ -168,6 +168,62 @@ Backups du jour : `2026-06-14_avant-comparaisons` → `…_titres-typo` (≈12 b
 - Vérifié : `tsc --noEmit` exit 0 + DOM live (3 lieux, surlignages OK : 2,4 km / nickel ●●● / ouvert / 1 voix). Backup `_backups/2026-06-14_table-comparaison`.
 - **Accès aussi depuis l'index** (carte n'était pas le seul point d'entrée → on restait coincé dans la fiche) : menu ⋯ de chaque carte d'index a **« à comparer » / « retirer de la compa »** (props `aComparer`/`onComparer` sur `LigneIndex`) ; **barre « à comparer · N » + « comparer → »** au-dessus de la liste (`.idx-comparer`). `TableComparaison` **exportée** de Carte.tsx et **lazy-load** dans App (`TableComparaisonLazy`, garde maplibre hors du bundle principal). State `comparer`/`compaOuverte` dans App. Vérifié DOM live (barre « à comparer · 3 » en index → table 3 colonnes). Backup `_backups/2026-06-14_compa-index`.
 
+### FAIT — session 2026-06-14 (CHANTIER 6 « En ligne » — étapes 0 + 1 : Supabase + auth) ✅
+**Cadrage validé (voie A).** On garde la forme `Lieu` à la frontière de `db.ts` ; le backend remplace IndexedDB DERRIÈRE la même API (UI ne bouge presque pas). Tables prévues : `profils · lieux · tips (=tipsCercle) · photos · relations (2 anneaux + demandes) · sorties`. RLS = l'esprit du concept en dur (chacun voit ses spots + public + son cercle ; édite que les siens ; les 🔒 privés ne fuient jamais).
+**⚠️ Découverte d'audit** : « db.ts seul point d'accès » est FAUX aujourd'hui — ~14 clés localStorage écrites en direct (surtout App.tsx : `jeudi-couleur/seuils/comparer/favoris/vus/onboard/tagline/ville/meteo/sorties/signales/suivis/bofs` + wipe IndexedDB direct App.tsx:307). → **Étape 2b ajoutée au plan** : tout faire passer par db.ts AVANT de brancher Supabase (sinon mur à l'étape 3).
+**Projet Supabase** : `jeudi`, région **West EU (Ireland)** (RGPD ok), org `ersav-dev's Org` (Free). URL `https://pksiepuiamuesugackpf.supabase.co`. RLS auto activée à la création (toute table verrouillée par défaut). Clé anon dans `app/.env.local` (gitignoré, `.env.*` couvert) + `.env.example` gabarit.
+**Code posé** : `@supabase/supabase-js` installé · `app/src/supabase.ts` (client, session persistante + autoRefresh + detectSessionInUrl) · `app/src/Auth.tsx` (écran magic-link DA carnet de nuit) · `App.tsx` barrière : splash → (pas de session) Auth → onboarding → app, avec `onAuthStateChange`. CSS `.auth-*` dans index.css. `tsc -b` exit 0.
+**Vérifié EN VRAI** : mail reçu (Supabase Auth SMTP test), clic du lien → retour connecté → app (profil). Auth bout-en-bout OK. ⚠️ pas encore : config dashboard Redirect URLs à confirmer (`localhost:5173/**` + `jeudi-seven.vercel.app/**`), email template encore en anglais (à traduire plus tard, Email Templates).
+**Plan corrigé (ordre)** : 0 projet ✅ · 1 auth magic-link ✅ · 1b Google ✅ (testé OK ; projet Google Cloud `jeudi-499418`, provider activé dans Supabase) · 1c Apple (plus tard, PWA → pas obligatoire, évite compte dev Apple payant) · 2 schéma+RLS · **2b consolider localStorage derrière db.ts** · 3 db.ts→Supabase + cache offline · 4 Storage photos · 5 relations réelles + demandes · 6 realtime/sync · 7 deck pondéré proches · 8 match de groupe · 9 push · 10 RGPD (suppr compte/export/flou visages).
+**PROCHAINE SESSION (neuve, courte)** : étape 2 (schéma SQL + RLS dans le SQL editor Supabase). Prompt : « Lis REPRISE.md, chantier 6 étape 2 : écris les migrations SQL (tables + RLS voie A) et on les applique. »
+NB : `prenom: 'Ersan'` codé en dur (Onboarding.tsx:57) + MEMBRES/demandes/CURATEURS simulés → remplacés à l'étape 5, rien ne casse avant.
+
+### FAIT — session 2026-06-14 (CHANTIER 6 étape 2 : schéma + RLS) ✅
+- **6 tables** créées via SQL editor : `profils · lieux · tips · photos · relations · sorties` (+ index). Migration versionnée : `supabase/migrations/0001_init.sql`.
+- **Trigger** `handle_new_user` : crée le profil auto à chaque inscription (magic-link/Google). Backfill des comptes existants fait → `profils` rempli (1 compte ersan.musa, Google + magic-link liés au même gmail).
+- **RLS complète (voie A)** : lieux visibles = miens + publics + cercle (`est_dans_mon_cercle`) ; édition réservée au owner ; tips/photos suivent la visibilité du lieu parent (helpers `lieu_visible`/`lieu_a_moi`) ; relations = celles où je suis impliqué ; sorties = les miennes. Les 🔒 privés ne fuient jamais.
+- **PROCHAIN = étape 2b** : faire passer TOUS les accès localStorage par db.ts (prérequis avant étape 3 db.ts→Supabase). Prompt : « Lis REPRISE.md, chantier 6 étape 2b ».
+
+### FAIT — session 2026-06-17 (CHANTIER 6 étape 2b : db.ts = seul point d'accès stockage) ✅
+- **Tous les `localStorage` éparpillés routés derrière `db.ts`.** App.tsx/CeSoir.tsx/Onboarding.tsx n'écrivent/lisent plus jamais `localStorage` en direct.
+- **Nouveaux helpers `db.ts`** : `ecrireCouleur`, `ecrireSeuils`, `lireVille`, `lireMeteo`/`ecrireMeteo`, `lireVus`/`ecrireVus`, `onboardingFait`/`marquerOnboarding`/`reinitOnboarding`, `lireTagline`/`ecrireTagline`, `lireSuivis`/`ecrireSuivis`, `lireSignales`/`signalerLieu`, `ajouterBof`, `viderSorties`, `effacerTout` (vide les clés `jeudi-*` + IndexedDB). Bloc commenté « préférences & état local (étape 2b) » en fin de db.ts.
+- **Seules clés restantes hors db.ts** : `jeudi-seed-v18` (interne à `seed.ts`, couche données) + un commentaire dans `supabase.ts`. C'est voulu.
+- Vérifié : `tsc --noEmit` exit 0 + `npm run build` vert. Refactor 1:1, comportement identique. **Le mur de l'étape 3 est levé.**
+- **PROCHAIN = étape 3** : remplacer IndexedDB/localStorage par Supabase DERRIÈRE la frontière db.ts (+ cache offline). Prompt : « Lis REPRISE.md, chantier 6 étape 3 ».
+
+### FAIT — session 2026-06-17 (CHANTIER 6 étape 3 : db.ts → Supabase + cache offline) ✅ (code)
+- **`db.ts` tape sur Supabase derrière la frontière** (voie A, l'UI ne bouge pas).
+  - **Lieux** : `tousLesLieux` = mes spots (cloud `lieux`, `owner_id=moi`, statut actif) + le décor (cercle simulé + publics du seed, resté en IndexedDB). `ajouterLieu`/`majLieu`/`archiverLieu`/`supprimerLieu`/`lireLieu` → Supabase avec repli local. `ajouterLieuLocal` réservé au seed.
+  - **Profil** : `lireProfil`/`sauverProfil` → table `profils` + miroir IndexedDB (la photo Blob reste locale jusqu'à l'étape 4 Storage).
+  - **Takeout** : `importerTakeout` passe par `ajouterLieu` (donc cloud).
+  - **`monId`** mis en cache (`chargerMonId()` au boot + `onAuthStateChange`) pour que `estAMoi()` reste synchrone.
+- **Cache offline (le morceau manquant)** : `tousLesLieux` **miroite** chaque lecture cloud réussie dans IndexedDB et **purge** les spots disparus du cloud ; hors-ligne, il relit ce miroir au lieu de n'afficher que le décor. Plus de perte de spots sans réseau.
+- Vérifié : `tsc --noEmit` exit 0 + `npm run build` vert.
+- **⚠️ À VÉRIFIER EN VRAI (terrain d'Ersan, navigateur connecté)** : se connecter sur https://jeudi-seven.vercel.app → ajouter un spot → vérifier dans le dashboard Supabase (Table editor → `lieux`) qu'il est bien là avec `owner_id` = mon user. Puis reload (et idéalement 2e appareil) pour confirmer la persistance cloud. Tester aussi un reload hors-ligne (les spots restent grâce au miroir).
+- **⚠️ NON COMMITTÉ** : tout le chantier 6 (Auth.tsx, supabase.ts, couche cloud db.ts, supabase/migrations, étapes 2b + 3) est en working-tree, 1 seul commit au repo. À committer une fois vérifié en vrai.
+- **PROCHAIN = étape 4** : photos dans Supabase Storage (la photo de profil + les photos de lieux passent du Blob IndexedDB au cloud, URL en base).
+
+### FAIT — session 2026-06-19 (3 moteurs de logique pure + onglet « labo ») ✅
+3 modules **purs, locaux, sans backend** (cercle simulé Karim/Léa) :
+- `app/src/groupe.ts` — MATCH DE GROUPE (« trouver un endroit avec ses potes ») : `classerPourGroupe` (triangulation envies + budget du plus serré + ouvert + distance), `reactionsDuGroupe` (langage de réactions chaud/trop cher/trop loin/pas moi/pourquoi pas → résumé agrégé), `verdictDeGroupe` (gagnant). Profils membres simulés `PROFILS_MEMBRES` (karim/lea) + `monProfil()`.
+- `app/src/recherche.ts` — MOTEUR RECHERCHE/RECO perso : `profilDeGout(historique)` (habitudes apprises depuis validés +1 / bofs −0.7), `rechercher(lieux, requête, goût)` (requête envies/compagnie/météo/**texte libre** insensible accents × habitudes × signaux → liste classée + **raisons**), `pourToi()` (reco sans requête, exclut les vus).
+- `app/src/deck.ts` — DECK PONDÉRÉ PAR LES PROCHES (chantier 7) : `signalProche` + `pondererParProches(lieux, proches, scoreBase?)` (boost si porté par l'anneau intérieur). Matching prénom insensible casse/accents (id seed = prénom minuscule).
+**Écrans branchés** : `EcranRecherche.tsx` + `EcranGroupe.tsx` (autonomes, prop `lieux`, stylés DA carnet via vars CSS) → **nouvel onglet « labo »** dans App.tsx (5e item nav, icône IGlobe ; sous-onglets *trouver* / *avec mes potes*). Les 4 onglets existants n'ont pas bougé.
+⚠️ **Piège évité** : noms de fichiers écran vs logique se clashaient en casse Windows (`Groupe.tsx`/`groupe.ts`) → écrans préfixés `Ecran*`.
+Vérifié : `tsc` + `npm run build` verts, app boote 0 erreur console. **PAS encore vu en vrai dans l'onglet labo** (mur d'auth — besoin du login d'Ersan). Non committé.
+
+**Philosophie de la recherche TRANCHÉE + CODÉE (2026-06-19)** — voir CONCEPT.md section « Chercher — ce que jeudi te POUSSE ≠ ce qu'il te RÉPOND » + mémoire [[jeudi-philo-recherche]]. Push (deck/défaut) = cercle ; Pull (recherche) = tout le public, tous les jours ; ≠ Grand Jeudi. Garde-fous codés dans `recherche.ts` + `EcranRecherche.tsx` : (1) **confiance d'abord** (boost si porté par le cercle, via `signalProche` de deck.ts, raison « porté par Karim (ton cercle) ») ; (2) **répond sans lister** (sans intention → `pourToi` top 12 « pour toi » ; avec intention → 15 max ; jamais le catalogue).
+**Module `autour.ts` (« autour de ») + branché au labo** : `POINTS_REPERE` (8 repères Paris instantanés), `geocoderRepere(texte)` (Nominatim search IDF), `classerAutour`. `recherche.ts` accepte un param `depuis?:{lat,lng}` (distanceM le supportait déjà) → la recherche se recentre sur le repère choisi. EcranRecherche : sélecteur « autour de » (ici / repères / champ adresse géocodé à Entrée). `tsc` + build verts.
+
+### FAIT — session 2026-06-17 (CHANTIER 6 étape 4 : photos → Supabase Storage) ✅ (code)
+- **Migration `supabase/migrations/0002_storage_photos.sql`** : bucket public `photos` + policies `storage.objects` (lecture publique ; insert/update/delete réservés à MON dossier `<auth.uid()>/...`). **⚠️ ERSAN DOIT L'APPLIQUER** : Supabase → SQL Editor → coller 0002 → Run (le bucket ne se crée pas tout seul).
+- **Helpers `db.ts`** : `televerserPhoto(blob, chemin)` (upload Storage → URL publique), `syncPhotosLieu(lieu)` (upload des blobs neufs sous `<monId>/<lieuId>/...` + réécrit la table `photos`, appelé après `ajouterLieu`/`majLieu`), `chargerPhotos(ids)` (lit la table `photos` → remplit `Lieu.photos` dans `tousLesLieux` et `lireLieu`).
+- **Photos de lieu** : `srcPhoto` préférait déjà `url` au `blob` → dès que `Lieu.photos` est rempli depuis le cloud, l'UI (index, fiche, carte, deck) les affiche sans autre changement.
+- **Photo de profil** : champ `Profil.photoUrl` ajouté. `sauverProfil` uploade le blob portrait → `<monId>/profil.jpg` (cache-bust `?t=Date.now()`) et écrit `photo_url`. `lireProfil` renvoie `photoUrl`. App.tsx affiche le portrait **cloud en priorité**, sinon le blob local (cache). `sauverBioInsta` forwarde `photoUrl` (sinon éditer la bio écraserait le portrait).
+- Vérifié : `tsc --noEmit` exit 0 + `npm run build` vert + 0 erreur console (dev server).
+- **⚠️ À VÉRIFIER EN VRAI (Ersan)** : 1) appliquer la migration 0002. 2) se connecter sur l'app → changer sa photo de profil + ajouter un spot avec photo → dans Supabase : Storage → bucket `photos` (fichiers sous mon uid) ET Table editor → `photos` (lignes url/type/ordre). 3) reload → photos réaffichées depuis le cloud.
+- **PROCHAIN = étape 5** : relations réelles (2 anneaux proches/suivis) + demandes d'amis réelles (la cloche est encore SIMULÉE : MEMBRES/demandes/CURATEURS en dur).
+
 ### 🚀 EN LIGNE — déployé sur Vercel (2026-06-14)
 - **URL live : https://jeudi-seven.vercel.app** (testée OK iPhone 16 Pro Max + Samsung, vrai GPS via HTTPS, installable « sur l'écran d'accueil »).
 - Projet Vercel : `atr-s-projects/jeudi` (compte d'Ersan, déjà lié). Config `app/vercel.json` (framework Vite + rewrites SPA).
@@ -179,6 +235,15 @@ Backups du jour : `2026-06-14_avant-comparaisons` → `…_titres-typo` (≈12 b
 ### FAIT — session 2026-06-14 (chantier 1 complet + chantier 5 + déploiement)
 **Chantier 1 « comparaison » — terminé et unifié.** Flux identique index + carte : `comparer →` ouvre les FICHES (pages + nav 1/N restreinte aux lieux comparés) → bouton `le tableau →` ouvre la table côte-à-côte (meilleure valeur surlignée/ligne). Sélection par **clic long** (carrousel ET cartes d'index, + menu ⋯). État `comparer` **remonté dans App** (source unique, fini la double-source/superposition). **Pins dorés** sur la carte pour les lieux à comparer (actif reste bleu). Carrousel : **distance à gauche · durée à droite (atténuée)**. Incitation paysage à 3 lieux. Backups : `_backups/2026-06-14_compa-*`, `_pins-dores`, `_duree-droite`, etc.
 **Chantier 5 « le mot juste » — gravé (code + CONCEPT.md).** `turbo` retiré de l'UI (gardé dans le type/données pour plus tard) · `disco` visible en permanence · **à minuit (00h)** : `apéro`→`alcolo` + rangée réduite à `dodo · alcolo · gastro` (+disco) · `incognito` = **speakeasy / bar caché**. Menu « filtres » harmonisé avec « trier » (actif en bleu, plus de points ○/●) · ligne **« foot »** unique (tap = on le voit, appui long = barré « sans foot »).
+
+### 💡 À FAIRE — point de référence pour « autour de »
+Pouvoir regarder les spots **autour de soi** (géoloc actuelle) OU **autour d'un endroit choisi** : une **adresse** saisie, ou un **point de référence** (métro, gare, monument, quartier). Ça change le centre de calcul des distances/temps (aujourd'hui figé sur `MA_POSITION` = Place Vendôme, cf. `db.ts` `maPosition`/`definirMaPosition`) et le recentrage de la carte. UX : un sélecteur « depuis : ma position / une adresse » en haut, géocodé via Nominatim (déjà utilisé). Toutes les distances (`distanceM`) en découlent.
+
+### ✅ SUR GITHUB (2026-06-14) — repo privé
+- **Repo : https://github.com/ersav-dev/jeudi** (privé 🔒, compte `ersav-dev`), branche `main`.
+- `.gitignore` à la racine de `Jeudi_App` (exclut node_modules, dist, .vercel, _backups, _trash, .env).
+- Workflow : `cd F:\ErsanMusa-com\Jeudi_App` puis `git add -A && git commit -m "..." && git push`.
+- ⏭️ PAS ENCORE fait : connecter Vercel au repo GitHub (Settings→Git) pour auto-deploy à chaque push (pour l'instant deploy manuel via `vercel --prod` dans `app/`). `gh` CLI non installé sur la machine.
 
 ### ✅ COUPE DU MONDE + SUR L'EAU injectés (2026-06-14 fin de journée) — déployés
 - `node __sources/gen_extra.mjs` → `app/src/spots_extra.ts` (2 CSV `;` : `coupe_du_monde_2026_GPT_FR_semicolon.csv` → `match:'diffuse'` (foot/fan zones) ; `surleau_GTP_FR_semicolon.csv` → `surLeau:true`). Géocodage Nominatim des manquants, voix jeudi, filtre `inclure_app=1`.
@@ -224,6 +289,13 @@ Colonnes (mapping DÉJÀ fait par GPT) : `nom, adresse_complete, arrondissement,
   - description = `description_courte` ; garder `source_url` qq part.
 Prompt session neuve : « Lis REPRISE.md. Injecte les rooftops de `__sources/rooftops_paris_app_v01.csv` dans le seed (mapping déjà fait par GPT dans les colonnes), géocode les coords manquantes, rooftop:true, profil public, bump seed. »
 Ensuite : demander à GPT d'autres listes (speakeasy=incognito, street-food par type, comptoirs solo) — même format.
+
+### 💡 IDÉE À GARDER — langage de réactions du MATCH DE GROUPE (chantier 8)
+Idée d'Ersan (2026-06-14) : quand chacun swipe les propositions d'une sortie de groupe, chaque réaction porte un sens court + un signe. Vocabulaire proposé :
+- chaud · pourquoi pas · pas moi · trop cher · trop loin · faim · juste boire · plus discret · moins cher · on se fait plaisir
+Et un **résumé ultra simple** par lieu, agrégé sur le groupe, ex :
+> Moonshiner — chaud×3 · cher×1 · loin×1 → « le groupe est chaud, mais un peu cher/loin. »
+⚠️ **DA** : les pictos montrés par Ersan étaient des émojis (🔥💸📍…) — INTERDITS dans le chrome (règle de la maison). À implémenter en **icônes encre** (même style que le reste), pas en émojis. Le vocabulaire et le résumé agrégé, eux, sont à garder.
 
 ### 💡 IDÉE À FAIRE — tuto à la première visite (onboarding du deck)
 À la **toute première visite**, la **première carte de résultat** (1er spot du deck / 1ʳᵉ case) doit servir de **mini-tuto intégré** : elle explique les gestes en situation (swipe photo = lieu suivant, swipe tip = autre voix, ← bof / validé →, tap = stories…). L'utilisateur **suit le tuto sur la vraie carte**, et à la fin tout est compris — pas d'écran d'aide séparé. Déclencheur : flag localStorage type `jeudi-tuto-fait`. À faire après les rooftops.

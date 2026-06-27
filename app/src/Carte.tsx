@@ -313,8 +313,6 @@ export default function Carte({
     })
   }, [comparer, lieux])
 
-  const nbOuverts = lieux.filter((l) => etatHoraire(l.horaires)?.ouvert).length
-
   if (mini) {
     return <div ref={conteneur} className="carte carte-mini" />
   }
@@ -322,11 +320,6 @@ export default function Carte({
   return (
     <>
       <div ref={conteneur} className={`carte${lieuActif ? ' carte-sel' : ''}`} />
-      {nbOuverts > 0 && !actif && comparer.length === 0 && (
-        <div className="carte-accroche mono">
-          {nbOuverts} {nbOuverts > 1 ? 'spots ouverts' : 'spot ouvert'} près de toi ce soir
-        </div>
-      )}
 
       {/* la barre « à comparer » + la table vivent maintenant dans App (source
           unique), rendues sous les filtres → plus de superposition en vue carte. */}

@@ -1,4 +1,4 @@
-import { type Lieu, type TipCercle, type PhotoLieu, ajouterLieu, nouvelId, getDB } from './db'
+import { type Lieu, type TipCercle, type PhotoLieu, ajouterLieuLocal, nouvelId, getDB } from './db'
 import ERSAN from './ersan'
 import { CURATED } from './spots_curated'
 import { EXTRA } from './spots_extra'
@@ -286,7 +286,7 @@ export async function importerSeed(): Promise<boolean> {
   for (const s of SPOTS) {
     const membre = s.auteurCercle !== undefined ? MEMBRES[s.auteurCercle] : null
     if (!membre) continue
-    await ajouterLieu({
+    await ajouterLieuLocal({
       id: nouvelId(),
       nom: s.nom,
       lat: s.lat ?? 0,
@@ -311,7 +311,7 @@ export async function importerSeed(): Promise<boolean> {
   // ── le profil ERSAN : ta vraie collection (Google Maps géocodé), en PUBLIC ──
   for (const e of ERSAN) {
     const envies = cuisineVersEnvies(e.cuisine)
-    await ajouterLieu({
+    await ajouterLieuLocal({
       id: nouvelId(),
       nom: e.nom,
       lat: e.lat,
@@ -336,7 +336,7 @@ export async function importerSeed(): Promise<boolean> {
   }
   // les spots publics d'éclaireurs hors cercle (peuplent l'onglet "public")
   for (const p of PUBLICS) {
-    await ajouterLieu({
+    await ajouterLieuLocal({
       id: nouvelId(),
       nom: p.nom,
       lat: p.lat,
@@ -361,7 +361,7 @@ export async function importerSeed(): Promise<boolean> {
   // les spots curated (liste GPT v02, géocodés) — toutes catégories, publics.
   // inclut rooftop + sur l'eau + speakeasy(incognito) + disco + guinguette + street-food…
   for (const [i, s] of CURATED.entries()) {
-    await ajouterLieu({
+    await ajouterLieuLocal({
       id: nouvelId(),
       nom: s.nom,
       lat: s.lat,
@@ -384,7 +384,7 @@ export async function importerSeed(): Promise<boolean> {
   }
   // extra : Coupe du monde 2026 (match diffuse) + sur l'eau (péniches, quais…)
   for (const [i, s] of EXTRA.entries()) {
-    await ajouterLieu({
+    await ajouterLieuLocal({
       id: nouvelId(),
       nom: s.nom,
       lat: s.lat,

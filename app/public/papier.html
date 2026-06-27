@@ -1,0 +1,108 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:#3a352c;display:flex;justify-content:center;align-items:flex-start;
+       font-family:'Instrument Serif',Georgia,serif}
+  .screen{position:relative;width:100%;max-width:430px;min-height:100vh;overflow:hidden;
+          background:url('/textures/kraft.jpg');background-size:560px;background-repeat:repeat}
+  .screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+          background:radial-gradient(135% 70% at 50% -8%, rgba(255,246,222,.20), rgba(34,26,14,.32) 96%)}
+  .wrap{position:relative;z-index:2;padding:42px 28px 44px}
+
+  .titre{font-style:italic;font-size:60px;color:#2c2218;text-align:center;letter-spacing:.5px;
+         text-shadow:1px 1px 0 rgba(255,255,255,.4), 2px 3px 0 rgba(0,0,0,.16), 5px 8px 10px rgba(0,0,0,.32)}
+  .lieu{font-style:italic;font-size:31px;color:#241c12;text-align:center;margin-top:0;
+        text-shadow:1px 1px 0 rgba(255,255,255,.35), 2px 3px 5px rgba(0,0,0,.22)}
+
+  .polaroid{position:relative;width:224px;margin:22px auto 0;padding:14px 14px 30px;transform:rotate(-3deg);
+            background:url('/textures/ivoire.jpg');background-size:cover;
+            filter:drop-shadow(0 14px 18px rgba(0,0,0,.42));border-radius:2px}
+  .photo{position:relative;overflow:hidden;height:162px;border-radius:1px;
+         background:linear-gradient(150deg,#2e231c,#6b4838 55%,#9a6038)}
+  .gloss{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+         background:radial-gradient(150px 120px at var(--gx,58%) var(--gy,18%),
+             rgba(255,255,255,.28), rgba(255,255,255,.06) 46%, rgba(255,255,255,0) 74%);
+         transition:background .09s ease-out}
+  .legende{font-family:'Caveat',cursive;font-weight:600;font-size:24px;color:#2a2118;text-align:center;margin-top:7px}
+  .sceau{position:absolute;width:78px;right:-20px;bottom:-22px;transform:rotate(8deg);
+          filter:drop-shadow(0 5px 7px rgba(0,0,0,.4))}
+
+  .paper{position:relative;display:flex;align-items:center;justify-content:center}
+  .paper>img{width:100%;display:block;filter:drop-shadow(0 9px 13px rgba(0,0,0,.34))}
+  .paper>.txt{position:absolute;z-index:2;text-align:center;padding:0 46px}
+
+  .tip{width:332px;margin:30px auto 0}
+  .tip .txt{font-family:'Caveat',cursive;font-weight:500;font-size:25px;color:#1c1610;line-height:1.22}
+
+  .infos{display:flex;justify-content:center;gap:11px;margin-top:13px;
+         font-style:italic;font-size:19px;color:#33271b;text-shadow:1px 1px 0 rgba(255,255,255,.3)}
+  .infos .pt{opacity:.4}
+
+  .cta{width:194px;margin:38px auto 0;cursor:pointer}
+  .cta>img{transform:rotate(-1.5deg);filter:drop-shadow(0 11px 14px rgba(0,0,0,.4))}
+  .cta .txt{padding:0 18px;font-style:italic;font-size:22px;color:#86251b;letter-spacing:.3px;
+            text-shadow:1px 1px 0 rgba(255,255,255,.5)}
+</style>
+
+<div class="screen">
+  <div class="wrap">
+    <div class="titre">Jeudi.</div>
+    <div class="lieu">Chez Jeanne</div>
+
+    <div class="polaroid">
+      <div class="photo"><div class="gloss" id="gloss"></div></div>
+      <div class="legende">un mardi de novembre</div>
+      <img class="sceau" src="/textures/cire-rouge.png" alt="">
+    </div>
+
+    <div class="paper tip">
+      <img src="/textures/papier-dechire-long.png" alt="">
+      <div class="txt">« le comptoir du fond,<br>demande Marco — il sait. »</div>
+    </div>
+
+    <div class="infos"><span>à 450 m</span><span class="pt">·</span><span>ouvert jusqu'à 2h</span></div>
+
+    <div class="paper cta">
+      <img src="/textures/papier-dechire.png" alt="">
+      <div class="txt">m'y emmener →</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var screen=document.querySelector('.screen'), gloss=document.getElementById('gloss');
+    function move(px,py){
+      px=Math.max(0,Math.min(1,px)); py=Math.max(0,Math.min(1,py));
+      gloss.style.setProperty('--gx',(px*100).toFixed(1)+'%');
+      gloss.style.setProperty('--gy',(py*100).toFixed(1)+'%');
+      gloss.style.setProperty('--tilt',((px-0.5)*40).toFixed(1));
+    }
+    // desktop : la souris
+    screen.addEventListener('pointermove',function(e){
+      var r=screen.getBoundingClientRect();
+      move((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);
+    });
+    // mobile : le gyroscope (gamma = gauche/droite, beta = avant/arrière)
+    function onTilt(e){
+      if(e.gamma==null) return;
+      move((e.gamma+45)/90,(e.beta-10)/70);
+    }
+    // iOS demande une autorisation au tap ; ailleurs, on écoute direct
+    if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+      screen.addEventListener('click',function once(){
+        DeviceOrientationEvent.requestPermission().then(function(s){
+          if(s==='granted') window.addEventListener('deviceorientation',onTilt);
+        }).catch(function(){});
+        screen.removeEventListener('click',once);
+      });
+    } else {
+      window.addEventListener('deviceorientation',onTilt);
+    }
+  })();
+</script>

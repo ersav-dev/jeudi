@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:#15120d;display:flex;justify-content:center;align-items:flex-start;
+       font-family:'Instrument Serif',Georgia,serif}
+  .screen{position:relative;width:100%;max-width:430px;min-height:100vh;overflow:hidden;
+          background:linear-gradient(rgba(20,15,9,.80),rgba(20,15,9,.80)), url('/textures/kraft.jpg');
+          background-size:cover, 560px;background-repeat:no-repeat, repeat}
+  .screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+          background:radial-gradient(125% 65% at 50% 0%, rgba(255,225,170,.10), rgba(0,0,0,.45) 100%)}
+  .wrap{position:relative;z-index:2;padding:46px 26px 48px}
+
+  .titre{font-style:italic;font-size:62px;color:#ece1cd;text-align:center;letter-spacing:.5px;
+         text-shadow:0 1px 0 rgba(255,255,255,.12), 1px 2px 0 rgba(0,0,0,.5), 3px 6px 12px rgba(0,0,0,.6)}
+  .lieu{font-style:italic;font-size:30px;color:#d8c9ad;text-align:center;
+        text-shadow:1px 2px 4px rgba(0,0,0,.5)}
+
+  .polaroid{position:relative;width:226px;margin:24px auto 0;margin-left:34px;padding:14px 14px 30px;
+            transform:rotate(-4deg);background:url('/textures/ivoire.jpg');background-size:cover;
+            filter:drop-shadow(0 18px 24px rgba(0,0,0,.6));border-radius:2px}
+  .tape{position:absolute;top:-13px;left:50%;width:104px;height:30px;transform:translateX(-58%) rotate(-6deg);
+        background:rgba(214,196,160,.42);box-shadow:0 2px 5px rgba(0,0,0,.35);
+        -webkit-mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+  .photo{position:relative;overflow:hidden;height:164px;border-radius:1px;
+         background:linear-gradient(150deg,#241a14,#5e4030 55%,#925736)}
+  .gloss{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+         background:radial-gradient(150px 120px at var(--gx,56%) var(--gy,18%),
+             rgba(255,243,214,.34), rgba(255,243,214,.07) 46%, rgba(255,255,255,0) 74%);
+         transition:background .09s ease-out}
+  .legende{font-family:'Caveat',cursive;font-weight:600;font-size:24px;color:#2a2118;text-align:center;margin-top:7px}
+  .sceau{position:absolute;width:80px;right:-22px;bottom:-24px;transform:rotate(10deg);
+          filter:drop-shadow(0 6px 9px rgba(0,0,0,.55))}
+
+  .paper{position:relative;display:flex;align-items:center;justify-content:center}
+  .paper>img{width:100%;display:block;filter:drop-shadow(0 12px 18px rgba(0,0,0,.55))}
+  .paper>.txt{position:absolute;z-index:2;text-align:center}
+
+  .tip{width:320px;margin:34px 0 0 auto;margin-right:6px;transform:rotate(1.5deg)}
+  .tip .txt{padding:0 44px;font-family:'Caveat',cursive;font-weight:500;font-size:25px;color:#1c1610;line-height:1.22}
+
+  .infos{display:flex;justify-content:center;gap:11px;margin-top:18px;
+         font-style:italic;font-size:19px;color:#cbb99a;text-shadow:1px 1px 3px rgba(0,0,0,.5)}
+  .infos .pt{opacity:.45}
+
+  .cta{width:198px;margin:36px auto 0;margin-left:46px;cursor:pointer;transform:rotate(-2deg)}
+  .cta>img{filter:drop-shadow(0 13px 18px rgba(0,0,0,.6))}
+  .cta .txt{padding:0 16px;font-style:italic;font-size:22px;color:#9a2a1d;letter-spacing:.3px;
+            text-shadow:1px 1px 0 rgba(255,255,255,.5)}
+</style>
+
+<div class="screen">
+  <div class="wrap">
+    <div class="titre">Jeudi.</div>
+    <div class="lieu">Chez Jeanne</div>
+
+    <div class="polaroid">
+      <div class="tape"></div>
+      <div class="photo"><div class="gloss" id="gloss"></div></div>
+      <div class="legende">un mardi de novembre</div>
+      <img class="sceau" src="/textures/cire-rouge.png" alt="">
+    </div>
+
+    <div class="paper tip">
+      <img src="/textures/papier-dechire-long.png" alt="">
+      <div class="txt">« le comptoir du fond,<br>demande Marco — il sait. »</div>
+    </div>
+
+    <div class="infos"><span>à 450 m</span><span class="pt">·</span><span>ouvert jusqu'à 2h</span></div>
+
+    <div class="paper cta">
+      <img src="/textures/papier-dechire.png" alt="">
+      <div class="txt">m'y emmener →</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var screen=document.querySelector('.screen'), gloss=document.getElementById('gloss');
+    function move(px,py){
+      px=Math.max(0,Math.min(1,px)); py=Math.max(0,Math.min(1,py));
+      gloss.style.setProperty('--gx',(px*100).toFixed(1)+'%');
+      gloss.style.setProperty('--gy',(py*100).toFixed(1)+'%');
+    }
+    screen.addEventListener('pointermove',function(e){
+      var r=screen.getBoundingClientRect();
+      move((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);
+    });
+    function onTilt(e){ if(e.gamma==null) return; move((e.gamma+45)/90,(e.beta-10)/70); }
+    if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+      screen.addEventListener('click',function once(){
+        DeviceOrientationEvent.requestPermission().then(function(s){
+          if(s==='granted') window.addEventListener('deviceorientation',onTilt);
+        }).catch(function(){});
+        screen.removeEventListener('click',once);
+      });
+    } else { window.addEventListener('deviceorientation',onTilt); }
+  })();
+</script>

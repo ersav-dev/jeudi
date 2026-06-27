@@ -128,11 +128,37 @@ jeudi distingue **deux cercles**, et ça change tout :
 
 Les inconnus autour de toi ne voient que ce que tu rends public. L'entrée dans jeudi se fait sur invitation — et qui invite répond un peu de ses invités. *(Au niveau de la plateforme : ouvert jusqu'à ~1000 membres, puis invitation only — un cap différent de celui de l'anneau des proches.)*
 
+### Les critères — le regard d'un proche, pas une note
+Chaque membre a ses **critères** : sa façon de juger un lieu. Tes **super potes** (l'anneau intérieur, **10 max**) te donnent accès aux leurs — voir un lieu *à travers leurs yeux*. Deux formes, et une seule autorisée pour le gradué :
+
+- **Binaire (un fait)** : foot oui/non, terrasse oui/non, cocktails oui/non, manger-seul oui/non… Un attribut filtrable, pas une note. (Déjà dans l'app : `match`, `rooftop`, `surLeau`.)
+- **Gradué (un avis signé)** : en **pastilles sur 3 niveaux** (●○○ · ●●○ · ●●●), **jamais d'étoiles, jamais de « /5 »**. C'est la mécanique des WC (propreté), **généralisée à n'importe quel critère**. Toujours **signé** (*« le bruit selon Karim : ●●○ »*), **jamais une moyenne de foule, jamais un classement**.
+
+C'est ce qui rend l'anneau intérieur précieux : pas « leurs adresses », mais **leur regard**.
+
 ### Les règles de la maison
 - **Aucun lieu ne peut payer pour apparaître. Jamais.** Pas de pub, pas de sponsoring, pas de vente de données.
 - **Les visages des inconnus sont automatiquement masqués** sur les photos (un petit sticker à l'encre, dans le style du carnet) — on montre les lieux, on protège les gens.
 - **Charte photo WC** : on documente l'état des lieux, cadrage propre. Le premier écart : *« on a dit les toilettes, pas TES toilettes. dernier avertissement. »* Le deuxième : **banni.**
 - Sortir un lieu de sa carte est un acte visible. Être dans la carte EST la validation.
+
+---
+
+## Chercher — ce que jeudi te POUSSE ≠ ce qu'il te RÉPOND
+
+Une distinction qui sauve l'app du réflexe Google Maps : **deux gestes opposés.**
+
+- **Ce que jeudi te POUSSE** (sans que tu demandes : le deck « ça dit quoi ce soir ? », la vue par défaut) → **ton cercle et tes curateurs.** Jeudi te montre ce qui te ressemble.
+- **Ce que jeudi te RÉPOND** (quand *toi* tu cherches, tu poses une intention) → **tout le public de la ville, tous les jours.** Quand tu tires, jeudi a le droit de répondre au-delà de ton cercle — parce que tu l'as voulu, il ne te l'a pas imposé.
+
+> *jeudi te montre ton cercle. Mais quand tu cherches, il te répond avec toute la ville.*
+
+Ce n'est **pas** le Grand Jeudi (lui, c'est le déballage spectaculaire, tout d'un coup — voir plus bas). Parce que **chercher ≠ feuilleter** : la recherche *répond* (peu, ciblé, sur une intention), elle ne *déballe* jamais le catalogue.
+
+Les garde-fous, pour que chercher reste un geste jeudi et pas un mini Google Maps :
+- **Confiance d'abord dans le tri.** Un spot public porté par ton cercle remonte au-dessus d'un public anonyme. Les tips restent signés (*« — Karim, éclaireur du 10e »*) : tu vois toujours qui parle.
+- **Ça répond, ça ne liste pas.** La recherche exige une intention (un mot, une envie, un coin, ouvert maintenant) et rend peu. Sans intention, c'est « pour toi » (tes habitudes), jamais les 312 spots à scroller.
+- **Jamais l'intime des autres.** Les adresses 🔒 *pour toi* d'autrui restent invisibles, même dans une recherche.
 
 ---
 

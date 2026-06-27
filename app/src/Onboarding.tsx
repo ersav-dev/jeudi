@@ -1,5 +1,13 @@
 import { useRef, useState } from 'react'
-import { sauverProfil, lireCouleur, appliquerCouleur } from './db'
+import {
+  sauverProfil,
+  lireCouleur,
+  appliquerCouleur,
+  ecrireCouleur,
+  ecrireSeuils,
+  ecrireSuivis,
+  marquerOnboarding,
+} from './db'
 import { ISoleil, INuage, IPluie } from './icones'
 import PickerCouleur from './PickerCouleur'
 
@@ -57,14 +65,14 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
       prenom: 'Ersan',
       naissance: naissance || undefined,
     })
-    localStorage.setItem('jeudi-couleur', couleur)
-    localStorage.setItem('jeudi-suivis', JSON.stringify(suivis))
+    ecrireCouleur(couleur)
+    ecrireSuivis(suivis)
     // les seuils € (garde-fous : s1 < s2, valeurs positives, sinon défauts)
     const n1 = Number(s1) || 20
     const n2 = Number(s2) || 50
-    const seuils = n1 < n2 ? [n1, n2] : [20, 50]
-    localStorage.setItem('jeudi-seuils', JSON.stringify(seuils))
-    localStorage.setItem('jeudi-onboard', 'fait')
+    const seuils: [number, number] = n1 < n2 ? [n1, n2] : [20, 50]
+    ecrireSeuils(seuils)
+    marquerOnboarding()
     onFini()
   }
 

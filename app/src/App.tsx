@@ -3,10 +3,15 @@ import LigneIndex from './LigneIndex'
 import CeSoir from './CeSoir'
 import Onboarding from './Onboarding'
 import Splash from './Splash'
+import Auth from './Auth'
+import { supabase } from './supabase'
+import type { Session } from '@supabase/supabase-js'
 import PickerCouleur from './PickerCouleur'
 import { importerSeed, MEMBRES } from './seed'
 import { srcPhoto } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche } from './icones'
+import Recherche from './EcranRecherche'
+import Groupe from './EcranGroupe'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -22,6 +27,7 @@ import {
   uniteParPersonne,
   gloseEnvie,
   tousLesLieux,
+  chargerMonId,
   ajouterLieu,
   archiverLieu,
   supprimerLieu,
@@ -30,7 +36,20 @@ import {
   adopterLieu,
   lireCouleur,
   appliquerCouleur,
+  ecrireCouleur,
   lireSeuils,
+  ecrireSeuils,
+  lireVille,
+  lireVus,
+  ecrireVus,
+  onboardingFait,
+  reinitOnboarding,
+  lireTagline,
+  ecrireTagline,
+  signalerLieu,
+  ajouterBof,
+  viderSorties,
+  effacerTout,
   definirMaPosition,
   importerTakeout,
   distanceM,
@@ -81,7 +100,7 @@ const VISIBILITES: { v: Visibilite; icone: React.ReactNode; label: string }[] = 
   { v: 'public', icone: <IGlobe taille={15} />, label: 'public' },
 ]
 
-type Onglet = 'cesoir' | 'macarte' | 'cercle' | 'profil'
+type Onglet = 'cesoir' | 'macarte' | 'cercle' | 'profil' | 'labo'
 
 const labelHeure = (x: number) => `${Math.floor(x) % 24}h${x % 1 === 0.5 ? '30' : ''}`
 // valeur de départ quand une borne passe d'inconnue à définie
@@ -261,11 +280,53 @@ const VILLES = [
 ]
 
 // ── les réglages : ville · couleur · porte-monnaie · données · à venir ──
+// ── helpers d'affichage du profil v2 (Insta/Bumble) ──
+const CARTE_PROFIL: React.CSSProperties = {
+  background: 'var(--paper-2)',
+  border: '1px solid rgba(240,234,217,0.08)',
+  borderRadius: 12,
+  padding: '14px 16px',
+}
+function TitreSection({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
+        letterSpacing: 1,
+        color: 'var(--red)',
+        margin: '24px 0 10px',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+function StatProfil({ n, l, onClick }: { n: React.ReactNode; l: string; onClick?: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1,
+        background: 'none',
+        border: 'none',
+        padding: '0 4px',
+        color: 'var(--ivory)',
+        cursor: onClick ? 'pointer' : 'default',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ fontStyle: 'italic', fontSize: 22 }}>{n}</div>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.55 }}>{l}</div>
+    </button>
+  )
+}
+
 function Reglages({ lieux }: { lieux: Lieu[] }) {
   const [couleur, setCouleur] = useState(() => lireCouleur())
   const [s1, setS1] = useState(() => String(lireSeuils()[0]))
   const [s2, setS2] = useState(() => String(lireSeuils()[1]))
-  const ville = localStorage.getItem('jeudi-ville') || 'paris'
+  const ville = lireVille()
   const [sauve, setSauve] = useState(false)
   const [confirmEffacer, setConfirmEffacer] = useState(false)
   const [ouvert, setOuvert] = useState<'ville' | 'couleur' | 'argent' | 'donnees' | 'bientot' | null>(
@@ -279,7 +340,7 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
   const choisirCouleur = (c: string) => {
     setCouleur(c)
     appliquerCouleur(c)
-    localStorage.setItem('jeudi-couleur', c)
+    ecrireCouleur(c)
     flash()
   }
   const majSeuil = (bord: 0 | 1, val: string) => {
@@ -288,7 +349,7 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
     const n1 = bord === 0 ? Number(val) : Number(s1)
     const n2 = bord === 1 ? Number(val) : Number(s2)
     if (n1 > 0 && n2 > n1) {
-      localStorage.setItem('jeudi-seuils', JSON.stringify([n1, n2]))
+      ecrireSeuils([n1, n2])
       flash()
     }
   }
@@ -304,10 +365,7 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
   }
   // effacer : on vide tout le local (clés jeudi-* + la base IndexedDB) puis reload
   const effacer = () => {
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith('jeudi-'))
-      .forEach((k) => localStorage.removeItem(k))
-    indexedDB.deleteDatabase('jeudi')
+    effacerTout()
     window.location.reload()
   }
 
@@ -441,6 +499,8 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
 
 export default function App() {
   const [splash, setSplash] = useState(true)
+  const [session, setSession] = useState<Session | null>(null)
+  const [authPret, setAuthPret] = useState(false)
   const [lieux, setLieux] = useState<Lieu[]>([])
   const [ajout, setAjout] = useState(false)
   const [vue, setVue] = useState<'liste' | 'carte'>('liste')
@@ -453,18 +513,19 @@ export default function App() {
   // appui long = barré (sans foot / refuge). timer du long-press.
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
+  const [labo, setLabo] = useState<'trouver' | 'potos'>('trouver')
   const [fiche, setFiche] = useState<Lieu | null>(null)
   // la liste de contexte pour naviguer précédent/suivant dans la fiche
   const [ficheListe, setFicheListe] = useState<Lieu[]>([])
   // les lieux déjà consultés : pour les reconnaître sur la carte (comme un lien visité)
   const [vus, setVus] = useState<Set<string>>(
-    () => new Set(JSON.parse(localStorage.getItem('jeudi-vus') ?? '[]')),
+    () => new Set(lireVus()),
   )
   const marquerVu = (id: string) =>
     setVus((prev) => {
       if (prev.has(id)) return prev
       const n = new Set(prev).add(id)
-      localStorage.setItem('jeudi-vus', JSON.stringify([...n]))
+      ecrireVus([...n])
       return n
     })
   const ouvrirFiche = (l: Lieu, contexte: Lieu[]) => {
@@ -486,7 +547,7 @@ export default function App() {
     setFiche(l)
     marquerVu(l.id)
   }
-  const [onboard, setOnboard] = useState(() => !localStorage.getItem('jeudi-onboard'))
+  const [onboard, setOnboard] = useState(() => !onboardingFait())
   const [attente, setAttente] = useState<SortieEnAttente[]>([])
   const [attenteTotal, setAttenteTotal] = useState(0)
   const [archive, setArchive] = useState<Lieu | null>(null)
@@ -502,7 +563,7 @@ export default function App() {
   const [critere, setCritere] = useState('le feeling')
   const [photoProfil, setPhotoProfil] = useState<Blob | null>(null)
   const [bio, setBio] = useState('')
-  const [tagline, setTagline] = useState(() => localStorage.getItem('jeudi-tagline') || '')
+  const [tagline, setTagline] = useState(() => lireTagline())
   const [insta, setInsta] = useState('')
   const [naissance, setNaissance] = useState('1991-03-06') // pré-rempli (Ersan)
   const [depuis, setDepuis] = useState('')
@@ -516,6 +577,7 @@ export default function App() {
       critere: cur?.critere ?? critere,
       prenom: cur?.prenom ?? 'Ersan',
       photo: cur?.photo,
+      photoUrl: cur?.photoUrl,
       bio: bio.trim(),
       insta: insta.trim().replace(/^@/, ''),
       naissance: naiss || cur?.naissance,
@@ -592,6 +654,7 @@ export default function App() {
 
   const recharger = () => tousLesLieux().then(setLieux)
   useEffect(() => {
+    chargerMonId().then(() => {
     importerSeed().then(() => {
       recharger()
       const a = sortiesEnAttente()
@@ -601,12 +664,30 @@ export default function App() {
     lireProfil().then((p) => {
       if (p?.prenom) setPrenom(p.prenom.toLowerCase())
       if (p?.critere) setCritere(p.critere)
-      if (p?.photo) setPhotoProfil(p.photo)
+      // le portrait cloud (Storage) est prioritaire ; sinon le blob local (cache)
+      if (p?.photoUrl) setPhotoUrl(p.photoUrl)
+      else if (p?.photo) setPhotoProfil(p.photo)
       if (p?.bio) setBio(p.bio)
       if (p?.insta) setInsta(p.insta)
       if (p?.naissance) setNaissance(p.naissance)
       if (p?.depuis) setDepuis(p.depuis)
     })
+    })
+  }, [])
+
+  // ── la session Supabase : on lit l'existante puis on écoute les changements
+  // (connexion via magic-link, déconnexion, refresh du token). Tant qu'on n'a
+  // pas répondu, authPret reste faux → on n'affiche ni Auth ni l'app par erreur.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthPret(true)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+      setSession(s)
+      setAuthPret(true)
+    })
+    return () => sub.subscription.unsubscribe()
   }, [])
 
   const aValider = attente[0] ?? null
@@ -676,9 +757,7 @@ export default function App() {
   }
 
   const signaler = async (l: Lieu) => {
-    const liste = JSON.parse(localStorage.getItem('jeudi-signales') ?? '[]')
-    if (!liste.includes(l.id)) liste.push(l.id)
-    localStorage.setItem('jeudi-signales', JSON.stringify(liste))
+    signalerLieu(l.id)
     setFlash('signalé. merci, on vérifie.')
   }
 
@@ -741,6 +820,8 @@ export default function App() {
   })()
 
   if (splash) return <Splash onFini={() => setSplash(false)} />
+  if (!authPret) return null
+  if (!session) return <Auth />
   if (onboard) return <Onboarding onFini={() => setOnboard(false)} />
 
   return (
@@ -869,7 +950,7 @@ export default function App() {
                         className="notif-non"
                         onClick={() => {
                           setDemandes([])
-                          localStorage.removeItem('jeudi-sorties')
+                          viderSorties()
                           setAttente([])
                           setConfirmVider(false)
                           setNotifsOuvertes(false)
@@ -995,6 +1076,7 @@ export default function App() {
               )
             })()}
             <span className="idx-reglages-compteur mono">
+              {lieuxFiltres.filter((l) => etatHoraire(l.horaires)?.ouvert === true).length} ouverts ·{' '}
               {lieuxFiltres.length} spot{lieuxFiltres.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -1136,26 +1218,8 @@ export default function App() {
             </button>
           )}
 
-          {/* chantier 1 : la table de comparaison, ouverte depuis l'index ou la carte */}
-          {compaOuverte && (
-            <TableComparaison
-              lieux={
-                comparer
-                  .map((id) => lieux.find((x) => x.id === id))
-                  .filter((x): x is Lieu => !!x)
-              }
-              onFermer={() => setCompaOuverte(false)}
-              onVoir={(l) => {
-                setCompaOuverte(false)
-                ouvrirFiche(l, lieux.filter((x) => comparer.includes(x.id)))
-              }}
-              onRetirer={(id) => {
-                const n = basculerComparer(id)
-                setComparer(n)
-                if (n.length < 2) setCompaOuverte(false)
-              }}
-            />
-          )}
+          {/* la table de comparaison est rendue au niveau GLOBAL (voir plus bas),
+              pour s'ouvrir depuis n'importe quel onglet (récap « ce soir », index, carte). */}
         </>
       )}
 
@@ -1173,8 +1237,8 @@ export default function App() {
       {onglet === 'profil' && (
         <div className="cercle profil-vue">
 
-          {/* le portrait + sa fiche d'identité de carnet (infos sur le côté) */}
-          <div className="profil-carte">
+          {/* ① en-tête : portrait + identité + stats (façon Insta) */}
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             <label className="profil-id">
               <svg className="profil-trombone" viewBox="0 0 28 72" aria-hidden="true">
                 <path
@@ -1193,30 +1257,124 @@ export default function App() {
               <input type="file" accept="image/*" capture="user" hidden onChange={changerPhotoProfil} />
             </label>
 
-            <dl className="profil-fiche mono">
-              <div>
-                <dt>prénom</dt>
-                <dd>{prenom}</dd>
+            <div style={{ flex: 1, paddingTop: 4, color: 'var(--ivory)' }}>
+              <div style={{ fontStyle: 'italic', fontSize: 26, lineHeight: 1.1 }}>
+                {prenom}
+                {ageDepuis(naissance) != null && (
+                  <span style={{ opacity: 0.65 }}> · {ageDepuis(naissance)} ans</span>
+                )}
               </div>
-              <div>
-                <dt>âge</dt>
-                <dd>{ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ans` : '—'}</dd>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.55, marginTop: 3 }}>
+                depuis {formatDepuis(depuis)}
               </div>
-              <div>
-                <dt>depuis</dt>
-                <dd>{formatDepuis(depuis)}</dd>
+              <div style={{ display: 'flex', marginTop: 14 }}>
+                <StatProfil n={mesLieux.length} l="spots" />
+                <StatProfil n={mesLieux.filter((x) => x.tampon?.v === 'valide').length} l="validés" />
+                <StatProfil
+                  n={`${MEMBRES.filter((m) => m.proche).length}/10`}
+                  l="super potes"
+                  onClick={() => setOnglet('cercle')}
+                />
               </div>
-              <div>
-                <dt>spots</dt>
-                <dd>{mesLieux.length}</dd>
-              </div>
-              <div>
-                <dt>critère</dt>
-                <dd>{critere.replace(/^(le |la |les |l')/, '')}</dd>
-              </div>
-            </dl>
+            </div>
           </div>
 
+          {/* ② mes critères (ex-« critère ») */}
+          <TitreSection>mes critères</TitreSection>
+          <div style={CARTE_PROFIL}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontStyle: 'italic', fontSize: 19 }}>
+                {critere.replace(/^(le |la |les |l')/, '')}
+              </span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5 }}>
+                ton critère
+              </span>
+            </div>
+            <div
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11,
+                opacity: 0.45,
+                marginTop: 10,
+                borderTop: '1px solid rgba(240,234,217,0.08)',
+                paddingTop: 10,
+                lineHeight: 1.5,
+              }}
+            >
+              bientôt : ajoute tes critères (le bruit ●●○, cocktails oui/non…) — et vois les lieux « selon Karim »
+            </div>
+          </div>
+
+          {/* ③ mes super potes (anneau intérieur, 10 max) */}
+          <TitreSection>mes super potes · {MEMBRES.filter((m) => m.proche).length}/10</TitreSection>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {MEMBRES.filter((m) => m.proche).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setOnglet('cercle')}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--ivory)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    border: '1px solid var(--red)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontStyle: 'italic',
+                    fontSize: 20,
+                  }}
+                >
+                  {m.prenom[0]}
+                </span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.6 }}>
+                  {m.prenom}
+                </span>
+              </button>
+            ))}
+            <button
+              onClick={() => setOnglet('cercle')}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--ivory-faded)',
+              }}
+            >
+              <span
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  border: '1px dashed var(--ivory-faded)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 24,
+                }}
+              >
+                +
+              </span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.5 }}>
+                ajouter
+              </span>
+            </button>
+          </div>
+
+          <TitreSection>ta vitrine</TitreSection>
           <label className="profil-tagline-edit">
             <input
               className="profil-tagline"
@@ -1224,7 +1382,7 @@ export default function App() {
               value={tagline}
               maxLength={TAGLINE_MAX}
               onChange={(e) => setTagline(e.target.value)}
-              onBlur={() => localStorage.setItem('jeudi-tagline', tagline.trim())}
+              onBlur={() => ecrireTagline(tagline.trim())}
             />
             <span className="profil-tagline-compteur mono">
               {tagline.length}/{TAGLINE_MAX}
@@ -1252,12 +1410,13 @@ export default function App() {
             </label>
           </div>
 
+          <TitreSection>réglages</TitreSection>
           <Reglages lieux={lieux} />
 
           <button
             className="lien"
             onClick={() => {
-              localStorage.removeItem('jeudi-onboard')
+              reinitOnboarding()
               window.location.reload()
             }}
           >
@@ -1268,7 +1427,7 @@ export default function App() {
 
       {onglet === 'cercle' && !curateur && (
         <div className="cercle">
-          <p className="mono cercle-compteur">{MEMBRES.length} membres · 20 max</p>
+          <p className="mono cercle-compteur">{MEMBRES.length} membres · 10 max</p>
           <ul className="membres">
             {MEMBRES.map((m) => {
               const nbSpots = lieux.filter((l) =>
@@ -1333,6 +1492,24 @@ export default function App() {
         />
       )}
 
+      {/* la table de comparaison — GLOBALE : s'ouvre depuis le récap « ce soir »,
+          l'index, la carte ou une fiche (avant elle était piégée dans « ma carte »). */}
+      {compaOuverte && (
+        <TableComparaison
+          lieux={comparer.map((id) => lieux.find((x) => x.id === id)).filter((x): x is Lieu => !!x)}
+          onFermer={() => setCompaOuverte(false)}
+          onVoir={(l) => {
+            setCompaOuverte(false)
+            ouvrirFiche(l, lieux.filter((x) => comparer.includes(x.id)))
+          }}
+          onRetirer={(id) => {
+            const n = basculerComparer(id)
+            setComparer(n)
+            if (n.length < 2) setCompaOuverte(false)
+          }}
+        />
+      )}
+
       {aValider && (
         <Validation
           key={aValider.lieuId}
@@ -1362,6 +1539,37 @@ export default function App() {
           <button className="lien" onClick={annulerArchive}>
             annuler
           </button>
+        </div>
+      )}
+
+      {onglet === 'labo' && (
+        <div style={{ paddingBottom: 90 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+            {(['trouver', 'potos'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setLabo(t)}
+                style={{
+                  flex: 1,
+                  padding: '9px 0',
+                  borderRadius: 10,
+                  border: `1px solid ${labo === t ? 'var(--red)' : 'var(--ivory-faded)'}`,
+                  background: labo === t ? 'var(--red)' : 'transparent',
+                  color: labo === t ? 'var(--print-white)' : 'var(--ivory)',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                {t === 'trouver' ? 'trouver' : 'avec mes potes'}
+              </button>
+            ))}
+          </div>
+          {labo === 'trouver' ? (
+            <Recherche lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          ) : (
+            <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          )}
         </div>
       )}
 
@@ -1404,6 +1612,14 @@ export default function App() {
           >
             <ITampon taille={24} />
             <span className="nav-lbl">mon profil</span>
+          </button>
+          <button
+            className={`nav-item ${onglet === 'labo' ? 'actif' : ''}`}
+            onClick={() => setOnglet('labo')}
+            aria-label="labo"
+          >
+            <IGlobe taille={24} />
+            <span className="nav-lbl">labo</span>
           </button>
         </nav>
       )}
@@ -1511,9 +1727,7 @@ function Validation({
 
   // même un "bof" est du signal : on le garde — et le tampon le dit
   const bof = async () => {
-    const bofs = JSON.parse(localStorage.getItem('jeudi-bofs') ?? '[]')
-    bofs.push({ lieuId: sortie.lieuId, date: new Date().toISOString() })
-    localStorage.setItem('jeudi-bofs', JSON.stringify(bofs))
+    ajouterBof(sortie.lieuId)
     if (lieu)
       await majLieu({
         ...lieu,

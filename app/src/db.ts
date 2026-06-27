@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import { supabase } from './supabase'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -113,8 +114,10 @@ export interface Profil {
   /** l'obsession du membre : "la luminosité", "le bruit"... */
   critere: string
   prenom: string
-  /** le portrait du membre, en tirage (blob image) */
+  /** le portrait du membre, en tirage (blob image, cache local) */
   photo?: Blob
+  /** le portrait dans le cloud (Supabase Storage, étape 4) — prioritaire à l'affichage */
+  photoUrl?: string
   /** une bio courte + un lien insta (optionnels) */
   bio?: string
   insta?: string
@@ -164,20 +167,198 @@ export function getDB() {
   return dbPromise
 }
 
-export async function tousLesLieux(): Promise<Lieu[]> {
-  const db = await getDB()
-  const lieux = await db.getAllFromIndex('lieux', 'par-statut', 'actif')
-  return lieux.sort((a, b) => b.creeLe.localeCompare(a.creeLe))
+// ── couche cloud (étape 3) ─────────────────────────────────────
+// Tes lieux vivent dans Supabase (table lieux, owner_id = toi). Le décor
+// (cercle simulé Karim/Léa + spots publics du seed) reste en LOCAL (IndexedDB).
+// monId = ton id de session, mis en cache pour estAMoi() (qui est synchrone).
+let monId: string | null = null
+export function definirMonId(id: string | null) {
+  monId = id
+}
+/** lit la session et met monId à jour (à appeler au boot, avant tousLesLieux) */
+export async function chargerMonId(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession()
+  monId = data.session?.user?.id ?? null
+  return monId
+}
+// tient monId à jour aux changements (connexion / déconnexion / refresh)
+supabase.auth.onAuthStateChange((_e, session) => {
+  monId = session?.user?.id ?? null
+})
+
+type LigneLieu = Record<string, unknown>
+function ligneVersLieu(r: LigneLieu): Lieu {
+  const g = r as Record<string, any>
+  return {
+    id: g.id,
+    nom: g.nom,
+    lat: g.lat,
+    lng: g.lng,
+    adresse: g.adresse ?? undefined,
+    description: g.description ?? undefined,
+    note: g.note ?? '',
+    visibilite: g.visibilite,
+    envies: g.envies ?? [],
+    compagnies: g.compagnies ?? [],
+    meteo: g.meteo ?? undefined,
+    criterePerso: g.critere_perso ?? undefined,
+    photos: [], // les photos arrivent avec le Storage cloud (étape 4)
+    statut: g.statut ?? 'actif',
+    creeLe: g.cree_le,
+    derniereValidation: g.derniere_validation ?? undefined,
+    source: g.source ?? 'manuel',
+    proprietaire: g.owner_id,
+    tampon: g.tampon ?? undefined,
+    horaires:
+      g.horaire_ouv != null || g.horaire_ferm != null
+        ? [g.horaire_ouv ?? null, g.horaire_ferm ?? null]
+        : undefined,
+    match: g.match ?? undefined,
+    rooftop: g.rooftop ?? undefined,
+    surLeau: g.sur_leau ?? undefined,
+    propreteWc: g.proprete_wc ?? undefined,
+  }
+}
+function lieuVersLigne(l: Lieu): LigneLieu {
+  return {
+    id: l.id,
+    owner_id: monId,
+    nom: l.nom,
+    lat: l.lat,
+    lng: l.lng,
+    adresse: l.adresse ?? null,
+    description: l.description ?? null,
+    note: l.note ?? null,
+    visibilite: l.visibilite,
+    envies: l.envies ?? [],
+    compagnies: l.compagnies ?? [],
+    meteo: l.meteo ?? null,
+    critere_perso: l.criterePerso ?? null,
+    source: l.source,
+    statut: l.statut,
+    match: l.match ?? null,
+    rooftop: l.rooftop ?? false,
+    sur_leau: l.surLeau ?? false,
+    proprete_wc: l.propreteWc ?? null,
+    horaire_ouv: l.horaires?.[0] ?? null,
+    horaire_ferm: l.horaires?.[1] ?? null,
+    tampon: l.tampon ?? null,
+    derniere_validation: l.derniereValidation ?? null,
+  }
 }
 
-export async function ajouterLieu(lieu: Lieu): Promise<void> {
+// ── Storage des photos (étape 4) ───────────────────────────────
+// Un bucket public `photos` ; chaque fichier vit sous `<monId>/...`.
+// La table `photos` garde l'URL publique + le type ; l'app lit `url` direct.
+const BUCKET_PHOTOS = 'photos'
+
+/** téléverse un blob dans MON dossier → URL publique (null si échec/hors-ligne) */
+async function televerserPhoto(blob: Blob, chemin: string): Promise<string | null> {
+  if (!monId) return null
+  const { error } = await supabase.storage
+    .from(BUCKET_PHOTOS)
+    .upload(chemin, blob, { upsert: true, contentType: blob.type || 'image/jpeg' })
+  if (error) return null
+  return supabase.storage.from(BUCKET_PHOTOS).getPublicUrl(chemin).data.publicUrl
+}
+
+/** synchronise les photos d'un de MES lieux : upload des blobs neufs, réécrit
+ *  la table `photos` (efface puis réinsère — simple et idempotent). */
+async function syncPhotosLieu(lieu: Lieu): Promise<void> {
+  if (!monId || !estAMoi(lieu)) return
+  const lignes: { lieu_id: string; type: string; url: string; ordre: number }[] = []
+  let i = 0
+  for (const p of lieu.photos ?? []) {
+    let url = p.url
+    if (!url && p.blob) {
+      url = (await televerserPhoto(p.blob, `${monId}/${lieu.id}/${i}-${p.type}.jpg`)) ?? undefined
+    }
+    if (url) lignes.push({ lieu_id: lieu.id, type: p.type, url, ordre: i })
+    i++
+  }
+  await supabase.from('photos').delete().eq('lieu_id', lieu.id)
+  if (lignes.length) await supabase.from('photos').insert(lignes)
+}
+
+/** charge les photos (table `photos`) pour une liste d'ids de lieux → map id→photos */
+async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
+  const map = new Map<string, PhotoLieu[]>()
+  if (!ids.length) return map
+  const { data } = await supabase
+    .from('photos')
+    .select('lieu_id,type,url,ordre')
+    .in('lieu_id', ids)
+    .order('ordre')
+  for (const r of (data ?? []) as Record<string, any>[]) {
+    const arr = map.get(r.lieu_id) ?? []
+    arr.push({ type: r.type, url: r.url })
+    map.set(r.lieu_id, arr)
+  }
+  return map
+}
+
+export async function tousLesLieux(): Promise<Lieu[]> {
+  const db = await getDB()
+  const actifs = await db.getAllFromIndex('lieux', 'par-statut', 'actif')
+  // le décor : tout ce qui n'est PAS à moi (cercle simulé + spots publics du seed)
+  const decor = actifs.filter((l) => !estAMoi(l))
+  // mes spots : source de vérité = le cloud (owner_id = moi). On miroite chaque
+  // lecture réussie dans IndexedDB → hors-ligne, on relit ce cache au lieu de
+  // perdre mes spots (cache offline, étape 3).
+  let miens: Lieu[] = []
+  let cloudOk = false
+  try {
+    if (monId) {
+      const { data, error } = await supabase
+        .from('lieux')
+        .select('*')
+        .eq('owner_id', monId)
+        .eq('statut', 'actif')
+      if (error) throw error
+      if (data) {
+        miens = data.map(ligneVersLieu)
+        // les photos (table photos → Storage) ; best-effort, ne casse pas la lecture
+        const photos = await chargerPhotos(miens.map((l) => l.id))
+        for (const l of miens) l.photos = photos.get(l.id) ?? []
+        cloudOk = true
+        // miroir local : on remplace mes spots cachés par l'état cloud frais
+        const anciensMiens = actifs.filter((l) => estAMoi(l)).map((l) => l.id)
+        const frais = new Set(miens.map((l) => l.id))
+        const tx = db.transaction('lieux', 'readwrite')
+        for (const l of miens) await tx.store.put(l)
+        // purge les spots cachés qui n'existent plus côté cloud (supprimés ailleurs)
+        for (const id of anciensMiens) if (!frais.has(id)) await tx.store.delete(id)
+        await tx.done
+      }
+    }
+  } catch {
+    /* hors-ligne ou erreur réseau : on retombe sur le cache local ci-dessous */
+  }
+  // hors-ligne : mes spots = ce que le miroir IndexedDB a gardé de la dernière sync
+  if (!cloudOk && monId) miens = actifs.filter((l) => estAMoi(l))
+  return [...miens, ...decor].sort((a, b) => b.creeLe.localeCompare(a.creeLe))
+}
+
+/** insert LOCAL (IndexedDB) — réservé au seed (le décor). PAS pour tes spots. */
+export async function ajouterLieuLocal(lieu: Lieu): Promise<void> {
   const db = await getDB()
   await db.put('lieux', lieu)
 }
 
+export async function ajouterLieu(lieu: Lieu): Promise<void> {
+  // tes spots → cloud (owner_id = toi). Repli local si pas connecté (ne devrait
+  // pas arriver, l'app est derrière l'auth).
+  if (!monId) return ajouterLieuLocal(lieu)
+  const { error } = await supabase.from('lieux').insert(lieuVersLigne(lieu))
+  if (error) throw error
+  await syncPhotosLieu(lieu)
+}
+
 /** le spot est-il à moi ? (undefined = ancien spot d'avant le marqueur = mien) */
 export function estAMoi(lieu: Lieu): boolean {
-  return !lieu.proprietaire || lieu.proprietaire === 'moi'
+  // legacy (capture optimiste / anciens locaux) OU mes spots cloud (owner_id = moi)
+  if (!lieu.proprietaire || lieu.proprietaire === 'moi') return true
+  return monId != null && lieu.proprietaire === monId
 }
 
 /** adopter un spot du cercle : on en crée SA PROPRE copie privée. la voix
@@ -203,6 +384,10 @@ export async function adopterLieu(lieu: Lieu): Promise<Lieu> {
 }
 
 export async function archiverLieu(id: string): Promise<void> {
+  if (monId) {
+    const { error } = await supabase.from('lieux').update({ statut: 'archive' }).eq('id', id)
+    if (!error) return
+  }
   const db = await getDB()
   const lieu = await db.get('lieux', id)
   if (lieu) await db.put('lieux', { ...lieu, statut: 'archive' })
@@ -210,6 +395,10 @@ export async function archiverLieu(id: string): Promise<void> {
 
 /** suppression définitive — pas de retour en arrière */
 export async function supprimerLieu(id: string): Promise<void> {
+  if (monId) {
+    const { error } = await supabase.from('lieux').delete().eq('id', id)
+    if (!error) return
+  }
   const db = await getDB()
   await db.delete('lieux', id)
 }
@@ -285,6 +474,9 @@ export function lireCouleur(): string {
 export function appliquerCouleur(c: string): void {
   document.documentElement.style.setProperty('--red', c)
 }
+export function ecrireCouleur(c: string): void {
+  localStorage.setItem('jeudi-couleur', c)
+}
 
 // les seuils € du porte-monnaie, réglés par chacun à l'inscription.
 // [s1, s2] : pluie < s1 · nuageux s1–s2 · soleil s2+. défaut 20 / 50.
@@ -298,6 +490,9 @@ export function lireSeuils(): [number, number] {
     /* défaut */
   }
   return [20, 50]
+}
+export function ecrireSeuils(s: [number, number]): void {
+  localStorage.setItem('jeudi-seuils', JSON.stringify(s))
 }
 export function prixMeteo(m: Meteo): string {
   const [s1, s2] = lireSeuils()
@@ -556,23 +751,97 @@ export async function importerTakeout(json: unknown): Promise<number> {
 }
 
 export async function majLieu(lieu: Lieu): Promise<void> {
+  if (monId && estAMoi(lieu)) {
+    const { error } = await supabase.from('lieux').update(lieuVersLigne(lieu)).eq('id', lieu.id)
+    if (!error) {
+      await syncPhotosLieu(lieu)
+      return
+    }
+  }
   const db = await getDB()
   await db.put('lieux', lieu)
 }
 
 export async function lireLieu(id: string): Promise<Lieu | undefined> {
+  try {
+    if (monId) {
+      const { data } = await supabase.from('lieux').select('*').eq('id', id).maybeSingle()
+      if (data) {
+        const lieu = ligneVersLieu(data)
+        const photos = await chargerPhotos([id])
+        lieu.photos = photos.get(id) ?? []
+        return lieu
+      }
+    }
+  } catch {
+    /* repli local */
+  }
   const db = await getDB()
   return db.get('lieux', id)
 }
 
+// ── le profil : source de vérité = Supabase (table profils), miroir local ──
+// (étape 3, tranche 1) — le profil suit le compte sur tous les appareils.
+// La photo (Blob) reste en IndexedDB tant que le Storage cloud (étape 4) n'est
+// pas branché ; le local sert aussi de cache hors-ligne.
 export async function lireProfil(): Promise<Profil | undefined> {
   const db = await getDB()
-  return db.get('profil', 'moi')
+  const local = await db.get('profil', 'moi')
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (user) {
+      const { data } = await supabase.from('profils').select('*').eq('id', user.id).maybeSingle()
+      if (data) {
+        return {
+          scoreSwipe: data.score_swipe ?? local?.scoreSwipe ?? 50,
+          critere: data.critere ?? local?.critere ?? 'le feeling',
+          prenom: data.prenom ?? local?.prenom ?? 'toi',
+          bio: data.bio ?? undefined,
+          insta: data.insta ?? undefined,
+          naissance: data.naissance ?? undefined,
+          depuis: data.cree_le ?? local?.depuis,
+          photo: local?.photo, // le blob local sert de cache hors-ligne
+          photoUrl: data.photo_url ?? undefined, // le portrait cloud (prioritaire à l'affichage)
+        }
+      }
+    }
+  } catch {
+    /* hors-ligne : on retombe sur le cache local */
+  }
+  return local
 }
 
 export async function sauverProfil(p: Profil): Promise<void> {
   const db = await getDB()
-  await db.put('profil', p, 'moi')
+  await db.put('profil', p, 'moi') // miroir local (+ garde la photo Blob)
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+    // le portrait → Storage (dossier <monId>/) si un nouveau blob est fourni
+    let photo_url = p.photoUrl ?? null
+    if (p.photo) {
+      const u = await televerserPhoto(p.photo, `${user.id}/profil.jpg`)
+      if (u) photo_url = `${u}?t=${Date.now()}` // casse le cache CDN au changement
+    }
+    await supabase
+      .from('profils')
+      .update({
+        prenom: p.prenom,
+        critere: p.critere,
+        bio: p.bio ?? null,
+        insta: p.insta ?? null,
+        naissance: p.naissance ?? null,
+        score_swipe: p.scoreSwipe,
+        photo_url,
+      })
+      .eq('id', user.id)
+  } catch {
+    /* hors-ligne : le cloud se resynchronisera à la prochaine sauvegarde */
+  }
 }
 
 // ── les sorties en attente de validation ("alors, Le Bisou ?") ──
@@ -601,4 +870,109 @@ export function retirerSortie(lieuId: string) {
     'jeudi-sorties',
     JSON.stringify(sortiesEnAttente().filter((x) => x.lieuId !== lieuId)),
   )
+}
+/** « oublie tout » : efface les sorties en attente de validation */
+export function viderSorties(): void {
+  localStorage.removeItem('jeudi-sorties')
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ── préférences & état local (chantier 6, étape 2b) ──
+// db.ts est le SEUL point d'accès au stockage : tout le reste de l'app passe
+// par ces helpers, jamais par localStorage en direct. C'est le prérequis pour
+// remplacer IndexedDB/localStorage par Supabase derrière la même frontière.
+// ════════════════════════════════════════════════════════════════════
+
+// la ville active (une seule pour l'instant : paris)
+export function lireVille(): string {
+  return localStorage.getItem('jeudi-ville') || 'paris'
+}
+
+// la météo du porte-monnaie choisie au deck (soleil/nuageux/pluie)
+export function lireMeteo(): Meteo {
+  return (localStorage.getItem('jeudi-meteo') as Meteo) || 'nuageux'
+}
+export function ecrireMeteo(m: Meteo): void {
+  localStorage.setItem('jeudi-meteo', m)
+}
+
+// les lieux déjà consultés (halo « déjà vu » sur la carte)
+export function lireVus(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem('jeudi-vus') ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+export function ecrireVus(ids: string[]): void {
+  localStorage.setItem('jeudi-vus', JSON.stringify(ids))
+}
+
+// l'accueil (onboarding) : fait ou pas
+export function onboardingFait(): boolean {
+  return !!localStorage.getItem('jeudi-onboard')
+}
+export function marquerOnboarding(): void {
+  localStorage.setItem('jeudi-onboard', 'fait')
+}
+export function reinitOnboarding(): void {
+  localStorage.removeItem('jeudi-onboard')
+}
+
+// la tagline du profil (« le roi du dernier verre »)
+export function lireTagline(): string {
+  return localStorage.getItem('jeudi-tagline') || ''
+}
+export function ecrireTagline(s: string): void {
+  localStorage.setItem('jeudi-tagline', s)
+}
+
+// les curateurs suivis, choisis à l'onboarding
+export function lireSuivis(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem('jeudi-suivis') ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+export function ecrireSuivis(noms: string[]): void {
+  localStorage.setItem('jeudi-suivis', JSON.stringify(noms))
+}
+
+// les lieux signalés (flag « on vérifie »)
+export function lireSignales(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem('jeudi-signales') ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+export function signalerLieu(id: string): void {
+  const liste = lireSignales()
+  if (!liste.includes(id)) liste.push(id)
+  localStorage.setItem('jeudi-signales', JSON.stringify(liste))
+}
+
+// un « bof » reste du signal : on l'archive (lieuId + date ISO)
+export function ajouterBof(lieuId: string): void {
+  let bofs: { lieuId: string; date: string }[]
+  try {
+    bofs = JSON.parse(localStorage.getItem('jeudi-bofs') ?? '[]')
+    if (!Array.isArray(bofs)) bofs = []
+  } catch {
+    bofs = []
+  }
+  bofs.push({ lieuId, date: new Date().toISOString() })
+  localStorage.setItem('jeudi-bofs', JSON.stringify(bofs))
+}
+
+// « effacer mes données » : vide toutes les clés jeudi-* + la base IndexedDB
+export function effacerTout(): void {
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith('jeudi-'))
+    .forEach((k) => localStorage.removeItem(k))
+  indexedDB.deleteDatabase('jeudi')
 }

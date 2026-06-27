@@ -101,6 +101,124 @@ body {
   animation: inkIn 0.8s ease-out both 1.4s;
 }
 
+/* ── l'écran de connexion (magic-link) ── */
+.auth {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--paper);
+  background-image: radial-gradient(rgba(240, 234, 217, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 0 32px;
+}
+.auth-tampon {
+  color: var(--red);
+  border: 4px solid var(--red);
+  padding: 6px 26px 10px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 48px;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--red) 25%, transparent);
+}
+.auth-tagline {
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ivory);
+  margin-bottom: 6px;
+}
+.auth-form,
+.auth-envoye {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 320px;
+}
+.auth-sous {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: var(--ivory-faded);
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+.auth-gros {
+  font-style: italic;
+  font-size: 24px;
+  color: var(--ivory);
+  margin: 0;
+}
+.auth-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--paper-2);
+  border: 1px solid rgba(240, 234, 217, 0.18);
+  border-radius: 6px;
+  color: var(--ivory);
+  font-size: 16px;
+  text-align: center;
+}
+.auth-input:focus {
+  outline: none;
+  border-color: var(--red);
+}
+.auth-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--red);
+  color: var(--print-white);
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.auth-google {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--print-white, #f0ead9);
+  color: #15130f;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-ou {
+  font-family: 'Caveat', cursive;
+  font-size: 15px;
+  color: var(--ivory-faded);
+  margin: 2px 0;
+}
+.auth-relance {
+  background: none;
+  border: none;
+  color: var(--ivory-faded);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.auth-erreur {
+  color: var(--red);
+  font-size: 13px;
+  text-align: center;
+  margin: 0;
+}
+
 /* ── la pile derrière la carte du deck ── */
 .pile {
   position: relative;

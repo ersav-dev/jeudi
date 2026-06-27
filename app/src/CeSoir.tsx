@@ -8,6 +8,8 @@ import {
   COMPAGNIE_GLOSE,
   gloseEnvie,
   ajouterSortie,
+  lireMeteo,
+  ecrireMeteo,
   distanceM,
   formatDistance,
   tempsMarche,
@@ -76,20 +78,36 @@ export default function CeSoir({
 }) {
   const [compagnie, setCompagnie] = useState<Compagnie | null>(null)
   const [envie, setEnvie] = useState<string | null>(null)
-  const [meteo, setMeteo] = useState<Meteo>(
-    () => (localStorage.getItem('jeudi-meteo') as Meteo) || 'nuageux',
-  )
-  // le lexique se met à jour tout seul (l'app ouverte à 17h59 verra la fête à 18h)
-  const [moment, setMoment] = useState(() => lexiqueDuMoment())
+  const [meteo, setMeteo] = useState<Meteo>(() => lireMeteo())
+  // « quand ? » — par défaut MAINTENANT (live). On peut prévisualiser un moment
+  // ultérieur (le nom de l'app, c'est une nuit qu'on anticipe). Le défaut reste
+  // l'immédiateté ; le décalage est un geste secondaire, opt-in.
+  type Quand = 'maintenant' | 'soir' | 'nuit' | 'jeudi'
+  const [quandKey, setQuandKey] = useState<Quand>('maintenant')
+  const [, setTick] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setMoment(lexiqueDuMoment()), 60_000)
+    // seul « maintenant » est vivant (l'app ouverte à 17h59 verra la fête à 18h) ;
+    // un moment figé n'a pas besoin de tick.
+    if (quandKey !== 'maintenant') return
+    const t = setInterval(() => setTick((n) => n + 1), 60_000)
     return () => clearInterval(t)
-  }, [])
-  const { envies, nuit } = moment
+  }, [quandKey])
+  const dateEffective = (() => {
+    const d = new Date()
+    if (quandKey === 'soir') d.setHours(22, 0, 0, 0)
+    else if (quandKey === 'nuit') d.setHours(25, 0, 0, 0) // 1h du matin (la fonte)
+    else if (quandKey === 'jeudi') {
+      const delta = (4 - d.getDay() + 7) % 7 || 7 // prochain jeudi (toujours futur)
+      d.setDate(d.getDate() + delta)
+      d.setHours(22, 0, 0, 0)
+    }
+    return d
+  })()
+  const { envies, nuit } = lexiqueDuMoment(dateEffective)
 
   const choisirMeteo = (m: Meteo) => {
     setMeteo(m)
-    localStorage.setItem('jeudi-meteo', m)
+    ecrireMeteo(m)
   }
 
   const deck = useMemo(() => {
@@ -147,7 +165,7 @@ export default function CeSoir({
           >
             {compagnie} · {envie} <span className="cesoir-rappel-x">↺</span>
           </button>
-          <Deck key={`${compagnie}-${envie}-${meteo}`} deck={deck} onVoir={onVoir} onComparer={onComparer} />
+          <Deck key={`${compagnie}-${envie}-${meteo}`} deck={deck} maintenant={dateEffective} onVoir={onVoir} onComparer={onComparer} />
         </>
       )}
 
@@ -166,6 +184,28 @@ export default function CeSoir({
           </button>
         ))}
         {meteo === 'pluie' && <span className="mono pluie-mot">il pleut sur ton porte-monnaie.</span>}
+      </div>
+
+      <span className="lbl mono meteo-bas-lbl">quand ?</span>
+      <div className="meteo-bas">
+        {(
+          [
+            ['maintenant', 'maintenant'],
+            ['soir', 'ce soir · 22h'],
+            ['nuit', '1h du mat'],
+            ['jeudi', 'jeudi · 22h'],
+          ] as [Quand, string][]
+        ).map(([k, lbl]) => (
+          <button
+            key={k}
+            className={`meteo-choix ${quandKey === k ? 'on' : ''}`}
+            aria-pressed={quandKey === k}
+            onClick={() => setQuandKey(k)}
+            title={k === 'maintenant' ? 'là, maintenant' : 'prévisualiser ce moment'}
+          >
+            <span className="meteo-prix mono">{lbl}</span>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -313,10 +353,12 @@ type Verdict = 'valide' | 'bof'
 
 function Deck({
   deck,
+  maintenant = new Date(),
   onVoir,
   onComparer,
 }: {
   deck: Lieu[]
+  maintenant?: Date
   onVoir?: (l: Lieu) => void
   onComparer?: (ids: string[]) => void
 }) {
@@ -349,6 +391,7 @@ function Deck({
       <Recap
         deck={deck.filter((l) => !jetes.has(l.id))}
         verdicts={verdicts}
+        maintenant={maintenant}
         onVoir={onVoir}
         onRefaire={refaire}
         onJeter={(id) => setJetes((prev) => new Set(prev).add(id))}
@@ -454,7 +497,7 @@ function Deck({
           <div className="mono carte-meta">
             <span>{formatDistance(distanceM(lieu))} · {tempsMarche(distanceM(lieu))} min</span>
             {(() => {
-              const h = etatHoraire(lieu.horaires)
+              const h = etatHoraire(lieu.horaires, maintenant)
               return h ? <span className={h.ouvert ? 'ouvert' : 'ferme'}>{h.texte}</span> : null
             })()}
           </div>
@@ -490,11 +533,13 @@ function labelCatPhoto(t?: string) {
 function RecapTirage({
   lieu,
   valide,
+  maintenant = new Date(),
   onVoir,
   onJeter,
 }: {
   lieu: Lieu
   valide: boolean
+  maintenant?: Date
   onVoir?: (l: Lieu) => void
   onJeter: (id: string) => void
 }) {
@@ -503,7 +548,7 @@ function RecapTirage({
   const press = useRef<{ timer: number; fired: boolean } | null>(null)
   const nbPhotos = lieu.photos.length
   const dist = distanceM(lieu)
-  const horaire = etatHoraire(lieu.horaires)
+  const horaire = etatHoraire(lieu.horaires, maintenant)
   const wc = propreteWcLabel(lieu.propreteWc)
 
   const onDown = (e: React.PointerEvent) => {
@@ -588,6 +633,7 @@ function RecapTirage({
 function Recap({
   deck,
   verdicts,
+  maintenant = new Date(),
   onVoir,
   onRefaire,
   onJeter,
@@ -595,6 +641,7 @@ function Recap({
 }: {
   deck: Lieu[]
   verdicts: Record<string, Verdict>
+  maintenant?: Date
   onVoir?: (l: Lieu) => void
   onRefaire: () => void
   onJeter: (id: string) => void
@@ -640,7 +687,7 @@ function Recap({
       {vue === 'grand' && (
         <div className="recap-grand">
           {deck.map((l) => (
-            <RecapTirage key={l.id} lieu={l} valide={verdicts[l.id] === 'valide'} onVoir={onVoir} onJeter={onJeter} />
+            <RecapTirage key={l.id} lieu={l} valide={verdicts[l.id] === 'valide'} maintenant={maintenant} onVoir={onVoir} onJeter={onJeter} />
           ))}
         </div>
       )}
