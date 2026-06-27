@@ -30,15 +30,14 @@ export const POINTS_REPERE: Repere[] = [
   { nom: 'Montmartre', lat: 48.8867, lng: 2.3431 },
 ]
 
-// géocodage texte → point (Nominatim, biaisé sur l'Île-de-France).
+// géocodage texte → point (Nominatim, partout en France — jeudi te suit où tu es).
 // best-effort : renvoie null si rien / hors-ligne.
 export async function geocoderRepere(texte: string): Promise<Repere | null> {
   const q = texte.trim()
   if (!q) return null
   try {
     const url =
-      'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr' +
-      '&viewbox=2.10,49.00,2.55,48.70&bounded=1&q=' +
+      'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&q=' +
       encodeURIComponent(q)
     const r = await fetch(url, { headers: { 'Accept-Language': 'fr' } })
     const data = (await r.json()) as { lat: string; lon: string; display_name: string }[]

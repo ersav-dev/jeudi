@@ -39,7 +39,7 @@ import {
   ecrireCouleur,
   lireSeuils,
   ecrireSeuils,
-  lireVille,
+  villeDeCoords,
   lireVus,
   ecrireVus,
   onboardingFait,
@@ -270,16 +270,7 @@ function MenuCritere({
 // la phrase d'accroche (tagline) : courte par essence — limite stricte
 const TAGLINE_MAX = 42
 
-// les villes : Paris (= IDF entière) dispo ; les autres arrivent (façon Citymapper)
-const VILLES = [
-  { id: 'paris', nom: 'Paris', sous: "et l'Île-de-France", dispo: true },
-  { id: 'lyon', nom: 'Lyon', sous: 'bientôt', dispo: false },
-  { id: 'marseille', nom: 'Marseille', sous: 'bientôt', dispo: false },
-  { id: 'bordeaux', nom: 'Bordeaux', sous: 'bientôt', dispo: false },
-  { id: 'lille', nom: 'Lille', sous: 'bientôt', dispo: false },
-]
-
-// ── les réglages : ville · couleur · porte-monnaie · données · à venir ──
+// ── les réglages : où tu es · couleur · porte-monnaie · données · à venir ──
 // ── helpers d'affichage du profil v2 (Insta/Bumble) ──
 const CARTE_PROFIL: React.CSSProperties = {
   background: 'var(--paper-2)',
@@ -326,7 +317,10 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
   const [couleur, setCouleur] = useState(() => lireCouleur())
   const [s1, setS1] = useState(() => String(lireSeuils()[0]))
   const [s2, setS2] = useState(() => String(lireSeuils()[1]))
-  const ville = lireVille()
+  const [ouTu, setOuTu] = useState('')
+  useEffect(() => {
+    villeDeCoords().then(setOuTu)
+  }, [])
   const [sauve, setSauve] = useState(false)
   const [confirmEffacer, setConfirmEffacer] = useState(false)
   const [ouvert, setOuvert] = useState<'ville' | 'couleur' | 'argent' | 'donnees' | 'bientot' | null>(
@@ -369,8 +363,6 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
     window.location.reload()
   }
 
-  const villeActuelle = VILLES.find((v) => v.id === ville) ?? VILLES[0]
-
   return (
     <div className="reglages">
       <div className="reglages-tete">
@@ -378,22 +370,29 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
         <span className={`mono reglages-sauve ${sauve ? 'on' : ''}`}>enregistré ✓</span>
       </div>
 
-      {/* TA VILLE */}
+      {/* OÙ TU ES (location-native : le centre suit ton GPS) */}
       <button
         className="mono reglages-section reglages-toggle"
         aria-expanded={ouvert === 'ville'}
         onClick={() => bascule('ville')}
       >
-        ta ville · {villeActuelle.nom}
+        où tu es · {ouTu || '…'}
         <span className="reglages-chevron">{ouvert === 'ville' ? '–' : '+'}</span>
       </button>
       {ouvert === 'ville' && (
         <div className="reglages-villes mono">
           <p className="reglages-ville-actuelle">
-            tu es sur <strong>Paris</strong> — et toute l'Île-de-France.
+            {ouTu ? (
+              <>
+                tu es à <strong>{ouTu}</strong>.
+              </>
+            ) : (
+              <>on cherche où tu es…</>
+            )}
           </p>
           <p className="reglages-ville-bientot">
-            {VILLES.filter((v) => !v.dispo).map((v) => v.nom).join(' · ')} — bientôt.
+            jeudi te suit partout — les distances se calculent depuis ta position. autorise le
+            GPS pour qu'elles soient justes (sinon : Place Vendôme).
           </p>
         </div>
       )}

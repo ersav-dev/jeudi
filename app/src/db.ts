@@ -883,9 +883,26 @@ export function viderSorties(): void {
 // remplacer IndexedDB/localStorage par Supabase derrière la même frontière.
 // ════════════════════════════════════════════════════════════════════
 
-// la ville active (une seule pour l'instant : paris)
+// la ville active (legacy : jeudi est désormais location-native, le « centre »
+// suit le GPS. gardé pour compat, plus utilisé comme réglage.)
 export function lireVille(): string {
   return localStorage.getItem('jeudi-ville') || 'paris'
+}
+
+// où tu es : le nom de la ville/commune déduit de tes coordonnées (GPS).
+// jeudi te suit partout — Paris, Annecy, n'importe où. best-effort.
+export async function villeDeCoords(
+  lat = maPosition.lat,
+  lng = maPosition.lng,
+): Promise<string> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10&addressdetails=1`
+    const r = await fetch(url, { headers: { 'Accept-Language': 'fr' } })
+    const a = ((await r.json())?.address ?? {}) as Record<string, string>
+    return a.city || a.town || a.village || a.municipality || a.county || ''
+  } catch {
+    return ''
+  }
 }
 
 // la météo du porte-monnaie choisie au deck (soleil/nuageux/pluie)

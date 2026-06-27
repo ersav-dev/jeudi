@@ -162,6 +162,13 @@ Les garde-fous, pour que chercher reste un geste jeudi et pas un mini Google Map
 
 ---
 
+## Où tu es — jeudi te suit partout (location-native)
+
+jeudi n'est **pas attaché à une ville**, c'est une carte continue centrée sur **toi**. Pas de sélecteur « Paris / Lyon » : tu regardes toujours *autour d'un point* (ta position GPS, ou un lieu que tu choisis) à un certain **zoom** (le quartier → la ville → la région → la France). « Annecy » n'est pas un réglage, c'est juste *où tu es ce week-end* — et tu peux y poser des spots comme chez toi.
+
+- **Chez toi**, le défaut c'est ton **cercle** (push). **Ailleurs**, sans ton cercle, ce sont les **éclaireurs locaux + le public** qui te portent (pull). Le voyage rend la couche publique *plus* précieuse, pas moins.
+- Le centre des distances suit le **GPS** (repli : Place Vendôme si refusé). Le « autour de » géocode **toute la France**, pas seulement Paris.
+
 ## Le Grand Jeudi — la nuit où la carte s'ouvre
 
 Le reste du temps, *jeudi* te montre ce qui te ressemble : ton cercle et tes curateurs. Mais **un jeudi sur X**, le voile tombe : tu as accès à **tous les spots publics de la ville**, d'un coup, le temps d'une nuit. C'est le super pouvoir de l'app — et c'est dans son nom.
