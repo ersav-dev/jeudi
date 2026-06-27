@@ -19,6 +19,7 @@ import {
   apercuCritere,
   type TypeCritere,
 } from './criteres'
+import { lesProches, basculerProche, CAP_PROCHES } from './cercle'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -528,6 +529,16 @@ export default function App() {
     if (!nouvCrit.trim()) return
     setCriteres(ajouterCritere(nouvCrit, nouvType))
     setNouvCrit('')
+  }
+  // les super potes (anneau intérieur, cap 10) — togglables
+  const [proches, setProches] = useState(() => lesProches())
+  const toggleProche = (id: string) => {
+    const r = basculerProche(id)
+    if (r.pleinAtteint) {
+      setFlash(`ton cercle est plein (${CAP_PROCHES}) — retire un super pote d'abord.`)
+      return
+    }
+    setProches(r.proches)
   }
   const [fiche, setFiche] = useState<Lieu | null>(null)
   // la liste de contexte pour naviguer précédent/suivant dans la fiche
@@ -1413,9 +1424,11 @@ export default function App() {
           </div>
 
           {/* ③ mes super potes (anneau intérieur, 10 max) */}
-          <TitreSection>mes super potes · {MEMBRES.filter((m) => m.proche).length}/10</TitreSection>
+          <TitreSection>
+            mes super potes · {proches.length}/{CAP_PROCHES}
+          </TitreSection>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            {MEMBRES.filter((m) => m.proche).map((m) => (
+            {MEMBRES.filter((m) => proches.includes(m.id)).map((m) => (
               <button
                 key={m.id}
                 onClick={() => setOnglet('cercle')}
@@ -1534,21 +1547,53 @@ export default function App() {
 
       {onglet === 'cercle' && !curateur && (
         <div className="cercle">
-          <p className="mono cercle-compteur">{MEMBRES.length} membres · 10 max</p>
+          <p className="mono cercle-compteur">
+            {MEMBRES.length} membres · {proches.length}/{CAP_PROCHES} super potes
+          </p>
           <ul className="membres">
             {MEMBRES.map((m) => {
               const nbSpots = lieux.filter((l) =>
                 l.tipsCercle?.some((t) => t.auteur === m.prenom),
               ).length
+              const estPro = proches.includes(m.id)
               return (
                 <li
                   key={m.id}
                   className="membre"
                   role="button"
                   onClick={() => setCurateur(m.prenom)}
+                  style={estPro ? { borderColor: 'var(--red)' } : undefined}
                 >
-                  <div className="membre-tete">
-                    <span className="membre-nom">{m.prenom}</span>
+                  <div
+                    className="membre-tete"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
+                  >
+                    <span className="membre-nom">
+                      {m.prenom}
+                      {estPro && (
+                        <span style={{ color: 'var(--red)', marginLeft: 7, fontSize: 12 }}>★ super pote</span>
+                      )}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleProche(m.id)
+                      }}
+                      style={{
+                        background: estPro ? 'var(--red)' : 'transparent',
+                        color: estPro ? 'var(--print-white)' : 'var(--ivory)',
+                        border: '1px solid var(--red)',
+                        borderRadius: 999,
+                        padding: '4px 10px',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 10,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {estPro ? 'retirer' : '+ super pote'}
+                    </button>
                   </div>
                   <p className="hand membre-bio">{m.bio}</p>
                   <p className="mono membre-critere">
