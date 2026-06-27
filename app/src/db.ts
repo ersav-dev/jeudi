@@ -471,8 +471,47 @@ export const COULEUR_DEFAUT = '#a8322a' // le rouge cire d'origine
 export function lireCouleur(): string {
   return localStorage.getItem('jeudi-couleur') || COULEUR_DEFAUT
 }
+// ── moteur de dérivation couleur (roue chromatique) ──
+// la marque (`--red`) est la graine ; le reste se calcule par relation. Pour
+// l'instant on dérive « moi » (le repère GPS) = le COMPLÉMENT vif (H+180°), pour
+// qu'il contraste TOUJOURS, que la marque soit chaude (rouge cire) ou néon.
+function hslDe(hex: string): { h: number; s: number; l: number } {
+  let x = hex.replace('#', '')
+  if (x.length === 3)
+    x = x
+      .split('')
+      .map((c) => c + c)
+      .join('')
+  const r = parseInt(x.slice(0, 2), 16) / 255
+  const g = parseInt(x.slice(2, 4), 16) / 255
+  const b = parseInt(x.slice(4, 6), 16) / 255
+  const mx = Math.max(r, g, b)
+  const mn = Math.min(r, g, b)
+  const d = mx - mn
+  let h = 0
+  if (d) {
+    if (mx === r) h = ((g - b) / d) % 6
+    else if (mx === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+    h = (h * 60 + 360) % 360
+  }
+  const l = (mx + mn) / 2
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0
+  return { h, s, l }
+}
+
+/** la couleur du repère « moi » : le complément vif de la couleur de marque.
+ *  les lieux portent la couleur ; toi tu es son opposé sur la roue → contraste garanti. */
+export function couleurMoi(hex: string): string {
+  const { h } = hslDe(hex)
+  const mh = Math.round((h + 180) % 360)
+  return `hsl(${mh} 85% 58%)`
+}
+
 export function appliquerCouleur(c: string): void {
-  document.documentElement.style.setProperty('--red', c)
+  const root = document.documentElement.style
+  root.setProperty('--red', c)
+  root.setProperty('--moi', couleurMoi(c)) // le repère GPS se dérive de la marque
 }
 export function ecrireCouleur(c: string): void {
   localStorage.setItem('jeudi-couleur', c)

@@ -33,6 +33,7 @@ body {
   min-height: 100dvh;
   padding: calc(20px + env(safe-area-inset-top)) 20px calc(90px + env(safe-area-inset-bottom));
   position: relative;
+  overflow-x: clip;
 }
 
 .mono {
@@ -1661,19 +1662,57 @@ button {
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
 /* "moi" : un point ivoire qui pulse doucement, distinct des spots rouges */
+/* "moi" = un point TANGERINE chaud "you are here" : le seul accent chaud de la
+   carte (les lieux sont froids/violets, toi tu es chaud). Cœur orange + anneau
+   blanc + halo qui pulse. Couleur SYSTÈME fixe (indépendante de la couleur de
+   marque) → contraste toujours. (Le cap/arc d'orientation = étape suivante,
+   quand on branche la boussole.) */
 .pin-moi {
-  width: 16px;
-  height: 16px;
-  background: var(--ivory);
-  border: 3px solid var(--paper);
+  width: 14px;
+  height: 14px;
+  background: var(--moi, #14c6b0);
+  border: 3px solid var(--print-white);
   border-radius: 50%;
-  box-shadow: 0 0 0 2px var(--ivory), 0 0 12px 2px rgba(240, 234, 217, 0.6);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--moi, #14c6b0) 30%, transparent),
+    0 0 14px 3px color-mix(in srgb, var(--moi, #14c6b0) 55%, transparent);
+}
+.pin-moi::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--moi, #14c6b0) 45%, transparent);
+  animation: pulse-moi 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes pulse-moi {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.6);
+    opacity: 0;
+  }
+}
+/* le point de géoloc live de MapLibre : même couleur dérivée "moi", cohérent */
+.maplibregl-user-location-dot,
+.maplibregl-user-location-dot::before {
+  background-color: var(--moi, #14c6b0);
 }
 .pin {
   width: 18px;
   height: 18px;
-  background: var(--red);
-  border: 2px solid var(--print-white);
+  /* forme "D" : anneau (la bordure) + cœur (le point central du radial-gradient),
+     centre vide entre les deux. plus lisible au premier regard qu'un disque plein.
+     pas de pseudo ici : ::before = le label du nom, ::after = la zone de tap. */
+  background: radial-gradient(circle at center, var(--red) 0 2.6px, transparent 3.2px);
+  border: 2.5px solid var(--red);
   border-radius: 50%;
   box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.6);
   cursor: pointer;
@@ -4720,7 +4759,9 @@ button {
   border: none;
   color: var(--ivory);
   font-size: 22px;
-  padding: 8px 18px;
+  padding: 8px 6px;
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -4729,8 +4770,9 @@ button {
 /* le libellé sous l'icône : on n'apprend pas trois hiéroglyphes par cœur */
 .nav-lbl {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 .nav-item.actif {
   opacity: 1;
