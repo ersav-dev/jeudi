@@ -22,6 +22,7 @@ import {
 } from './criteres'
 import { lesProches, basculerProche, CAP_PROCHES } from './cercle'
 import { rechercher, profilDeGout } from './recherche'
+import { regardDe, CRITERES_MEMBRES, pastilles } from './regard'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -1652,6 +1653,7 @@ export default function App() {
           onComparer={() => setCompaOuverte(true)}
           onAdopter={adopter}
           dejaAdopte={!estAMoi(fiche) && lieux.some((x) => estAMoi(x) && x.nom === fiche.nom)}
+          proches={proches}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -2266,6 +2268,7 @@ function Fiche({
   onComparer,
   onAdopter,
   dejaAdopte,
+  proches,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -2278,6 +2281,8 @@ function Fiche({
   /** adopter un spot qui n'est pas à moi (le copier sur ma carte) */
   onAdopter: (l: Lieu) => void
   dejaAdopte: boolean
+  /** mes super potes (ids) → on affiche leur regard sur ce lieu */
+  proches: string[]
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -2651,6 +2656,37 @@ function Fiche({
           <p className="hand tip-vide">t'as rien dit sur ce spot. encore.</p>
         )}
       </div>
+
+      {(() => {
+        // « à travers leurs yeux » : le regard de tes super potes sur ce lieu
+        const regards = proches
+          .filter((id) => CRITERES_MEMBRES[id])
+          .map((id) => ({ prenom: MEMBRES.find((m) => m.id === id)?.prenom ?? id, lectures: regardDe(id, lieu) }))
+          .filter((r) => r.lectures.length)
+        if (!regards.length) return null
+        return (
+          <div className="fiche-tips">
+            <span className="lbl mono">à travers leurs yeux</span>
+            {regards.map((r) => (
+              <div className="tip" key={r.prenom}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
+                  {r.lectures.map((l) => (
+                    <span key={l.nom} className="mono" style={{ fontSize: 12 }}>
+                      {l.nom} :{' '}
+                      {l.type === 'gradue' ? (
+                        <span style={{ color: 'var(--red)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>
+                      ) : (
+                        <span>{l.oui ? 'oui' : 'non'}</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                <span className="mono tip-signature">— selon {r.prenom}</span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {mien && !edition ? (
         <div className="fiche-tags">
