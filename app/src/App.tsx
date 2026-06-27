@@ -12,6 +12,7 @@ import { srcPhoto } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
+import GrandJeudi from './GrandJeudi'
 import {
   mesCriteres,
   ajouterCritere,
@@ -520,7 +521,7 @@ export default function App() {
   // appui long = barré (sans foot / refuge). timer du long-press.
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
-  const [labo, setLabo] = useState<'trouver' | 'potos'>('trouver')
+  const [labo, setLabo] = useState<'trouver' | 'potos' | 'grandjeudi'>('trouver')
   // mes critères (ma façon de juger un lieu) — binaire / gradué ●●○
   const [criteres, setCriteres] = useState(() => mesCriteres())
   const [nouvCrit, setNouvCrit] = useState('')
@@ -1697,30 +1698,32 @@ export default function App() {
       {onglet === 'labo' && (
         <div style={{ paddingBottom: 90 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-            {(['trouver', 'potos'] as const).map((t) => (
+            {(['trouver', 'potos', 'grandjeudi'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setLabo(t)}
                 style={{
                   flex: 1,
-                  padding: '9px 0',
+                  padding: '9px 4px',
                   borderRadius: 10,
                   border: `1px solid ${labo === t ? 'var(--red)' : 'var(--ivory-faded)'}`,
                   background: labo === t ? 'var(--red)' : 'transparent',
                   color: labo === t ? 'var(--print-white)' : 'var(--ivory)',
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 12,
+                  fontSize: 11,
                   cursor: 'pointer',
                 }}
               >
-                {t === 'trouver' ? 'trouver' : 'avec mes potes'}
+                {t === 'trouver' ? 'trouver' : t === 'potos' ? 'avec mes potes' : 'grand jeudi'}
               </button>
             ))}
           </div>
           {labo === 'trouver' ? (
             <Recherche lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
-          ) : (
+          ) : labo === 'potos' ? (
             <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          ) : (
+            <GrandJeudi lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
           )}
         </div>
       )}
