@@ -76,9 +76,20 @@ export interface ScoreGroupe {
   pourquoi: string
 }
 
+/** le point de rendez-vous : le barycentre des points de départ du groupe.
+ *  l'app triangule « au milieu » → près de tout le monde. */
+export function triangule(departs: { lat: number; lng: number }[]): { lat: number; lng: number } {
+  const n = departs.length || 1
+  return {
+    lat: departs.reduce((s, p) => s + p.lat, 0) / n,
+    lng: departs.reduce((s, p) => s + p.lng, 0) / n,
+  }
+}
+
 export function scoreLieuGroupe(
   lieu: Lieu,
   groupe: MembrePref[],
+  centre?: { lat: number; lng: number },
   maintenant = new Date(),
 ): ScoreGroupe {
   const total = groupe.length || 1
@@ -89,7 +100,7 @@ export function scoreLieuGroupe(
   const budgetMin = Math.min(...groupe.map((m) => m.budgetMax)) // le plus serré
   const budgetOk = cout == null || cout <= budgetMin
 
-  const dist = distanceM(lieu)
+  const dist = distanceM(lieu, centre) // distance depuis le point de rendez-vous
   const distScore = Math.max(0, Math.min(1, 1 - dist / 3000))
 
   const ouvert = ouvertMaintenant(lieu, maintenant)
@@ -114,10 +125,11 @@ export function classerPourGroupe(
   lieux: Lieu[],
   groupe: MembrePref[],
   topN?: number,
+  centre?: { lat: number; lng: number },
   maintenant = new Date(),
 ): ScoreGroupe[] {
   const classes = lieux
-    .map((l) => scoreLieuGroupe(l, groupe, maintenant))
+    .map((l) => scoreLieuGroupe(l, groupe, centre, maintenant))
     .sort((a, b) => b.score - a.score || a.distance - b.distance)
   return topN ? classes.slice(0, topN) : classes
 }
@@ -204,7 +216,7 @@ export function verdictDeGroupe(
   topN = 5,
   maintenant = new Date(),
 ): VerdictGroupe | null {
-  const classes = classerPourGroupe(lieux, groupe, topN, maintenant)
+  const classes = classerPourGroupe(lieux, groupe, topN, undefined, maintenant)
   if (!classes.length) return null
   const shortlist = classes.map((score) => ({
     score,
