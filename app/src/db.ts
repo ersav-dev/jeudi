@@ -258,7 +258,10 @@ async function televerserPhoto(blob: Blob, chemin: string): Promise<string | nul
   const { error } = await supabase.storage
     .from(BUCKET_PHOTOS)
     .upload(chemin, blob, { upsert: true, contentType: blob.type || 'image/jpeg' })
-  if (error) return null
+  if (error) {
+    console.error('[jeudi] upload photo KO', chemin, error)
+    return null
+  }
   return supabase.storage.from(BUCKET_PHOTOS).getPublicUrl(chemin).data.publicUrl
 }
 
@@ -276,8 +279,12 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
     if (url) lignes.push({ lieu_id: lieu.id, type: p.type, url, ordre: i })
     i++
   }
-  await supabase.from('photos').delete().eq('lieu_id', lieu.id)
-  if (lignes.length) await supabase.from('photos').insert(lignes)
+  const del = await supabase.from('photos').delete().eq('lieu_id', lieu.id)
+  if (del.error) console.error('[jeudi] syncPhotos delete KO', del.error)
+  if (lignes.length) {
+    const ins = await supabase.from('photos').insert(lignes)
+    if (ins.error) console.error('[jeudi] syncPhotos insert KO', ins.error)
+  }
 }
 
 /** charge les photos (table `photos`) pour une liste d'ids de lieux → map id→photos */
@@ -796,6 +803,7 @@ export async function majLieu(lieu: Lieu): Promise<void> {
       await syncPhotosLieu(lieu)
       return
     }
+    console.error('[jeudi] majLieu cloud KO — repli local', error)
   }
   const db = await getDB()
   await db.put('lieux', lieu)
@@ -833,6 +841,14 @@ export async function lireProfil(): Promise<Profil | undefined> {
     if (user) {
       const { data } = await supabase.from('profils').select('*').eq('id', user.id).maybeSingle()
       if (data) {
+        // prefs d'appareil rapatriées du cloud (nouvel appareil) → localStorage
+        if (data.couleur) {
+          ecrireCouleur(data.couleur)
+          appliquerCouleur(data.couleur)
+        }
+        if (Array.isArray(data.seuils) && data.seuils.length === 2) {
+          ecrireSeuils([data.seuils[0], data.seuils[1]])
+        }
         return {
           scoreSwipe: data.score_swipe ?? local?.scoreSwipe ?? 50,
           critere: data.critere ?? local?.critere ?? 'le feeling',
@@ -866,7 +882,7 @@ export async function sauverProfil(p: Profil): Promise<void> {
       const u = await televerserPhoto(p.photo, `${user.id}/profil.jpg`)
       if (u) photo_url = `${u}?t=${Date.now()}` // casse le cache CDN au changement
     }
-    await supabase
+    const { error } = await supabase
       .from('profils')
       .update({
         prenom: p.prenom,
@@ -875,11 +891,14 @@ export async function sauverProfil(p: Profil): Promise<void> {
         insta: p.insta ?? null,
         naissance: p.naissance ?? null,
         score_swipe: p.scoreSwipe,
+        couleur: lireCouleur(), // pref d'appareil → suit le compte (nouvel appareil)
+        seuils: lireSeuils(), // météo porte-monnaie → suit le compte
         photo_url,
       })
       .eq('id', user.id)
-  } catch {
-    /* hors-ligne : le cloud se resynchronisera à la prochaine sauvegarde */
+    if (error) console.error('[jeudi] sauverProfil cloud KO', error)
+  } catch (e) {
+    console.warn('[jeudi] sauverProfil hors-ligne (resync à la prochaine sauvegarde)', e)
   }
 }
 
