@@ -1700,6 +1700,32 @@ button {
     opacity: 0;
   }
 }
+/* le cap : une flèche d'orientation autour du point "moi", tournée par la
+   boussole (JS pose le rotate). cachée tant qu'aucun cap n'est capté. */
+.pin-moi-cap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.pin-moi-cap::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 12px solid var(--moi, #14c6b0);
+}
+
 /* le point de géoloc live de MapLibre : même couleur dérivée "moi", cohérent */
 .maplibregl-user-location-dot,
 .maplibregl-user-location-dot::before {

@@ -126,6 +126,42 @@ export default function Carte({
     elMoi.className = 'pin-moi'
     elMoi.title = 'moi'
     new maplibregl.Marker({ element: elMoi }).setLngLat(moi()).addTo(carte.current)
+
+    // ── le cap : une flèche d'orientation sur "moi", pilotée par la boussole ──
+    // (mobile · iOS demande l'autorisation au 1er tap · cachée tant qu'aucun cap)
+    const cap = document.createElement('div')
+    cap.className = 'pin-moi-cap'
+    elMoi.appendChild(cap)
+    const onOrient = (e: DeviceOrientationEvent) => {
+      const ev = e as DeviceOrientationEvent & { webkitCompassHeading?: number }
+      let heading: number | null = null
+      if (typeof ev.webkitCompassHeading === 'number') heading = ev.webkitCompassHeading
+      else if (ev.absolute && typeof ev.alpha === 'number') heading = 360 - ev.alpha
+      if (heading == null || Number.isNaN(heading)) return
+      cap.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`
+      cap.style.opacity = '1'
+    }
+    const ecouterBoussole = () => {
+      window.addEventListener('deviceorientationabsolute', onOrient as EventListener, true)
+      window.addEventListener('deviceorientation', onOrient, true)
+    }
+    const DOE = window.DeviceOrientationEvent as
+      | (typeof window.DeviceOrientationEvent & { requestPermission?: () => Promise<string> })
+      | undefined
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      const once = () => {
+        DOE.requestPermission!()
+          .then((s) => {
+            if (s === 'granted') ecouterBoussole()
+          })
+          .catch(() => {})
+        conteneur.current?.removeEventListener('click', once)
+      }
+      conteneur.current?.addEventListener('click', once)
+    } else {
+      ecouterBoussole()
+    }
+
     // ── labels anti-collision : jamais tous ; ~8 max, par priorité, sans chevauchement
     const PLAFOND = 8
     type Box = { x: number; y: number; w: number; h: number }
@@ -193,6 +229,8 @@ export default function Carte({
     carte.current.on('zoom', planifier)
     majLabels()
     return () => {
+      window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true)
+      window.removeEventListener('deviceorientation', onOrient, true)
       carte.current?.remove()
       carte.current = null
     }
