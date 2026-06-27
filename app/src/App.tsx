@@ -21,6 +21,7 @@ import {
   type TypeCritere,
 } from './criteres'
 import { lesProches, basculerProche, CAP_PROCHES } from './cercle'
+import { rechercher, profilDeGout } from './recherche'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -655,7 +656,7 @@ export default function App() {
   const [favoris, setFavoris] = useState<string[]>(() => lireFavoris())
   const [favOn, setFavOn] = useState(false)
   // #22 : le tri — au plus proche (défaut) ou par propreté des WC (seul score permis)
-  const [tri, setTri] = useState<'proche' | 'wc' | 'pop'>('proche')
+  const [tri, setTri] = useState<'proche' | 'wc' | 'pop' | 'pertinence' | 'oublies'>('proche')
   // quelle collection on regarde sur "ma carte" : 'moi', un prénom de curateur, ou 'public'
   const [collection, setCollection] = useState<string>('tout')
   // appliquer la couleur de marque choisie (dès le premier rendu)
@@ -836,6 +837,23 @@ export default function App() {
       // populaire = recommandé par le plus de voix (toi + le cercle)
       const voix = (l: Lieu) => (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
       return [...liste].sort((a, b) => voix(b) - voix(a))
+    }
+    if (tri === 'pertinence') {
+      // « pour toi » : la carte respire en resurfaçant selon tes habitudes
+      const gout = profilDeGout({
+        valides: liste.filter((l) => l.tampon?.v === 'valide'),
+        bofs: liste.filter((l) => l.tampon?.v === 'bof'),
+        favoris,
+        vus: [...vus],
+      })
+      const cercle = MEMBRES.flatMap((m) => [m.id, m.prenom])
+      return rechercher(liste, {}, gout, cercle).map((r) => r.lieu)
+    }
+    if (tri === 'oublies') {
+      // « à redécouvrir » : les spots jamais consultés remontent (la carte ne dort pas)
+      return [...liste].sort(
+        (a, b) => (vus.has(a.id) ? 1 : 0) - (vus.has(b.id) ? 1 : 0) || distanceM(a) - distanceM(b),
+      )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
   })()
@@ -1027,10 +1045,12 @@ export default function App() {
               valeur={tri}
               options={[
                 { v: 'proche', lbl: 'au plus proche', court: 'proche' },
+                { v: 'pertinence', lbl: 'pour toi', court: 'pour toi' },
+                { v: 'oublies', lbl: 'à redécouvrir', court: 'oubliés' },
                 { v: 'pop', lbl: 'populaire', court: 'pop' },
                 { v: 'wc', lbl: 'wc propres', court: 'wc' },
               ]}
-              onChoisir={(v) => setTri(v as 'proche' | 'wc' | 'pop')}
+              onChoisir={(v) => setTri(v as 'proche' | 'wc' | 'pop' | 'pertinence' | 'oublies')}
             />
             {/* le menu « filtres » : statut / ouvert / match repliés */}
             {(() => {
