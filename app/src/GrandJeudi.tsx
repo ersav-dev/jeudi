@@ -17,9 +17,13 @@ export default function GrandJeudi({
 }) {
   const [phase, setPhase] = useState<'voile' | 'ville'>('voile')
 
-  // le voile n'ouvre que le PUBLIC (jamais l'intime des autres)
+  // le voile n'ouvre que le PUBLIC (jamais l'intime des autres) ;
+  // les lieux sans coords (0,0) sont écartés : ils fausseraient toutes les distances
   const publics = useMemo(
-    () => lieux.filter((l) => l.visibilite === 'public').sort((a, b) => distanceM(a) - distanceM(b)),
+    () =>
+      lieux
+        .filter((l) => l.visibilite === 'public' && !(l.lat === 0 && l.lng === 0))
+        .sort((a, b) => distanceM(a) - distanceM(b)),
     [lieux],
   )
 
@@ -103,6 +107,17 @@ export default function GrandJeudi({
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 16px' }}>
         {publics.length} spots publics · ouverts cette nuit · le voile retombe au matin
       </p>
+
+      {publics.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <p style={{ fontStyle: 'italic', fontSize: 19, margin: 0, opacity: 0.85 }}>
+            la ville est encore silencieuse.
+          </p>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginTop: 10 }}>
+            aucun spot public pour l'instant — reviens quand la ville aura parlé.
+          </p>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
         {publics.map((l) => (

@@ -5,6 +5,7 @@ import {
   monProfil,
   classerPourGroupe,
   reactionsDuGroupe,
+  verdictDeGroupe,
   triangule,
   type ScoreGroupe,
   type ReactionsLieu,
@@ -54,8 +55,9 @@ export default function Groupe({
   const [i, setI] = useState(0)
   const [gagnant, setGagnant] = useState<Prop | null>(null)
 
+  // pas de repli silencieux sur ['apéro'] : zéro envie = bouton désactivé + message
   const groupe = useMemo(() => {
-    const moi = monProfil(mesEnvies.length ? mesEnvies : ['apéro'], 1)
+    const moi = monProfil(mesEnvies, 1)
     const autres = avec.map((id) => PROFILS_MEMBRES[id]).filter(Boolean)
     return [moi, ...autres]
   }, [mesEnvies, avec])
@@ -65,13 +67,25 @@ export default function Groupe({
     return triangule(departs)
   }, [monDepart, avec])
 
+  // (0,0) = coordonnées manquantes : hors des calculs de distance
+  const lieuxValides = useMemo(() => lieux.filter((l) => l.lat !== 0 || l.lng !== 0), [lieux])
+
   const props = useMemo<Prop[]>(
     () =>
-      classerPourGroupe(lieux, groupe, 8, centre).map((score) => ({
+      classerPourGroupe(lieuxValides, groupe, 8, centre).map((score) => ({
         score,
-        reactions: reactionsDuGroupe(score.lieu, groupe),
+        reactions: reactionsDuGroupe(score.lieu, groupe, centre),
       })),
-    [lieux, groupe, centre],
+    [lieuxValides, groupe, centre],
+  )
+
+  // le verdict AGRÉGÉ (croisement score d'algo × adhésion « chaud ») : le flux
+  // swipe reste le geste principal de l'écran (« le 1er qui matche gagne »,
+  // c'est le concept), mais à l'étape match l'app dit AUSSI où le groupe
+  // convergeait vraiment — le vrai verdictDeGroupe, en complément.
+  const verdict = useMemo(
+    () => verdictDeGroupe(lieuxValides, groupe, 8, centre),
+    [lieuxValides, groupe, centre],
   )
 
   const toggleEnvie = (e: Envie) =>
@@ -79,7 +93,9 @@ export default function Groupe({
   const toggleAvec = (id: string) =>
     setAvec((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]))
 
+  const sansEnvie = mesEnvies.length === 0
   const lancer = () => {
+    if (sansEnvie) return
     setI(0)
     setGagnant(null)
     setEtape('swipe')
@@ -140,8 +156,14 @@ export default function Groupe({
           ))}
         </div>
 
+        {sansEnvie && (
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 10px' }}>
+            choisis au moins une envie — le groupe a besoin d'un cap.
+          </p>
+        )}
         <button
           onClick={lancer}
+          disabled={sansEnvie}
           style={{
             width: '100%',
             padding: '13px 0',
@@ -151,7 +173,8 @@ export default function Groupe({
             color: 'var(--print-white)',
             fontStyle: 'italic',
             fontSize: 19,
-            cursor: 'pointer',
+            cursor: sansEnvie ? 'default' : 'pointer',
+            opacity: sansEnvie ? 0.4 : 1,
           }}
         >
           trianguler →
@@ -268,6 +291,23 @@ export default function Groupe({
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, marginTop: 8 }}>
         {formatDistance(distanceM(g.score.lieu, centre))} du rendez-vous · ouvert ? {g.score.ouvert === true ? 'oui' : g.score.ouvert === false ? 'non' : '?'}
       </div>
+
+      {/* le verdict agrégé (score × adhésion) en regard du choix swipé */}
+      {verdict && (
+        <div
+          style={{
+            ...carte,
+            marginTop: 16,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 11,
+            opacity: 0.75,
+          }}
+        >
+          {verdict.gagnant.lieu.id === g.score.lieu.id
+            ? 'le verdict du groupe confirme : score et adhésion pointaient déjà ici.'
+            : `au croisement score × adhésion, le groupe convergeait plutôt sur ${verdict.gagnant.lieu.nom} (« ${verdict.reactions.resume} »).`}
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
         {onOuvrir && (

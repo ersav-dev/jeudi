@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
 import LigneIndex from './LigneIndex'
 import CeSoir from './CeSoir'
 import Onboarding from './Onboarding'
@@ -9,7 +9,7 @@ import type { Session } from '@supabase/supabase-js'
 import PickerCouleur from './PickerCouleur'
 import { importerSeed, MEMBRES } from './seed'
 import { srcPhoto } from './photos'
-import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche } from './icones'
+import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import GrandJeudi from './GrandJeudi'
@@ -82,6 +82,10 @@ import {
   retirerSortie,
   lireProfil,
   sauverProfil,
+  lireSuivis,
+  ecrireSuivis,
+  supprimerMonCompte,
+  exporterMesDonnees,
 } from './db'
 
 // A4 : MapLibre (~1 Mo) sort du bundle principal — chargé à la demande
@@ -139,6 +143,14 @@ function RoueHoraire({ valeur, onChange }: { valeur: number; onChange: (v: numbe
     const i = CRANS.indexOf(valeur)
     el.scrollTop = (i < 0 ? 0 : i) * ROUE_ROW
   }, [valeur])
+
+  // au démontage : on nettoie le timer de snap (sinon il tire sur une molette morte)
+  useEffect(
+    () => () => {
+      if (timer.current) window.clearTimeout(timer.current)
+    },
+    [],
+  )
 
   const onScroll = () => {
     scrolling.current = true
@@ -334,6 +346,10 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
   }, [])
   const [sauve, setSauve] = useState(false)
   const [confirmEffacer, setConfirmEffacer] = useState(false)
+  // RGPD : suppression du compte (double confirmation) + erreur visible si le cloud refuse
+  const [confirmCompte, setConfirmCompte] = useState(false)
+  const [compteEnCours, setCompteEnCours] = useState(false)
+  const [erreurCompte, setErreurCompte] = useState<string | null>(null)
   const [ouvert, setOuvert] = useState<'ville' | 'couleur' | 'argent' | 'donnees' | 'bientot' | null>(
     null,
   )
@@ -368,9 +384,34 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
     a.click()
     URL.revokeObjectURL(a.href)
   }
+  // RGPD : portabilité — tout ce que jeudi sait de toi, en un .json daté
+  const exporterDonnees = async () => {
+    const donnees = await exporterMesDonnees()
+    const blob = new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `jeudi-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+  // RGPD : le droit à l'oubli — deux taps (le premier arme, le second confirme)
+  const supprimerCompte = async () => {
+    if (compteEnCours) return
+    setCompteEnCours(true)
+    setErreurCompte(null)
+    try {
+      await supprimerMonCompte()
+      window.location.reload()
+    } catch {
+      setErreurCompte('le cloud a refusé. rien n’a bougé — réessaie dans un instant.')
+      setConfirmCompte(false)
+      setCompteEnCours(false)
+    }
+  }
   // effacer : on vide tout le local (clés jeudi-* + la base IndexedDB) puis reload
-  const effacer = () => {
-    effacerTout()
+  // (effacerTout est async désormais : on ATTEND avant de recharger)
+  const effacer = async () => {
+    await effacerTout()
     window.location.reload()
   }
 
@@ -469,12 +510,27 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
           <button className="reglages-action" onClick={exporter}>
             exporter mes spots (.json)
           </button>
+          <button className="reglages-action" onClick={exporterDonnees}>
+            exporter mes données (.json)
+          </button>
           <button
             className={`reglages-action danger ${confirmEffacer ? 'confirm' : ''}`}
             onClick={() => (confirmEffacer ? effacer() : setConfirmEffacer(true))}
           >
             {confirmEffacer ? 'sûr ? tout effacer pour de bon' : 'effacer mes données locales'}
           </button>
+          <button
+            className={`reglages-action danger ${confirmCompte ? 'confirm' : ''}`}
+            disabled={compteEnCours}
+            onClick={() => (confirmCompte ? supprimerCompte() : setConfirmCompte(true))}
+          >
+            {compteEnCours
+              ? 'suppression…'
+              : confirmCompte
+                ? 'sûr ? tout part : le cloud aussi.'
+                : 'supprimer mon compte'}
+          </button>
+          {erreurCompte && <p className="reglages-erreur mono">{erreurCompte}</p>}
         </div>
       )}
 
@@ -495,7 +551,6 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
             'spots archivés',
             'notifications',
             'se déconnecter',
-            'supprimer le compte',
           ].map((t) => (
             <span key={t} className="reglages-bientot-item">
               {t} <span className="reglages-bientot-tag">bientôt</span>
@@ -509,6 +564,8 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
 
 export default function App() {
   const [splash, setSplash] = useState(true)
+  // stable (useCallback) : sinon le timer du splash repartirait à chaque render
+  const finirSplash = useCallback(() => setSplash(false), [])
   const [session, setSession] = useState<Session | null>(null)
   const [authPret, setAuthPret] = useState(false)
   const [lieux, setLieux] = useState<Lieu[]>([])
@@ -560,7 +617,8 @@ export default function App() {
   const ouvrirFiche = (l: Lieu, contexte: Lieu[]) => {
     // si on ouvre un lieu « à comparer », on ne navigue QUE parmi les sélectionnés
     // (ex. 1/3 au lieu de 1/82), jusqu'à ce que la liste « à comparer » soit vidée.
-    const comp = lireComparer()
+    // (l'état `comparer` EST la source — pas de relecture localStorage à chaque ouverture)
+    const comp = comparer
     if (comp.includes(l.id)) {
       const compares = comp
         .map((id) => lieux.find((x) => x.id === id))
@@ -577,16 +635,28 @@ export default function App() {
     marquerVu(l.id)
   }
   const [onboard, setOnboard] = useState(() => !onboardingFait())
+  // `sorties` = TOUTES les sorties en attente (miroir du stockage, lu une fois) ;
+  // `attente` = la file de validation ouverte à l'écran. une seule source, deux vues.
+  const [sorties, setSorties] = useState<SortieEnAttente[]>([])
   const [attente, setAttente] = useState<SortieEnAttente[]>([])
   const [attenteTotal, setAttenteTotal] = useState(0)
   const [archive, setArchive] = useState<Lieu | null>(null)
   // notifications (haut-droite) : demandes d'amis (simulées) + lieux à noter
   const [notifsOuvertes, setNotifsOuvertes] = useState(false)
+  // demandes SIMULÉES (tampon « démo » à l'affichage — pas de faux vrais amis)
   const [demandes, setDemandes] = useState<{ id: string; prenom: string; titre: string }[]>([
     { id: 'sofia', prenom: 'Sofia', titre: 'éclaireuse du 3e' },
     { id: 'yanis', prenom: 'Yanis', titre: 'éclaireur du 10e' },
   ])
-  const repondreDemande = (id: string) => setDemandes((d) => d.filter((x) => x.id !== id))
+  // accepter ≠ ignorer : accepter ajoute VRAIMENT aux suivis locaux (cercle),
+  // ignorer retire seulement la demande.
+  const accepterDemande = (id: string) => {
+    const d = demandes.find((x) => x.id === id)
+    if (d) ecrireSuivis([...new Set([...lireSuivis(), d.prenom])])
+    setDemandes((prev) => prev.filter((x) => x.id !== id))
+    if (d) setFlash(`@${d.prenom.toLowerCase()} rejoint ton cercle.`)
+  }
+  const ignorerDemande = (id: string) => setDemandes((d) => d.filter((x) => x.id !== id))
   const [confirmVider, setConfirmVider] = useState(false)
   const [prenom, setPrenom] = useState('toi')
   const [critere, setCritere] = useState('le feeling')
@@ -594,19 +664,16 @@ export default function App() {
   const [bio, setBio] = useState('')
   const [tagline, setTagline] = useState(() => lireTagline())
   const [insta, setInsta] = useState('')
-  const [naissance, setNaissance] = useState('1991-03-06') // pré-rempli (Ersan)
+  // vide tant que non renseignée (l'onboarding la demande) — jamais de défaut perso
+  const [naissance, setNaissance] = useState('')
   const [depuis, setDepuis] = useState('')
   const sauverBioInsta = async (naiss = naissance) => {
     const cur = await lireProfil()
     // « depuis » se fige à la 1re sauvegarde (date d'entrée dans le carnet)
     const dep = cur?.depuis ?? depuis ?? new Date().toISOString()
     if (!depuis) setDepuis(dep)
+    // sauverProfil = MERGE : on n'envoie QUE ce que cet éditeur possède
     await sauverProfil({
-      scoreSwipe: cur?.scoreSwipe ?? 100,
-      critere: cur?.critere ?? critere,
-      prenom: cur?.prenom ?? 'Ersan',
-      photo: cur?.photo,
-      photoUrl: cur?.photoUrl,
       bio: bio.trim(),
       insta: insta.trim().replace(/^@/, ''),
       naissance: naiss || cur?.naissance,
@@ -617,6 +684,9 @@ export default function App() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   useEffect(() => {
     if (!photoProfil) {
+      // synchronisation avec une ressource externe (object URL) : le reset à
+      // null quand la photo disparaît est voulu, pas un état dérivable au rendu
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPhotoUrl(null)
       return
     }
@@ -627,13 +697,8 @@ export default function App() {
   const changerPhotoProfil = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     if (!f) return
-    const cur = await lireProfil()
-    await sauverProfil({
-      scoreSwipe: cur?.scoreSwipe ?? 100,
-      critere: cur?.critere ?? critere,
-      prenom: cur?.prenom ?? 'Ersan',
-      photo: f,
-    })
+    // sauverProfil = MERGE : la photo seule suffit
+    await sauverProfil({ photo: f })
     setPhotoProfil(f)
   }
   // le curateur dont on regarde la carte (par prénom) — null = la liste du cercle
@@ -686,7 +751,10 @@ export default function App() {
     chargerMonId().then(() => {
     importerSeed().then(() => {
       recharger()
+      // UNE lecture du stockage : ensuite l'état fait foi (sorties = la cloche,
+      // attente = la file de validation ouverte)
       const a = sortiesEnAttente()
+      setSorties(a)
       setAttente(a)
       setAttenteTotal(a.length)
     })
@@ -792,29 +860,31 @@ export default function App() {
 
   // qui possède quoi : mes spots + ceux de mon cercle = "ma carte" ; les
   // éclaireurs hors cercle (proprietaire pub-*) ne vivent que dans "public".
-  const idsCercle = new Set(MEMBRES.map((m) => m.id))
-  const idsProches = new Set(MEMBRES.filter((m) => m.proche).map((m) => m.id))
-  const estDuCercle = (l: Lieu) => !!l.proprietaire && idsCercle.has(l.proprietaire)
-  const estDesProches = (l: Lieu) => !!l.proprietaire && idsProches.has(l.proprietaire)
-  const mesLieux = lieux.filter((l) => estAMoi(l) || estDuCercle(l))
-  const lieuxPublics = lieux.filter((l) => l.visibilite === 'public')
+  const idsCercle = useMemo(() => new Set(MEMBRES.map((m) => m.id)), [])
+  // UNE seule source pour les super potes : lesProches() (état `proches`),
+  // plus jamais le `proche` figé du seed (il ne sert qu'à amorcer cercle.ts).
+  const idsProches = useMemo(() => new Set(proches), [proches])
+  const mesLieux = useMemo(
+    () => lieux.filter((l) => estAMoi(l) || idsCercle.has(l.proprietaire ?? '')),
+    [lieux, idsCercle],
+  )
+  // mes spots à MOI (stat « spots » du profil : pas ceux du cercle)
+  const mesSpots = useMemo(() => lieux.filter((l) => estAMoi(l)), [lieux])
 
   // la collection affichée sur "ma carte" : 4 niveaux de distance sociale
   // (la sélection d'UNE personne précise se fait dans l'onglet "le cercle")
-  const baseCarte =
-    collection === 'tout'
-      ? lieux // tout mélangé : mes spots + proches + potes + public/curateurs
-      : collection === 'moi'
-      ? lieux.filter(estAMoi)
-      : collection === 'public'
-        ? lieuxPublics
-        : collection === 'proches'
-          ? lieux.filter(estDesProches)
-          : lieux.filter(estDuCercle) // potes = tout le cercle (proches inclus)
+  const baseCarte = useMemo(() => {
+    if (collection === 'tout') return lieux // tout mélangé : mes spots + proches + potes + public/curateurs
+    if (collection === 'moi') return lieux.filter(estAMoi)
+    if (collection === 'public') return lieux.filter((l) => l.visibilite === 'public')
+    if (collection === 'proches')
+      return lieux.filter((l) => !!l.proprietaire && idsProches.has(l.proprietaire))
+    return lieux.filter((l) => !!l.proprietaire && idsCercle.has(l.proprietaire)) // potes = tout le cercle (proches inclus)
+  }, [lieux, collection, idsProches, idsCercle])
 
   // l'index filtré : les 3 axes se COMBINENT (tous doivent passer)
-  const appliquerFiltre = (liste: Lieu[]) =>
-    liste.filter((l) => {
+  const lieuxFiltres = useMemo(() => {
+    const liste = baseCarte.filter((l) => {
       const okStatut = filtre === 'faits' ? !!l.tampon : filtre === 'decouvrir' ? !l.tampon : true
       const okOuvert = !ouvertOn || etatHoraire(l.horaires)?.ouvert === true
       const okMatch =
@@ -829,8 +899,6 @@ export default function App() {
       const okSurLeau = !surLeauOn || !!l.surLeau
       return okStatut && okOuvert && okMatch && okEnvie && okFav && okRooftop && okSurLeau
     })
-  const lieuxFiltres = (() => {
-    const liste = appliquerFiltre(baseCarte)
     if (tri === 'wc') {
       return [...liste].sort((a, b) => (b.propreteWc ?? 0) - (a.propreteWc ?? 0))
     }
@@ -857,16 +925,29 @@ export default function App() {
       )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
-  })()
+  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus])
 
-  // les lieux à noter, dédoublonnés par nom (des sorties périmées s'accumulent)
-  const aNoter = (() => {
-    const vus = new Set<string>()
-    return sortiesEnAttente().filter((s) => (vus.has(s.nom) ? false : (vus.add(s.nom), true)))
-  })()
+  // le compteur « N ouverts » — partagé, calculé une fois par liste filtrée
+  const nbOuverts = useMemo(
+    () => lieuxFiltres.filter((l) => etatHoraire(l.horaires)?.ouvert === true).length,
+    [lieuxFiltres],
+  )
 
-  if (splash) return <Splash onFini={() => setSplash(false)} />
-  if (!authPret) return null
+  // les lieux à noter, dédoublonnés par nom (des sorties périmées s'accumulent) —
+  // dérivés de l'état `sorties` (plus de relecture localStorage à chaque render)
+  const aNoter = useMemo(() => {
+    const nomsVus = new Set<string>()
+    return sorties.filter((s) => (nomsVus.has(s.nom) ? false : (nomsVus.add(s.nom), true)))
+  }, [sorties])
+
+  if (splash) return <Splash onFini={finirSplash} />
+  // pas d'écran noir pendant qu'on interroge la session : le tampon respire
+  if (!authPret)
+    return (
+      <div className="attente-auth" aria-busy="true" aria-label="chargement">
+        <div className="tampon-logo attente-auth-logo">Jeudi.</div>
+      </div>
+    )
   if (!session) return <Auth />
   if (onboard) return <Onboarding onFini={() => setOnboard(false)} />
 
@@ -939,12 +1020,13 @@ export default function App() {
                   <div className="notif-ligne" key={d.id}>
                     <span className="notif-qui">
                       @{d.prenom.toLowerCase()}
+                      <span className="mono tampon-demo">démo</span>
                     </span>
                     <span className="notif-actions mono">
-                      <button className="notif-ok" onClick={() => repondreDemande(d.id)}>
+                      <button className="notif-ok" onClick={() => accepterDemande(d.id)}>
                         accepter
                       </button>
-                      <button className="notif-non" onClick={() => repondreDemande(d.id)}>
+                      <button className="notif-non" onClick={() => ignorerDemande(d.id)}>
                         ignorer
                       </button>
                     </span>
@@ -962,7 +1044,9 @@ export default function App() {
                     className="notif-ligne notif-anoter hand"
                     key={s.lieuId}
                     onClick={() => {
+                      // on ouvre UNE sortie : le compteur doit dire 1/1, pas 3/3
                       setAttente([s])
+                      setAttenteTotal(1)
                       setNotifsOuvertes(false)
                     }}
                   >
@@ -997,6 +1081,7 @@ export default function App() {
                         onClick={() => {
                           setDemandes([])
                           viderSorties()
+                          setSorties([])
                           setAttente([])
                           setConfirmVider(false)
                           setNotifsOuvertes(false)
@@ -1124,8 +1209,7 @@ export default function App() {
               )
             })()}
             <span className="idx-reglages-compteur mono">
-              {lieuxFiltres.filter((l) => etatHoraire(l.horaires)?.ouvert === true).length} ouverts ·{' '}
-              {lieuxFiltres.length} spot{lieuxFiltres.length > 1 ? 's' : ''}
+              {nbOuverts} ouverts · {lieuxFiltres.length} spot{lieuxFiltres.length > 1 ? 's' : ''}
             </span>
           </div>
 
@@ -1308,18 +1392,21 @@ export default function App() {
             <div style={{ flex: 1, paddingTop: 4, color: 'var(--ivory)' }}>
               <div style={{ fontStyle: 'italic', fontSize: 26, lineHeight: 1.1 }}>
                 {prenom}
-                {ageDepuis(naissance) != null && (
-                  <span style={{ opacity: 0.65 }}> · {ageDepuis(naissance)} ans</span>
-                )}
+                <span style={{ opacity: 0.65 }}>
+                  {' '}
+                  · {ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ans` : '—'}
+                </span>
               </div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.55, marginTop: 3 }}>
                 depuis {formatDepuis(depuis)}
               </div>
               <div style={{ display: 'flex', marginTop: 14 }}>
-                <StatProfil n={mesLieux.length} l="spots" />
-                <StatProfil n={mesLieux.filter((x) => x.tampon?.v === 'valide').length} l="validés" />
+                {/* mes spots à MOI (pas ceux du cercle) */}
+                <StatProfil n={mesSpots.length} l="spots" />
+                <StatProfil n={mesSpots.filter((x) => x.tampon?.v === 'valide').length} l="validés" />
+                {/* MÊME source que le toggle : lesProches() (état) — bouge en direct */}
                 <StatProfil
-                  n={`${MEMBRES.filter((m) => m.proche).length}/10`}
+                  n={`${proches.length}/${CAP_PROCHES}`}
                   l="super potes"
                   onClick={() => setOnglet('cercle')}
                 />
@@ -1583,7 +1670,14 @@ export default function App() {
                   key={m.id}
                   className="membre"
                   role="button"
+                  tabIndex={0}
                   onClick={() => setCurateur(m.prenom)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setCurateur(m.prenom)
+                    }
+                  }}
                   style={estPro ? { borderColor: 'var(--red)' } : undefined}
                 >
                   <div
@@ -1593,7 +1687,19 @@ export default function App() {
                     <span className="membre-nom">
                       {m.prenom}
                       {estPro && (
-                        <span style={{ color: 'var(--red)', marginLeft: 7, fontSize: 12 }}>★ super pote</span>
+                        <span
+                          style={{
+                            color: 'var(--red)',
+                            marginLeft: 7,
+                            fontSize: 12,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          {/* l'anneau intérieur — jamais d'étoile (DA) */}
+                          <IAnneau taille={12} /> super pote
+                        </span>
                       )}
                     </span>
                     <button
@@ -1695,6 +1801,7 @@ export default function App() {
           total={attenteTotal}
           onFini={() => {
             retirerSortie(aValider.lieuId)
+            setSorties((prev) => prev.filter((s) => s.lieuId !== aValider.lieuId))
             sortieSuivante()
             recharger()
           }}
@@ -1913,12 +2020,18 @@ function Validation({
     onFini()
   }
 
+  // cap raisonnable de photos par lieu : au-delà, les plus ANCIENNES sortent
+  const CAP_PHOTOS_LIEU = 12
+
   const terminer = async () => {
     if (lieu) {
+      // on AJOUTE les nouvelles photos (on ne remplace jamais les anciennes du même type)
+      const photosFusion = [...lieu.photos, ...photos].slice(-CAP_PHOTOS_LIEU)
       await majLieu({
         ...lieu,
-        note: tip.trim() ? tip.trim() : lieu.note,
-        photos: [...lieu.photos.filter((p) => !photos.some((n) => n.type === p.type)), ...photos],
+        // le champ tip reflète l'état final : vidé → le tip s'efface (note: '')
+        note: tip.trim(),
+        photos: photosFusion,
         // les cases reflètent l'état final : cocher ajoute, décocher corrige
         envies: tags.filter((t) => (ENVIES as readonly string[]).includes(t)) as Lieu['envies'],
         compagnies: tags.filter((t) =>
@@ -2240,7 +2353,18 @@ function CarteCurateur({
               const tip = l.tipsCercle?.find((t) => t.auteur === curateur)
               return (
                 <li key={l.id} className="lieu">
-                  <div className="lieu-ligne" role="button" onClick={() => onVoir(l)}>
+                  <div
+                    className="lieu-ligne"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onVoir(l)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onVoir(l)
+                      }
+                    }}
+                  >
                     <div className="lieu-texte">
                       <div className="lieu-tete">
                         <span className="lieu-nom">{l.nom}</span>
@@ -2288,11 +2412,16 @@ function Fiche({
   const [photoIndex, setPhotoIndex] = useState(0)
   const [agrandi, setAgrandi] = useState(false) // visionneuse photo plein écran
   const zoomDepart = useRef({ x: 0, y: 0 })
+  // le doigt a bougé (> 8px) entre down et up → c'est un feuilletage, pas un clic de fermeture
+  const zoomBouge = useRef(false)
   // l'adresse complète (n° + rue + CP + ville) récupérée en live, sinon repli
   const [adrComplete, setAdrComplete] = useState('')
   const nbPhotos = lieu.photos.length
 
   useEffect(() => {
+    // reset volontaire avant le fetch : on ne veut pas montrer l'adresse de
+    // l'ancien lieu pendant que la nouvelle arrive (comportement voulu tel quel)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAdrComplete('')
     if (lieu.lat === 0 && lieu.lng === 0) return
     let ok = true
@@ -2453,13 +2582,22 @@ function Fiche({
       {agrandi && nbPhotos > 0 && (
         <div
           className="photo-zoom"
-          onClick={() => setAgrandi(false)}
+          onClick={() => {
+            // un geste de feuilletage ne ferme pas la visionneuse
+            if (zoomBouge.current) {
+              zoomBouge.current = false
+              return
+            }
+            setAgrandi(false)
+          }}
           onPointerDown={(e) => {
+            zoomBouge.current = false
             zoomDepart.current = { x: e.clientX, y: e.clientY }
           }}
           onPointerUp={(e) => {
             const dx = e.clientX - zoomDepart.current.x
             const dy = e.clientY - zoomDepart.current.y
+            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) zoomBouge.current = true
             if ((Math.abs(dx) > 40 || Math.abs(dy) > 40) && nbPhotos > 1) {
               setPhotoIndex((p) =>
                 dx < 0 || dy < 0 ? (p + 1) % nbPhotos : (p - 1 + nbPhotos) % nbPhotos,
@@ -2467,7 +2605,16 @@ function Fiche({
             }
           }}
         >
-          <button className="photo-zoom-x mono" aria-label="fermer">✕</button>
+          <button
+            className="photo-zoom-x mono"
+            aria-label="fermer"
+            onClick={(e) => {
+              e.stopPropagation()
+              setAgrandi(false)
+            }}
+          >
+            ✕
+          </button>
           <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
           {nbPhotos > 1 && (
             <div className="photo-tirets photo-zoom-tirets">
@@ -2681,7 +2828,9 @@ function Fiche({
                     </span>
                   ))}
                 </div>
-                <span className="mono tip-signature">— selon {r.prenom}</span>
+                <span className="mono tip-signature">
+                  — selon {r.prenom} <span className="tampon-simule">simulé</span>
+                </span>
               </div>
             ))}
           </div>
@@ -2940,6 +3089,9 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
   const [horaires, setHoraires] = useState<[number | null, number | null] | undefined>(undefined)
   // import Google Takeout
   const [importMsg, setImportMsg] = useState<string | null>(null)
+  // anti double-tap sur « c'est dit. » + message doux si pas de position
+  const [envoiEnCours, setEnvoiEnCours] = useState(false)
+  const [msgPosition, setMsgPosition] = useState<string | null>(null)
 
   const importerFichier = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -2976,7 +3128,10 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
 
   // recherche d'adresse (Nominatim/OSM) — debounce 600ms, identifié (politique d'usage)
   useEffect(() => {
+    // debounce de recherche : vider/armer l'état de suggestion à chaque frappe
+    // est le comportement voulu (synchronisation avec un fetch externe)
     if (nom.trim().length < 3 || adresseChoisie) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([])
       setRecherche('off')
       return
@@ -3014,29 +3169,40 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
     setAdresseChoisie(s.adresse)
     setSuggestions([])
     setGeoEtat('ok')
+    setMsgPosition(null) // le spot a une place — le message n'a plus lieu d'être
   }
 
   const enregistrer = async () => {
-    if (!nom.trim()) return
-    await ajouterLieu({
-      id: nouvelId(),
-      nom: nom.trim(),
-      lat: position?.lat ?? 0,
-      lng: position?.lng ?? 0,
-      adresse: adresseChoisie ?? undefined,
-      note: note.trim(),
-      visibilite,
-      envies: envies as Lieu['envies'],
-      compagnies: compagnies as Lieu['compagnies'],
-      meteo,
-      horaires,
-      photos,
-      propreteWc: propreteWcV,
-      statut: 'actif',
-      creeLe: new Date().toISOString(),
-      source: adresseChoisie ? 'manuel' : position ? 'rue' : 'manuel',
-    })
-    onFini()
+    if (!nom.trim() || envoiEnCours) return
+    // pas de spot à Null Island : sans position (GPS ou adresse), on refuse gentiment
+    if (!position) {
+      setMsgPosition('place-le sur la carte d’abord — choisis une adresse ou autorise le GPS.')
+      return
+    }
+    setEnvoiEnCours(true)
+    try {
+      await ajouterLieu({
+        id: nouvelId(),
+        nom: nom.trim(),
+        lat: position.lat,
+        lng: position.lng,
+        adresse: adresseChoisie ?? undefined,
+        note: note.trim(),
+        visibilite,
+        envies: envies as Lieu['envies'],
+        compagnies: compagnies as Lieu['compagnies'],
+        meteo,
+        horaires,
+        photos,
+        propreteWc: propreteWcV,
+        statut: 'actif',
+        creeLe: new Date().toISOString(),
+        source: adresseChoisie ? 'manuel' : 'rue',
+      })
+      onFini()
+    } finally {
+      setEnvoiEnCours(false)
+    }
   }
 
   return (
@@ -3172,10 +3338,15 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
         <button className="lien" onClick={onAnnule}>
           laisse tomber
         </button>
-        <button className="valider" onClick={enregistrer} disabled={!nom.trim()}>
-          c'est dit.
+        <button
+          className="valider"
+          onClick={enregistrer}
+          disabled={!nom.trim() || envoiEnCours}
+        >
+          {envoiEnCours ? 'on le note…' : "c'est dit."}
         </button>
       </div>
+      {msgPosition && <p className="mono form-msg-position">{msgPosition}</p>}
     </div>
   )
 }

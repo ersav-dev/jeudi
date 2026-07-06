@@ -157,7 +157,13 @@ export default function LigneIndex({
             <div className="idx-polaroid">
               <div className="idx-photo">
                 {nbPhotos > 0 ? (
-                  <img src={srcPhoto(lieu.photos[0])} alt={lieu.nom} />
+                  <img
+                    src={srcPhoto(lieu.photos[0])}
+                    alt={lieu.nom}
+                    loading="lazy"
+                    width={110}
+                    height={110}
+                  />
                 ) : (
                   <span className="hand idx-sansphoto">sa photo</span>
                 )}
@@ -250,7 +256,13 @@ export default function LigneIndex({
               </div>
             )}
             {nbPhotos > 0 ? (
-              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+              <img
+                src={srcPhoto(lieu.photos[photoIndex])}
+                alt={lieu.nom}
+                loading="lazy"
+                width={640}
+                height={400}
+              />
             ) : (
               <div className="idx-grande-vide hand">pas encore de photo.</div>
             )}
@@ -302,7 +314,12 @@ export default function LigneIndex({
               <div className={`idx-case-gros ${horaire?.ouvert ? 'ouvert' : ''}`}>
                 {horaire ? horaire.texte.replace(/.*à /, '') : '—'}
               </div>
-              <div className="mono idx-case-lbl">{horaire?.ouvert ? 'FERME' : 'OUVRE'}</div>
+              {/* horaire inconnu : on le DIT (pas de « OUVRE — » trompeur) */}
+              {horaire ? (
+                <div className="mono idx-case-lbl">{horaire.ouvert ? 'FERME' : 'OUVRE'}</div>
+              ) : (
+                <div className="mono idx-case-lbl idx-case-inconnu">horaires inconnus</div>
+              )}
             </div>
           </div>
           <a

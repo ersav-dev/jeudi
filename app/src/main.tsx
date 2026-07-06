@@ -4,6 +4,10 @@ import { createRoot } from 'react-dom/client'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './index.css'
 import App from './App.tsx'
+import { registerSW } from 'virtual:pwa-register'
+
+// service worker : mise à jour auto, sans prompt
+registerSW({ immediate: true })
 
 // filet de sécurité : une exception ne doit jamais faire un écran blanc
 class GardeFou extends Component<{ children: ReactNode }, { erreur: boolean }> {

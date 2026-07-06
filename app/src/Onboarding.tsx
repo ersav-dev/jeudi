@@ -26,6 +26,13 @@ const CURATEURS = [
   { prenom: 'Inès', titre: 'curatrice · 61 spots', truc: 'la bougie' },
 ]
 
+// app orientée bars/apéro : majeur uniquement → la date max = aujourd'hui − 18 ans
+function maxNaissance(): string {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 18)
+  return d.toISOString().slice(0, 10)
+}
+
 export default function Onboarding({ onFini }: { onFini: () => void }) {
   const [drag, setDrag] = useState({ x: 0, actif: false })
   const [etape, setEtape] = useState<
@@ -35,7 +42,10 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
   const [score, setScore] = useState(100)
   const [chambre, setChambre] = useState<string | null>(null)
   const [critere, setCritere] = useState('')
-  const [naissance, setNaissance] = useState('1991-03-06') // pré-rempli (Ersan)
+  // AUCUN défaut perso : le prénom se demande ici, la naissance reste vide tant
+  // que non renseignée (l'âge s'affiche « — » sur le profil si absente)
+  const [prenom, setPrenom] = useState('')
+  const [naissance, setNaissance] = useState('')
   const [reponseEcrite, setReponseEcrite] = useState('')
   // qui tu suis : pré-cochés (on entre par les curateurs), mais tu décides
   const [suivis, setSuivis] = useState<string[]>(() => CURATEURS.map((c) => c.prenom))
@@ -62,7 +72,7 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     await sauverProfil({
       scoreSwipe: score,
       critere: critere.trim() || 'le feeling',
-      prenom: 'Ersan',
+      prenom: prenom.trim(),
       naissance: naissance || undefined,
     })
     ecrireCouleur(couleur)
@@ -164,8 +174,15 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
                 key={c.prenom}
                 className={`onboard-curateur ${suivi ? 'suivi' : ''}`}
                 role="button"
+                tabIndex={0}
                 aria-pressed={suivi}
                 onClick={() => basculerSuivi(c.prenom)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    basculerSuivi(c.prenom)
+                  }
+                }}
               >
                 <div className="onboard-curateur-tete">
                   <span className="membre-nom">{c.prenom}</span>
@@ -209,15 +226,28 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
           onChange={(e) => setCritere(e.target.value)}
         />
         <label className="onboard-naissance mono">
+          ton prénom
+          <input
+            className="onboard-input"
+            placeholder="comment on t'appelle ?"
+            value={prenom}
+            onChange={(e) => setPrenom(e.target.value)}
+          />
+        </label>
+        <label className="onboard-naissance mono">
           ta date de naissance
           <input
             type="date"
-            max="2012-12-31"
+            max={maxNaissance()}
             value={naissance}
             onChange={(e) => setNaissance(e.target.value)}
           />
         </label>
-        <button className="valider" onClick={() => setEtape('curateurs')}>
+        <button
+          className="valider"
+          onClick={() => setEtape('curateurs')}
+          disabled={!prenom.trim()}
+        >
           continuer
         </button>
       </div>

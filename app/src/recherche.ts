@@ -6,7 +6,7 @@
 //
 // Moteur PUR : il ne lit pas le stockage lui-même. Le caller lui passe
 // l'historique (construit depuis db.ts) → reste testable et sans couplage.
-// ⚠️ ISOLÉ : importé nulle part tant que la logique n'est pas validée.
+// Branché sur l'écran labo EcranRecherche.tsx.
 // ════════════════════════════════════════════════════════════════
 import {
   type Lieu,
@@ -103,14 +103,33 @@ export interface Resultat {
   score: number
   /** ce qui a fait remonter ce lieu, en clair */
   raisons: string[]
+  /** ouvert à l'instant de la recherche (null = horaires inconnus) */
+  ouvert: boolean | null
+}
+
+// ── cache du « foin » normalisé par lieu ────────────────────────
+// la recherche texte re-scannait nom/desc/note/adresse de CHAQUE lieu à CHAQUE
+// frappe (≈750 normalisations NFD par caractère tapé). on normalise une seule
+// fois par objet Lieu — WeakMap par référence : une liste fraîche donne un
+// cache frais, et rien ne fuit quand les lieux sont rechargés.
+const cacheFoin = new WeakMap<Lieu, { foin: string; nom: string }>()
+function foinDe(lieu: Lieu): { foin: string; nom: string } {
+  let c = cacheFoin.get(lieu)
+  if (!c) {
+    c = {
+      foin: norm([lieu.nom, lieu.description ?? '', lieu.note ?? '', lieu.adresse ?? ''].join(' ')),
+      nom: norm(lieu.nom),
+    }
+    cacheFoin.set(lieu, c)
+  }
+  return c
 }
 
 /** score de correspondance au texte libre (0..1) sur nom/desc/note/adresse */
 function scoreTexte(lieu: Lieu, q: string): number {
   const tokens = norm(q).split(/\s+/).filter(Boolean)
   if (!tokens.length) return 1
-  const foin = norm([lieu.nom, lieu.description ?? '', lieu.note ?? '', lieu.adresse ?? ''].join(' '))
-  const nomNorm = norm(lieu.nom)
+  const { foin, nom: nomNorm } = foinDe(lieu)
   let hits = 0
   let bonusNom = 0
   for (const t of tokens) {
@@ -145,6 +164,11 @@ export function rechercher(
     }
 
     const raisons: string[] = []
+
+    // filtre « ouvert » : on GARDE les horaires inconnus (la majorité des spots
+    // n'a pas d'horaires — les exclure viderait la liste), mais on le dit, et
+    // les vrais ouverts passent devant au tri final.
+    if (requete.ouvertSeulement && ouvert == null) raisons.push('horaires inconnus')
 
     // — la requête explicite du moment —
     let reqScore = 0
@@ -202,10 +226,18 @@ export function rechercher(
     if (dist < 600) raisons.push('tout près')
 
     const score = (reqScore + goutScore + confScore + sig + distScore) * tScore
-    out.push({ lieu, score, raisons })
+    out.push({ lieu, score, raisons, ouvert })
   }
 
-  return out.sort((a, b) => b.score - a.score || distanceM(a.lieu, depuis) - distanceM(b.lieu, depuis))
+  // avec le filtre « ouvert » : les lieux VRAIMENT ouverts d'abord, les
+  // horaires inconnus derrière — puis le score, puis la distance.
+  const rangOuvert = (r: Resultat) => (requete.ouvertSeulement && r.ouvert === true ? 1 : 0)
+  return out.sort(
+    (a, b) =>
+      rangOuvert(b) - rangOuvert(a) ||
+      b.score - a.score ||
+      distanceM(a.lieu, depuis) - distanceM(b.lieu, depuis),
+  )
 }
 
 // ════════════════════════════════════════════════════════════════

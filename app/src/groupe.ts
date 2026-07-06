@@ -4,8 +4,7 @@
 // triangulation des envies + contraintes), puis le groupe « réagit »
 // (langage de réactions agrégé). Aucune dépendance UI ici — que de la logique.
 //
-// ⚠️ ISOLÉ : ce fichier n'est importé nulle part tant que la logique n'est
-// pas validée. Il ne touche donc pas à l'app existante.
+// Branché sur l'écran labo EcranGroupe.tsx (compose → swipe → match).
 // ════════════════════════════════════════════════════════════════
 import {
   type Lieu,
@@ -13,6 +12,7 @@ import {
   type Meteo,
   distanceM,
   etatHoraire,
+  maPosition,
 } from './db'
 
 // ── le profil de préférences d'un membre du groupe ──────────────
@@ -49,9 +49,12 @@ function coutLieu(m?: Meteo): 0 | 1 | 2 | null {
 
 const TROP_LOIN_M = 2500 // au-delà, un pote dira « trop loin »
 
-function veutCeLieu(lieu: Lieu, m: MembrePref): boolean {
-  // un lieu sans envie taggée plaît faiblement à tout le monde (neutre)
-  return lieu.envies.length === 0 || lieu.envies.some((e) => m.envies.includes(e))
+/** crédit d'envie d'un membre pour un lieu : 1 = une envie couverte ·
+ *  0,5 = lieu SANS envie taggée (demi-crédit : les fiches vides ne doivent
+ *  pas battre les fiches honnêtes) · 0 = taggé mais rien pour lui. */
+function creditEnvie(lieu: Lieu, m: MembrePref): number {
+  if (lieu.envies.length === 0) return 0.5
+  return lieu.envies.some((e) => m.envies.includes(e)) ? 1 : 0
 }
 
 function ouvertMaintenant(lieu: Lieu, maintenant = new Date()): boolean | null {
@@ -77,9 +80,15 @@ export interface ScoreGroupe {
 }
 
 /** le point de rendez-vous : le barycentre des points de départ du groupe.
- *  l'app triangule « au milieu » → près de tout le monde. */
-export function triangule(departs: { lat: number; lng: number }[]): { lat: number; lng: number } {
-  const n = departs.length || 1
+ *  l'app triangule « au milieu » → près de tout le monde.
+ *  sans aucun départ : repli sur `repli` (ma position par défaut) — jamais
+ *  {0,0}, qui poserait le rendez-vous au large du golfe de Guinée. */
+export function triangule(
+  departs: { lat: number; lng: number }[],
+  repli: { lat: number; lng: number } = maPosition,
+): { lat: number; lng: number } {
+  if (!departs.length) return { lat: repli.lat, lng: repli.lng }
+  const n = departs.length
   return {
     lat: departs.reduce((s, p) => s + p.lat, 0) / n,
     lng: departs.reduce((s, p) => s + p.lng, 0) / n,
@@ -93,12 +102,19 @@ export function scoreLieuGroupe(
   maintenant = new Date(),
 ): ScoreGroupe {
   const total = groupe.length || 1
-  const satisfaits = groupe.filter((m) => veutCeLieu(lieu, m)).length
-  const couverture = satisfaits / total
+  const credits = groupe.map((m) => creditEnvie(lieu, m))
+  // satisfaits = envie vraiment couverte (le demi-crédit des fiches vides ne compte pas)
+  const satisfaits = credits.filter((c) => c >= 1).length
+  const couverture = credits.reduce((s, c) => s + c, 0) / total
 
   const cout = coutLieu(lieu.meteo)
-  const budgetMin = Math.min(...groupe.map((m) => m.budgetMax)) // le plus serré
+  // le porte-monnaie le plus serré ; groupe vide → pas de contrainte
+  // (garde anti Math.min(...[]) = Infinity)
+  const budgetMin = groupe.length ? Math.min(...groupe.map((m) => m.budgetMax)) : 2
   const budgetOk = cout == null || cout <= budgetMin
+  // coût inconnu = demi-confiance (0,1 au lieu du bonus plein 0,2) :
+  // les fiches vides ne doivent pas battre les fiches honnêtes.
+  const bonusBudget = cout == null ? 0.1 : cout <= budgetMin ? 0.2 : 0
 
   const dist = distanceM(lieu, centre) // distance depuis le point de rendez-vous
   const distScore = Math.max(0, Math.min(1, 1 - dist / 3000))
@@ -109,7 +125,7 @@ export function scoreLieuGroupe(
   const potos = lieu.compagnies.length === 0 || lieu.compagnies.includes('potos') ? 1 : 0
 
   const score =
-    couverture * 0.5 + (budgetOk ? 1 : 0) * 0.2 + bonusOuvert * 0.15 + potos * 0.08 + distScore * 0.07
+    couverture * 0.5 + bonusBudget + bonusOuvert * 0.15 + potos * 0.08 + distScore * 0.07
 
   // la phrase « pourquoi »
   const bouts: string[] = [`plaît à ${satisfaits}/${total}`]
@@ -148,12 +164,19 @@ export const REACTION_LABELS: Record<Reaction, string> = {
   'trop loin': 'trop loin',
 }
 
-/** la réaction (simulée mais déterministe) d'un membre face à un lieu */
-export function reactionMembre(lieu: Lieu, m: MembrePref, maintenant = new Date()): Reaction {
+/** la réaction (simulée mais déterministe) d'un membre face à un lieu.
+ *  `centre` = le point de rendez-vous TRIANGULÉ : « trop loin » se juge depuis
+ *  là (le trajet du groupe), pas depuis ma position à moi. */
+export function reactionMembre(
+  lieu: Lieu,
+  m: MembrePref,
+  centre: { lat: number; lng: number },
+  maintenant = new Date(),
+): Reaction {
   const cout = coutLieu(lieu.meteo)
   if (cout != null && cout > m.budgetMax) return 'trop cher'
-  if (distanceM(lieu) > TROP_LOIN_M) return 'trop loin'
-  if (!veutCeLieu(lieu, m)) return 'pas moi'
+  if (distanceM(lieu, centre) > TROP_LOIN_M) return 'trop loin'
+  if (creditEnvie(lieu, m) === 0) return 'pas moi'
   if (ouvertMaintenant(lieu, maintenant) === false) return 'pourquoi pas'
   return 'chaud'
 }
@@ -170,9 +193,13 @@ export interface ReactionsLieu {
 export function reactionsDuGroupe(
   lieu: Lieu,
   groupe: MembrePref[],
+  centre: { lat: number; lng: number },
   maintenant = new Date(),
 ): ReactionsLieu {
-  const reactions = groupe.map((m) => ({ membre: m.prenom, reaction: reactionMembre(lieu, m, maintenant) }))
+  const reactions = groupe.map((m) => ({
+    membre: m.prenom,
+    reaction: reactionMembre(lieu, m, centre, maintenant),
+  }))
   const comptes: Partial<Record<Reaction, number>> = {}
   for (const r of reactions) comptes[r.reaction] = (comptes[r.reaction] ?? 0) + 1
 
@@ -214,13 +241,15 @@ export function verdictDeGroupe(
   lieux: Lieu[],
   groupe: MembrePref[],
   topN = 5,
+  centre?: { lat: number; lng: number },
   maintenant = new Date(),
 ): VerdictGroupe | null {
-  const classes = classerPourGroupe(lieux, groupe, topN, undefined, maintenant)
+  const point = centre ?? maPosition // sans rendez-vous fourni : depuis moi
+  const classes = classerPourGroupe(lieux, groupe, topN, point, maintenant)
   if (!classes.length) return null
   const shortlist = classes.map((score) => ({
     score,
-    reactions: reactionsDuGroupe(score.lieu, groupe, maintenant),
+    reactions: reactionsDuGroupe(score.lieu, groupe, point, maintenant),
   }))
   // gagnant = celui qui combine le mieux score d'algo + nombre de « chaud »
   const gagnant = [...shortlist].sort((a, b) => {

@@ -1,7 +1,6 @@
 import { type Lieu, type TipCercle, type PhotoLieu, ajouterLieuLocal, nouvelId, getDB } from './db'
-import ERSAN from './ersan'
-import { CURATED } from './spots_curated'
-import { EXTRA } from './spots_extra'
+// les gros fichiers de données (ERSAN/CURATED/EXTRA) sont importés dynamiquement
+// DANS importerSeed() : ils ne partent plus dans le chunk principal.
 
 // ── mapping des vraies données Google → langage jeudi ──
 // le type de cuisine devient une envie
@@ -248,7 +247,7 @@ function horairesDefaut(envies: string[]): [number, number] {
 // les tables calmes sont des refuges. (à terme : déclaré par le membre.)
 // #22 : la propreté des WC, déterministe sur le nom (le seul score autorisé).
 // (à terme : déclarée par le membre à la capture.)
-function propreteDefaut(_nom: string): 1 | 2 | 3 | undefined {
+function propreteDefaut(): 1 | 2 | 3 | undefined {
   // la propreté des WC ne s'invente pas : elle vient des membres (photos WC).
   // tant qu'on n'a pas la vraie donnée, on n'affiche rien (pas de faux score).
   return undefined
@@ -276,6 +275,12 @@ export async function importerSeed(): Promise<boolean> {
   // poser le drapeau AVANT d'insérer : React StrictMode lance
   // l'effet deux fois en dev, sinon double import (course)
   localStorage.setItem('jeudi-seed-v18', 'fait')
+  // données chargées à la demande (chunks séparés du bundle principal)
+  const [{ default: ERSAN }, { CURATED }, { EXTRA }] = await Promise.all([
+    import('./ersan'),
+    import('./spots_curated'),
+    import('./spots_extra'),
+  ])
   const db = await getDB()
   // purge l'ancien seed (v1) avant de réinsérer la version cercle
   for (const l of await db.getAll('lieux')) {
@@ -299,7 +304,7 @@ export async function importerSeed(): Promise<boolean> {
       horaires: s.horaires ?? horairesDefaut(s.envies ?? []),
       match: matchDefaut(s.envies ?? [], s.nom),
       rooftop: estRooftop(s.nom, s.note),
-      propreteWc: propreteDefaut(s.nom),
+      propreteWc: propreteDefaut(),
       photos: s.photos ?? [],
       statut: 'actif',
       creeLe: new Date().toISOString(),
@@ -326,7 +331,7 @@ export async function importerSeed(): Promise<boolean> {
       horaires: horairesDefaut(envies),
       match: matchDefaut(envies, e.nom),
       rooftop: estRooftop(e.nom, e.note, e.cuisine),
-      propreteWc: propreteDefaut(e.nom),
+      propreteWc: propreteDefaut(),
       photos: ph(e.nom),
       statut: 'actif',
       creeLe: new Date().toISOString(),
@@ -349,7 +354,7 @@ export async function importerSeed(): Promise<boolean> {
       horaires: horairesDefaut(p.envies),
       match: matchDefaut(p.envies, p.nom),
       rooftop: estRooftop(p.nom, p.note),
-      propreteWc: propreteDefaut(p.nom),
+      propreteWc: propreteDefaut(),
       photos: ph(p.id),
       statut: 'actif',
       creeLe: new Date().toISOString(),

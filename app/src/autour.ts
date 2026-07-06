@@ -3,9 +3,10 @@
 // Le geste « pull / intention précise » : pas « ma position » par défaut,
 // mais un repère que TU choisis — un métro, une gare, un quartier, une adresse.
 // Change le centre de calcul des distances (distanceM accepte déjà `depuis`).
-// Pur logique + un géocodage Nominatim. Isolé.
+// Pur logique + un géocodage via nominatim.ts (le seul point d'accès OSM).
 // ════════════════════════════════════════════════════════════════
 import { type Lieu, maPosition, distanceM } from './db'
+import { chercherAdresse } from './nominatim'
 
 export interface Repere {
   nom: string
@@ -30,27 +31,16 @@ export const POINTS_REPERE: Repere[] = [
   { nom: 'Montmartre', lat: 48.8867, lng: 2.3431 },
 ]
 
-// géocodage texte → point (Nominatim, partout en France — jeudi te suit où tu es).
-// best-effort : renvoie null si rien / hors-ligne.
+// géocodage texte → point (partout en France — jeudi te suit où tu es).
+// passe par nominatim.ts (file d'attente + annulation). best-effort : renvoie
+// null si rien / hors-ligne — les appelants qui veulent le DÉTAIL de l'échec
+// (introuvable ? réseau ?) utilisent chercherAdresse directement.
 export async function geocoderRepere(texte: string): Promise<Repere | null> {
   const q = texte.trim()
   if (!q) return null
-  try {
-    const url =
-      'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&q=' +
-      encodeURIComponent(q)
-    const r = await fetch(url, { headers: { 'Accept-Language': 'fr' } })
-    const data = (await r.json()) as { lat: string; lon: string; display_name: string }[]
-    if (!data?.length) return null
-    const d = data[0]
-    return {
-      nom: q,
-      lat: parseFloat(d.lat),
-      lng: parseFloat(d.lon),
-    }
-  } catch {
-    return null
-  }
+  const r = await chercherAdresse(q)
+  if (!r.ok) return null
+  return { nom: q, lat: r.lieux[0].lat, lng: r.lieux[0].lng }
 }
 
 /** classe les lieux par distance croissante depuis un repère (avec la distance) */

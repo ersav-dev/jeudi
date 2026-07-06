@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
+import Supercluster from 'supercluster'
 import {
   maPosition,
   etatHoraire,
@@ -10,6 +11,7 @@ import {
   propreteWcLabel,
   type Lieu,
 } from './db'
+import { IBallon } from './icones'
 import { srcPhoto } from './photos'
 
 // fond sombre gratuit (tuiles raster Carto dark) — style inline : aucun
@@ -36,6 +38,24 @@ const moi = (): [number, number] => [maPosition.lng, maPosition.lat]
 // le bloc « détails » : page 0 = photo claire (sans texte) · 1 le mot · 2 recommandé · 3 pratique
 const NB_PAGES_SHEET = 4
 
+// ── clustering : les propriétés portées par chaque point de l'index ──
+type ProprietesPin = { id: string }
+// un résultat de getClusters est soit une grappe, soit un point isolé
+const estGrappe = (
+  f: Supercluster.ClusterFeature<Supercluster.AnyProps> | Supercluster.PointFeature<ProprietesPin>,
+): f is Supercluster.ClusterFeature<Supercluster.AnyProps> =>
+  (f.properties as { cluster?: boolean }).cluster === true
+
+// ── labels anti-collision : géométrie pure (aucune lecture du DOM) ──
+const PLAFOND_LABELS = 8
+type Boite = { x: number; y: number; w: number; h: number }
+const chevauche = (a: Boite, b: Boite) =>
+  !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y)
+
+// combien de cartes réelles de part et d'autre du centre du carrousel
+// (le reste = coquilles de même largeur, pour garder le scroll-snap juste)
+const FENETRE_CARROUSEL = 7
+
 export default function Carte({
   lieux,
   onVoir,
@@ -56,15 +76,23 @@ export default function Carte({
 }) {
   const conteneur = useRef<HTMLDivElement>(null)
   const carte = useRef<maplibregl.Map | null>(null)
-  const marqueurs = useRef<maplibregl.Marker[]>([])
-  // recalcul des labels (défini dans l'effet d'init, appelé après pose/clic)
-  const majLabelsRef = useRef<() => void>(() => {})
+  // ── clustering supercluster : l'index (reconstruit quand `lieux` change),
+  // les lieux valides par id, et les markers actuellement posés (diffing).
+  // clés de `poses` : `l:<id de lieu>` (pin isolé) ou `c:<cluster_id>` (grappe).
+  const indexRef = useRef<Supercluster<ProprietesPin> | null>(null)
+  const lieuxParId = useRef<Map<string, Lieu>>(new Map())
+  const poses = useRef<Map<string, maplibregl.Marker>>(new Map())
   // #11 : le lieu sélectionné — pilote le bottom-sheet, le carrousel et le grisé
   const [actif, setActif] = useState<string | null>(null)
-  // les éléments DOM des pins, par id de lieu (pour colorer/griser sans re-créer)
+  // les éléments DOM des pins de LIEUX posés, par id (pour colorer/griser sans re-créer)
   const pinEls = useRef<Record<string, HTMLElement>>({})
+  // cadrage initial : UNE seule fois — consulter une fiche ne recadre plus jamais
+  const dejaCadre = useRef(false)
   // la barre carrousel (pour faire défiler la carte vers la carte active)
   const carrousel = useRef<HTMLDivElement>(null)
+  // fenêtrage du carrousel : l'index « au centre » (cartes réelles autour, coquilles ailleurs)
+  const [centreCarrousel, setCentreCarrousel] = useState(0)
+  const scrollPrevu = useRef(false)
   // photo en cours dans le bloc « détails » (feuilletable), remise à 0 au changement de lieu
   const [sheetPhoto, setSheetPhoto] = useState(0)
   // page d'infos du bloc « détails » (swipe gauche/droite) : le mot · recommandé · pratique
@@ -72,11 +100,21 @@ export default function Carte({
   const sheetDepart = useRef({ x: 0, y: 0 })
   // suivi du clic long : timer + drapeau "déjà déclenché" pour ne pas aussi sélectionner
   const press = useRef<{ timer: number; fired: boolean } | null>(null)
-  // setActif stable pour les closures DOM créées dans l'effet de pose
+  // valeurs vivantes pour les closures DOM / les listeners maplibre posés une fois
   const setActifRef = useRef(setActif)
-  setActifRef.current = setActif
   const onVoirRef = useRef(onVoir)
-  onVoirRef.current = onVoir
+  const actifRef = useRef<string | null>(actif)
+  const vusRef = useRef(vus)
+  const comparerRef = useRef(comparer)
+  // synchronisées après chaque rendu (règle react-hooks/refs : pas d'écriture
+  // pendant le rendu) ; cet effet est déclaré AVANT ceux qui les consomment.
+  useEffect(() => {
+    setActifRef.current = setActif
+    onVoirRef.current = onVoir
+    actifRef.current = actif
+    vusRef.current = vus
+    comparerRef.current = comparer
+  }, [setActif, onVoir, actif, vus, comparer])
 
   const valides = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
   const lieuActif = valides.find((l) => l.id === actif) ?? null
@@ -90,10 +128,234 @@ export default function Carte({
   // à l'index.
   const enCompaCarte = actifAComparer && comparer.length > 1
 
+  // ── fabrique le pin DOM d'un lieu (identité visuelle du carnet : initiale,
+  // teinte du curateur, badges — inchangée). Les états volatils (actif/grisé/
+  // vu/à comparer) sont appliqués À PART par appliquerEtats().
+  const creerPinLieu = (l: Lieu): HTMLElement => {
+    const sig = l.tipsCercle?.[0]
+    const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
+    const valide = l.tampon?.v === 'valide'
+    const ferme = etatHoraire(l.horaires)?.ouvert === false
+    const el = document.createElement('div')
+    // pins homogènes (façon Airbnb/Google) : la photo vit dans la fiche au tap,
+    // pas sur la carte. point rouge = toi · pastille ivoire + initiale = curateur.
+    el.className = `pin${sig ? ' pin-curateur' : ''}${valide ? ' pin-valide' : ''}${ferme ? ' pin-ferme' : ''}`
+    if (sig) {
+      // une teinte par curateur + son initiale à l'encre (garde-fou : nom vide)
+      el.style.background = teinteCurateur(sig.auteur)
+      el.textContent = sig.auteur ? sig.auteur.charAt(0).toUpperCase() : ''
+      // recommandé par plusieurs : un badge avec le nombre de voix
+      if (nbVoix > 1) {
+        const badge = document.createElement('span')
+        badge.className = 'pin-badge mono'
+        badge.textContent = String(nbVoix)
+        el.appendChild(badge)
+      }
+    }
+    // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
+    if (l.match === 'diffuse') {
+      const ballon = document.createElement('span')
+      ballon.className = 'pin-ballon'
+      ballon.title = 'on y voit les matchs'
+      ballon.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
+      el.appendChild(ballon)
+    }
+    // le nom s'affiche en label sous le pin (au zoom suffisant)
+    el.setAttribute('data-nom', l.nom)
+    el.title = l.nom
+    // priorité d'affichage du label : validé > recommandé par plusieurs > ouvert
+    const ouvertMaintenant = etatHoraire(l.horaires)?.ouvert === true
+    el.dataset.prio = String((valide ? 3 : 0) + (nbVoix > 1 ? 2 : 0) + (ouvertMaintenant ? 1 : 0))
+    // #11 : 1er tap = sélectionne (nom+desc en bottom-sheet, carte en couleur,
+    // le reste grisé) · 2e tap sur le même pin = la fiche détaillée.
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation()
+      if (el.classList.contains('pin-actif')) {
+        onVoirRef.current?.(l)
+        return
+      }
+      setActifRef.current(l.id)
+    })
+    return el
+  }
+
+  // ── fabrique la pastille d'une grappe : rond encre ivoire + compte au mono,
+  // même langage que les pins du carnet. clic = zoom jusqu'à l'éclatement.
+  const creerPastilleGrappe = (idGrappe: number, compte: number, lng: number, lat: number) => {
+    const el = document.createElement('div')
+    el.className = 'cluster-pastille mono'
+    el.textContent = String(compte)
+    el.title = `${compte} lieux`
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation()
+      const m = carte.current
+      const index = indexRef.current
+      if (!m || !index) return
+      let z: number
+      try {
+        z = index.getClusterExpansionZoom(idGrappe)
+      } catch {
+        /* l'index a été reconstruit entre temps : on zoome quand même un cran */
+        z = Math.floor(m.getZoom()) + 2
+      }
+      m.easeTo({ center: [lng, lat], zoom: Math.min(z, 18) })
+    })
+    return el
+  }
+
+  // ── réapplique les états volatils sur les pins POSÉS (survit au diffing) :
+  // sélection, grisé, vu, à comparer. Appelée après chaque re-pose ET quand
+  // `actif` / `vus` / `comparer` changent — sans jamais recréer un marker.
+  const appliquerEtats = () => {
+    const a = actifRef.current
+    const c = comparerRef.current
+    const v = vusRef.current
+    for (const [id, el] of Object.entries(pinEls.current)) {
+      el.classList.toggle('pin-actif', id === a)
+      el.classList.toggle('pin-grise', a !== null && id !== a)
+      el.classList.toggle('pin-acomparer', c.includes(id))
+      el.classList.toggle('pin-vu', v?.has(id) === true)
+    }
+  }
+
+  // ── labels anti-collision : jamais tous ; ~8 max, par priorité, sans
+  // chevauchement. Version SANS getBoundingClientRect : on connaît les
+  // coordonnées géo → map.project() (pur calcul), sur les seuls pins visibles.
+  const majLabels = () => {
+    const m = carte.current
+    if (!m) return
+    const entrees = Object.entries(pinEls.current)
+    // dézoomé : la carte respire, zéro label
+    if (m.getZoom() < 13) {
+      for (const [, el] of entrees) el.classList.remove('label-on')
+      return
+    }
+    // priorité : actif > déjà affiché (hystérésis, anti-clignotement) > data-prio
+    const candidats: { el: HTMLElement; boite: Boite; actif: boolean; score: number }[] = []
+    for (const [id, el] of entrees) {
+      const l = lieuxParId.current.get(id)
+      if (!l) continue
+      const pt = m.project([l.lng, l.lat])
+      const nom = l.nom.slice(0, 16)
+      const w = nom.length * 5.5 + 12
+      // le pin fait 18px ancré au centre : le label naît ~2px sous son bord bas
+      const boite: Boite = { x: pt.x - w / 2, y: pt.y + 11, w, h: 14 }
+      const estActif = el.classList.contains('pin-actif')
+      candidats.push({
+        el,
+        boite,
+        actif: estActif,
+        score:
+          (estActif ? 100 : 0) +
+          (el.classList.contains('label-on') ? 10 : 0) +
+          Number(el.dataset.prio || 0),
+      })
+    }
+    candidats.sort((a, b) => b.score - a.score)
+    const posees: Boite[] = []
+    let n = 0
+    for (const c of candidats) {
+      if (c.actif) {
+        c.el.classList.add('label-on')
+        posees.push(c.boite)
+        n++
+        continue
+      }
+      if (n >= PLAFOND_LABELS || posees.some((o) => chevauche(o, c.boite))) {
+        c.el.classList.remove('label-on')
+      } else {
+        c.el.classList.add('label-on')
+        posees.push(c.boite)
+        n++
+      }
+    }
+  }
+
+  // ── LE cœur : interroge l'index sur la bbox visible et pose UNIQUEMENT ce
+  // qui s'y trouve, en diffant contre l'existant (crée les nouveaux, retire
+  // les disparus, ne touche pas au reste). Appelé sur moveend/zoomend — jamais
+  // à chaque frame.
+  const poserVisibles = () => {
+    const m = carte.current
+    const index = indexRef.current
+    if (!m || !index) return
+    const b = m.getBounds()
+    // marge de 20 % autour du viewport : pas de pop au ras du bord en fin de pan
+    const margeX = (b.getEast() - b.getWest()) * 0.2
+    const margeY = (b.getNorth() - b.getSouth()) * 0.2
+    const bbox: [number, number, number, number] = [
+      b.getWest() - margeX,
+      Math.max(-85, b.getSouth() - margeY),
+      b.getEast() + margeX,
+      Math.min(85, b.getNorth() + margeY),
+    ]
+    const grappes = index.getClusters(bbox, Math.floor(m.getZoom()))
+    const voulus = new Set<string>()
+    for (const f of grappes) {
+      const [lng, lat] = f.geometry.coordinates as [number, number]
+      if (estGrappe(f)) {
+        const cle = `c:${f.properties.cluster_id}`
+        voulus.add(cle)
+        if (!poses.current.has(cle)) {
+          const el = creerPastilleGrappe(f.properties.cluster_id, f.properties.point_count, lng, lat)
+          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(m))
+        }
+      } else {
+        const cle = `l:${f.properties.id}`
+        voulus.add(cle)
+        if (!poses.current.has(cle)) {
+          const l = lieuxParId.current.get(f.properties.id)
+          if (!l) continue
+          const el = creerPinLieu(l)
+          pinEls.current[l.id] = el
+          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([l.lng, l.lat]).addTo(m))
+        }
+      }
+    }
+    // le lieu SÉLECTIONNÉ garde toujours son pin, même si sa grappe l'avale :
+    // la sélection reste visible (le pin se superpose à la pastille).
+    const a = actifRef.current
+    if (a) {
+      const l = lieuxParId.current.get(a)
+      if (l) {
+        const cle = `l:${a}`
+        voulus.add(cle)
+        if (!poses.current.has(cle)) {
+          const el = creerPinLieu(l)
+          pinEls.current[l.id] = el
+          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([l.lng, l.lat]).addTo(m))
+        }
+      }
+    }
+    // retire ce qui a quitté la vue ou changé de grappe
+    for (const [cle, mk] of [...poses.current]) {
+      if (!voulus.has(cle)) {
+        mk.remove()
+        poses.current.delete(cle)
+        if (cle.startsWith('l:')) delete pinEls.current[cle.slice(2)]
+      }
+    }
+    appliquerEtats()
+    majLabels()
+  }
+
+  // refs vivantes pour les listeners maplibre posés une seule fois au mount ;
+  // synchronisées après chaque rendu, avant les effets consommateurs ci-dessous.
+  const poserRef = useRef(poserVisibles)
+  const majLabelsRef = useRef(majLabels)
+  const appliquerEtatsRef = useRef(appliquerEtats)
   useEffect(() => {
-    if (!conteneur.current) return
+    poserRef.current = poserVisibles
+    majLabelsRef.current = majLabels
+    appliquerEtatsRef.current = appliquerEtats
+  })
+
+  useEffect(() => {
+    const cont = conteneur.current
+    if (!cont) return
     carte.current = new maplibregl.Map({
-      container: conteneur.current,
+      container: cont,
       style: STYLE,
       center: moi(),
       zoom: 13,
@@ -104,7 +366,10 @@ export default function Carte({
     // le conteneur est révélé au toggle "carte" : maplibre s'initialise
     // parfois avec une taille périmée → tuiles et pins désynchronisés.
     // on force un resize une fois la carte prête.
-    carte.current.on('load', () => carte.current?.resize())
+    carte.current.on('load', () => {
+      carte.current?.resize()
+      poserRef.current()
+    })
     carte.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
       'bottom-left',
@@ -125,7 +390,18 @@ export default function Carte({
     const elMoi = document.createElement('div')
     elMoi.className = 'pin-moi'
     elMoi.title = 'moi'
-    new maplibregl.Marker({ element: elMoi }).setLngLat(moi()).addTo(carte.current)
+    let posMoi = moi()
+    const mkMoi = new maplibregl.Marker({ element: elMoi }).setLngLat(posMoi).addTo(carte.current)
+    // la géoloc répond souvent APRÈS le mount : un petit suivi compare la
+    // position mémorisée et déplace "moi" quand elle change (fini le marker
+    // planté à Vendôme alors que l'utilisateur est ailleurs).
+    const suiviMoi = window.setInterval(() => {
+      const p = moi()
+      if (p[0] !== posMoi[0] || p[1] !== posMoi[1]) {
+        posMoi = p
+        mkMoi.setLngLat(p)
+      }
+    }, 5000)
 
     // ── le cap : une flèche d'orientation sur "moi", pilotée par la boussole ──
     // (mobile · iOS demande l'autorisation au 1er tap · cachée tant qu'aucun cap)
@@ -148,6 +424,8 @@ export default function Carte({
     const DOE = window.DeviceOrientationEvent as
       | (typeof window.DeviceOrientationEvent & { requestPermission?: () => Promise<string> })
       | undefined
+    // iOS : listener « once » — gardé en ref pour le retirer au cleanup s'il n'a pas tiré
+    let onceEnAttente: (() => void) | null = null
     if (DOE && typeof DOE.requestPermission === 'function') {
       const once = () => {
         DOE.requestPermission!()
@@ -155,180 +433,96 @@ export default function Carte({
             if (s === 'granted') ecouterBoussole()
           })
           .catch(() => {})
-        conteneur.current?.removeEventListener('click', once)
+        cont.removeEventListener('click', once)
+        onceEnAttente = null
       }
-      conteneur.current?.addEventListener('click', once)
+      onceEnAttente = once
+      cont.addEventListener('click', once)
     } else {
       ecouterBoussole()
     }
 
-    // ── labels anti-collision : jamais tous ; ~8 max, par priorité, sans chevauchement
-    const PLAFOND = 8
-    type Box = { x: number; y: number; w: number; h: number }
-    const chevauche = (a: Box, b: Box) =>
-      !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y)
-    const boite = (el: Element): Box => {
-      const r = el.getBoundingClientRect()
-      const nom = (el.getAttribute('data-nom') || '').slice(0, 16)
-      const w = nom.length * 5.5 + 12
-      return { x: r.left + r.width / 2 - w / 2, y: r.bottom + 2, w, h: 14 }
-    }
-    const majLabels = () => {
-      const cont = conteneur.current
-      const m = carte.current
-      if (!cont || !m) return
-      const pins = [...cont.querySelectorAll<HTMLElement>('.pin, .pin-photo')]
-      // dézoomé : la carte respire, zéro label
-      if (m.getZoom() < 13) {
-        pins.forEach((p) => p.classList.remove('label-on'))
-        return
-      }
-      // priorité : actif > déjà affiché (hystérésis, anti-clignotement) > data-prio
-      const dejaLa = new Set(pins.filter((p) => p.classList.contains('label-on')))
-      const tries = pins
-        .map((p) => ({
-          p,
-          actif: p.classList.contains('pin-actif'),
-          score:
-            (p.classList.contains('pin-actif') ? 100 : 0) +
-            (dejaLa.has(p) ? 10 : 0) +
-            Number(p.dataset.prio || 0),
-        }))
-        .sort((a, b) => b.score - a.score)
-      const posees: Box[] = []
-      let n = 0
-      for (const { p, actif } of tries) {
-        const b = boite(p)
-        if (actif) {
-          p.classList.add('label-on')
-          posees.push(b)
-          n++
-          continue
-        }
-        if (n >= PLAFOND || posees.some((o) => chevauche(o, b))) {
-          p.classList.remove('label-on')
-        } else {
-          p.classList.add('label-on')
-          posees.push(b)
-          n++
-        }
-      }
-    }
-    majLabelsRef.current = majLabels
-    // recalcul throttlé (rAF) au moindre déplacement/zoom
-    let pending = false
-    const planifier = () => {
-      if (pending) return
-      pending = true
-      requestAnimationFrame(() => {
-        pending = false
-        majLabels()
-      })
-    }
-    carte.current.on('move', planifier)
-    carte.current.on('zoom', planifier)
-    majLabels()
+    // re-pose (clustering + diffing + labels) en FIN de geste seulement —
+    // pendant le pan/zoom, maplibre déplace lui-même les markers déjà posés.
+    const rafraichir = () => poserRef.current()
+    carte.current.on('moveend', rafraichir)
+    carte.current.on('zoomend', rafraichir)
+
+    const posesCourantes = poses.current
+    const pins = pinEls.current
     return () => {
       window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true)
       window.removeEventListener('deviceorientation', onOrient, true)
+      if (onceEnAttente) cont.removeEventListener('click', onceEnAttente)
+      window.clearInterval(suiviMoi)
+      posesCourantes.forEach((mk) => mk.remove())
+      posesCourantes.clear()
+      for (const id of Object.keys(pins)) delete pins[id]
+      dejaCadre.current = false
       carte.current?.remove()
       carte.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // pose les pins rouges et cadre la vue sur les spots
+  // ── (re)construit l'index supercluster quand les lieux changent, puis pose
+  // la vue courante. `vus` n'est PLUS une dépendance : consulter une fiche ne
+  // reconstruit rien (voir l'effet léger plus bas).
   useEffect(() => {
+    const validesL = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
+    lieuxParId.current = new Map(validesL.map((l) => [l.id, l]))
+    const index = new Supercluster<ProprietesPin>({ radius: 60, maxZoom: 17 })
+    index.load(
+      validesL.map((l) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [l.lng, l.lat] },
+        properties: { id: l.id },
+      })),
+    )
+    indexRef.current = index
+    // les cluster_id ne survivent pas à une reconstruction d'index : table rase
+    poses.current.forEach((mk) => mk.remove())
+    poses.current.clear()
+    pinEls.current = {}
     const m = carte.current
     if (!m) return
-
-    // la carte doit être prête (style chargé + bonne taille) avant de
-    // projeter les pins et cadrer : sinon tuiles et pins se désynchronisent.
-    const poser = () => {
-      m.resize()
-      marqueurs.current.forEach((mk) => mk.remove())
-      marqueurs.current = []
-      pinEls.current = {}
-
-      const valides = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
-      for (const l of valides) {
-        const sig = l.tipsCercle?.[0]
-        const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
-        const valide = l.tampon?.v === 'valide'
-        const ferme = etatHoraire(l.horaires)?.ouvert === false
-        const etats = `${valide ? ' pin-valide' : ''}${ferme ? ' pin-ferme' : ''}`
-        const el = document.createElement('div')
-        // pins homogènes (façon Airbnb/Google) : la photo vit dans la fiche au tap,
-        // pas sur la carte. point rouge = toi · pastille ivoire + initiale = curateur.
-        const vu = vus?.has(l.id) ? ' pin-vu' : ''
-        el.className = `pin${sig ? ' pin-curateur' : ''}${etats}${vu}`
-        if (sig) {
-          // une teinte par curateur + son initiale à l'encre
-          el.style.background = teinteCurateur(sig.auteur)
-          el.textContent = sig.auteur[0].toUpperCase()
-          // recommandé par plusieurs : un badge avec le nombre de voix
-          if (nbVoix > 1) {
-            const badge = document.createElement('span')
-            badge.className = 'pin-badge mono'
-            badge.textContent = String(nbVoix)
-            el.appendChild(badge)
-          }
-        }
-        // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
-        if (l.match === 'diffuse') {
-          const ballon = document.createElement('span')
-          ballon.className = 'pin-ballon'
-          ballon.title = 'on y voit les matchs'
-          ballon.innerHTML =
-            '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
-          el.appendChild(ballon)
-        }
-        // le nom s'affiche en label sous le pin (au zoom suffisant)
-        el.setAttribute('data-nom', l.nom)
-        el.title = l.nom
-        // priorité d'affichage du label : validé > recommandé par plusieurs > ouvert
-        const ouvertMaintenant = etatHoraire(l.horaires)?.ouvert === true
-        el.dataset.prio = String((valide ? 3 : 0) + (nbVoix > 1 ? 2 : 0) + (ouvertMaintenant ? 1 : 0))
-        const mk = new maplibregl.Marker({ element: el }).setLngLat([l.lng, l.lat]).addTo(m)
-        // #11 : 1er tap = sélectionne (nom+desc en bottom-sheet, carte en couleur,
-        // le reste grisé) · 2e tap sur le même pin = la fiche détaillée.
-        el.addEventListener('click', (ev) => {
-          ev.stopPropagation()
-          if (el.classList.contains('pin-actif')) {
-            onVoirRef.current?.(l)
-            return
-          }
-          setActifRef.current(l.id)
-        })
-        pinEls.current[l.id] = el
-        marqueurs.current.push(mk)
-      }
-
-      if (valides.length === 1) {
-        m.flyTo({ center: [valides[0].lng, valides[0].lat], zoom: 14 })
-      } else if (valides.length > 1) {
+    m.resize()
+    poserRef.current()
+    // cadrage : UNE seule fois en plein écran (retour de fiche = la vue ne
+    // bouge pas). En mini (récap figé, pas de navigation à préserver), on
+    // recadre à chaque nouveau deck.
+    if ((!dejaCadre.current || mini) && validesL.length > 0) {
+      dejaCadre.current = true
+      if (validesL.length === 1) {
+        m.flyTo({ center: [validesL[0].lng, validesL[0].lat], zoom: 14 })
+      } else {
         const bounds = new maplibregl.LngLatBounds()
-        valides.forEach((l) => bounds.extend([l.lng, l.lat]))
+        validesL.forEach((l) => bounds.extend([l.lng, l.lat]))
         m.fitBounds(bounds, { padding: 60, maxZoom: 15 })
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lieux])
 
-    // les marqueurs sont du DOM ancré : pas besoin d'attendre le style
-    // (comme le marqueur "moi"). un resize garde tuiles et pins synchro.
-    poser()
-    majLabelsRef.current()
-  }, [lieux, vus])
+  // ── `vus` / `comparer` : un simple toggle de classes sur les pins existants —
+  // AUCUN marker recréé, la vue ne bouge pas.
+  useEffect(() => {
+    appliquerEtatsRef.current()
+  }, [vus, comparer])
 
   // #11 : la sélection — pin actif en couleur, le reste grisé · recadre la carte ·
   // fait défiler le carrousel vers la carte du lieu choisi.
   useEffect(() => {
-    Object.entries(pinEls.current).forEach(([id, el]) => {
-      el.classList.toggle('pin-actif', id === actif)
-      el.classList.toggle('pin-grise', actif !== null && id !== actif)
-    })
-    majLabelsRef.current()
+    // poserVisibles garantit que le pin sélectionné existe (même sous une
+    // grappe) puis réapplique états + labels ; à la désélection, il balaie
+    // le pin forcé devenu inutile.
+    poserRef.current()
+    if (!actif) return // désélection : ni recadrage, ni reset inutile du sheet
+    // reset volontaire du sheet quand `actif` change (pas de refactor : le
+    // comportement « nouveau lieu → photo 0, page 1 » est voulu tel quel)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSheetPhoto(0) // nouveau lieu → on repart de la 1re photo
     setSheetPage(1) // on ouvre sur « le mot » ; la photo claire est à gauche (page 0)
-    if (!actif) return
     const m = carte.current
     const l = valides.find((x) => x.id === actif)
     if (m && l) {
@@ -339,17 +533,37 @@ export default function Carte({
         padding: { top: 0, left: 0, right: 0, bottom: 240 },
       })
     }
-    const carte_card = carrousel.current?.querySelector(`[data-id="${actif}"]`)
-    carte_card?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    // recentre la fenêtre du carrousel sur le lieu choisi AVANT le scroll
+    const idx = valides.findIndex((x) => x.id === actif)
+    if (idx >= 0) setCentreCarrousel(idx)
+    const carteCard = carrousel.current?.querySelector(`[data-id="${actif}"]`)
+    carteCard?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actif])
 
-  // les pins « à comparer » : dorés et moins transparents (le pin actif reste bleu).
-  // dépend aussi de `lieux` pour se réappliquer quand les pins sont recréés.
-  useEffect(() => {
-    Object.entries(pinEls.current).forEach(([id, el]) => {
-      el.classList.toggle('pin-acomparer', comparer.includes(id))
+  // fenêtrage du carrousel : au scroll, recale le centre sur la carte la plus
+  // proche du milieu (throttlé rAF + hystérésis pour éviter les re-rendus en rafale)
+  const surScrollCarrousel = () => {
+    if (scrollPrevu.current) return
+    scrollPrevu.current = true
+    requestAnimationFrame(() => {
+      scrollPrevu.current = false
+      const c = carrousel.current
+      if (!c) return
+      const centreX = c.scrollLeft + c.clientWidth / 2
+      let meilleur = 0
+      let dMin = Infinity
+      for (let i = 0; i < c.children.length; i++) {
+        const h = c.children[i] as HTMLElement
+        const d = Math.abs(h.offsetLeft + h.offsetWidth / 2 - centreX)
+        if (d < dMin) {
+          dMin = d
+          meilleur = i
+        }
+      }
+      setCentreCarrousel((prev) => (Math.abs(prev - meilleur) >= 3 ? meilleur : prev))
     })
-  }, [comparer, lieux])
+  }
 
   if (mini) {
     return <div ref={conteneur} className="carte carte-mini" />
@@ -465,7 +679,11 @@ export default function Carte({
                     <span className="carte-sheet-wc">wc {w.points} {w.mot}</span>
                   ) : null
                 })()}
-                {lieuActif.match === 'diffuse' && <span className="carte-sheet-wc">⚽ on y voit les matchs</span>}
+                {lieuActif.match === 'diffuse' && (
+                  <span className="carte-sheet-wc">
+                    <IBallon taille={12} /> on y voit les matchs
+                  </span>
+                )}
                 {lieuActif.match === 'refuge' && <span>refuge anti-foot</span>}
                 {lieuActif.envies.length > 0 && <span>{lieuActif.envies.join(' · ')}</span>}
               </div>
@@ -493,50 +711,63 @@ export default function Carte({
         </div>
       )}
 
-      {/* #11 : le carrousel des lieux — la carte active est en couleur, le reste grisé */}
+      {/* #11 : le carrousel des lieux — la carte active est en couleur, le reste
+          grisé. Fenêtré : seules ~15 cartes autour du centre sont réelles, les
+          autres sont des coquilles de même largeur (le nom invisible donne la
+          largeur) pour garder le scroll-snap et la barre de défilement justes. */}
       {valides.length > 0 && (
-        <div className="carte-carrousel" ref={carrousel}>
-          {valides.map((l) => (
-            <button
-              key={l.id}
-              data-id={l.id}
-              className={`carte-card ${l.id === actif ? 'on' : ''} ${
-                comparer.includes(l.id) ? 'a-comparer' : ''
-              }`}
-              onPointerDown={() => {
-                press.current = { fired: false, timer: 0 }
-                press.current.timer = window.setTimeout(() => {
-                  if (press.current) press.current.fired = true
-                  onComparer?.(l.id) // clic long = à comparer (état dans App)
-                  navigator.vibrate?.(30)
-                }, 450)
-              }}
-              onPointerUp={() => {
-                const p = press.current
-                press.current = null
-                if (!p) return
-                clearTimeout(p.timer)
-                if (p.fired) return // c'était un clic long → déjà traité
-                l.id === actif ? onVoir?.(l) : setActif(l.id) // tap = sélection / fiche
-              }}
-              onPointerLeave={() => {
-                if (press.current) {
-                  clearTimeout(press.current.timer)
+        <div className="carte-carrousel" ref={carrousel} onScroll={surScrollCarrousel}>
+          {valides.map((l, i) =>
+            Math.abs(i - centreCarrousel) > FENETRE_CARROUSEL ? (
+              <div key={l.id} data-id={l.id} className="carte-card" aria-hidden="true">
+                <span className="carte-card-nom" style={{ visibility: 'hidden' }}>
+                  {l.nom}
+                </span>
+              </div>
+            ) : (
+              <button
+                key={l.id}
+                data-id={l.id}
+                className={`carte-card ${l.id === actif ? 'on' : ''} ${
+                  comparer.includes(l.id) ? 'a-comparer' : ''
+                }`}
+                onPointerDown={() => {
+                  press.current = { fired: false, timer: 0 }
+                  press.current.timer = window.setTimeout(() => {
+                    if (press.current) press.current.fired = true
+                    onComparer?.(l.id) // clic long = à comparer (état dans App)
+                    navigator.vibrate?.(30)
+                  }, 450)
+                }}
+                onPointerUp={() => {
+                  const p = press.current
                   press.current = null
-                }
-              }}
-            >
-              {l.photos.length > 0 && (
-                <img className="carte-card-bg" src={srcPhoto(l.photos[0])} alt="" loading="lazy" />
-              )}
-              {comparer.includes(l.id) && <span className="carte-card-vs mono">à comparer</span>}
-              <span className="carte-card-nom">{l.nom}</span>
-              <span className="mono carte-card-dist">
-                <span className="carte-card-km">{formatDistance(distanceM(l))}</span>
-                <span className="carte-card-min">{tempsMarche(distanceM(l))} min</span>
-              </span>
-            </button>
-          ))}
+                  if (!p) return
+                  clearTimeout(p.timer)
+                  if (p.fired) return // c'était un clic long → déjà traité
+                  // tap = sélection / fiche
+                  if (l.id === actif) onVoir?.(l)
+                  else setActif(l.id)
+                }}
+                onPointerLeave={() => {
+                  if (press.current) {
+                    clearTimeout(press.current.timer)
+                    press.current = null
+                  }
+                }}
+              >
+                {l.photos.length > 0 && (
+                  <img className="carte-card-bg" src={srcPhoto(l.photos[0])} alt="" loading="lazy" />
+                )}
+                {comparer.includes(l.id) && <span className="carte-card-vs mono">à comparer</span>}
+                <span className="carte-card-nom">{l.nom}</span>
+                <span className="mono carte-card-dist">
+                  <span className="carte-card-km">{formatDistance(distanceM(l))}</span>
+                  <span className="carte-card-min">{tempsMarche(distanceM(l))} min</span>
+                </span>
+              </button>
+            ),
+          )}
         </div>
       )}
     </>
@@ -563,9 +794,12 @@ export function TableComparaison({
 }) {
   // départ du geste de swipe (pour retirer une colonne d'un coup vers le haut)
   const colDepart = useRef({ x: 0, y: 0 })
-  // pour chaque ligne « gagnante », l'index (ou les index) du/des meilleur(s)
-  const dists = lieux.map((l) => distanceM(l))
-  const distMin = Math.min(...dists)
+  // pour chaque ligne « gagnante », l'index (ou les index) du/des meilleur(s).
+  // les lieux sans coordonnées (0,0) sortent du calcul de distance : leur
+  // distance « depuis Vendôme jusqu'au golfe de Guinée » faussait le gagnant.
+  const dists = lieux.map((l) => (l.lat !== 0 || l.lng !== 0 ? distanceM(l) : null))
+  const distsConnues = dists.filter((d): d is number => d !== null)
+  const distMin = distsConnues.length > 0 ? Math.min(...distsConnues) : Infinity
   const wcMax = Math.max(...lieux.map((l) => l.propreteWc ?? 0))
   const voixMax = Math.max(...lieux.map((l) => nbVoix(l)))
 
@@ -622,12 +856,21 @@ export function TableComparaison({
 
         {/* distance / temps à pied */}
         <div className="tc-lbl mono">distance</div>
-        {lieux.map((l, i) => (
-          <div key={l.id} className={`tc-cell mono${best(dists[i] === distMin)}`}>
-            {formatDistance(dists[i])}
-            <span className="tc-sous">{tempsMarche(dists[i])} min à pied</span>
-          </div>
-        ))}
+        {lieux.map((l, i) => {
+          const d = dists[i]
+          return (
+            <div key={l.id} className={`tc-cell mono${best(d !== null && d === distMin)}`}>
+              {d !== null ? (
+                <>
+                  {formatDistance(d)}
+                  <span className="tc-sous">{tempsMarche(d)} min à pied</span>
+                </>
+              ) : (
+                <span className="tc-vide">—</span>
+              )}
+            </div>
+          )
+        })}
 
         {/* ouvert / fermé */}
         <div className="tc-lbl mono">maintenant</div>
@@ -686,7 +929,7 @@ export function TableComparaison({
           const n = nbVoix(l)
           return (
             <div key={l.id} className={`tc-cell mono${best(n > 0 && n === voixMax)}`}>
-              {n > 0 ? `${n} ${n > 1 ? 'voix' : 'voix'}${n >= 2 ? ' · référence' : ''}` : <span className="tc-vide">—</span>}
+              {n > 0 ? `${n} voix${n >= 2 ? ' · référence' : ''}` : <span className="tc-vide">—</span>}
             </div>
           )
         })}

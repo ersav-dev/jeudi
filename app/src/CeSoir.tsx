@@ -8,6 +8,7 @@ import {
   COMPAGNIE_GLOSE,
   gloseEnvie,
   ajouterSortie,
+  retirerSortie,
   lireMeteo,
   ecrireMeteo,
   distanceM,
@@ -97,7 +98,10 @@ export default function CeSoir({
     if (quandKey === 'soir') d.setHours(22, 0, 0, 0)
     else if (quandKey === 'nuit') d.setHours(25, 0, 0, 0) // 1h du matin (la fonte)
     else if (quandKey === 'jeudi') {
-      const delta = (4 - d.getDay() + 7) % 7 || 7 // prochain jeudi (toujours futur)
+      // jeudi le plus proche : si on est jeudi avant 22h, c'est CE soir (delta 0) ;
+      // jeudi après 22h → celui d'après.
+      const brut = (4 - d.getDay() + 7) % 7
+      const delta = brut === 0 ? (d.getHours() < 22 ? 0 : 7) : brut
       d.setDate(d.getDate() + delta)
       d.setHours(22, 0, 0, 0)
     }
@@ -253,7 +257,9 @@ function QuestionsSwipe({
       : compagnie === 'potos'
         ? 'et ça dit quoi, les potos ?'
         : 'pour quoi faire ?'
-  const sousTitre = etape === 0 ? 'avec qui ?' : 'pour quoi faire ?'
+  // étape 1 : le titre pose déjà « pour quoi faire ? » — le sous-titre glose au
+  // lieu de répéter.
+  const sousTitre = etape === 0 ? 'avec qui ?' : "l'envie du moment"
   const glose = etape === 0 ? COMPAGNIE_GLOSE[choix as Compagnie] : gloseEnvie(choix)
 
   const valider = () => {
@@ -289,6 +295,8 @@ function QuestionsSwipe({
     }
     setDrag({ x: 0, y: 0, actif: false })
   }
+  // geste interrompu (scroll natif, etc.) → on remet la scène en place
+  const onCancel = () => setDrag({ x: 0, y: 0, actif: false })
 
   return (
     <div className="qs">
@@ -300,6 +308,7 @@ function QuestionsSwipe({
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
+        onPointerCancel={onCancel}
       >
         <button className="qs-fleche gauche" onClick={() => defiler(-1)} aria-label="précédent">
           ‹
@@ -386,6 +395,7 @@ function Deck({
       setIndex(0)
       setVerdicts({})
       setPhotoIndex(0)
+      setJetes(new Set()) // les jetés reviennent : sinon ils se re-swipent puis redisparaissent du récap
     }
     return (
       <Recap
@@ -394,7 +404,12 @@ function Deck({
         maintenant={maintenant}
         onVoir={onVoir}
         onRefaire={refaire}
-        onJeter={(id) => setJetes((prev) => new Set(prev).add(id))}
+        onJeter={(id) => {
+          // un lieu validé avait déjà sa sortie en attente → on la retire,
+          // sinon l'app redemanderait « alors, X ? » pour un lieu jamais fait
+          if (verdicts[id] === 'valide') retirerSortie(id)
+          setJetes((prev) => new Set(prev).add(id))
+        }}
         onComparer={onComparer}
       />
     )
@@ -454,6 +469,8 @@ function Deck({
     }
     setDrag({ x: 0, y: 0, actif: false })
   }
+  // geste interrompu (scroll natif, etc.) → la carte revient en place
+  const onCancel = () => setDrag({ x: 0, y: 0, actif: false })
 
   return (
     <div className="deck">
@@ -473,6 +490,7 @@ function Deck({
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
+          onPointerCancel={onCancel}
         >
           {verdict === 'valide' && <span className="tampon valide">VALIDÉ</span>}
           {verdict === 'bof' && <span className="tampon bof">bof</span>}
@@ -588,6 +606,13 @@ function RecapTirage({
         onPointerDown={onDown}
         onPointerUp={onUp}
         onPointerLeave={() => {
+          if (press.current) {
+            clearTimeout(press.current.timer)
+            press.current = null
+          }
+        }}
+        onPointerCancel={() => {
+          // geste interrompu → l'appui long ne doit pas partir tout seul
           if (press.current) {
             clearTimeout(press.current.timer)
             press.current = null

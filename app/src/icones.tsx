@@ -85,6 +85,14 @@ export const ISignet = ({ taille, plein }: { taille?: number; plein?: boolean })
     <path d="M7 4h10v16l-5-3.5L7 20z" />
   </svg>
 )
+// l'anneau (super pote) : deux cercles concentriques, l'anneau intérieur de la
+// confiance — un sceau, PAS une étoile (la DA les interdit).
+export const IAnneau = ({ taille }: { taille?: number }) => (
+  <Svg taille={taille}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="3.6" />
+  </Svg>
+)
 // le trombone (favoris) : « je le clipse, je le garde » — écho au trombone du
 // portrait profil. pas de remplissage (c'est un fil de fer) : actif = trait
 // plus appuyé + couleur de marque (gérée en CSS).

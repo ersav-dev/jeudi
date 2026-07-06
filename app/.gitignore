@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# cache de polices du script gen-icons (retéléchargé au besoin)
+scripts/.fonts-cache

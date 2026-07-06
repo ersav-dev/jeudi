@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   type Lieu,
   type Envie,
@@ -10,7 +10,8 @@ import {
 } from './db'
 import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
 import { MEMBRES } from './seed'
-import { POINTS_REPERE, geocoderRepere, type Repere } from './autour'
+import { POINTS_REPERE, type Repere } from './autour'
+import { chercherAdresse } from './nominatim'
 
 // Écran « labo » : surface le moteur de recherche/reco personnalisé.
 // Philosophie (CONCEPT.md) : la recherche RÉPOND (pull) → tout le public, mais
@@ -23,11 +24,37 @@ export default function Recherche({
   onOuvrir?: (l: Lieu) => void
 }) {
   const [texte, setTexte] = useState('')
+  // debounce 200 ms : le moteur ne tourne pas à chaque frappe
+  const [texteRetarde, setTexteRetarde] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => setTexteRetarde(texte), 200)
+    return () => clearTimeout(t)
+  }, [texte])
+
   const [envie, setEnvie] = useState<Envie | null>(null)
   const [ouvertSeul, setOuvertSeul] = useState(false)
   // « autour de » : null = ma position, sinon un repère choisi
   const [depuis, setDepuis] = useState<Repere | null>(null)
   const [adr, setAdr] = useState('')
+  // l'état de la recherche d'adresse (Nominatim) — visible, jamais silencieux
+  const [etatAdr, setEtatAdr] = useState<'off' | 'cherche' | 'introuvable' | 'reseau'>('off')
+
+  // favoris / vus : relus à CHAQUE retour sur l'écran (focus / onglet visible),
+  // pas seulement au premier mount — ils ont pu changer depuis un autre écran.
+  const [favoris, setFavoris] = useState<string[]>(() => lireFavoris())
+  const [vus, setVus] = useState<string[]>(() => lireVus())
+  useEffect(() => {
+    const relire = () => {
+      setFavoris(lireFavoris())
+      setVus(lireVus())
+    }
+    window.addEventListener('focus', relire)
+    document.addEventListener('visibilitychange', relire)
+    return () => {
+      window.removeEventListener('focus', relire)
+      document.removeEventListener('visibilitychange', relire)
+    }
+  }, [])
 
   // ton cercle (prénoms + ids) → la confiance d'abord dans le tri
   const cercle = useMemo(() => MEMBRES.flatMap((m) => [m.id, m.prenom]), [])
@@ -36,30 +63,44 @@ export default function Recherche({
   const gout = useMemo(() => {
     const valides = lieux.filter((l) => l.tampon?.v === 'valide')
     const bofs = lieux.filter((l) => l.tampon?.v === 'bof')
-    return profilDeGout({ valides, bofs, favoris: lireFavoris(), vus: lireVus() })
-  }, [lieux])
+    return profilDeGout({ valides, bofs, favoris, vus })
+  }, [lieux, favoris, vus])
 
   // a-t-on une intention ? (un mot, une envie, un filtre) — sinon « pour toi »
-  const aIntention = texte.trim().length > 0 || envie !== null || ouvertSeul
+  const aIntention = texteRetarde.trim().length > 0 || envie !== null || ouvertSeul
 
-  const point = depuis ? { lat: depuis.lat, lng: depuis.lng } : undefined
+  // point stabilisé (même référence tant que `depuis` ne change pas) : le
+  // useMemo des résultats ne recalcule plus à chaque rendu
+  const point = useMemo(
+    () => (depuis ? { lat: depuis.lat, lng: depuis.lng } : undefined),
+    [depuis],
+  )
+
   const resultats = useMemo(() => {
     // sans intention : on ne LISTE pas le catalogue → « pour toi » (court)
-    if (!aIntention) return pourToi(lieux, gout, { exclureVus: lireVus(), topN: 12, cercle, depuis: point })
+    if (!aIntention) return pourToi(lieux, gout, { exclureVus: vus, topN: 12, cercle, depuis: point })
     // avec intention : on RÉPOND (peu, ciblé, confiance d'abord, autour du repère)
     const req: Requete = {
-      texte: texte.trim() || undefined,
+      texte: texteRetarde.trim() || undefined,
       envies: envie ? [envie] : undefined,
       ouvertSeulement: ouvertSeul,
     }
     return rechercher(lieux, req, gout, cercle, point).slice(0, 15)
-  }, [lieux, texte, envie, ouvertSeul, gout, cercle, aIntention, point])
+  }, [lieux, texteRetarde, envie, ouvertSeul, gout, cercle, aIntention, point, vus])
 
-  const chercherAdresse = async () => {
-    const r = await geocoderRepere(adr)
-    if (r) {
-      setDepuis(r)
+  const lancerAdresse = async () => {
+    const q = adr.trim()
+    if (!q) return
+    setEtatAdr('cherche')
+    const r = await chercherAdresse(q)
+    if (r.ok) {
+      setDepuis({ nom: q, lat: r.lieux[0].lat, lng: r.lieux[0].lng })
       setAdr('')
+      setEtatAdr('off')
+    } else if (r.raison === 'annule') {
+      // une recherche plus récente est partie : on la laisse conclure
+    } else {
+      setEtatAdr(r.raison)
     }
   }
 
@@ -128,8 +169,11 @@ export default function Recherche({
       </div>
       <input
         value={adr}
-        onChange={(e) => setAdr(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && chercherAdresse()}
+        onChange={(e) => {
+          setAdr(e.target.value)
+          setEtatAdr('off') // on retape → l'ancien message ne colle plus
+        }}
+        onKeyDown={(e) => e.key === 'Enter' && lancerAdresse()}
         placeholder="…ou une adresse / un métro (Entrée)"
         style={{
           width: '100%',
@@ -141,9 +185,26 @@ export default function Recherche({
           fontFamily: "'Instrument Serif', serif",
           fontSize: 15,
           outline: 'none',
-          marginBottom: 14,
+          marginBottom: etatAdr === 'off' ? 14 : 4,
         }}
       />
+      {etatAdr !== 'off' && (
+        <div
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 11,
+            marginBottom: 14,
+            opacity: 0.75,
+            color: etatAdr === 'cherche' ? 'var(--ivory)' : 'var(--red)',
+          }}
+        >
+          {etatAdr === 'cherche'
+            ? 'je cherche…'
+            : etatAdr === 'introuvable'
+              ? 'introuvable par ici. essaie plus précis.'
+              : 'pas de réseau on dirait. réessaie dans un instant.'}
+        </div>
+      )}
 
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
         {aIntention

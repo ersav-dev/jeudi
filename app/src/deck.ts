@@ -2,6 +2,13 @@
 // jeudi. — DECK PONDÉRÉ PAR LES PROCHES (chantier 7)
 // Un lieu porté par quelqu'un de ton cercle PROCHE (l'anneau intérieur)
 // remonte dans le deck : la confiance se transmet. Pur logique, isolé.
+//
+// ⚠️ FRAGILITÉ CONNUE : le matching se fait sur le PRÉNOM normalisé (string).
+// Un homonyme hors cercle (« Karim » inconnu) = faux « porté par ton cercle »,
+// et deux « Léa » sont indistinguables. La confiance — le garde-fou du produit —
+// ne doit pas reposer sur une string : à remplacer par des ids stables (uuid)
+// dès que les relations Supabase réelles arrivent. Les prénoms redeviendront
+// alors de l'affichage pur.
 // ════════════════════════════════════════════════════════════════
 import { type Lieu, distanceM } from './db'
 

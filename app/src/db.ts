@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { supabase } from './supabase'
+import { adresseDepuis } from './nominatim'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -175,51 +176,105 @@ let monId: string | null = null
 export function definirMonId(id: string | null) {
   monId = id
 }
+
+// ── pretAuth : « l'auth a répondu au moins une fois » ──
+// La course classique : tousLesLieux() partait AVANT que chargerMonId ait
+// rempli monId → la branche cloud était sautée et mes spots cloud passaient
+// pour du décor. pretAuth se résout au premier retour d'auth (chargerMonId OU
+// l'event INITIAL_SESSION de Supabase) ; les lectures/écritures cloud
+// l'attendent. Ça ne bloque pas le rendu local-first : la session est en
+// localStorage, la réponse est quasi immédiate.
+let authResolue = false
+let resoudreAuth: (() => void) | null = null
+export const pretAuth: Promise<void> = new Promise<void>((r) => {
+  resoudreAuth = r
+})
+function marquerAuthPrete(): void {
+  if (!authResolue) {
+    authResolue = true
+    resoudreAuth?.()
+  }
+}
+
 /** lit la session et met monId à jour (à appeler au boot, avant tousLesLieux) */
 export async function chargerMonId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession()
   monId = data.session?.user?.id ?? null
+  marquerAuthPrete()
+  // connecté : on rejoue les écritures restées en rade (file d'attente offline)
+  if (monId) void rejouerAttente()
   return monId
 }
 // tient monId à jour aux changements (connexion / déconnexion / refresh)
 supabase.auth.onAuthStateChange((_e, session) => {
   monId = session?.user?.id ?? null
+  marquerAuthPrete()
 })
 
-type LigneLieu = Record<string, unknown>
+/** ligne de la table `lieux` (colonnes snake_case côté Supabase).
+ *  `cree_le` est posé par la base (default) → absent des écritures ;
+ *  `recos` reste optionnelle tant que la migration 0003 n'est pas garantie. */
+interface LigneLieu {
+  id: string
+  owner_id: string | null
+  nom: string
+  lat: number
+  lng: number
+  adresse: string | null
+  description: string | null
+  note: string | null
+  visibilite: Visibilite
+  envies: Envie[] | null
+  compagnies: Compagnie[] | null
+  meteo: Meteo | null
+  critere_perso: string | null
+  source: Lieu['source'] | null
+  statut: Statut | null
+  match: Lieu['match'] | null
+  rooftop: boolean | null
+  sur_leau: boolean | null
+  proprete_wc: Lieu['propreteWc'] | null
+  horaire_ouv: number | null
+  horaire_ferm: number | null
+  tampon: Lieu['tampon'] | null
+  derniere_validation: string | null
+  recos?: string[] | null
+  cree_le: string
+}
 function ligneVersLieu(r: LigneLieu): Lieu {
-  const g = r as Record<string, any>
   return {
-    id: g.id,
-    nom: g.nom,
-    lat: g.lat,
-    lng: g.lng,
-    adresse: g.adresse ?? undefined,
-    description: g.description ?? undefined,
-    note: g.note ?? '',
-    visibilite: g.visibilite,
-    envies: g.envies ?? [],
-    compagnies: g.compagnies ?? [],
-    meteo: g.meteo ?? undefined,
-    criterePerso: g.critere_perso ?? undefined,
+    id: r.id,
+    nom: r.nom,
+    lat: r.lat,
+    lng: r.lng,
+    adresse: r.adresse ?? undefined,
+    description: r.description ?? undefined,
+    note: r.note ?? '',
+    visibilite: r.visibilite,
+    envies: r.envies ?? [],
+    compagnies: r.compagnies ?? [],
+    meteo: r.meteo ?? undefined,
+    criterePerso: r.critere_perso ?? undefined,
     photos: [], // les photos arrivent avec le Storage cloud (étape 4)
-    statut: g.statut ?? 'actif',
-    creeLe: g.cree_le,
-    derniereValidation: g.derniere_validation ?? undefined,
-    source: g.source ?? 'manuel',
-    proprietaire: g.owner_id,
-    tampon: g.tampon ?? undefined,
+    statut: r.statut ?? 'actif',
+    creeLe: r.cree_le,
+    derniereValidation: r.derniere_validation ?? undefined,
+    source: r.source ?? 'manuel',
+    proprietaire: r.owner_id ?? undefined,
+    tampon: r.tampon ?? undefined,
     horaires:
-      g.horaire_ouv != null || g.horaire_ferm != null
-        ? [g.horaire_ouv ?? null, g.horaire_ferm ?? null]
+      r.horaire_ouv != null || r.horaire_ferm != null
+        ? [r.horaire_ouv ?? null, r.horaire_ferm ?? null]
         : undefined,
-    match: g.match ?? undefined,
-    rooftop: g.rooftop ?? undefined,
-    surLeau: g.sur_leau ?? undefined,
-    propreteWc: g.proprete_wc ?? undefined,
+    match: r.match ?? undefined,
+    rooftop: r.rooftop ?? undefined,
+    surLeau: r.sur_leau ?? undefined,
+    propreteWc: r.proprete_wc ?? undefined,
+    // colonne créée par la migration 0003 : absente en base = undefined
+    recos: Array.isArray(r.recos) ? r.recos : undefined,
   }
 }
-function lieuVersLigne(l: Lieu): LigneLieu {
+function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
   return {
     id: l.id,
     owner_id: monId,
@@ -244,50 +299,145 @@ function lieuVersLigne(l: Lieu): LigneLieu {
     horaire_ferm: l.horaires?.[1] ?? null,
     tampon: l.tampon ?? null,
     derniere_validation: l.derniereValidation ?? null,
+    // text[] côté base (0003). Si la colonne n'existe pas encore, l'écriture
+    // échoue avec « column recos… » → pousserLieuCloud retente sans elle.
+    recos: l.recos ?? null,
   }
 }
 
-// ── Storage des photos (étape 4) ───────────────────────────────
-// Un bucket public `photos` ; chaque fichier vit sous `<monId>/...`.
-// La table `photos` garde l'URL publique + le type ; l'app lit `url` direct.
+// ── Storage des photos (étape 4, sécurisé par la migration 0003) ──────────
+// Un bucket `photos` (PRIVÉ après 0003) ; chaque fichier vit sous `<monId>/...`.
+// Les colonnes `photos.url` et `profils.photo_url` stockent le CHEMIN du
+// fichier dans le bucket (plus une URL publique) ; l'app génère des URLs
+// SIGNÉES à la lecture. createSignedUrl marche AUSSI sur un bucket public →
+// le code est compatible avant ET après la migration.
 const BUCKET_PHOTOS = 'photos'
+const TTL_SIGNATURE_S = 3600 // 1 h
 
-/** téléverse un blob dans MON dossier → URL publique (null si échec/hors-ligne) */
+/** retrouve le CHEMIN bucket depuis une valeur stockée (compat avant/après 0003) :
+ *  - déjà un chemin (« uid/lieu/0-lieu.jpg ») → tel quel
+ *  - URL Supabase (publique d'avant 0003, ou signée) → chemin extrait
+ *  - blob:/data:/URL externe (photos de test du seed) → null : pas un fichier
+ *    du bucket, l'appelant garde la valeur telle quelle */
+function cheminDepuis(valeur: string): string | null {
+  if (valeur.startsWith('blob:') || valeur.startsWith('data:')) return null
+  if (/^https?:\/\//i.test(valeur)) {
+    const m = valeur.match(/\/object\/(?:public|sign|authenticated)\/photos\/([^?]+)/)
+    return m ? decodeURIComponent(m[1]) : null
+  }
+  return valeur
+}
+
+// petit cache mémoire des signatures : chemin → { url signée, expiration }
+const signatures = new Map<string, { url: string; expire: number }>()
+
+/** URL affichable d'un fichier du bucket (signée, TTL 1 h, mise en cache).
+ *  null si hors-ligne / chemin inconnu — l'appelant garde sa valeur de repli. */
+export async function urlPhoto(
+  chemin: string,
+  ttlSecondes = TTL_SIGNATURE_S,
+): Promise<string | null> {
+  const connue = signatures.get(chemin)
+  if (connue && connue.expire > Date.now()) return connue.url
+  try {
+    const { data, error } = await supabase.storage
+      .from(BUCKET_PHOTOS)
+      .createSignedUrl(chemin, ttlSecondes)
+    if (error || !data?.signedUrl) return null
+    // marge de 60 s : on ne ressert jamais une URL sur le point d'expirer
+    signatures.set(chemin, {
+      url: data.signedUrl,
+      expire: Date.now() + Math.max(ttlSecondes - 60, 30) * 1000,
+    })
+    return data.signedUrl
+  } catch {
+    return null
+  }
+}
+
+/** téléverse un blob dans MON dossier → CHEMIN bucket (null si échec/hors-ligne) */
 async function televerserPhoto(blob: Blob, chemin: string): Promise<string | null> {
   if (!monId) return null
-  const { error } = await supabase.storage
+  const { data, error } = await supabase.storage
     .from(BUCKET_PHOTOS)
     .upload(chemin, blob, { upsert: true, contentType: blob.type || 'image/jpeg' })
   if (error) {
     console.error('[jeudi] upload photo KO', chemin, error)
     return null
   }
-  return supabase.storage.from(BUCKET_PHOTOS).getPublicUrl(chemin).data.publicUrl
+  // le contenu a changé : une signature en cache pour ce chemin est périmée
+  signatures.delete(chemin)
+  return data?.path ?? chemin
+}
+
+/** ménage Storage d'un lieu : supprime les fichiers de `<monId>/<lieuId>/`
+ *  qui ne sont plus référencés (`gardes` = chemins encore utilisés ; sans
+ *  gardes → tout le dossier part). Best-effort : un échec ne casse rien. */
+async function nettoyerStorageLieu(lieuId: string, gardes?: Set<string>): Promise<void> {
+  if (!monId) return
+  const dossier = `${monId}/${lieuId}`
+  try {
+    const { data, error } = await supabase.storage.from(BUCKET_PHOTOS).list(dossier)
+    if (error || !data) {
+      if (error) console.warn('[jeudi] listage Storage KO', dossier, error)
+      return
+    }
+    const aSupprimer = data
+      .map((f) => `${dossier}/${f.name}`)
+      .filter((ch) => !gardes || !gardes.has(ch))
+    if (!aSupprimer.length) return
+    const { error: eSuppr } = await supabase.storage.from(BUCKET_PHOTOS).remove(aSupprimer)
+    if (eSuppr) console.warn('[jeudi] ménage Storage KO', dossier, eSuppr)
+  } catch (e) {
+    console.warn('[jeudi] ménage Storage KO', dossier, e)
+  }
 }
 
 /** synchronise les photos d'un de MES lieux : upload des blobs neufs, réécrit
- *  la table `photos` (efface puis réinsère — simple et idempotent). */
+ *  la table `photos` en INSÉRANT AVANT d'effacer (un insert raté conserve les
+ *  anciennes lignes — jamais d'état 0-photo), puis fait le ménage des blobs
+ *  Storage qui ne sont plus référencés. */
 async function syncPhotosLieu(lieu: Lieu): Promise<void> {
   if (!monId || !estAMoi(lieu)) return
   const lignes: { lieu_id: string; type: string; url: string; ordre: number }[] = []
   let i = 0
   for (const p of lieu.photos ?? []) {
-    let url = p.url
-    if (!url && p.blob) {
-      url = (await televerserPhoto(p.blob, `${monId}/${lieu.id}/${i}-${p.type}.jpg`)) ?? undefined
+    let valeur: string | undefined
+    if (p.blob) {
+      valeur = (await televerserPhoto(p.blob, `${monId}/${lieu.id}/${i}-${p.type}.jpg`)) ?? undefined
+    } else if (p.url) {
+      // URL signée/publique → on retrouve le CHEMIN ; URL externe (photos de
+      // test) → stockée telle quelle (compat) ; blob:/data: → rien à stocker
+      valeur = cheminDepuis(p.url) ?? (/^https?:\/\//i.test(p.url) ? p.url : undefined)
     }
-    if (url) lignes.push({ lieu_id: lieu.id, type: p.type, url, ordre: i })
+    if (valeur) lignes.push({ lieu_id: lieu.id, type: p.type, url: valeur, ordre: i })
     i++
   }
-  const del = await supabase.from('photos').delete().eq('lieu_id', lieu.id)
-  if (del.error) console.error('[jeudi] syncPhotos delete KO', del.error)
+  // pas d'unicité (lieu_id, ordre) en base → pas d'upsert possible : on relève
+  // les anciennes lignes, on insère les neuves, PUIS on efface les anciennes
+  // par id — dans cet ordre, et les deux erreurs remontent en console.
+  const anciennes = await supabase.from('photos').select('id').eq('lieu_id', lieu.id)
+  if (anciennes.error) {
+    console.error('[jeudi] syncPhotos lecture KO — sync photos abandonnée', anciennes.error)
+    return
+  }
   if (lignes.length) {
     const ins = await supabase.from('photos').insert(lignes)
-    if (ins.error) console.error('[jeudi] syncPhotos insert KO', ins.error)
+    if (ins.error) {
+      console.error('[jeudi] syncPhotos insert KO — anciennes lignes conservées', ins.error)
+      return
+    }
   }
+  const anciensIds = ((anciennes.data ?? []) as { id: string }[]).map((r) => r.id)
+  if (anciensIds.length) {
+    const del = await supabase.from('photos').delete().in('id', anciensIds)
+    if (del.error) console.error('[jeudi] syncPhotos delete KO (doublons possibles)', del.error)
+  }
+  await nettoyerStorageLieu(lieu.id, new Set(lignes.map((l) => l.url)))
 }
 
-/** charge les photos (table `photos`) pour une liste d'ids de lieux → map id→photos */
+/** charge les photos (table `photos`) pour une liste d'ids de lieux → map
+ *  id→photos, avec des URLs SIGNÉES prêtes à afficher (un seul lot + cache). */
 async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
   const map = new Map<string, PhotoLieu[]>()
   if (!ids.length) return map
@@ -296,15 +446,182 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
     .select('lieu_id,type,url,ordre')
     .in('lieu_id', ids)
     .order('ordre')
-  for (const r of (data ?? []) as Record<string, any>[]) {
+  // ligne de la table `photos` (les seules colonnes sélectionnées ci-dessus)
+  const lignes = (data ?? []) as { lieu_id: string; type: PhotoLieu['type']; url: string; ordre: number }[]
+  // 1er passage : signer en UN lot les chemins pas (ou plus) en cache
+  const aSigner: string[] = []
+  for (const r of lignes) {
+    const ch = typeof r.url === 'string' ? cheminDepuis(r.url) : null
+    if (!ch) continue
+    const connue = signatures.get(ch)
+    if ((!connue || connue.expire <= Date.now()) && !aSigner.includes(ch)) aSigner.push(ch)
+  }
+  if (aSigner.length) {
+    try {
+      const { data: signees } = await supabase.storage
+        .from(BUCKET_PHOTOS)
+        .createSignedUrls(aSigner, TTL_SIGNATURE_S)
+      for (const s of signees ?? []) {
+        if (s.path && s.signedUrl) {
+          signatures.set(s.path, {
+            url: s.signedUrl,
+            expire: Date.now() + (TTL_SIGNATURE_S - 60) * 1000,
+          })
+        }
+      }
+    } catch {
+      /* hors-ligne : on servira la valeur brute ci-dessous */
+    }
+  }
+  // 2e passage : construire la map avec l'URL signée (ou la valeur brute :
+  // URL externe de test, ou chemin nu si la signature a échoué)
+  for (const r of lignes) {
     const arr = map.get(r.lieu_id) ?? []
-    arr.push({ type: r.type, url: r.url })
+    let url: string = r.url
+    const ch = typeof r.url === 'string' ? cheminDepuis(r.url) : null
+    if (ch) url = signatures.get(ch)?.url ?? url
+    arr.push({ type: r.type, url })
     map.set(r.lieu_id, arr)
   }
   return map
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ── la file d'attente offline (write-queue) ──
+// Quand une écriture cloud échoue (réseau, timeout, RLS muette), on note QUOI
+// resynchroniser ({type, id, date} — jamais le payload : rejouer = relire
+// l'état LOCAL actuel et le pousser, le dernier état gagne). Persistée en
+// localStorage, rejouée au démarrage (chargerMonId) et au retour en ligne.
+// ════════════════════════════════════════════════════════════════════
+type TypeTacheSync = 'lieu-upsert' | 'lieu-archive' | 'lieu-suppr' | 'profil'
+interface TacheSync {
+  type: TypeTacheSync
+  id: string
+  date: string // ISO — informatif (debug) ; le rejeu relit l'état local
+}
+const CLE_ATTENTE = 'jeudi-attente-sync'
+
+function lireAttente(): TacheSync[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_ATTENTE) ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+function ecrireAttente(taches: TacheSync[]): void {
+  localStorage.setItem(CLE_ATTENTE, JSON.stringify(taches))
+}
+/** enfile une resync. Dédoublonnée par id : le dernier état gagne. */
+function enfiler(type: TypeTacheSync, id: string): void {
+  const taches = lireAttente().filter((t) => t.id !== id)
+  taches.push({ type, id, date: new Date().toISOString() })
+  ecrireAttente(taches)
+}
+/** les ids en attente de sync (spots jamais poussés / modifiés hors-ligne) */
+function idsEnAttente(): Set<string> {
+  return new Set(lireAttente().map((t) => t.id))
+}
+
+let rejeuEnCours = false
+/** rejoue la file : relit l'état local de chaque entrée et le pousse au cloud.
+ *  Les échecs restent en file pour le prochain passage (démarrage / online). */
+export async function rejouerAttente(): Promise<void> {
+  if (rejeuEnCours) return
+  if (!lireAttente().length) return
+  await pretAuth
+  if (!monId) return
+  rejeuEnCours = true
+  try {
+    const restantes: TacheSync[] = []
+    for (const t of lireAttente()) {
+      const rejouee = await rejouerTache(t)
+      if (!rejouee.ok) restantes.push({ ...t, id: rejouee.id ?? t.id })
+    }
+    ecrireAttente(restantes)
+    if (restantes.length) {
+      console.warn(`[jeudi] resync : ${restantes.length} écriture(s) toujours en attente`)
+    }
+  } finally {
+    rejeuEnCours = false
+  }
+}
+
+async function rejouerTache(t: TacheSync): Promise<{ ok: boolean; id?: string }> {
+  try {
+    if (t.type === 'lieu-suppr') {
+      // pas d'état local à relire : on rejoue par id. 0 ligne touchée = déjà
+      // supprimé (ou jamais poussé) → succès quand même, c'est une suppression.
+      const { error } = await supabase
+        .from('lieux')
+        .delete()
+        .eq('id', t.id)
+        .eq('owner_id', monId)
+      if (error) return { ok: false }
+      await nettoyerStorageLieu(t.id)
+      return { ok: true }
+    }
+    if (t.type === 'profil') {
+      const db = await getDB()
+      const p = await db.get('profil', 'moi')
+      if (!p) return { ok: true } // plus rien à pousser
+      return { ok: await pousserProfilCloud(p) }
+    }
+    // lieu-upsert / lieu-archive : l'état local actuel EST la vérité à pousser
+    const db = await getDB()
+    const local = await db.get('lieux', t.id)
+    if (!local || !estAMoi(local)) return { ok: true } // disparu ou pas à moi
+    const lieu = await assurerUuid(local)
+    if (await pousserLieuCloud(lieu)) {
+      await syncPhotosLieu(lieu)
+      return { ok: true }
+    }
+    return { ok: false, id: lieu.id } // l'id a pu être réécrit (legacy → uuid)
+  } catch (e) {
+    console.warn('[jeudi] resync KO', t.type, t.id, e)
+    return { ok: false }
+  }
+}
+
+/** pousse TOUT le profil local vers le cloud (rejeu de la file). */
+async function pousserProfilCloud(p: Profil): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return false
+  const maj: Record<string, unknown> = {
+    prenom: p.prenom,
+    critere: p.critere,
+    bio: p.bio ?? null,
+    insta: p.insta ?? null,
+    naissance: p.naissance ?? null,
+    score_swipe: p.scoreSwipe,
+    couleur: lireCouleur(),
+    seuils: lireSeuils(),
+  }
+  if (p.photo) {
+    const chemin = await televerserPhoto(p.photo, `${user.id}/profil.jpg`)
+    if (chemin) maj.photo_url = chemin
+  } else if (p.photoUrl) {
+    const chemin = cheminDepuis(p.photoUrl)
+    if (chemin) maj.photo_url = chemin
+  }
+  const { error } = await supabase.from('profils').update(maj).eq('id', user.id)
+  if (error) {
+    console.warn('[jeudi] resync profil KO', error)
+    return false
+  }
+  return true
+}
+
+// PostgREST plafonne une lecture à 1000 lignes : si on touche ce plafond
+// rond, la lecture est probablement PARTIELLE → interdiction de purger.
+const PLAFOND_LECTURE = 1000
+
 export async function tousLesLieux(): Promise<Lieu[]> {
+  // la course monId : sans cette attente, un appel parti avant la première
+  // réponse d'auth sautait la branche cloud et classait mes spots en décor.
+  await pretAuth
   const db = await getDB()
   const actifs = await db.getAllFromIndex('lieux', 'par-statut', 'actif')
   // le décor : tout ce qui n'est PAS à moi (cercle simulé + spots publics du seed)
@@ -328,14 +645,26 @@ export async function tousLesLieux(): Promise<Lieu[]> {
         const photos = await chargerPhotos(miens.map((l) => l.id))
         for (const l of miens) l.photos = photos.get(l.id) ?? []
         cloudOk = true
-        // miroir local : on remplace mes spots cachés par l'état cloud frais
-        const anciensMiens = actifs.filter((l) => estAMoi(l)).map((l) => l.id)
         const frais = new Set(miens.map((l) => l.id))
+        const enAttente = idsEnAttente()
+        const lecturePartielle = miens.length >= PLAFOND_LECTURE
+        const locauxMiens = actifs.filter((l) => estAMoi(l))
+        // miroir local : on remplace mes spots cachés par l'état cloud frais
         const tx = db.transaction('lieux', 'readwrite')
         for (const l of miens) await tx.store.put(l)
-        // purge les spots cachés qui n'existent plus côté cloud (supprimés ailleurs)
-        for (const id of anciensMiens) if (!frais.has(id)) await tx.store.delete(id)
+        // purge des spots cachés absents du cloud (supprimés ailleurs) —
+        // SEULEMENT si la lecture est complète et fiable, et JAMAIS un spot
+        // encore en file d'attente (pas encore poussé au cloud)
+        if (!lecturePartielle) {
+          for (const l of locauxMiens) {
+            if (!frais.has(l.id) && !enAttente.has(l.id)) await tx.store.delete(l.id)
+          }
+        }
         await tx.done
+        // les spots locaux préservés restent visibles dans « les miens »
+        for (const l of locauxMiens) {
+          if (!frais.has(l.id) && (enAttente.has(l.id) || lecturePartielle)) miens.push(l)
+        }
       }
     }
   } catch {
@@ -352,13 +681,119 @@ export async function ajouterLieuLocal(lieu: Lieu): Promise<void> {
   await db.put('lieux', lieu)
 }
 
+// ── ids sûrs pour le cloud ──
+// La colonne `lieux.id` est un uuid : un id maison (« id-… » de l'ancien
+// fallback HTTP, ids du seed d'avant) serait rejeté par Postgres (22P02).
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export function estUuid(id: string): boolean {
+  return RE_UUID.test(id)
+}
+
+/** un lieu à pousser au cloud DOIT porter un uuid : si l'id est legacy, on en
+ *  génère un neuf et on réécrit l'enregistrement local + ses références
+ *  triviales (favoris, comparer, vus, signalés, sorties, bofs, cache adresse)
+ *  AVANT l'écriture cloud. Renvoie le lieu (réécrit, ou tel quel). */
+async function assurerUuid(lieu: Lieu): Promise<Lieu> {
+  if (estUuid(lieu.id)) return lieu
+  const ancien = lieu.id
+  const neuf: Lieu = { ...lieu, id: nouvelId() }
+  const db = await getDB()
+  const tx = db.transaction('lieux', 'readwrite')
+  await tx.store.delete(ancien)
+  await tx.store.put(neuf)
+  await tx.done
+  remplacerIdLocal(ancien, neuf.id)
+  console.warn(`[jeudi] id legacy réécrit pour le cloud : ${ancien} → ${neuf.id}`)
+  return neuf
+}
+
+/** remplace un id de lieu dans les petites listes localStorage (best-effort) */
+function remplacerIdLocal(ancien: string, neuf: string): void {
+  // listes d'ids nus
+  for (const cle of ['jeudi-favoris', 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
+    try {
+      const v = JSON.parse(localStorage.getItem(cle) ?? '[]')
+      if (Array.isArray(v) && v.includes(ancien)) {
+        localStorage.setItem(cle, JSON.stringify(v.map((x) => (x === ancien ? neuf : x))))
+      }
+    } catch {
+      /* liste illisible : tant pis */
+    }
+  }
+  // listes d'objets { lieuId }
+  for (const cle of ['jeudi-sorties', 'jeudi-bofs']) {
+    try {
+      const v = JSON.parse(localStorage.getItem(cle) ?? '[]')
+      if (Array.isArray(v)) {
+        localStorage.setItem(
+          cle,
+          JSON.stringify(v.map((x) => (x && x.lieuId === ancien ? { ...x, lieuId: neuf } : x))),
+        )
+      }
+    } catch {
+      /* idem */
+    }
+  }
+  // le cache d'adresse (+ son index de purge) suit le lieu
+  const adr = localStorage.getItem(`jeudi-adr-${ancien}`)
+  if (adr !== null) {
+    localStorage.removeItem(`jeudi-adr-${ancien}`)
+    localStorage.setItem(`jeudi-adr-${neuf}`, adr)
+    try {
+      const idx = JSON.parse(localStorage.getItem('jeudi-adr-index') ?? '[]')
+      if (Array.isArray(idx) && idx.includes(ancien)) {
+        localStorage.setItem(
+          'jeudi-adr-index',
+          JSON.stringify(idx.map((x) => (x === ancien ? neuf : x))),
+        )
+      }
+    } catch {
+      /* index illisible : la borne se refera toute seule */
+    }
+  }
+}
+
+/** écrit un de MES lieux au cloud (upsert = insert ou update, idempotent) et
+ *  VÉRIFIE qu'au moins une ligne est revenue — 0 ligne (RLS muette) = échec.
+ *  Tolère l'absence de la colonne `recos` tant que la migration 0003 n'est
+ *  pas passée : retente UNE fois sans elle, avec un warn. */
+async function pousserLieuCloud(lieu: Lieu): Promise<boolean> {
+  let ligne = lieuVersLigne(lieu)
+  for (let essai = 0; essai < 2; essai++) {
+    const { data, error } = await supabase.from('lieux').upsert(ligne).select('id')
+    if (!error) {
+      if (Array.isArray(data) && data.length > 0) return true
+      console.warn('[jeudi] écriture cloud : 0 ligne touchée (RLS ?)', lieu.id)
+      return false
+    }
+    if (essai === 0 && /recos/i.test(error.message ?? '')) {
+      console.warn('[jeudi] colonne `recos` absente en base (migration 0003 pas passée) — nouvel essai sans elle')
+      ligne = { ...ligne }
+      delete ligne.recos
+      continue
+    }
+    console.warn('[jeudi] écriture cloud KO', lieu.id, error)
+    return false
+  }
+  return false
+}
+
 export async function ajouterLieu(lieu: Lieu): Promise<void> {
-  // tes spots → cloud (owner_id = toi). Repli local si pas connecté (ne devrait
-  // pas arriver, l'app est derrière l'auth).
-  if (!monId) return ajouterLieuLocal(lieu)
-  const { error } = await supabase.from('lieux').insert(lieuVersLigne(lieu))
-  if (error) throw error
-  await syncPhotosLieu(lieu)
+  await pretAuth
+  // 1) LOCAL D'ABORD, toujours : l'utilisateur ne perd JAMAIS un spot, même si
+  //    le cloud tousse avec une session valide (avant : throw = spot perdu).
+  const db = await getDB()
+  await db.put('lieux', lieu)
+  if (!monId) return // pas connecté : le spot vit en local (repli historique)
+  // 2) id compatible cloud (colonne uuid) — les ids legacy sont réécrits
+  const sur = await assurerUuid(lieu)
+  // 3) push vérifié ; échec → file d'attente, rejouée au retour en ligne
+  if (await pousserLieuCloud(sur)) {
+    await syncPhotosLieu(sur)
+  } else {
+    enfiler('lieu-upsert', sur.id)
+    console.warn('[jeudi] ajouterLieu : cloud KO — spot gardé en local, resync planifiée', sur.id)
+  }
 }
 
 /** le spot est-il à moi ? (undefined = ancien spot d'avant le marqueur = mien) */
@@ -391,23 +826,70 @@ export async function adopterLieu(lieu: Lieu): Promise<Lieu> {
 }
 
 export async function archiverLieu(id: string): Promise<void> {
-  if (monId) {
-    const { error } = await supabase.from('lieux').update({ statut: 'archive' }).eq('id', id)
-    if (!error) return
-  }
+  await pretAuth
+  // le local d'abord (miroir + décor) : l'archivage est TOUJOURS visible
   const db = await getDB()
   const lieu = await db.get('lieux', id)
   if (lieu) await db.put('lieux', { ...lieu, statut: 'archive' })
+  // côté cloud : uniquement mes spots (le décor est local par nature)
+  const mien = lieu ? estAMoi(lieu) : true // inconnu en local → spot cloud probable
+  if (!monId || !mien) return
+  if (!estUuid(id)) return // id legacy : jamais poussé au cloud → rien à archiver là-haut
+  const { data, error } = await supabase
+    .from('lieux')
+    .update({ statut: 'archive' })
+    .eq('id', id)
+    .eq('owner_id', monId)
+    .select('id')
+  // 0 ligne touchée N'EST PAS un succès (hors-ligne, RLS, spot jamais poussé…)
+  if (error || !Array.isArray(data) || data.length === 0) {
+    console.warn(
+      '[jeudi] archiverLieu cloud KO — archivé en local, resync planifiée',
+      id,
+      error ?? '0 ligne',
+    )
+    enfiler('lieu-archive', id)
+  }
 }
 
 /** suppression définitive — pas de retour en arrière */
 export async function supprimerLieu(id: string): Promise<void> {
-  if (monId) {
-    const { error } = await supabase.from('lieux').delete().eq('id', id)
-    if (!error) return
-  }
+  await pretAuth
   const db = await getDB()
-  await db.delete('lieux', id)
+  const lieu = await db.get('lieux', id)
+  const mien = lieu ? estAMoi(lieu) : true
+  await db.delete('lieux', id) // le local part dans tous les cas
+  if (!monId || !mien) return
+  if (!estUuid(id)) {
+    // id legacy : jamais poussé au cloud. On retire juste une éventuelle
+    // resync en attente pour cet id, et c'est réglé.
+    ecrireAttente(lireAttente().filter((t) => t.id !== id))
+    return
+  }
+  const { data, error } = await supabase
+    .from('lieux')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', monId)
+    .select('id')
+  if (error) {
+    console.warn(
+      '[jeudi] supprimerLieu cloud KO — supprimé en local, resync planifiée',
+      id,
+      error,
+    )
+    enfiler('lieu-suppr', id)
+    return
+  }
+  if (!Array.isArray(data) || data.length === 0) {
+    // rien côté cloud (jamais poussé, ou déjà supprimé ailleurs) : acceptable
+    // pour une suppression — on nettoie quand même le Storage par acquit.
+    console.warn('[jeudi] supprimerLieu : 0 ligne côté cloud', id)
+  }
+  // une resync en attente pour ce lieu n'a plus d'objet
+  ecrireAttente(lireAttente().filter((t) => t.id !== id))
+  // le dossier Storage du lieu part aussi (best-effort, warn si KO)
+  await nettoyerStorageLieu(id)
 }
 
 // ── distance depuis "moi" (Place Vendôme par défaut) ───────────
@@ -707,36 +1189,65 @@ export function adresseLisible(adresse?: string, nom = ''): string {
   return [rue, ville].filter(Boolean).join(' · ')
 }
 
-/** l'adresse COMPLÈTE (n° + rue, CP + ville) par reverse-geocoding des coordonnées.
- *  Nominatim a le house_number que notre import n'avait pas gardé. mis en cache
- *  (localStorage) par lieu pour ne pas re-télécharger ni spammer le service. */
-export async function reverseAdresse(id: string, lat: number, lng: number): Promise<string> {
-  const cle = `jeudi-adr-${id}`
-  const cache = localStorage.getItem(cle)
-  if (cache !== null) return cache
+// ── cache d'adresses reverse-geocodées, BORNÉ ──
+// une entrée `jeudi-adr-<id>` par lieu + un index d'insertion `jeudi-adr-index`
+// pour purger les plus anciennes au-delà de MAX_ADRESSES (localStorage n'est
+// pas un puits sans fond).
+const MAX_ADRESSES = 300
+const CLE_ADR_INDEX = 'jeudi-adr-index'
+
+function noterAdresse(id: string, adresse: string): void {
+  localStorage.setItem(`jeudi-adr-${id}`, adresse)
+  let index: string[]
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
-    const r = await fetch(url, { headers: { 'Accept-Language': 'fr' } })
-    const d = await r.json()
-    const a = d.address ?? {}
-    const num = a.house_number ? `${a.house_number} ` : ''
-    const rue = a.road || a.pedestrian || a.footway || a.square || ''
-    const cp = a.postcode || ''
-    const ville = a.city || a.town || a.village || a.municipality || a.suburb || ''
-    const complete = `${num}${rue}${rue && (cp || ville) ? ', ' : ''}${cp}${cp && ville ? ' ' : ''}${ville}`.trim()
-    if (complete) {
-      localStorage.setItem(cle, complete)
-      return complete
-    }
+    const v = JSON.parse(localStorage.getItem(CLE_ADR_INDEX) ?? '[]')
+    index = Array.isArray(v) ? v : []
   } catch {
-    /* hors-ligne ou service indispo : on retombe sur l'adresse stockée */
+    index = []
   }
-  return ''
+  index = index.filter((x) => x !== id)
+  index.push(id)
+  while (index.length > MAX_ADRESSES) {
+    const vieux = index.shift()
+    if (vieux) localStorage.removeItem(`jeudi-adr-${vieux}`)
+  }
+  localStorage.setItem(CLE_ADR_INDEX, JSON.stringify(index))
+}
+
+/** l'adresse COMPLÈTE (n° + rue, CP + ville) par reverse-geocoding des
+ *  coordonnées. Passe par nominatim.ts (adresseDepuis) : file d'attente ~1 r/s,
+ *  annulation et erreurs typées mutualisées — plus de fetch direct ici.
+ *  Cache localStorage par lieu, borné (FIFO) à MAX_ADRESSES entrées. */
+export async function reverseAdresse(id: string, lat: number, lng: number): Promise<string> {
+  const cache = localStorage.getItem(`jeudi-adr-${id}`)
+  if (cache !== null) return cache
+  const r = await adresseDepuis(lat, lng)
+  if (r.ok) {
+    noterAdresse(id, r.adresse)
+    return r.adresse
+  }
+  return '' // introuvable / réseau / annulé : l'appelant garde l'adresse stockée
+}
+
+/** un uuid v4 « à la main » pour les contextes sans crypto.randomUUID (HTTP
+ *  sur IP locale). Math.random suffit ici : on veut l'unicité pratique, pas de
+ *  la crypto. SURTOUT plus d'id maison (« id-… ») : la colonne uuid de
+ *  Postgres les rejetait, et ces spots ne montaient jamais au cloud. */
+function uuidV4Manuel(): string {
+  let s = ''
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) s += '-'
+    else if (i === 14) s += '4' // version 4
+    else if (i === 19) s += (((Math.random() * 4) | 0) | 8).toString(16) // variante 8-b
+    else s += ((Math.random() * 16) | 0).toString(16)
+  }
+  return s
 }
 
 export function nouvelId(): string {
   // crypto.randomUUID n'existe qu'en contexte sécurisé (HTTPS / localhost).
-  // En HTTP sur IP locale (test depuis le tél), on bascule sur un fallback.
+  // En HTTP sur IP locale (test depuis le tél), on bascule sur le fallback —
+  // qui produit AUSSI un uuid v4 valide (compatible colonne uuid).
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     try {
       return crypto.randomUUID()
@@ -744,7 +1255,7 @@ export function nouvelId(): string {
       /* contexte non sécurisé : on tombe sur le fallback */
     }
   }
-  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
+  return uuidV4Manuel()
 }
 
 // ── import Google Takeout ("Saved Places.json" / "Lieux enregistrés") ──
@@ -797,21 +1308,30 @@ export async function importerTakeout(json: unknown): Promise<number> {
 }
 
 export async function majLieu(lieu: Lieu): Promise<void> {
-  if (monId && estAMoi(lieu)) {
-    const { error } = await supabase.from('lieux').update(lieuVersLigne(lieu)).eq('id', lieu.id)
-    if (!error) {
-      await syncPhotosLieu(lieu)
-      return
-    }
-    console.error('[jeudi] majLieu cloud KO — repli local', error)
-  }
+  await pretAuth
   const db = await getDB()
-  await db.put('lieux', lieu)
+  if (!monId || !estAMoi(lieu)) {
+    // décor / pas connecté : le local est la seule vérité
+    await db.put('lieux', lieu)
+    return
+  }
+  // id compatible cloud (les spots seed « moi » ou legacy sont réécrits ici)
+  const sur = await assurerUuid(lieu)
+  await db.put('lieux', sur) // miroir local d'abord — l'édition n'est jamais perdue
+  // upsert vérifié : couvre aussi le spot local jamais poussé (0 ligne à updater)
+  if (await pousserLieuCloud(sur)) {
+    await syncPhotosLieu(sur)
+    return
+  }
+  // l'échec cloud n'est plus silencieux : gardé en local ET marqué à resynchroniser
+  console.warn('[jeudi] majLieu : cloud KO — état gardé en local, resync planifiée', sur.id)
+  enfiler('lieu-upsert', sur.id)
 }
 
 export async function lireLieu(id: string): Promise<Lieu | undefined> {
   try {
-    if (monId) {
+    await pretAuth
+    if (monId && estUuid(id)) {
       const { data } = await supabase.from('lieux').select('*').eq('id', id).maybeSingle()
       if (data) {
         const lieu = ligneVersLieu(data)
@@ -849,6 +1369,13 @@ export async function lireProfil(): Promise<Profil | undefined> {
         if (Array.isArray(data.seuils) && data.seuils.length === 2) {
           ecrireSeuils([data.seuils[0], data.seuils[1]])
         }
+        // le portrait : la base stocke un CHEMIN bucket (ou une vieille URL
+        // publique d'avant 0003) → on renvoie une URL SIGNÉE, affichable direct
+        let photoUrl: string | undefined
+        if (typeof data.photo_url === 'string' && data.photo_url) {
+          const chemin = cheminDepuis(data.photo_url)
+          photoUrl = chemin ? ((await urlPhoto(chemin)) ?? undefined) : data.photo_url
+        }
         return {
           scoreSwipe: data.score_swipe ?? local?.scoreSwipe ?? 50,
           critere: data.critere ?? local?.critere ?? 'le feeling',
@@ -858,47 +1385,82 @@ export async function lireProfil(): Promise<Profil | undefined> {
           naissance: data.naissance ?? undefined,
           depuis: data.cree_le ?? local?.depuis,
           photo: local?.photo, // le blob local sert de cache hors-ligne
-          photoUrl: data.photo_url ?? undefined, // le portrait cloud (prioritaire à l'affichage)
+          photoUrl, // le portrait cloud signé (prioritaire à l'affichage)
         }
       }
     }
   } catch {
     /* hors-ligne : on retombe sur le cache local */
   }
+  // hors-ligne : un photoUrl non affichable (chemin bucket nu, impossible à
+  // signer sans réseau) est retiré → l'app retombe sur le blob local.
+  if (local?.photoUrl && !/^(https?:|blob:|data:)/.test(local.photoUrl)) {
+    return { ...local, photoUrl: undefined }
+  }
   return local
 }
 
-export async function sauverProfil(p: Profil): Promise<void> {
+/** sauvegarde en MERGE : ne touche que les clés PRÉSENTES (≠ undefined) dans
+ *  `partiel`, en local comme au cloud. Avant : un appel partiel (ex. changer
+ *  la photo) écrasait bio/insta/naissance partout — LE bug perte de données
+ *  n°1. Un Profil complet reste un Partial<Profil> valide : les appels
+ *  existants d'App.tsx / Onboarding.tsx passent tels quels. */
+export async function sauverProfil(partiel: Partial<Profil>): Promise<void> {
   const db = await getDB()
-  await db.put('profil', p, 'moi') // miroir local (+ garde la photo Blob)
+  // 1) fusion locale : l'existant + les clés réellement fournies
+  const existant = await db.get('profil', 'moi')
+  const fourni: Partial<Profil> = {}
+  for (const [k, v] of Object.entries(partiel)) {
+    if (v !== undefined) (fourni as Record<string, unknown>)[k] = v
+  }
+  const fusion: Profil = {
+    scoreSwipe: 50,
+    critere: 'le feeling',
+    prenom: 'toi',
+    ...existant,
+    ...fourni,
+  }
+  // le portrait cloud se stocke en CHEMIN (stable) dans le miroir local —
+  // jamais une URL signée qui expirerait dans le cache
+  if (fusion.photoUrl) {
+    const chemin = cheminDepuis(fusion.photoUrl)
+    if (chemin) fusion.photoUrl = chemin
+  }
+  await db.put('profil', fusion, 'moi') // miroir local (+ garde la photo Blob)
+  // 2) cloud : UNIQUEMENT les clés du partiel (jamais d'écrasement du reste)
   try {
+    await pretAuth
     const {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) return
-    // le portrait → Storage (dossier <monId>/) si un nouveau blob est fourni
-    let photo_url = p.photoUrl ?? null
-    if (p.photo) {
-      const u = await televerserPhoto(p.photo, `${user.id}/profil.jpg`)
-      if (u) photo_url = `${u}?t=${Date.now()}` // casse le cache CDN au changement
+    const maj: Record<string, unknown> = {
+      couleur: lireCouleur(), // prefs d'appareil : suivent toujours le compte
+      seuils: lireSeuils(),
     }
-    const { error } = await supabase
-      .from('profils')
-      .update({
-        prenom: p.prenom,
-        critere: p.critere,
-        bio: p.bio ?? null,
-        insta: p.insta ?? null,
-        naissance: p.naissance ?? null,
-        score_swipe: p.scoreSwipe,
-        couleur: lireCouleur(), // pref d'appareil → suit le compte (nouvel appareil)
-        seuils: lireSeuils(), // météo porte-monnaie → suit le compte
-        photo_url,
-      })
-      .eq('id', user.id)
-    if (error) console.error('[jeudi] sauverProfil cloud KO', error)
+    if (fourni.prenom !== undefined) maj.prenom = fourni.prenom
+    if (fourni.critere !== undefined) maj.critere = fourni.critere
+    if (fourni.scoreSwipe !== undefined) maj.score_swipe = fourni.scoreSwipe
+    if (fourni.bio !== undefined) maj.bio = fourni.bio || null
+    if (fourni.insta !== undefined) maj.insta = fourni.insta || null
+    if (fourni.naissance !== undefined) maj.naissance = fourni.naissance || null
+    if (fourni.photo) {
+      // nouveau portrait → Storage ; la colonne stocke le CHEMIN (l'URL signée
+      // se génère à la lecture — plus besoin du ?t= casse-cache CDN)
+      const chemin = await televerserPhoto(fourni.photo, `${user.id}/profil.jpg`)
+      if (chemin) maj.photo_url = chemin
+    } else if (fourni.photoUrl) {
+      const chemin = cheminDepuis(fourni.photoUrl)
+      if (chemin) maj.photo_url = chemin // jamais une URL signée/blob: en base
+    }
+    const { error } = await supabase.from('profils').update(maj).eq('id', user.id)
+    if (error) {
+      console.warn('[jeudi] sauverProfil cloud KO — resync planifiée', error)
+      enfiler('profil', 'moi')
+    }
   } catch (e) {
-    console.warn('[jeudi] sauverProfil hors-ligne (resync à la prochaine sauvegarde)', e)
+    console.warn('[jeudi] sauverProfil hors-ligne — resync planifiée', e)
+    enfiler('profil', 'moi')
   }
 }
 
@@ -1041,13 +1603,90 @@ export function ajouterBof(lieuId: string): void {
     bofs = []
   }
   bofs.push({ lieuId, date: new Date().toISOString() })
+  // borné à 200 entrées (FIFO) : les plus vieux « bof » sortent
+  if (bofs.length > 200) bofs = bofs.slice(-200)
   localStorage.setItem('jeudi-bofs', JSON.stringify(bofs))
 }
 
-// « effacer mes données » : vide toutes les clés jeudi-* + la base IndexedDB
-export function effacerTout(): void {
+// « effacer mes données » : vide toutes les clés jeudi-* + la base IndexedDB.
+// ASYNC : le deleteDatabase est ATTENDU via ses callbacks — avant, un reload
+// immédiat derrière l'appel pouvait couper la suppression en plein vol.
+export async function effacerTout(): Promise<void> {
   Object.keys(localStorage)
     .filter((k) => k.startsWith('jeudi-'))
     .forEach((k) => localStorage.removeItem(k))
-  indexedDB.deleteDatabase('jeudi')
+  // fermer NOTRE connexion d'abord, sinon deleteDatabase reste bloqué
+  if (dbPromise) {
+    try {
+      ;(await dbPromise).close()
+    } catch {
+      /* connexion déjà fermée / jamais ouverte */
+    }
+    dbPromise = null
+  }
+  await new Promise<void>((resolve) => {
+    const req = indexedDB.deleteDatabase('jeudi')
+    req.onsuccess = () => resolve()
+    req.onerror = () => {
+      console.warn('[jeudi] deleteDatabase KO', req.error)
+      resolve()
+    }
+    req.onblocked = () => {
+      // un autre onglet retient la base : elle partira à sa fermeture
+      console.warn('[jeudi] deleteDatabase bloqué (autre onglet ouvert ?)')
+      resolve()
+    }
+  })
+}
+
+// ── RGPD (chantier 6, étape 5) ─────────────────────────────────
+/** le droit à l'oubli : rpc supprimer_mon_compte() (tout part en cascade côté
+ *  serveur, Storage compris — cf. migration 0003), puis déconnexion et
+ *  effacement local COMPLET. Throw si le serveur refuse : l'UI doit prévenir,
+ *  pas faire semblant. */
+export async function supprimerMonCompte(): Promise<void> {
+  const { error } = await supabase.rpc('supprimer_mon_compte')
+  if (error) throw error
+  try {
+    // scope local : le compte n'existe plus côté serveur, inutile de l'appeler
+    await supabase.auth.signOut({ scope: 'local' })
+  } catch (e) {
+    console.warn('[jeudi] signOut après suppression du compte', e)
+  }
+  await effacerTout()
+}
+
+/** portabilité : tout ce que jeudi sait de toi, en un objet JSON sérialisable
+ *  (l'UI d'App.tsx le télécharge). Les blobs photo (non sérialisables) sont
+ *  omis ; les photos cloud sortent en URLs. */
+export async function exporterMesDonnees(): Promise<Record<string, unknown>> {
+  const [profil, lieux] = await Promise.all([lireProfil(), tousLesLieux()])
+  const miens = lieux
+    .filter((l) => estAMoi(l))
+    .map((l) => ({
+      ...l,
+      photos: (l.photos ?? []).filter((p) => !!p.url).map((p) => ({ type: p.type, url: p.url })),
+    }))
+  return {
+    exporteLe: new Date().toISOString(),
+    profil: profil ? { ...profil, photo: undefined } : null,
+    lieux: miens,
+    sorties: sortiesEnAttente(),
+    favoris: lireFavoris(),
+    vus: lireVus(),
+    suivis: lireSuivis(),
+    signales: lireSignales(),
+    comparer: lireComparer(),
+    tagline: lireTagline(),
+    couleur: lireCouleur(),
+    seuils: lireSeuils(),
+  }
+}
+
+// ── au retour en ligne : rejouer la file d'attente (best-effort) ──
+// posé au chargement du module, une seule fois — db.ts est un singleton.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    void rejouerAttente()
+  })
 }

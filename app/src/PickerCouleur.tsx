@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // ── le picker de couleur de marque ─────────────────────────────
 // deux niveaux : d'abord des suggestions au goût sûr (les Pantone de
@@ -9,6 +9,7 @@ import { useRef, useState } from 'react'
 // les suggestions : Pantone récents (peach fuzz 24, viva magenta 23,
 // very peri 22, classic blue 20…) + des teintes qui tiennent sur le
 // papier charbon. la 1re reste le rouge cire d'origine.
+// eslint-disable-next-line react-refresh/only-export-components -- palette intimement liée au picker ; seul coût : fast refresh recharge ce fichier en entier
 export const SUGGESTIONS: { hex: string; nom: string }[] = [
   { hex: '#a8322a', nom: 'rouge cire' },
   { hex: '#ffbe98', nom: 'peach fuzz' }, // Pantone 2024
@@ -62,9 +63,33 @@ export default function PickerCouleur({
   onChange: (hex: string) => void
 }) {
   const [roue, setRoue] = useState(false)
-  const hsv = hexVersHsv(valeur)
-  const [v, setV] = useState(hsv.v) // luminosité, réglée au slider
+  // h/s/v vivent en STATE : les re-dériver du hex à chaque rendu faisait
+  // DÉRIVER la teinte (HSV → hex arrondi sur 8 bits → HSV ≠ l'original,
+  // cumulé à chaque tick du slider). ici le hex n'est plus qu'une sortie.
+  const [hs, setHs] = useState(() => {
+    const c = hexVersHsv(valeur)
+    return { h: c.h, s: c.s }
+  })
+  const [v, setV] = useState(() => hexVersHsv(valeur).v) // luminosité, réglée au slider
+  // le dernier hex qu'ON a émis : si `valeur` revient différente de l'extérieur
+  // (clic sur une suggestion Pantone, reset), on se resynchronise dessus.
+  const dernierEmis = useRef(valeur.toLowerCase())
+  useEffect(() => {
+    const val = valeur.toLowerCase()
+    if (val !== dernierEmis.current) {
+      const c = hexVersHsv(val)
+      setHs({ h: c.h, s: c.s })
+      setV(c.v)
+      dernierEmis.current = val
+    }
+  }, [valeur])
   const disque = useRef<HTMLDivElement>(null)
+
+  const emettre = (h: number, s: number, nv: number) => {
+    const hex = hsvVersHex(h, s, nv)
+    dernierEmis.current = hex
+    onChange(hex)
+  }
 
   const choisirDansLaRoue = (e: React.PointerEvent) => {
     const el = disque.current
@@ -78,7 +103,8 @@ export default function PickerCouleur({
     let h = (Math.atan2(dy, dx) * 180) / Math.PI
     if (h < 0) h += 360
     const s = Math.min(1, Math.hypot(dx, dy) / rayonMax)
-    onChange(hsvVersHex(h, s, v))
+    setHs({ h, s })
+    emettre(h, s, v)
   }
 
   const onPointer = (e: React.PointerEvent) => {
@@ -88,8 +114,8 @@ export default function PickerCouleur({
   }
 
   // position du curseur sur le disque (pour le petit point témoin)
-  const angle = (hsv.h * Math.PI) / 180
-  const rayon = hsv.s * 50 // en %
+  const angle = (hs.h * Math.PI) / 180
+  const rayon = hs.s * 50 // en %
   const px = 50 + Math.cos(angle) * rayon
   const py = 50 + Math.sin(angle) * rayon
 
@@ -139,7 +165,7 @@ export default function PickerCouleur({
             onChange={(e) => {
               const nv = Number(e.target.value)
               setV(nv)
-              onChange(hsvVersHex(hsv.h, hsv.s, nv))
+              emettre(hs.h, hs.s, nv)
             }}
             aria-label="luminosité"
           />
