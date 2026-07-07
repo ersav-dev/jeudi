@@ -624,34 +624,51 @@ export async function tousLesLieux(): Promise<Lieu[]> {
   await pretAuth
   const db = await getDB()
   const actifs = await db.getAllFromIndex('lieux', 'par-statut', 'actif')
-  // le décor : tout ce qui n'est PAS à moi (cercle simulé + spots publics du seed)
-  const decor = actifs.filter((l) => !estAMoi(l))
+  // le décor : tout ce qui n'est PAS à moi — le seed local (cercle simulé +
+  // spots publics) ET le miroir hors-ligne des spots du cercle réel.
+  let decor = actifs.filter((l) => !estAMoi(l))
   // mes spots : source de vérité = le cloud (owner_id = moi). On miroite chaque
   // lecture réussie dans IndexedDB → hors-ligne, on relit ce cache au lieu de
   // perdre mes spots (cache offline, étape 3).
   let miens: Lieu[] = []
+  // les spots du CERCLE RÉEL (et les publics d'autres membres) : la RLS les
+  // donne d'office dès qu'on lit sans filtre owner_id (étape 5).
+  let duCercle: Lieu[] = []
   let cloudOk = false
   try {
     if (monId) {
+      // SANS filtre owner_id : la RLS rend mes spots + ceux que j'ai le droit
+      // de voir (cercle accepté + publics). On sépare ensuite les miens du reste.
       const { data, error } = await supabase
         .from('lieux')
         .select('*')
-        .eq('owner_id', monId)
         .eq('statut', 'actif')
       if (error) throw error
       if (data) {
-        miens = data.map(ligneVersLieu)
-        // les photos (table photos → Storage) ; best-effort, ne casse pas la lecture
-        const photos = await chargerPhotos(miens.map((l) => l.id))
+        const lignes = data as LigneLieu[]
+        miens = lignes.filter((r) => r.owner_id === monId).map(ligneVersLieu)
+        duCercle = lignes.filter((r) => r.owner_id !== monId).map(ligneVersLieu)
+        // les photos (table photos → Storage), un seul lot pour tout ;
+        // best-effort, ne casse pas la lecture
+        const photos = await chargerPhotos([...miens, ...duCercle].map((l) => l.id))
         for (const l of miens) l.photos = photos.get(l.id) ?? []
+        for (const l of duCercle) l.photos = photos.get(l.id) ?? []
         cloudOk = true
         const frais = new Set(miens.map((l) => l.id))
+        const fraisCercle = new Set(duCercle.map((l) => l.id))
         const enAttente = idsEnAttente()
-        const lecturePartielle = miens.length >= PLAFOND_LECTURE
+        // la lecture TOTALE a pu être tronquée (plafond PostgREST) → pas de purge
+        const lecturePartielle = lignes.length >= PLAFOND_LECTURE
         const locauxMiens = actifs.filter((l) => estAMoi(l))
-        // miroir local : on remplace mes spots cachés par l'état cloud frais
+        // le miroir des spots du cercle d'un passage précédent : proprietaire =
+        // un uuid qui n'est pas moi (le seed, lui, porte 'karim'/'pub-…')
+        const locauxCercle = actifs.filter(
+          (l) => !estAMoi(l) && !!l.proprietaire && estUuid(l.proprietaire),
+        )
+        // miroir local : mes spots + ceux du cercle (cache hors-ligne)
         const tx = db.transaction('lieux', 'readwrite')
         for (const l of miens) await tx.store.put(l)
+        for (const l of duCercle) await tx.store.put(l)
         // purge des spots cachés absents du cloud (supprimés ailleurs) —
         // SEULEMENT si la lecture est complète et fiable, et JAMAIS un spot
         // encore en file d'attente (pas encore poussé au cloud)
@@ -659,20 +676,29 @@ export async function tousLesLieux(): Promise<Lieu[]> {
           for (const l of locauxMiens) {
             if (!frais.has(l.id) && !enAttente.has(l.id)) await tx.store.delete(l.id)
           }
+          // un spot du cercle disparu (retiré, repassé privé, relation rompue)
+          // sort aussi du miroir
+          for (const l of locauxCercle) {
+            if (!fraisCercle.has(l.id)) await tx.store.delete(l.id)
+          }
         }
         await tx.done
         // les spots locaux préservés restent visibles dans « les miens »
         for (const l of locauxMiens) {
           if (!frais.has(l.id) && (enAttente.has(l.id) || lecturePartielle)) miens.push(l)
         }
+        // le décor ne doit pas DUPLIQUER les spots cloud frais (miroir d'un
+        // passage précédent) : la version fraîche fait foi
+        decor = decor.filter((l) => !fraisCercle.has(l.id) && !frais.has(l.id))
       }
     }
   } catch {
-    /* hors-ligne ou erreur réseau : on retombe sur le cache local ci-dessous */
+    /* hors-ligne ou erreur réseau : on retombe sur le cache local ci-dessous
+       (les spots du cercle miroités y sont DANS le décor — rien à faire) */
   }
   // hors-ligne : mes spots = ce que le miroir IndexedDB a gardé de la dernière sync
   if (!cloudOk && monId) miens = actifs.filter((l) => estAMoi(l))
-  return [...miens, ...decor].sort((a, b) => b.creeLe.localeCompare(a.creeLe))
+  return [...miens, ...duCercle, ...decor].sort((a, b) => b.creeLe.localeCompare(a.creeLe))
 }
 
 /** insert LOCAL (IndexedDB) — réservé au seed (le décor). PAS pour tes spots. */
@@ -1462,6 +1488,326 @@ export async function sauverProfil(partiel: Partial<Profil>): Promise<void> {
     console.warn('[jeudi] sauverProfil hors-ligne — resync planifiée', e)
     enfiler('profil', 'moi')
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ── le CERCLE RÉEL (chantier cercle, étape 5) ──
+// Les vraies relations entre membres (table `relations`) remplacent la
+// simulation. Post-0003 : une demande part TOUJOURS en statut 'demande'
+// (de moi, jamais vers moi), et SEUL le destinataire accepte — le code
+// ci-dessous écrit pour ce monde-là (compatible 0001 aussi).
+// Realtime LÉGER : on recharge à l'ouverture et au retour de focus —
+// pas de subscription websocket (ça, c'est l'étape 6).
+// Écritures SANS write-queue : une demande d'ami ne se rejoue pas des
+// heures après sans le dire → l'échec remonte en erreur VISIBLE (throw,
+// message affichable tel quel). Lectures : repli sur un cache léger.
+// ════════════════════════════════════════════════════════════════════
+
+/** une demande d'ami reçue (relations.statut = 'demande', vers moi) */
+export interface DemandeRecue {
+  /** l'id du demandeur (relations.de_id) */
+  deId: string
+  prenom: string
+  /** URL signée du portrait, si le membre en a un */
+  photoUrl?: string
+}
+
+/** un membre de mon cercle réel (relation acceptée, peu importe le sens) */
+export interface MembreCercle {
+  id: string
+  prenom: string
+  critere?: string
+  bio?: string
+  insta?: string
+  photoUrl?: string
+}
+
+/** ligne de la vue `profils_publics` — la vitrine, JAMAIS naissance/seuils */
+interface LigneProfilPublic {
+  id: string
+  prenom: string | null
+  critere: string | null
+  bio: string | null
+  insta: string | null
+  photo_url: string | null
+}
+
+const CLE_CERCLE_CACHE = 'jeudi-cercle-cache'
+const CLE_INVITE = 'jeudi-invite-attente'
+// le domaine public de l'app : c'est LUI qui circule dans les invitations
+const URL_APP = 'https://jeudi-seven.vercel.app'
+
+/** signe le portrait d'un profil public (best-effort) */
+async function portraitSigne(photoUrl: string | null): Promise<string | undefined> {
+  if (!photoUrl) return undefined
+  const chemin = cheminDepuis(photoUrl)
+  if (!chemin) return /^https?:\/\//i.test(photoUrl) ? photoUrl : undefined
+  return (await urlPhoto(chemin)) ?? undefined
+}
+
+/** lit la vitrine publique d'une liste d'ids → map id → ligne */
+async function profilsPublics(ids: string[]): Promise<Map<string, LigneProfilPublic>> {
+  const map = new Map<string, LigneProfilPublic>()
+  if (!ids.length) return map
+  const { data, error } = await supabase
+    .from('profils_publics')
+    .select('id,prenom,critere,bio,insta,photo_url')
+    .in('id', ids)
+  if (error) throw error
+  for (const p of (data ?? []) as LigneProfilPublic[]) map.set(p.id, p)
+  return map
+}
+
+/** envoie une demande d'ami. Post-0003 : l'insert part TOUJOURS en 'demande'.
+ *  Erreurs PARLANTES — l'UI affiche le message tel quel. */
+export async function envoyerDemande(versId: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  if (versId === monId) throw new Error('c’est toi — pas besoin de demande.')
+  if (!estUuid(versId)) throw new Error('lien d’invitation invalide.')
+  const { error } = await supabase
+    .from('relations')
+    .insert({ de_id: monId, vers_id: versId, statut: 'demande' })
+  if (error) {
+    // 23505 = la paire existe déjà (mon sens, ou le sens inverse post-0003)
+    if (error.code === '23505') throw new Error('déjà demandé — ou déjà dans ton cercle.')
+    // 23503 = le profil visé n'existe pas (compte supprimé ?)
+    if (error.code === '23503') throw new Error('ce compte n’existe plus.')
+    console.warn('[jeudi] envoyerDemande KO', error)
+    throw new Error('la demande n’est pas partie. réessaie.')
+  }
+}
+
+/** les demandes reçues (vers moi, statut 'demande'), jointes à la vitrine.
+ *  Hors-ligne / erreur : liste vide — une demande ratée réapparaît au
+ *  prochain chargement, rien n'est perdu côté serveur. */
+export async function demandesRecues(): Promise<DemandeRecue[]> {
+  await pretAuth
+  if (!monId) return []
+  try {
+    const { data, error } = await supabase
+      .from('relations')
+      .select('de_id')
+      .eq('vers_id', monId)
+      .eq('statut', 'demande')
+    if (error) throw error
+    const ids = ((data ?? []) as { de_id: string }[]).map((r) => r.de_id)
+    const profils = await profilsPublics(ids)
+    const demandes: DemandeRecue[] = []
+    for (const id of ids) {
+      const p = profils.get(id)
+      demandes.push({
+        deId: id,
+        prenom: p?.prenom || 'quelqu’un',
+        photoUrl: await portraitSigne(p?.photo_url ?? null),
+      })
+    }
+    return demandes
+  } catch (e) {
+    console.warn('[jeudi] demandesRecues KO (hors-ligne ?)', e)
+    return []
+  }
+}
+
+/** accepte une demande. Post-0003, SEUL le destinataire (moi) le peut ;
+ *  0 ligne touchée = échec visible (RLS muette, demande disparue…). */
+export async function accepterDemande(deId: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { data, error } = await supabase
+    .from('relations')
+    .update({ statut: 'accepte' })
+    .eq('de_id', deId)
+    .eq('vers_id', monId)
+    .eq('statut', 'demande')
+    .select('de_id')
+  if (error || !Array.isArray(data) || data.length === 0) {
+    console.warn('[jeudi] accepterDemande KO', deId, error ?? '0 ligne')
+    throw new Error('l’acceptation n’est pas passée. réessaie.')
+  }
+}
+
+/** refuse (supprime) une demande reçue. 0 ligne = déjà partie : pas grave. */
+export async function refuserDemande(deId: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase
+    .from('relations')
+    .delete()
+    .eq('de_id', deId)
+    .eq('vers_id', monId)
+    .eq('statut', 'demande')
+  if (error) {
+    console.warn('[jeudi] refuserDemande KO', deId, error)
+    throw new Error('le refus n’est pas passé. réessaie.')
+  }
+}
+
+/** mon cercle réel : les relations ACCEPTÉES, dans les deux sens, jointes à la
+ *  vitrine publique. Lecture réussie → cache léger (identités SANS URLs
+ *  signées, elles expirent) ; hors-ligne → on relit ce cache. */
+export async function monCercle(): Promise<MembreCercle[]> {
+  await pretAuth
+  if (!monId) return []
+  try {
+    const { data, error } = await supabase
+      .from('relations')
+      .select('de_id,vers_id')
+      .eq('statut', 'accepte')
+      .or(`de_id.eq.${monId},vers_id.eq.${monId}`)
+    if (error) throw error
+    const lignes = (data ?? []) as { de_id: string; vers_id: string }[]
+    const ids = [...new Set(lignes.map((r) => (r.de_id === monId ? r.vers_id : r.de_id)))].filter(
+      (id) => id !== monId,
+    )
+    const profils = await profilsPublics(ids)
+    const membres: MembreCercle[] = []
+    for (const id of ids) {
+      const p = profils.get(id)
+      membres.push({
+        id,
+        prenom: p?.prenom || 'membre',
+        critere: p?.critere ?? undefined,
+        bio: p?.bio ?? undefined,
+        insta: p?.insta ?? undefined,
+        photoUrl: await portraitSigne(p?.photo_url ?? null),
+      })
+    }
+    try {
+      localStorage.setItem(
+        CLE_CERCLE_CACHE,
+        JSON.stringify(membres.map((m) => ({ ...m, photoUrl: undefined }))),
+      )
+    } catch {
+      /* stockage plein : le cache attendra */
+    }
+    return membres
+  } catch (e) {
+    console.warn('[jeudi] monCercle KO — repli sur le cache', e)
+    try {
+      const v = JSON.parse(localStorage.getItem(CLE_CERCLE_CACHE) ?? '[]')
+      return Array.isArray(v) ? (v as MembreCercle[]) : []
+    } catch {
+      return []
+    }
+  }
+}
+
+/** retire quelqu'un de mon cercle : la relation part, dans les deux sens
+ *  (une seule ligne existe, mais on couvre les deux pour être sûr). */
+export async function retirerDuCercle(id: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase
+    .from('relations')
+    .delete()
+    .or(`and(de_id.eq.${monId},vers_id.eq.${id}),and(de_id.eq.${id},vers_id.eq.${monId})`)
+  if (error) {
+    console.warn('[jeudi] retirerDuCercle KO', id, error)
+    throw new Error('le retrait n’est pas passé. réessaie.')
+  }
+  // le cache hors-ligne suit tout de suite
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_CERCLE_CACHE) ?? '[]')
+    if (Array.isArray(v)) {
+      localStorage.setItem(
+        CLE_CERCLE_CACHE,
+        JSON.stringify((v as MembreCercle[]).filter((m) => m.id !== id)),
+      )
+    }
+  } catch {
+    /* cache illisible : il se refera à la prochaine lecture */
+  }
+}
+
+/** la vitrine publique d'UN membre (écran d'invitation). null = introuvable. */
+export async function profilPublic(id: string): Promise<MembreCercle | null> {
+  try {
+    await pretAuth
+    if (!monId || !estUuid(id)) return null
+    const { data, error } = await supabase
+      .from('profils_publics')
+      .select('id,prenom,critere,bio,insta,photo_url')
+      .eq('id', id)
+      .maybeSingle()
+    if (error || !data) return null
+    const p = data as LigneProfilPublic
+    return {
+      id: p.id,
+      prenom: p.prenom || 'membre',
+      critere: p.critere ?? undefined,
+      bio: p.bio ?? undefined,
+      insta: p.insta ?? undefined,
+      photoUrl: await portraitSigne(p.photo_url),
+    }
+  } catch {
+    return null
+  }
+}
+
+// ── l'invitation par lien : LE canal de croissance ──────────────────
+// Format : https://jeudi-seven.vercel.app/?invite=<monId> — la SPA lit le
+// param au boot, le met de côté, et l'envoi part dès qu'on est connecté.
+
+/** MON lien d'invitation (connecté requis) */
+export function lienInvitation(): string {
+  if (!monId) throw new Error('connecte-toi d’abord pour inviter.')
+  return `${URL_APP}/?invite=${monId}`
+}
+
+/** parse le param ?invite= d'une query string → id (uuid) ou null.
+ *  PUR (testable) : aucune lecture d'état, que la chaîne fournie. */
+export function extraireInvite(search: string): string | null {
+  try {
+    const id = (new URLSearchParams(search).get('invite') ?? '').trim()
+    return estUuid(id) ? id : null
+  } catch {
+    return null
+  }
+}
+
+/** au boot : capte ?invite=<id>, le met de côté (localStorage) et NETTOIE
+ *  l'URL aussitôt. Consommé par traiterInviteAttente() une fois connecté —
+ *  y compris après un premier login plus tard (l'écran Auth ne change pas). */
+export function capterInvite(): void {
+  const id = extraireInvite(window.location.search)
+  if (!id) return
+  localStorage.setItem(CLE_INVITE, id)
+  try {
+    const url = new URL(window.location.href)
+    url.searchParams.delete('invite')
+    history.replaceState(null, '', url.pathname + url.search + url.hash)
+  } catch {
+    /* URL illisible : tant pis, l'invite est captée quand même */
+  }
+}
+
+/** connecté : consomme l'invite en attente → envoie la demande et rend le
+ *  PRÉNOM de l'inviteur (pour le bandeau d'accueil). null = rien à faire. */
+export async function traiterInviteAttente(): Promise<string | null> {
+  await pretAuth
+  if (!monId) return null
+  const id = localStorage.getItem(CLE_INVITE)
+  if (!id) return null
+  if (!estUuid(id) || id === monId) {
+    // s'auto-inviter / lien cassé : on jette sans bruit
+    localStorage.removeItem(CLE_INVITE)
+    return null
+  }
+  try {
+    await envoyerDemande(id)
+  } catch (e) {
+    if (!/déjà/.test((e as Error).message ?? '')) {
+      // vrai échec (réseau…) : on GARDE l'invite pour le prochain boot —
+      // et on ne dit rien de faux (pas de bandeau « c'est parti »)
+      console.warn('[jeudi] invite en attente non envoyée', e)
+      return null
+    }
+    // « déjà demandé / déjà potes » : l'invite est consommée quand même
+  }
+  localStorage.removeItem(CLE_INVITE)
+  const p = await profilPublic(id)
+  return p?.prenom ?? null
 }
 
 // ── les sorties en attente de validation ("alors, Le Bisou ?") ──

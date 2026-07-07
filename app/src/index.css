@@ -4900,6 +4900,46 @@ button {
   vertical-align: 2px;
 }
 
+/* ── le cercle réel (étape 5) ─────────────────────────────────── */
+/* le bandeau doux d'arrivée par invitation — mono, discret, tap pour ranger */
+.bandeau-invite {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 1px dashed var(--ivory-faded);
+  background: transparent;
+  color: var(--ivory);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  opacity: 0.75;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* « invite un pote dans ton cercle » — le canal de croissance, sobre */
+.inviter-pote {
+  display: block;
+  margin: 18px auto 6px;
+}
+
+/* retirer un vrai membre — action rare, en retrait, rouge à la confirmation */
+.retirer-cercle {
+  display: block;
+  margin: 22px auto 8px;
+  opacity: 0.6;
+}
+.retirer-cercle.confirm {
+  color: var(--red);
+  opacity: 1;
+}
+
+/* fiche : la provenance « chez untel » d'un spot du cercle */
+.fiche-chez {
+  color: var(--red);
+  opacity: 0.85;
+}
+
 /* réglages : l'erreur cloud (suppression de compte refusée) */
 .reglages-erreur {
   color: var(--red);
@@ -4981,4 +5021,21 @@ button {
   box-shadow:
     1px 2px 0 rgba(0, 0, 0, 0.6),
     0 0 0 4px rgba(240, 234, 217, 0.38);
+}
+/* la taille dit le poids de la grappe : 15+ lieux, puis 80+ (lisibilité de loin) */
+.cluster-pastille.cluster-md {
+  min-width: 36px;
+  height: 36px;
+  font-size: 12px;
+  border-width: 3px;
+}
+.cluster-pastille.cluster-lg {
+  min-width: 46px;
+  height: 46px;
+  font-size: 14px;
+  font-weight: 700;
+  border-width: 3px;
+  box-shadow:
+    1px 3px 0 rgba(0, 0, 0, 0.65),
+    0 0 0 5px rgba(240, 234, 217, 0.28);
 }

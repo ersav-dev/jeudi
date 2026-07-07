@@ -20,7 +20,13 @@ import {
   apercuCritere,
   type TypeCritere,
 } from './criteres'
-import { lesProches, basculerProche, CAP_PROCHES } from './cercle'
+import {
+  lesProches,
+  basculerProche,
+  CAP_PROCHES,
+  fusionnerCercle,
+  prenomDe,
+} from './cercle'
 import { rechercher, profilDeGout } from './recherche'
 import { regardDe, CRITERES_MEMBRES, pastilles } from './regard'
 import portraitDefaut from './assets/portrait.jpg'
@@ -82,10 +88,19 @@ import {
   retirerSortie,
   lireProfil,
   sauverProfil,
-  lireSuivis,
-  ecrireSuivis,
   supprimerMonCompte,
   exporterMesDonnees,
+  // le cercle réel (étape 5) — les vraies relations remplacent la simulation
+  type DemandeRecue,
+  type MembreCercle,
+  demandesRecues,
+  accepterDemande as accepterDemandeCloud,
+  refuserDemande as refuserDemandeCloud,
+  monCercle,
+  retirerDuCercle,
+  lienInvitation,
+  capterInvite,
+  traiterInviteAttente,
 } from './db'
 
 // A4 : MapLibre (~1 Mo) sort du bundle principal — chargé à la demande
@@ -546,7 +561,6 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
       {ouvert === 'bientot' && (
         <div className="reglages-bientot mono">
           {[
-            'inviter un pote',
             'amis archivés',
             'spots archivés',
             'notifications',
@@ -641,22 +655,68 @@ export default function App() {
   const [attente, setAttente] = useState<SortieEnAttente[]>([])
   const [attenteTotal, setAttenteTotal] = useState(0)
   const [archive, setArchive] = useState<Lieu | null>(null)
-  // notifications (haut-droite) : demandes d'amis (simulées) + lieux à noter
+  // notifications (haut-droite) : demandes d'amis (RÉELLES) + lieux à noter
   const [notifsOuvertes, setNotifsOuvertes] = useState(false)
-  // demandes SIMULÉES (tampon « démo » à l'affichage — pas de faux vrais amis)
-  const [demandes, setDemandes] = useState<{ id: string; prenom: string; titre: string }[]>([
-    { id: 'sofia', prenom: 'Sofia', titre: 'éclaireuse du 3e' },
-    { id: 'yanis', prenom: 'Yanis', titre: 'éclaireur du 10e' },
-  ])
-  // accepter ≠ ignorer : accepter ajoute VRAIMENT aux suivis locaux (cercle),
-  // ignorer retire seulement la demande.
-  const accepterDemande = (id: string) => {
-    const d = demandes.find((x) => x.id === id)
-    if (d) ecrireSuivis([...new Set([...lireSuivis(), d.prenom])])
-    setDemandes((prev) => prev.filter((x) => x.id !== id))
+  // les VRAIES demandes (table relations) — chargées au boot + au retour de focus
+  const [demandes, setDemandes] = useState<DemandeRecue[]>([])
+  // le cercle réel (relations acceptées) : les vrais membres, devant le décor seed
+  const [cercleReel, setCercleReel] = useState<MembreCercle[]>([])
+  // bandeau doux d'arrivée par lien d'invite : « ta demande est partie chez… »
+  const [bandeauInvite, setBandeauInvite] = useState<string | null>(null)
+  // realtime léger (étape 5) : un rechargement à l'ouverture + au focus suffit
+  const chargerCercle = useCallback(() => {
+    demandesRecues().then(setDemandes).catch(() => {})
+    monCercle().then(setCercleReel).catch(() => {})
+  }, [])
+  // accepter ≠ ignorer : accepter écrit VRAIMENT la relation (cloud),
+  // ignorer supprime la demande. Un échec cloud = flash, rien de silencieux.
+  const accepterDemande = async (deId: string) => {
+    const d = demandes.find((x) => x.deId === deId)
+    try {
+      await accepterDemandeCloud(deId)
+    } catch (e) {
+      setFlash((e as Error).message)
+      return
+    }
+    setDemandes((prev) => prev.filter((x) => x.deId !== deId))
     if (d) setFlash(`@${d.prenom.toLowerCase()} rejoint ton cercle.`)
+    monCercle().then(setCercleReel).catch(() => {})
+    recharger() // ses spots « cercle » arrivent sur ma carte
   }
-  const ignorerDemande = (id: string) => setDemandes((d) => d.filter((x) => x.id !== id))
+  const ignorerDemande = async (deId: string) => {
+    try {
+      await refuserDemandeCloud(deId)
+    } catch (e) {
+      setFlash((e as Error).message)
+      return
+    }
+    setDemandes((prev) => prev.filter((x) => x.deId !== deId))
+  }
+  // inviter un pote : navigator.share si dispo, sinon copie presse-papier
+  const inviterUnPote = async () => {
+    let lien: string
+    try {
+      lien = lienInvitation()
+    } catch (e) {
+      setFlash((e as Error).message)
+      return
+    }
+    const texte = `rejoins mon cercle sur jeudi. je dis où. ${lien}`
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: texte })
+      } catch {
+        /* partage annulé : rien à dire */
+      }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(texte)
+      setFlash('lien copié. envoie-le à ton pote.')
+    } catch {
+      setFlash(lien) // dernier repli : montrer le lien
+    }
+  }
   const [confirmVider, setConfirmVider] = useState(false)
   const [prenom, setPrenom] = useState('toi')
   const [critere, setCritere] = useState('le feeling')
@@ -748,7 +808,9 @@ export default function App() {
 
   const recharger = () => tousLesLieux().then(setLieux)
   useEffect(() => {
+    capterInvite() // ?invite=<id> → mis de côté, URL nettoyée aussitôt
     chargerMonId().then(() => {
+      chargerCercle()
     importerSeed().then(() => {
       recharger()
       // UNE lecture du stockage : ensuite l'état fait foi (sorties = la cloche,
@@ -770,7 +832,8 @@ export default function App() {
       if (p?.depuis) setDepuis(p.depuis)
     })
     })
-  }, [])
+    // chargerCercle est stable (useCallback []) : l'effet ne tourne qu'une fois
+  }, [chargerCercle])
 
   // ── la session Supabase : on lit l'existante puis on écoute les changements
   // (connexion via magic-link, déconnexion, refresh du token). Tant qu'on n'a
@@ -786,6 +849,27 @@ export default function App() {
     })
     return () => sub.subscription.unsubscribe()
   }, [])
+
+  // realtime léger : demandes + cercle se rafraîchissent au retour de focus
+  // (pas de websocket pour cette étape — ça, c'est l'étape 6)
+  useEffect(() => {
+    const auFocus = () => chargerCercle()
+    window.addEventListener('focus', auFocus)
+    return () => window.removeEventListener('focus', auFocus)
+  }, [chargerCercle])
+
+  // l'invite en attente (lien ?invite=) part dès qu'on est connecté — y compris
+  // juste après le premier login (l'écran Auth, lui, ne change pas)
+  useEffect(() => {
+    if (!session) return
+    chargerCercle()
+    traiterInviteAttente().then((prenom) => {
+      if (prenom) {
+        setBandeauInvite(`ta demande est partie chez ${prenom.toLowerCase()}.`)
+        chargerCercle()
+      }
+    })
+  }, [session, chargerCercle])
 
   const aValider = attente[0] ?? null
   const sortieSuivante = () => setAttente((prev) => prev.slice(1))
@@ -860,7 +944,14 @@ export default function App() {
 
   // qui possède quoi : mes spots + ceux de mon cercle = "ma carte" ; les
   // éclaireurs hors cercle (proprietaire pub-*) ne vivent que dans "public".
-  const idsCercle = useMemo(() => new Set(MEMBRES.map((m) => m.id)), [])
+  // le cercle = les VRAIS membres (relations acceptées) + le décor seed
+  const idsCercle = useMemo(
+    () => new Set([...cercleReel.map((m) => m.id), ...MEMBRES.map((m) => m.id)]),
+    [cercleReel],
+  )
+  // l'écran cercle : les vrais membres passent DEVANT, le seed reste le décor
+  // (tampon « démo ») tant qu'on est seul
+  const membresCercle = useMemo(() => fusionnerCercle(cercleReel), [cercleReel])
   // UNE seule source pour les super potes : lesProches() (état `proches`),
   // plus jamais le `proche` figé du seed (il ne sert qu'à amorcer cercle.ts).
   const idsProches = useMemo(() => new Set(proches), [proches])
@@ -915,7 +1006,10 @@ export default function App() {
         favoris,
         vus: [...vus],
       })
-      const cercle = MEMBRES.flatMap((m) => [m.id, m.prenom])
+      const cercle = [
+        ...MEMBRES.flatMap((m) => [m.id, m.prenom]),
+        ...cercleReel.flatMap((m) => [m.id, m.prenom]),
+      ]
       return rechercher(liste, {}, gout, cercle).map((r) => r.lieu)
     }
     if (tri === 'oublies') {
@@ -925,7 +1019,7 @@ export default function App() {
       )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
-  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus])
+  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cercleReel])
 
   // le compteur « N ouverts » — partagé, calculé une fois par liste filtrée
   const nbOuverts = useMemo(
@@ -998,6 +1092,12 @@ export default function App() {
               </button>
             )
           })()}
+          {/* l'accueil de l'invité : bandeau doux, tap pour le ranger */}
+          {bandeauInvite && (
+            <button className="mono bandeau-invite" onClick={() => setBandeauInvite(null)}>
+              {bandeauInvite}
+            </button>
+          )}
         </>
       )}
 
@@ -1016,17 +1116,15 @@ export default function App() {
               {demandes.length === 0 ? (
                 <p className="hand notif-vide">personne pour l'instant.</p>
               ) : (
+                // les VRAIES demandes (table relations) — plus de tampon démo ici
                 demandes.map((d) => (
-                  <div className="notif-ligne" key={d.id}>
-                    <span className="notif-qui">
-                      @{d.prenom.toLowerCase()}
-                      <span className="mono tampon-demo">démo</span>
-                    </span>
+                  <div className="notif-ligne" key={d.deId}>
+                    <span className="notif-qui">@{d.prenom.toLowerCase()}</span>
                     <span className="notif-actions mono">
-                      <button className="notif-ok" onClick={() => accepterDemande(d.id)}>
+                      <button className="notif-ok" onClick={() => accepterDemande(d.deId)}>
                         accepter
                       </button>
-                      <button className="notif-non" onClick={() => ignorerDemande(d.id)}>
+                      <button className="notif-non" onClick={() => ignorerDemande(d.deId)}>
                         ignorer
                       </button>
                     </span>
@@ -1537,7 +1635,7 @@ export default function App() {
             mes super potes · {proches.length}/{CAP_PROCHES}
           </TitreSection>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            {MEMBRES.filter((m) => proches.includes(m.id)).map((m) => (
+            {membresCercle.filter((m) => proches.includes(m.id)).map((m) => (
               <button
                 key={m.id}
                 onClick={() => setOnglet('cercle')}
@@ -1657,13 +1755,15 @@ export default function App() {
       {onglet === 'cercle' && !curateur && (
         <div className="cercle">
           <p className="mono cercle-compteur">
-            {MEMBRES.length} membres · {proches.length}/{CAP_PROCHES} super potes
+            {membresCercle.length} membres · {proches.length}/{CAP_PROCHES} super potes
           </p>
           <ul className="membres">
-            {MEMBRES.map((m) => {
-              const nbSpots = lieux.filter((l) =>
-                l.tipsCercle?.some((t) => t.auteur === m.prenom),
-              ).length
+            {membresCercle.map((m) => {
+              // un vrai membre POSSÈDE ses spots (owner_id) ; le décor seed,
+              // lui, ne vit que dans les tips
+              const nbSpots = m.reel
+                ? lieux.filter((l) => l.proprietaire === m.id).length
+                : lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === m.prenom)).length
               const estPro = proches.includes(m.id)
               return (
                 <li
@@ -1686,6 +1786,8 @@ export default function App() {
                   >
                     <span className="membre-nom">
                       {m.prenom}
+                      {/* le tampon d'honnêteté : le décor seed s'assume démo */}
+                      {!m.reel && <span className="mono tampon-demo">démo</span>}
                       {estPro && (
                         <span
                           style={{
@@ -1723,15 +1825,18 @@ export default function App() {
                       {estPro ? 'retirer' : '+ super pote'}
                     </button>
                   </div>
-                  <p className="hand membre-bio">{m.bio}</p>
+                  <p className="hand membre-bio">{m.bio || 'nouveau dans ton cercle.'}</p>
                   <p className="mono membre-critere">
-                    son truc : {m.critere} · voir ses {nbSpots} spots →
+                    {m.critere ? `son truc : ${m.critere} · ` : ''}voir ses {nbSpots} spots →
                   </p>
                 </li>
               )
             })}
           </ul>
-          <p className="mono tips-bientot">les invitations arrivent. choisis bien.</p>
+          {/* LE canal de croissance : le lien d'invitation */}
+          <button className="lien inviter-pote" onClick={inviterUnPote}>
+            invite un pote dans ton cercle →
+          </button>
         </div>
       )}
 
@@ -1740,12 +1845,29 @@ export default function App() {
           curateur={curateur}
           lieux={lieux}
           vus={vus}
-          onVoir={(l) =>
+          reels={cercleReel}
+          onVoir={(l) => {
+            // un vrai membre possède ses spots ; le décor vit dans les tips
+            const reel = cercleReel.find((m) => m.prenom === curateur)
             ouvrirFiche(
               l,
-              lieux.filter((x) => x.tipsCercle?.some((t) => t.auteur === curateur)),
+              reel
+                ? lieux.filter((x) => x.proprietaire === reel.id)
+                : lieux.filter((x) => x.tipsCercle?.some((t) => t.auteur === curateur)),
             )
-          }
+          }}
+          onRetirer={async (m) => {
+            try {
+              await retirerDuCercle(m.id)
+            } catch (e) {
+              setFlash((e as Error).message)
+              return
+            }
+            setCurateur(null)
+            setFlash(`@${m.prenom.toLowerCase()} n'est plus dans ton cercle.`)
+            chargerCercle()
+            recharger()
+          }}
           onFermer={() => setCurateur(null)}
         />
       )}
@@ -1760,6 +1882,7 @@ export default function App() {
           onAdopter={adopter}
           dejaAdopte={!estAMoi(fiche) && lieux.some((x) => estAMoi(x) && x.nom === fiche.nom)}
           proches={proches}
+          reels={cercleReel}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -2253,22 +2376,34 @@ function Validation({
 }
 
 // ── la carte d'un curateur : tous les spots où sa voix est passée ──
+// (membre seed = décor démo, OU vrai membre du cercle réel — étape 5)
 function CarteCurateur({
   curateur,
   lieux,
   vus,
+  reels,
   onVoir,
+  onRetirer,
   onFermer,
 }: {
   curateur: string
   lieux: Lieu[]
   vus: Set<string>
+  /** les vrais membres du cercle (relations acceptées) */
+  reels: MembreCercle[]
   onVoir: (l: Lieu) => void
+  /** retirer un VRAI membre de mon cercle (la relation part) */
+  onRetirer: (m: MembreCercle) => void
   onFermer: () => void
 }) {
+  const reel = reels.find((m) => m.prenom === curateur)
   const membre = MEMBRES.find((m) => m.prenom === curateur)
-  const spots = lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === curateur))
+  // un vrai membre POSSÈDE ses spots (owner_id) ; le seed vit dans les tips
+  const spots = reel
+    ? lieux.filter((l) => l.proprietaire === reel.id)
+    : lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === curateur))
   const [vue, setVue] = useState<'liste' | 'carte'>('liste')
+  const [confirmRetrait, setConfirmRetrait] = useState(false)
 
   return (
     <div className="cercle carte-curateur">
@@ -2287,38 +2422,62 @@ function CarteCurateur({
               strokeLinecap="round"
             />
           </svg>
-          <img
-            className="profil-id-photo"
-            src={`https://i.pravatar.cc/240?u=${membre?.id ?? curateur}`}
-            alt={curateur}
-          />
+          {reel && !reel.photoUrl ? (
+            // vrai membre sans portrait : l'initiale — jamais une fausse photo
+            <span
+              className="profil-id-photo"
+              style={{ display: 'grid', placeItems: 'center', fontStyle: 'italic', fontSize: 34 }}
+              aria-label={curateur}
+            >
+              {curateur[0]}
+            </span>
+          ) : (
+            <img
+              className="profil-id-photo"
+              src={reel?.photoUrl ?? `https://i.pravatar.cc/240?u=${membre?.id ?? curateur}`}
+              alt={curateur}
+            />
+          )}
           <span className="profil-id-tampon">{curateur}</span>
         </div>
         <dl className="profil-fiche mono">
           <div>
             <dt>prénom</dt>
-            <dd>{curateur}</dd>
+            <dd>
+              {curateur}
+              {!reel && <span className="tampon-demo">démo</span>}
+            </dd>
           </div>
           <div>
             <dt>spots</dt>
             <dd>{spots.length}</dd>
           </div>
-          {membre && (
+          {(membre || reel?.critere) && (
             <div>
               <dt>critère</dt>
-              <dd>{membre.critere.replace(/^(le |la |les |l')/, '')}</dd>
+              <dd>{(reel?.critere ?? membre?.critere ?? '').replace(/^(le |la |les |l')/, '')}</dd>
+            </div>
+          )}
+          {reel?.insta && (
+            <div>
+              <dt>insta</dt>
+              <dd>@{reel.insta}</dd>
             </div>
           )}
         </dl>
       </div>
-      <p className="profil-tagline-vue">
-        {membre?.tagline ? (
-          `« ${membre.tagline} »`
-        ) : (
-          <span className="tagline-exemple">ex. « le roi du dernier verre »</span>
-        )}
-      </p>
-      {membre?.bio && <p className="hand curateur-bio">{membre.bio}</p>}
+      {!reel && (
+        <p className="profil-tagline-vue">
+          {membre?.tagline ? (
+            `« ${membre.tagline} »`
+          ) : (
+            <span className="tagline-exemple">ex. « le roi du dernier verre »</span>
+          )}
+        </p>
+      )}
+      {(reel?.bio ?? membre?.bio) && (
+        <p className="hand curateur-bio">{reel?.bio ?? membre?.bio}</p>
+      )}
       <span className="basculer mono curateur-basculer">
         <button
           className={vue === 'liste' ? 'on' : ''}
@@ -2350,7 +2509,13 @@ function CarteCurateur({
         ) : (
           <ul className="liste">
             {spots.map((l) => {
-              const tip = l.tipsCercle?.find((t) => t.auteur === curateur)
+              // vrai membre : son tip = la note du spot (il en est l'auteur) ;
+              // décor seed : sa voix vit dans tipsCercle
+              const tip = reel
+                ? l.note
+                  ? { note: l.note }
+                  : undefined
+                : l.tipsCercle?.find((t) => t.auteur === curateur)
               return (
                 <li key={l.id} className="lieu">
                   <div
@@ -2377,6 +2542,18 @@ function CarteCurateur({
             })}
           </ul>
         ))}
+
+      {/* retirer un VRAI membre — deux taps, jamais silencieux */}
+      {reel && (
+        <button
+          className={`lien retirer-cercle ${confirmRetrait ? 'confirm' : ''}`}
+          onClick={() => (confirmRetrait ? onRetirer(reel) : setConfirmRetrait(true))}
+        >
+          {confirmRetrait
+            ? `sûr ? @${reel.prenom.toLowerCase()} sortira de ton cercle.`
+            : 'retirer de mon cercle'}
+        </button>
+      )}
     </div>
   )
 }
@@ -2393,6 +2570,7 @@ function Fiche({
   onAdopter,
   dejaAdopte,
   proches,
+  reels,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -2407,6 +2585,8 @@ function Fiche({
   dejaAdopte: boolean
   /** mes super potes (ids) → on affiche leur regard sur ce lieu */
   proches: string[]
+  /** les vrais membres du cercle (owner_id → prénom, « chez untel ») */
+  reels: MembreCercle[]
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -2441,6 +2621,8 @@ function Fiche({
   }, [onFermer])
 
   const mien = estAMoi(lieu)
+  // le spot appartient à un VRAI membre du cercle → « chez untel »
+  const chez = mien ? null : prenomDe(lieu.proprietaire, reels)
   const [edition, setEdition] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
@@ -2719,6 +2901,9 @@ function Fiche({
         )}
       </div>
 
+      {/* la provenance : un spot du cercle réel s'annonce « chez untel » */}
+      {chez && <p className="mono fiche-adresse fiche-chez">chez {chez.toLowerCase()} · un spot de ton cercle</p>}
+
       {(adrComplete || lieu.adresse) && (
         <p className="mono fiche-adresse">
           {adrComplete || adresseLisible(lieu.adresse, lieu.nom)}
@@ -2780,7 +2965,19 @@ function Fiche({
         {lieu.note && (
           <div className="tip">
             <p className="hand">{lieu.note}</p>
-            <span className="mono tip-signature">— toi</span>
+            <span className="mono tip-signature">
+              {/* la note d'un spot du cercle est LA voix de son proprio, pas la mienne */}
+              {chez ? (
+                <>
+                  —{' '}
+                  <button className="tip-auteur-lien" onClick={() => onCurateur(chez)}>
+                    @{chez.toLowerCase()}
+                  </button>
+                </>
+              ) : (
+                '— toi'
+              )}
+            </span>
           </div>
         )}
         {(lieu.tipsCercle ?? []).map((t, i) => {
