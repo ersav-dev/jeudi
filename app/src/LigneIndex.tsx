@@ -58,7 +58,8 @@ export default function LigneIndex({
 
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
-  const sig = lieu.tipsCercle?.[0]
+  // un tip cloud d'un pote sur MON spot ne change pas sa signature : « — toi »
+  const sig = estMien ? undefined : lieu.tipsCercle?.[0]
   const nbVoix = (lieu.note ? 1 : 0) + (lieu.tipsCercle?.length ?? 0)
   const tip = lieu.note || sig?.note || ''
   const nbPhotos = lieu.photos.length

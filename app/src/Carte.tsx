@@ -9,6 +9,7 @@ import {
   formatDistance,
   tempsMarche,
   propreteWcLabel,
+  estAMoi,
   type Lieu,
 } from './db'
 import { IBallon } from './icones'
@@ -132,7 +133,9 @@ export default function Carte({
   // teinte du curateur, badges — inchangée). Les états volatils (actif/grisé/
   // vu/à comparer) sont appliqués À PART par appliquerEtats().
   const creerPinLieu = (l: Lieu): HTMLElement => {
-    const sig = l.tipsCercle?.[0]
+    // un tip cloud d'un pote sur MON spot ne me déguise pas en curateur :
+    // le point rouge (toi) prime toujours sur la pastille
+    const sig = estAMoi(l) ? undefined : l.tipsCercle?.[0]
     const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
     const valide = l.tampon?.v === 'valide'
     const ferme = etatHoraire(l.horaires)?.ouvert === false

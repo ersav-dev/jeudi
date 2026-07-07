@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { supabase } from './supabase'
 import { adresseDepuis } from './nominatim'
+import { fusionnerTips } from './tips'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -56,6 +57,9 @@ export interface TipCercle {
   note: string
   /** url de photo distante (membres fictifs / futur cloud) */
   photoUrl?: string
+  /** id du membre (table `tips`) — présent = un VRAI tip cloud ;
+   *  absent = tip du seed (décor), tamponné « démo » dans la fiche */
+  auteurId?: string
 }
 
 export interface Lieu {
@@ -487,6 +491,128 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// ── les tips cloud (table `tips`) : les « autres voix » réelles ──
+// La RLS de 0001 les rend lisibles si le lieu parent m'est visible ; on
+// n'écrit que les siens (auteur_id = moi). Comme le cercle : écritures
+// SANS write-queue (du contenu social ne se rejoue pas des heures après
+// sans le dire) → l'échec remonte en erreur VISIBLE, message affichable
+// tel quel. Lecture : best-effort, le miroir IndexedDB tient le hors-ligne.
+// ════════════════════════════════════════════════════════════════════
+
+/** ligne de la table `tips` (les seules colonnes lues) */
+interface LigneTip {
+  lieu_id: string
+  auteur_id: string
+  titre: string | null
+  note: string | null
+}
+
+/** charge les tips cloud d'une liste de lieux → map id→TipCercle[], joints
+ *  aux prénoms : mon cercle d'abord (monCercle, cache léger), la vitrine
+ *  `profils_publics` pour le reste (moi inclus, et les voix sur des spots
+ *  publics d'inconnus). Best-effort : erreur/hors-ligne → map vide,
+ *  l'appelant garde ce que le miroir local sait déjà. */
+async function chargerTipsCloud(ids: string[]): Promise<Map<string, TipCercle[]>> {
+  const map = new Map<string, TipCercle[]>()
+  if (!ids.length || !monId) return map
+  try {
+    const { data, error } = await supabase
+      .from('tips')
+      .select('lieu_id,auteur_id,titre,note')
+      .in('lieu_id', ids)
+      .order('cree_le')
+    if (error) throw error
+    const lignes = (data ?? []) as LigneTip[]
+    if (!lignes.length) return map
+    // qui parle ? le cercle d'abord (déjà chargé/en cache), la vitrine ensuite
+    const prenoms = new Map<string, string>()
+    for (const m of await monCercle()) prenoms.set(m.id, m.prenom)
+    const inconnus = [...new Set(lignes.map((r) => r.auteur_id))].filter((a) => !prenoms.has(a))
+    if (inconnus.length) {
+      try {
+        for (const [pid, p] of await profilsPublics(inconnus)) {
+          if (p.prenom) prenoms.set(pid, p.prenom)
+        }
+      } catch {
+        /* vitrine injoignable : prénom de repli ci-dessous */
+      }
+    }
+    for (const r of lignes) {
+      const note = (r.note ?? '').trim()
+      if (!note) continue
+      const arr = map.get(r.lieu_id) ?? []
+      arr.push({
+        auteur: prenoms.get(r.auteur_id) ?? 'membre',
+        titre: r.titre ?? '',
+        note,
+        auteurId: r.auteur_id,
+      })
+      map.set(r.lieu_id, arr)
+    }
+  } catch (e) {
+    console.warn('[jeudi] chargerTipsCloud KO (hors-ligne ?)', e)
+  }
+  return map
+}
+
+/** merge les tips cloud d'un lieu DEVANT son héritage local sans auteurId
+ *  (seed / adoption), dédoublonnés — undefined si aucune voix (forme Lieu). */
+function mergerTipsLieu(lieu: Lieu, cloud: TipCercle[], local?: Lieu): void {
+  const heritage = (local?.tipsCercle ?? []).filter((t) => !t.auteurId)
+  const fusion = fusionnerTips(cloud, heritage)
+  lieu.tipsCercle = fusion.length ? fusion : undefined
+}
+
+/** écrit MON tip sur un lieu (un tip par lieu par auteur) : update s'il
+ *  existe, insert sinon, suppression si le texte est vide. Throw = échec
+ *  VISIBLE (RLS : le lieu doit m'être visible pour y poser ma voix). */
+export async function ecrireTip(lieuId: string, texte: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  if (!estUuid(lieuId)) throw new Error('ce spot ne vit pas encore dans le cloud.')
+  const propre = texte.trim()
+  try {
+    if (!propre) {
+      // texte vidé = mon tip s'efface (0 ligne touchée = déjà parti : ok)
+      const { error } = await supabase
+        .from('tips')
+        .delete()
+        .eq('lieu_id', lieuId)
+        .eq('auteur_id', monId)
+      if (error) throw error
+      return
+    }
+    // un par lieu par auteur : update d'abord (couvre d'éventuels doublons)…
+    const { data, error } = await supabase
+      .from('tips')
+      .update({ note: propre })
+      .eq('lieu_id', lieuId)
+      .eq('auteur_id', monId)
+      .select('id')
+    if (error) throw error
+    if (Array.isArray(data) && data.length > 0) return
+    // …insert sinon (RLS : auteur_id = moi ; FK : le lieu doit exister)
+    const { error: eIns } = await supabase
+      .from('tips')
+      .insert({ lieu_id: lieuId, auteur_id: monId, note: propre })
+    if (eIns) throw eIns
+  } catch (e) {
+    console.warn('[jeudi] ecrireTip KO', lieuId, e)
+    const code = (e as { code?: string } | null)?.code
+    if (code === '23503') throw new Error('ce spot n’existe plus côté cloud.', { cause: e })
+    if (code === '42501')
+      throw new Error('ce spot n’est pas (ou plus) partagé avec toi.', { cause: e })
+    throw new Error('ton tip n’est pas parti. vérifie le réseau et réessaie.', { cause: e })
+  }
+}
+
+/** MON tip cloud déjà posé sur ce lieu (pré-remplissage de la validation) */
+export function monTipDans(lieu: Lieu): string {
+  if (!monId) return ''
+  return lieu.tipsCercle?.find((t) => t.auteurId === monId)?.note ?? ''
+}
+
+// ════════════════════════════════════════════════════════════════════
 // ── la file d'attente offline (write-queue) ──
 // Quand une écriture cloud échoue (réseau, timeout, RLS muette), on note QUOI
 // resynchroniser ({type, id, date} — jamais le payload : rejouer = relire
@@ -653,6 +779,14 @@ export async function tousLesLieux(): Promise<Lieu[]> {
         const photos = await chargerPhotos([...miens, ...duCercle].map((l) => l.id))
         for (const l of miens) l.photos = photos.get(l.id) ?? []
         for (const l of duCercle) l.photos = photos.get(l.id) ?? []
+        // les autres voix (table tips), même lot — cloud DEVANT l'héritage
+        // local (seed/adoption). Le résultat part dans le miroir IndexedDB
+        // ci-dessous → hors-ligne, les voix restent lisibles.
+        const tipsCloud = await chargerTipsCloud([...miens, ...duCercle].map((l) => l.id))
+        const locauxParId = new Map(actifs.map((l) => [l.id, l] as const))
+        for (const l of [...miens, ...duCercle]) {
+          mergerTipsLieu(l, tipsCloud.get(l.id) ?? [], locauxParId.get(l.id))
+        }
         cloudOk = true
         const frais = new Set(miens.map((l) => l.id))
         const fraisCercle = new Set(duCercle.map((l) => l.id))
@@ -1363,6 +1497,9 @@ export async function lireLieu(id: string): Promise<Lieu | undefined> {
         const lieu = ligneVersLieu(data)
         const photos = await chargerPhotos([id])
         lieu.photos = photos.get(id) ?? []
+        // les autres voix : tips cloud devant l'héritage local (seed/adoption)
+        const db = await getDB()
+        mergerTipsLieu(lieu, (await chargerTipsCloud([id])).get(id) ?? [], await db.get('lieux', id))
         return lieu
       }
     }

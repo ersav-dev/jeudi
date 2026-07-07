@@ -54,6 +54,9 @@ import {
   majLieu,
   estAMoi,
   adopterLieu,
+  // les tips réels (table `tips`) : la voix qu'on pose sur le spot d'un autre
+  ecrireTip,
+  monTipDans,
   lireCouleur,
   appliquerCouleur,
   ecrireCouleur,
@@ -2090,7 +2093,12 @@ function Validation({
     ...(lieu?.compagnies ?? []),
     ...(lieu?.envies ?? []),
   ])
-  const [tip, setTip] = useState(lieu?.note ?? '')
+  // le spot est-il à moi ? à moi → ma note ; à un autre → MON tip cloud
+  // (table `tips`) — jamais la note du proprio dans mon champ.
+  const mien = lieu ? estAMoi(lieu) : true
+  const [tip, setTip] = useState(() => (lieu ? (mien ? lieu.note : monTipDans(lieu)) : ''))
+  // l'échec d'envoi du tip cloud : message VISIBLE (pas de file muette)
+  const [erreurTip, setErreurTip] = useState('')
   const [photos, setPhotos] = useState<PhotoLieu[]>([])
   const [propreteWc, setPropreteWc] = useState<1 | 2 | 3 | undefined>(lieu?.propreteWc)
   // le tampon perso : posé sur la photo, et il suit le doigt
@@ -2183,12 +2191,24 @@ function Validation({
 
   const terminer = async () => {
     if (lieu) {
+      if (!mien) {
+        // le spot d'un autre : mon tip part dans la table `tips` (l'autre
+        // voix) — échec = message visible, on reste là et on peut retaper
+        try {
+          await ecrireTip(lieu.id, tip.trim())
+          setErreurTip('')
+        } catch (e) {
+          setErreurTip((e as Error).message)
+          return
+        }
+      }
       // on AJOUTE les nouvelles photos (on ne remplace jamais les anciennes du même type)
       const photosFusion = [...lieu.photos, ...photos].slice(-CAP_PHOTOS_LIEU)
       await majLieu({
         ...lieu,
         // le champ tip reflète l'état final : vidé → le tip s'efface (note: '')
-        note: tip.trim(),
+        // — mais la note d'un spot du cercle reste LA voix de son proprio
+        note: mien ? tip.trim() : lieu.note,
         photos: photosFusion,
         // les cases reflètent l'état final : cocher ajoute, décocher corrige
         envies: tags.filter((t) => (ENVIES as readonly string[]).includes(t)) as Lieu['envies'],
@@ -2411,6 +2431,7 @@ function Validation({
           <p className="mono validation-aide">
             tape où tu veux — même sur le blanc. chaque tape, un coup de tampon.
           </p>
+          {erreurTip && <p className="mono validation-erreur">{erreurTip}</p>}
           <button className="valider" onClick={terminer}>
             tamponné.
           </button>
@@ -3026,8 +3047,11 @@ function Fiche({
           </div>
         )}
         {(lieu.tipsCercle ?? []).map((t, i) => {
-          // #22 : on exploite le critère perso du curateur (sa signature de goût)
-          const crit = MEMBRES.find((m) => m.prenom === t.auteur)?.critere
+          // #22 : on exploite le critère perso du curateur (sa signature de
+          // goût) — le vrai membre du cercle (auteurId) d'abord, le décor sinon
+          const crit = t.auteurId
+            ? reels.find((m) => m.id === t.auteurId)?.critere
+            : MEMBRES.find((m) => m.prenom === t.auteur)?.critere
           return (
             <div className="tip" key={i}>
               <p className="hand">{t.note}</p>
@@ -3037,6 +3061,8 @@ function Fiche({
                   @{t.auteur.toLowerCase()}
                 </button>
                 {crit && <span className="tip-critere"> · juge {crit}</span>}
+                {/* seul le décor (seed) porte le tampon d'honnêteté */}
+                {!t.auteurId && <span className="tampon-demo">démo</span>}
               </span>
             </div>
           )

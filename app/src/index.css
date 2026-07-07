@@ -3267,6 +3267,12 @@ button {
   color: rgba(240, 234, 217, 0.75);
   margin: 2px 0 10px;
 }
+/* l'échec d'envoi du tip cloud (spot d'un autre) : visible, pas de file muette */
+.validation-erreur {
+  color: var(--red);
+  font-size: 11px;
+  margin: 0 0 8px;
+}
 /* premier tap court : le mot souffle "reste appuyé" en orange, une fois */
 @keyframes pulseReco {
   0%, 100% { border-color: var(--red); }
