@@ -19,6 +19,8 @@ import {
 } from './db'
 import { srcPhoto } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
+import NoteMarge from './NoteMarge'
+import { effacerNote } from './tuto'
 const CarteLazy = lazy(() => import('./Carte'))
 function Carte(p: ComponentProps<typeof CarteLazy>) {
   return (
@@ -427,6 +429,7 @@ function Deck({
   const laVoix = voix[voixIndex % Math.max(voix.length, 1)]
 
   const suivant = (v: Verdict) => {
+    effacerNote('deck-swipe') // le geste est fait : la note en marge s'efface
     setVerdicts((prev) => ({ ...prev, [lieu.id]: v }))
     if (v === 'valide') {
       ajouterSortie({ lieuId: lieu.id, nom: lieu.nom, date: new Date().toISOString() })
@@ -460,6 +463,10 @@ function Deck({
     ) {
       setPhotoIndex((p) => (drag.y < 0 ? (p + 1) % nbPhotos : (p - 1 + nbPhotos) % nbPhotos))
     } else if (Math.abs(drag.x) < 6 && Math.abs(drag.y) < 6) {
+      // le tap (photo ou mot) est fait : la note en marge s'efface
+      if (cible.closest('.carte-photo') || cible.closest('.carte-voix')) {
+        effacerNote('deck-tape')
+      }
       if (cible.closest('.carte-photo') && nbPhotos > 1) {
         setPhotoIndex((p) => (p + 1) % nbPhotos)
       }
@@ -531,6 +538,10 @@ function Deck({
           )}
           {lieu.adresse && <p className="mono carte-adresse">{lieu.adresse}</p>}
         </div>
+        {/* les notes en marge de l'ancien proprio : le swipe, puis le tap.
+            une seule à la fois : la 1ʳᵉ carte, puis les suivantes. */}
+        {index === 0 && <NoteMarge id="deck-swipe" fleche="coins" className="note-marge-deck" />}
+        {index >= 1 && <NoteMarge id="deck-tape" fleche="bas" className="note-marge-deck2" />}
       </div>
       <p className="mono deck-aide">← bof · validé → · tap tip = autre voix</p>
     </div>

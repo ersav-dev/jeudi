@@ -28,6 +28,9 @@ import {
   prenomDe,
 } from './cercle'
 import { rechercher, profilDeGout } from './recherche'
+// le tuto « notes en marge » : le carnet prêté, ses notes qui s'effacent
+import NoteMarge, { MotScotche } from './NoteMarge'
+import { effacerNote, toutRelire } from './tuto'
 import { regardDe, CRITERES_MEMBRES, pastilles } from './regard'
 import portraitDefaut from './assets/portrait.jpg'
 import {
@@ -572,6 +575,17 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
           ))}
         </div>
       )}
+
+      {/* le tuto : faire revenir les notes griffonnées de l'ancien proprio */}
+      <button
+        className="lien reglages-relire"
+        onClick={() => {
+          toutRelire()
+          flash()
+        }}
+      >
+        relire les notes en marge
+      </button>
     </div>
   )
 }
@@ -694,6 +708,7 @@ export default function App() {
   }
   // inviter un pote : navigator.share si dispo, sinon copie presse-papier
   const inviterUnPote = async () => {
+    effacerNote('cercle-invite') // le geste visé : la note en marge s'efface
     let lien: string
     try {
       lien = lienInvitation()
@@ -1345,6 +1360,14 @@ export default function App() {
                 comparer={comparer}
                 onComparer={(id) => setComparer(basculerComparer(id))}
               />
+              {/* la note en marge de la carte — montée ICI (niveau App),
+                  par-dessus l'onglet : Carte.tsx n'est pas touché */}
+              <NoteMarge
+                id="carte-point"
+                fleche="bas"
+                effaceAuGeste
+                className="note-marge-carte"
+              />
             </>
           )}
 
@@ -1833,6 +1856,10 @@ export default function App() {
               )
             })}
           </ul>
+          {/* la note en marge : un cercle sans vrai membre, ça s'invite */}
+          {cercleReel.length === 0 && (
+            <NoteMarge id="cercle-invite" fleche="bas" className="note-marge-cercle" />
+          )}
           {/* LE canal de croissance : le lien d'invitation */}
           <button className="lien inviter-pote" onClick={inviterUnPote}>
             invite un pote dans ton cercle →
@@ -1986,6 +2013,10 @@ export default function App() {
         </div>
       )}
 
+      {/* le mot scotché de bienvenue — 1ʳᵉ arrivée après l'onboarding,
+          rangé d'un tap, jamais revu ensuite */}
+      {!fiche && !ajout && !aValider && <MotScotche />}
+
       {!ajout && !fiche && (
         <nav className="navbas">
           <button
@@ -2132,8 +2163,12 @@ function Validation({
   const dateCourte = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
 
 
+  // la réponse est donnée (valide OU bof) : la note en marge a fait son travail
+  const repondu = () => effacerNote('valider-carnet')
+
   // même un "bof" est du signal : on le garde — et le tampon le dit
   const bof = async () => {
+    repondu()
     ajouterBof(sortie.lieuId)
     if (lieu)
       await majLieu({
@@ -2178,6 +2213,8 @@ function Validation({
       {etape === 'verdict' ? (
         <>
           <h1 className="grande-question">alors, {sortie.nom} ?</h1>
+          {/* la note en marge : c'est ici que le carnet change de main */}
+          <NoteMarge id="valider-carnet" className="note-marge-validation" />
           {lieu && (
             <div
               className="carte-lieu fiche-carte validation-carte"
@@ -2194,8 +2231,10 @@ function Validation({
                 vDrag.actif && setVDrag({ x: e.clientX - vDepart.current, actif: true })
               }
               onPointerUp={() => {
-                if (vDrag.x > 90) setEtape('occasions')
-                else if (vDrag.x < -90) bof()
+                if (vDrag.x > 90) {
+                  repondu()
+                  setEtape('occasions')
+                } else if (vDrag.x < -90) bof()
                 setVDrag({ x: 0, actif: false })
               }}
             >
@@ -2229,7 +2268,13 @@ function Validation({
             >
               {bofSur ? 'sûr ? re-tape.' : 'bof'}
             </button>
-            <button className="valider" onClick={() => setEtape('occasions')}>
+            <button
+              className="valider"
+              onClick={() => {
+                repondu()
+                setEtape('occasions')
+              }}
+            >
               je valide
             </button>
           </div>
@@ -2998,6 +3043,11 @@ function Fiche({
         })}
         {!lieu.note && (lieu.tipsCercle ?? []).length === 0 && (
           <p className="hand tip-vide">t'as rien dit sur ce spot. encore.</p>
+        )}
+        {/* la note en marge : le 1ᵉʳ tip d'un pote qu'on croise — lue puis
+            effacée au prochain scroll/tap */}
+        {(lieu.tipsCercle ?? []).length > 0 && (
+          <NoteMarge id="fiche-tip-pote" fleche="haut" effaceAuGeste className="note-marge-fiche" />
         )}
       </div>
 

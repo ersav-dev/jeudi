@@ -5039,3 +5039,154 @@ button {
     1px 3px 0 rgba(0, 0, 0, 0.65),
     0 0 0 5px rgba(240, 234, 217, 0.28);
 }
+
+/* ── le tuto « notes en marge » : le carnet prêté ─────────────────
+   l'ancien proprio (« j. ») a griffonné des indications dans les marges.
+   jamais bloquant : les pointer-events ne vivent que sur le texte. */
+@keyframes noteMargeIn {
+  from { opacity: 0; translate: 0 7px; }
+  to { opacity: 1; translate: 0 0; }
+}
+.note-marge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  pointer-events: none;
+  z-index: 3;
+  animation: noteMargeIn 0.7s ease-out both 0.4s;
+}
+.note-marge-texte {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-family: 'Caveat', cursive;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--ivory);
+  text-align: inherit;
+  /* lisible même posé sur une photo — halo charbon, pas de cartouche */
+  text-shadow:
+    0 1px 4px rgba(21, 19, 15, 0.9),
+    0 0 14px rgba(21, 19, 15, 0.65);
+}
+.note-fleche {
+  flex-shrink: 0;
+  stroke: var(--ivory);
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+  filter: drop-shadow(0 1px 3px rgba(21, 19, 15, 0.8));
+}
+/* deck « ce soir » : la 1ʳᵉ carte (le swipe — flèches aux coins)… */
+.note-marge-deck {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 34%;
+  justify-content: space-between;
+}
+.note-marge-deck .note-marge-texte {
+  max-width: 68%;
+}
+/* …puis la carte suivante (le tap : la photo, le mot) */
+.note-marge-deck2 {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 15%;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+/* la fiche : en marge du 1ᵉʳ tip d'un pote */
+.note-marge-fiche {
+  margin-top: 2px;
+  justify-content: flex-start;
+  text-align: left;
+}
+/* l'onglet carte : posée au niveau App — au-dessus de la carte (z 0), sous la nav (z 12) */
+.note-marge-carte {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  top: 40%;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+  z-index: 5;
+}
+/* le cercle : pointe le bouton « invite un pote » juste dessous */
+.note-marge-cercle {
+  flex-direction: column;
+  gap: 2px;
+  margin: 18px auto -6px;
+  max-width: 300px;
+  text-align: center;
+}
+/* la validation « alors, X ? » : griffonnée dans la marge de droite */
+.note-marge-validation {
+  position: fixed;
+  right: 14px;
+  top: calc(64px + env(safe-area-inset-top));
+  z-index: 31;
+  max-width: 45vw;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+/* le mot scotché de bienvenue : un bout de papier de travers, du vrai scotch */
+@keyframes motScotcheIn {
+  from { opacity: 0; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
+}
+.mot-scotche {
+  position: fixed;
+  left: 50%;
+  top: max(19%, calc(70px + env(safe-area-inset-top)));
+  transform: translateX(-50%) rotate(-2.5deg);
+  width: min(330px, 84vw);
+  z-index: 40;
+  background: #e9e1cb;
+  color: #211d19;
+  border: none;
+  border-radius: 2px;
+  padding: 26px 22px 16px;
+  box-shadow:
+    3px 6px 0 rgba(0, 0, 0, 0.5),
+    0 14px 40px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  text-align: left;
+  animation: motScotcheIn 0.6s ease-out both 0.5s;
+}
+.mot-scotche::before {
+  /* le scotch, à cheval sur le bord haut */
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 92px;
+  height: 24px;
+  transform: translateX(-50%) rotate(1.8deg);
+  background: rgba(240, 234, 217, 0.28);
+  border: 1px solid rgba(240, 234, 217, 0.14);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.mot-scotche-texte {
+  display: block;
+  font-family: 'Caveat', cursive;
+  font-size: 21px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+/* réglages : l'entrée discrète pour tout relire */
+.reglages-relire {
+  display: block;
+  margin: 16px auto 0;
+  opacity: 0.7;
+}
