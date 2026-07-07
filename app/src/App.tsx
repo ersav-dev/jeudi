@@ -2967,6 +2967,22 @@ function Fiche({
         )}
       </div>
 
+      {/* l'album à trous : sur MES spots, chaque photo manquante démange */}
+      {mien && (
+        <AlbumATrous
+          lieu={lieu}
+          onPrise={(type, f) => {
+            void enregistrer({ ...lieu, photos: [...lieu.photos, { type, blob: f }] })
+          }}
+        />
+      )}
+      {/* spot du cercle sans photo : pas de cadre (RLS Storage), juste le constat */}
+      {!mien && chez && nbPhotos === 0 && (
+        <p className="mono album-sans-visage">
+          pas encore de visage — c'est le spot de {chez.toLowerCase()}.
+        </p>
+      )}
+
       {/* la provenance : un spot du cercle réel s'annonce « chez untel » */}
       {chez && <p className="mono fiche-adresse fiche-chez">chez {chez.toLowerCase()} · un spot de ton cercle</p>}
 
@@ -3239,6 +3255,76 @@ function Fiche({
         {VISIBILITES.find((x) => x.v === lieu.visibilite)?.label} · capturé le{' '}
         {new Date(lieu.creeLe).toLocaleDateString('fr-FR')}
       </div>
+    </div>
+  )
+}
+
+// ── l'album à trous ────────────────────────────────────────────
+// sur MES spots : chaque type de photo manquant = un cadre polaroïd VIDE qui
+// démange. un cadre = un <label> → tap = appareil photo ; la prise passe par
+// le pipeline existant (majLieu → televerserPhoto + syncPhotosLieu) et le
+// tirage « se développe » sur place (du sombre vers l'image, CSS only).
+const CADRES_ALBUM: { type: PhotoLieu['type']; etiquette: string }[] = [
+  { type: 'lieu', etiquette: 'la façade' },
+  { type: 'plat', etiquette: "ce qu'on y prend" },
+  { type: 'wc', etiquette: 'ton coin' },
+]
+
+function AlbumATrous({
+  lieu,
+  onPrise,
+}: {
+  lieu: Lieu
+  onPrise: (type: PhotoLieu['type'], f: File) => void
+}) {
+  // les trous comblés PENDANT cette visite : le tirage reste en place et se développe
+  const [developpees, setDeveloppees] = useState<PhotoLieu['type'][]>([])
+  const prendre =
+    (type: PhotoLieu['type']) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const f = e.target.files?.[0]
+      e.target.value = ''
+      if (!f) return
+      setDeveloppees((prev) => (prev.includes(type) ? prev : [...prev, type]))
+      onPrise(type, f)
+    }
+  // un cadre par type SANS photo (+ ceux tout juste comblés) ; album complet → rien
+  const cadres = CADRES_ALBUM.filter(
+    ({ type }) => !lieu.photos.some((p) => p.type === type) || developpees.includes(type),
+  )
+  if (!cadres.length) return null
+  return (
+    <div className="album-trous">
+      {cadres.map(({ type, etiquette }) => {
+        // le tirage frais : il n'y avait rien de ce type avant, find suffit
+        const prise = developpees.includes(type)
+          ? lieu.photos.find((p) => p.type === type)
+          : undefined
+        return (
+          <div key={type} className="album-cadre-bloc">
+            {prise ? (
+              <span className="album-cadre album-developpe">
+                <span className="album-fenetre">
+                  <img src={srcPhoto(prise)} alt={etiquette} />
+                </span>
+              </span>
+            ) : (
+              <label className="album-cadre album-vide" aria-label={`prendre la photo : ${etiquette}`}>
+                <span className="album-fenetre">
+                  <IAppareil taille={17} />
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  hidden
+                  onChange={prendre(type)}
+                />
+              </label>
+            )}
+            <span className="hand album-etiquette">{etiquette}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }

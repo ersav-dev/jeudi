@@ -5196,3 +5196,111 @@ button {
   margin: 16px auto 0;
   opacity: 0.7;
 }
+
+/* ── l'album à trous : cadres polaroïd vides sur MES spots ── */
+.album-trous {
+  display: flex;
+  gap: 10px;
+  margin: 14px 2px 2px;
+}
+.album-cadre-bloc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+/* le tirage : papier légèrement plus clair que la page, bord ivoire, menton */
+.album-cadre {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 88px; /* tap facile au pouce */
+  padding: 6px 6px 18px;
+  background: var(--paper-2);
+  border: 1px solid rgba(240, 234, 217, 0.4);
+  border-radius: 2px;
+  cursor: pointer;
+}
+/* la pose à la main : chaque tirage penche un peu autrement */
+.album-cadre-bloc:nth-child(1) .album-cadre {
+  transform: rotate(-1.4deg);
+}
+.album-cadre-bloc:nth-child(2) .album-cadre {
+  transform: rotate(1.1deg);
+}
+.album-cadre-bloc:nth-child(3) .album-cadre {
+  transform: rotate(-0.8deg);
+}
+/* le coin corné, en pseudo-élément */
+.album-cadre::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(225deg, var(--paper) 50%, rgba(240, 234, 217, 0.3) 50%);
+}
+/* la fenêtre : le sombre du tirage pas encore développé */
+.album-fenetre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  overflow: hidden;
+  color: var(--ivory-faded);
+}
+/* le vide démange : l'appareil photo gratte doucement */
+.album-vide .album-fenetre svg {
+  animation: albumDemange 2.6s ease-in-out infinite;
+}
+@keyframes albumDemange {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: rotate(0deg);
+  }
+  50% {
+    opacity: 0.95;
+    transform: rotate(-5deg);
+  }
+}
+/* le développement : du sombre vers l'image, 400 ms, CSS only */
+.album-developpe .album-fenetre img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: albumDeveloppement 400ms ease-out both;
+}
+@keyframes albumDeveloppement {
+  from {
+    filter: brightness(0);
+  }
+  to {
+    filter: brightness(1);
+  }
+}
+/* l'étiquette manuscrite, sous le tirage */
+.album-etiquette {
+  font-size: 16px;
+  line-height: 1.15;
+  color: var(--ivory-faded);
+  text-align: center;
+}
+/* spot du cercle sans photo : le constat, pas de cadre */
+.album-sans-visage {
+  margin: 12px 2px 0;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--ivory-faded);
+}
+@media (prefers-reduced-motion: reduce) {
+  .album-vide .album-fenetre svg,
+  .album-developpe .album-fenetre img {
+    animation: none;
+  }
+}
