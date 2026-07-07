@@ -34,7 +34,7 @@ export const NOTES: NoteTuto[] = [
   {
     id: 'deck-tape',
     ecran: 'cesoir',
-    texte: 'tape la photo → un autre lieu. tape le mot → une autre voix.',
+    texte: 'tape la photo → un autre tirage. tape le mot → une autre voix.',
   },
   {
     id: 'fiche-tip-pote',

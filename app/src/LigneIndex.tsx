@@ -193,6 +193,8 @@ export default function LigneIndex({
                 <div className="mono idx-sig">
                   — {sig.auteur}
                   {nbVoix > 1 && ` · +${nbVoix - 1} voix`}
+                  {/* même honnêteté que la fiche : voix du seed = « démo » */}
+                  {!sig.auteurId && <span className="tampon-demo">démo</span>}
                 </div>
               ) : (
                 <div className="mono idx-sig idx-sig-toi">— toi</div>

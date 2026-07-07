@@ -5109,6 +5109,14 @@ button {
   gap: 2px;
   text-align: center;
 }
+/* deck & carte : la note ne CAPTE jamais le geste qu'elle enseigne — un swipe
+   ou un pan démarré sur le texte doit atteindre la carte dessous. l'effacement
+   vient du geste lui-même (suivant/onUp/effaceAuGeste), pas d'un tap dessus. */
+.note-marge-deck .note-marge-texte,
+.note-marge-deck2 .note-marge-texte,
+.note-marge-carte .note-marge-texte {
+  pointer-events: none;
+}
 /* la fiche : en marge du 1ᵉʳ tip d'un pote */
 .note-marge-fiche {
   margin-top: 2px;
@@ -5134,15 +5142,11 @@ button {
   max-width: 300px;
   text-align: center;
 }
-/* la validation « alors, X ? » : griffonnée dans la marge de droite */
+/* la validation « alors, X ? » : griffonnée SOUS le titre, dans le flux —
+   un nom de lieu long ne passe plus jamais dessous (la marge reste une marge) */
 .note-marge-validation {
-  position: fixed;
-  right: 14px;
-  top: calc(64px + env(safe-area-inset-top));
-  z-index: 31;
-  max-width: 45vw;
-  flex-direction: column;
-  gap: 2px;
+  justify-content: flex-end;
+  margin: 2px 0 10px;
   text-align: right;
 }
 

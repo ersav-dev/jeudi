@@ -57,6 +57,7 @@ import {
   // les tips réels (table `tips`) : la voix qu'on pose sur le spot d'un autre
   ecrireTip,
   monTipDans,
+  estUuid,
   lireCouleur,
   appliquerCouleur,
   ecrireCouleur,
@@ -711,7 +712,6 @@ export default function App() {
   }
   // inviter un pote : navigator.share si dispo, sinon copie presse-papier
   const inviterUnPote = async () => {
-    effacerNote('cercle-invite') // le geste visé : la note en marge s'efface
     let lien: string
     try {
       lien = lienInvitation()
@@ -719,6 +719,9 @@ export default function App() {
       setFlash((e as Error).message)
       return
     }
+    // le geste visé est accompli (le lien existe) : la note en marge s'efface —
+    // jamais AVANT, sinon un échec (« connecte-toi d'abord ») la perdait pour rien
+    effacerNote('cercle-invite')
     const texte = `rejoins mon cercle sur jeudi. je dis où. ${lien}`
     if (navigator.share) {
       try {
@@ -2093,10 +2096,14 @@ function Validation({
     ...(lieu?.compagnies ?? []),
     ...(lieu?.envies ?? []),
   ])
-  // le spot est-il à moi ? à moi → ma note ; à un autre → MON tip cloud
-  // (table `tips`) — jamais la note du proprio dans mon champ.
+  // le spot est-il à moi ? à moi → ma note ; à un VRAI spot cloud d'un autre
+  // → MON tip cloud (table `tips`) — jamais la note du proprio dans mon champ.
+  // le décor du seed ('karim', 'pub-…') n'existe PAS dans la table `lieux` :
+  // son tip reste local (lieu.note), comme avant les tips réels.
   const mien = lieu ? estAMoi(lieu) : true
-  const [tip, setTip] = useState(() => (lieu ? (mien ? lieu.note : monTipDans(lieu)) : ''))
+  const spotCloud =
+    lieu != null && !mien && !!lieu.proprietaire && estUuid(lieu.proprietaire) && estUuid(lieu.id)
+  const [tip, setTip] = useState(() => (lieu ? (spotCloud ? monTipDans(lieu) : lieu.note) : ''))
   // l'échec d'envoi du tip cloud : message VISIBLE (pas de file muette)
   const [erreurTip, setErreurTip] = useState('')
   const [photos, setPhotos] = useState<PhotoLieu[]>([])
@@ -2191,9 +2198,11 @@ function Validation({
 
   const terminer = async () => {
     if (lieu) {
-      if (!mien) {
-        // le spot d'un autre : mon tip part dans la table `tips` (l'autre
-        // voix) — échec = message visible, on reste là et on peut retaper
+      // le spot d'un autre (cercle RÉEL) : mon tip part dans la table `tips`
+      // (l'autre voix) — échec = message visible, on reste là et on peut
+      // retaper. Tip inchangé = RIEN à envoyer : la validation aboutit même
+      // hors-ligne, et jamais d'appel cloud pour le décor du seed.
+      if (spotCloud && tip.trim() !== monTipDans(lieu)) {
         try {
           await ecrireTip(lieu.id, tip.trim())
           setErreurTip('')
@@ -2207,8 +2216,9 @@ function Validation({
       await majLieu({
         ...lieu,
         // le champ tip reflète l'état final : vidé → le tip s'efface (note: '')
-        // — mais la note d'un spot du cercle reste LA voix de son proprio
-        note: mien ? tip.trim() : lieu.note,
+        // — la note d'un spot du cercle RÉEL reste LA voix de son proprio ;
+        // sur le décor (seed), ma note vit en local comme avant
+        note: spotCloud ? lieu.note : tip.trim(),
         photos: photosFusion,
         // les cases reflètent l'état final : cocher ajoute, décocher corrige
         envies: tags.filter((t) => (ENVIES as readonly string[]).includes(t)) as Lieu['envies'],
@@ -3087,8 +3097,9 @@ function Fiche({
           <p className="hand tip-vide">t'as rien dit sur ce spot. encore.</p>
         )}
         {/* la note en marge : le 1ᵉʳ tip d'un pote qu'on croise — lue puis
-            effacée au prochain scroll/tap */}
-        {(lieu.tipsCercle ?? []).length > 0 && (
+            effacée au prochain scroll/tap. Un VRAI pote (auteurId) seulement :
+            « un pote qui parle » pendant que le tampon dit « démo », non. */}
+        {(lieu.tipsCercle ?? []).some((t) => t.auteurId) && (
           <NoteMarge id="fiche-tip-pote" fleche="haut" effaceAuGeste className="note-marge-fiche" />
         )}
       </div>
@@ -3264,10 +3275,11 @@ function Fiche({
 // démange. un cadre = un <label> → tap = appareil photo ; la prise passe par
 // le pipeline existant (majLieu → televerserPhoto + syncPhotosLieu) et le
 // tirage « se développe » sur place (du sombre vers l'image, CSS only).
+// même langue que le kit photos de la validation (« les wc, c'est la vérité »)
 const CADRES_ALBUM: { type: PhotoLieu['type']; etiquette: string }[] = [
   { type: 'lieu', etiquette: 'la façade' },
-  { type: 'plat', etiquette: "ce qu'on y prend" },
-  { type: 'wc', etiquette: 'ton coin' },
+  { type: 'plat', etiquette: 'ton verre' },
+  { type: 'wc', etiquette: 'les wc' },
 ]
 
 function AlbumATrous({

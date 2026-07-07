@@ -510,9 +510,10 @@ interface LigneTip {
 /** charge les tips cloud d'une liste de lieux → map id→TipCercle[], joints
  *  aux prénoms : mon cercle d'abord (monCercle, cache léger), la vitrine
  *  `profils_publics` pour le reste (moi inclus, et les voix sur des spots
- *  publics d'inconnus). Best-effort : erreur/hors-ligne → map vide,
- *  l'appelant garde ce que le miroir local sait déjà. */
-async function chargerTipsCloud(ids: string[]): Promise<Map<string, TipCercle[]>> {
+ *  publics d'inconnus). Best-effort : erreur/hors-ligne → NULL (≠ map vide
+ *  = vraiment zéro tip), l'appelant garde ce que le miroir local sait déjà
+ *  — un échec réseau ne jette JAMAIS les voix déjà miroitées. */
+async function chargerTipsCloud(ids: string[]): Promise<Map<string, TipCercle[]> | null> {
   const map = new Map<string, TipCercle[]>()
   if (!ids.length || !monId) return map
   try {
@@ -551,6 +552,7 @@ async function chargerTipsCloud(ids: string[]): Promise<Map<string, TipCercle[]>
     }
   } catch (e) {
     console.warn('[jeudi] chargerTipsCloud KO (hors-ligne ?)', e)
+    return null
   }
   return map
 }
@@ -785,7 +787,15 @@ export async function tousLesLieux(): Promise<Lieu[]> {
         const tipsCloud = await chargerTipsCloud([...miens, ...duCercle].map((l) => l.id))
         const locauxParId = new Map(actifs.map((l) => [l.id, l] as const))
         for (const l of [...miens, ...duCercle]) {
-          mergerTipsLieu(l, tipsCloud.get(l.id) ?? [], locauxParId.get(l.id))
+          const local = locauxParId.get(l.id)
+          if (tipsCloud) {
+            mergerTipsLieu(l, tipsCloud.get(l.id) ?? [], local)
+          } else {
+            // SELECT `tips` KO alors que `lieux` a répondu : on garde ce que
+            // le miroir sait déjà — sinon le put ci-dessous écraserait les
+            // voix des potes (et monTipDans repartirait à vide → DELETE à tort)
+            l.tipsCercle = local?.tipsCercle
+          }
         }
         cloudOk = true
         const frais = new Set(miens.map((l) => l.id))
@@ -966,7 +976,6 @@ export function estAMoi(lieu: Lieu): boolean {
 /** adopter un spot du cercle : on en crée SA PROPRE copie privée. la voix
  *  d'origine reste dans tipsCercle ; ta note se vide pour que tu y mettes la tienne. */
 export async function adopterLieu(lieu: Lieu): Promise<Lieu> {
-  const auteur = lieu.tipsCercle?.[0]
   const copie: Lieu = {
     ...lieu,
     id: nouvelId(),
@@ -978,8 +987,15 @@ export async function adopterLieu(lieu: Lieu): Promise<Lieu> {
     creeLe: new Date().toISOString(),
     tampon: undefined,
     derniereValidation: undefined,
-    // on conserve la reco d'origine comme première voix du cercle
-    tipsCercle: auteur ? [auteur, ...(lieu.tipsCercle?.slice(1) ?? [])] : lieu.tipsCercle,
+    // on conserve la reco d'origine comme première voix du cercle — SANS
+    // auteurId : la copie devient un héritage local assumé. Sinon la 1ʳᵉ
+    // sync (mergerTipsLieu ne garde en héritage que les tips sans auteurId)
+    // jetterait une voix réelle sans rien dire.
+    tipsCercle: lieu.tipsCercle?.map((t) => {
+      const heritage = { ...t }
+      delete heritage.auteurId
+      return heritage
+    }),
   }
   await ajouterLieu(copie)
   return copie
@@ -1498,8 +1514,12 @@ export async function lireLieu(id: string): Promise<Lieu | undefined> {
         const photos = await chargerPhotos([id])
         lieu.photos = photos.get(id) ?? []
         // les autres voix : tips cloud devant l'héritage local (seed/adoption)
+        // — SELECT `tips` KO (null) → on garde ce que le miroir sait déjà
         const db = await getDB()
-        mergerTipsLieu(lieu, (await chargerTipsCloud([id])).get(id) ?? [], await db.get('lieux', id))
+        const local = await db.get('lieux', id)
+        const tipsCloud = await chargerTipsCloud([id])
+        if (tipsCloud) mergerTipsLieu(lieu, tipsCloud.get(id) ?? [], local)
+        else lieu.tipsCercle = local?.tipsCercle
         return lieu
       }
     }
@@ -2139,6 +2159,16 @@ export async function supprimerMonCompte(): Promise<void> {
   await effacerTout()
 }
 
+// lecture brute d'une clé locale JSON — pour l'export : criteres.ts et
+// cercle.ts possèdent ces clés mais importent déjà db.ts (pas d'import croisé)
+function lireJsonLocal(cle: string): unknown {
+  try {
+    return JSON.parse(localStorage.getItem(cle) ?? '[]')
+  } catch {
+    return []
+  }
+}
+
 /** portabilité : tout ce que jeudi sait de toi, en un objet JSON sérialisable
  *  (l'UI d'App.tsx le télécharge). Les blobs photo (non sérialisables) sont
  *  omis ; les photos cloud sortent en URLs. */
@@ -2163,6 +2193,10 @@ export async function exporterMesDonnees(): Promise<Record<string, unknown>> {
     tagline: lireTagline(),
     couleur: lireCouleur(),
     seuils: lireSeuils(),
+    // les clés locales des autres modules (criteres.ts / cercle.ts) + les bofs
+    criteres: lireJsonLocal('jeudi-criteres'),
+    proches: lireJsonLocal('jeudi-proches'),
+    bofs: lireJsonLocal('jeudi-bofs'),
   }
 }
 

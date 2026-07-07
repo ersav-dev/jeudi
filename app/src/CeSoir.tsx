@@ -422,9 +422,10 @@ function Deck({
   const verdict = drag.x > 60 ? 'valide' : drag.x < -60 ? 'bof' : null
   const nbPhotos = lieu.photos.length
 
-  const voix: { note: string; signature: string }[] = [
+  // même honnêteté que la fiche : une voix sans auteurId = du seed → « démo »
+  const voix: { note: string; signature: string; demo?: boolean }[] = [
     ...(lieu.note ? [{ note: lieu.note, signature: 'toi' }] : []),
-    ...(lieu.tipsCercle ?? []).map((t) => ({ note: t.note, signature: t.auteur })),
+    ...(lieu.tipsCercle ?? []).map((t) => ({ note: t.note, signature: t.auteur, demo: !t.auteurId })),
   ]
   const laVoix = voix[voixIndex % Math.max(voix.length, 1)]
 
@@ -463,14 +464,14 @@ function Deck({
     ) {
       setPhotoIndex((p) => (drag.y < 0 ? (p + 1) % nbPhotos : (p - 1 + nbPhotos) % nbPhotos))
     } else if (Math.abs(drag.x) < 6 && Math.abs(drag.y) < 6) {
-      // le tap (photo ou mot) est fait : la note en marge s'efface
-      if (cible.closest('.carte-photo') || cible.closest('.carte-voix')) {
-        effacerNote('deck-tape')
-      }
+      // « s'efface quand t'as pigé » : la note ne part que si le tap a
+      // PRODUIT son effet (une seule photo/voix → rien ne bouge → elle reste)
       if (cible.closest('.carte-photo') && nbPhotos > 1) {
+        effacerNote('deck-tape')
         setPhotoIndex((p) => (p + 1) % nbPhotos)
       }
       if (cible.closest('.carte-voix') && voix.length > 1) {
+        effacerNote('deck-tape')
         setVoixIndex((v) => (v + 1) % voix.length)
       }
     }
@@ -533,6 +534,7 @@ function Deck({
               <span className="mono tip-signature">
                 — {laVoix.signature}
                 {voix.length > 1 && ` · ${(voixIndex % voix.length) + 1}/${voix.length}`}
+                {laVoix.demo && <span className="tampon-demo">démo</span>}
               </span>
             </div>
           )}

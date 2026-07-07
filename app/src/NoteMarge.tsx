@@ -2,10 +2,13 @@
 // jeudi. — LA NOTE EN MARGE (le tuto du carnet prêté)
 // une annotation griffonnée par l'ancien proprio (« j. ») : Caveat encre
 // ivoire, légèrement penchée, flèche tremblée dessinée à la main.
-// JAMAIS bloquante (pointer-events sur le texte seul) · tap = s'efface ·
-// et s'efface AUSSI toute seule quand le geste visé est accompli
-// (le parent appelle effacerNote, ou `effaceAuGeste` écoute le 1er
-// pan/tap/scroll une fois la note lue).
+// JAMAIS bloquante : pointer-events sur le texte seul — et les variantes
+// posées sur une zone gestuelle (deck, carte) sont pointer-events:none de
+// bout en bout (index.css), pour qu'un swipe démarré SUR le texte atteigne
+// la carte. tap = s'efface (hors zones gestuelles) · et s'efface AUSSI toute
+// seule quand le geste visé est accompli (le parent appelle effacerNote, ou
+// `effaceAuGeste` écoute le 1er pan/tap/scroll une fois la note lue).
+// le mot scotché de bienvenue passe TOUJOURS en premier (une voix à la fois).
 // ════════════════════════════════════════════════════════════════
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { noteVue, effacerNote, texteNote, sAbonnerNotes } from './tuto'
@@ -53,6 +56,9 @@ export default function NoteMarge({
   effaceAuGeste?: boolean
 }) {
   const effacee = useSyncExternalStore(sAbonnerNotes, () => noteVue(id))
+  // le mot scotché d'abord, les marges ensuite : jamais deux voix de tuto
+  // superposées — les notes attendent que le mot de bienvenue soit rangé
+  const motRange = useSyncExternalStore(sAbonnerNotes, () => noteVue('mot-bienvenue'))
   // « prête » = vue à l'écran depuis un instant → le prochain geste l'efface
   const [prete, setPrete] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -60,7 +66,7 @@ export default function NoteMarge({
   // on attend que la note soit VISIBLE (et lisible un instant) avant d'armer
   // l'effacement au geste — sinon le scroll qui la révèle l'efface aussitôt
   useEffect(() => {
-    if (!effaceAuGeste || effacee || prete) return
+    if (!effaceAuGeste || effacee || prete || !motRange) return
     const el = ref.current
     if (!el) return
     let timer: number | undefined
@@ -78,7 +84,7 @@ export default function NoteMarge({
       io.disconnect()
       if (timer) window.clearTimeout(timer)
     }
-  }, [effaceAuGeste, effacee, prete])
+  }, [effaceAuGeste, effacee, prete, motRange])
 
   useEffect(() => {
     if (!prete || effacee) return
@@ -91,7 +97,7 @@ export default function NoteMarge({
     }
   }, [prete, effacee, id])
 
-  if (effacee) return null
+  if (effacee || !motRange) return null
   const texte = texteNote(id)
   if (!texte) return null
 
