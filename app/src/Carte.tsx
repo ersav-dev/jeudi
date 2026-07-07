@@ -184,7 +184,9 @@ export default function Carte({
   // même langage que les pins du carnet. clic = zoom jusqu'à l'éclatement.
   const creerPastilleGrappe = (idGrappe: number, compte: number, lng: number, lat: number) => {
     const el = document.createElement('div')
-    el.className = 'cluster-pastille mono'
+    // la taille dit le poids : une grappe de 200 ne ressemble pas à une de 5
+    const gabarit = compte >= 80 ? ' cluster-lg' : compte >= 15 ? ' cluster-md' : ''
+    el.className = 'cluster-pastille mono' + gabarit
     el.textContent = String(compte)
     el.title = `${compte} lieux`
     el.addEventListener('click', (ev) => {
@@ -471,7 +473,11 @@ export default function Carte({
   useEffect(() => {
     const validesL = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
     lieuxParId.current = new Map(validesL.map((l) => [l.id, l]))
-    const index = new Supercluster<ProprietesPin>({ radius: 60, maxZoom: 17 })
+    // les grappes ne servent qu'aux vues LARGES (ville entière) — de près on
+    // veut les pins, pas des ronds : plus aucune grappe au-delà du zoom 14,
+    // et il faut au moins 4 lieux collés pour en former une (les paires/trios
+    // restent des pins lisibles).
+    const index = new Supercluster<ProprietesPin>({ radius: 40, maxZoom: 14, minPoints: 4 })
     index.load(
       validesL.map((l) => ({
         type: 'Feature' as const,
@@ -493,12 +499,28 @@ export default function Carte({
     // recadre à chaque nouveau deck.
     if ((!dejaCadre.current || mini) && validesL.length > 0) {
       dejaCadre.current = true
-      if (validesL.length === 1) {
-        m.flyTo({ center: [validesL[0].lng, validesL[0].lat], zoom: 14 })
+      if (mini) {
+        // récap du deck : peu de spots, on cadre sur eux
+        if (validesL.length === 1) {
+          m.flyTo({ center: [validesL[0].lng, validesL[0].lat], zoom: 14 })
+        } else {
+          const bounds = new maplibregl.LngLatBounds()
+          validesL.forEach((l) => bounds.extend([l.lng, l.lat]))
+          m.fitBounds(bounds, { padding: 60, maxZoom: 15 })
+        }
       } else {
-        const bounds = new maplibregl.LngLatBounds()
-        validesL.forEach((l) => bounds.extend([l.lng, l.lat]))
-        m.fitBounds(bounds, { padding: 60, maxZoom: 15 })
+        // plein écran : on démarre CHEZ TOI, pas sur l'enveloppe des 750 spots
+        // (un seul spot à 30 km dézoomait toute la ville). Le quartier d'abord :
+        // les spots à moins de ~2,5 km cadrent la vue, sinon zoom de quartier.
+        const pres = validesL.filter((l) => distanceM(l) < 2500)
+        if (pres.length >= 3) {
+          const bounds = new maplibregl.LngLatBounds()
+          bounds.extend(moi())
+          pres.forEach((l) => bounds.extend([l.lng, l.lat]))
+          m.fitBounds(bounds, { padding: 70, maxZoom: 15 })
+        } else {
+          m.flyTo({ center: moi(), zoom: 13.2 })
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
