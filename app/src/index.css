@@ -5061,6 +5061,84 @@ button {
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6); /* pas de halo */
 }
 
+/* ── variantes de grappes (banc d'essai carte-dev) ─────────────────────
+   la pastille porte deux lectures : .cluster-nombre (le chiffre) et
+   .cluster-pile (3 anneaux « D » empilés, masqués par défaut). une classe
+   sur <body> commute le style — le défaut reste l'actuel, pixel pour pixel.
+   une fois le gagnant choisi, les perdantes seront supprimées. */
+.cluster-pile {
+  display: none;
+}
+/* B. « anneau » : la grappe hérite du langage des pins — un grand anneau
+   rouge, le chiffre à l'encre ivoire dedans. le rond ivoire redevient
+   l'exclusivité des curateurs. */
+body.grappes-anneau .cluster-pastille {
+  background: rgba(21, 19, 15, 0.55);
+  color: var(--ivory);
+  border: 2.5px solid var(--red);
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.6);
+}
+body.grappes-anneau .cluster-pastille.cluster-md {
+  border-width: 3px;
+}
+body.grappes-anneau .cluster-pastille.cluster-lg {
+  border-width: 3.5px;
+  box-shadow: 1px 3px 0 rgba(0, 0, 0, 0.65);
+}
+body.grappes-anneau .cluster-pastille.cluster-duo {
+  border-width: 1.5px;
+}
+/* C. « tas de pins » : 2-3 anneaux en quinconce dont l'encre s'estompe,
+   le compte en cartouche ivoire accroché bas-droite — une note de marge. */
+body.grappes-pile .cluster-pastille {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+body.grappes-pile .cluster-pile {
+  display: block;
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+body.grappes-pile .cluster-pile i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--red);
+  background: radial-gradient(circle at center, var(--red) 0 2px, transparent 2.6px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+body.grappes-pile .cluster-pile i:nth-child(2) {
+  translate: 4px -4px;
+  opacity: 0.55;
+  z-index: -1;
+}
+body.grappes-pile .cluster-pile i:nth-child(3) {
+  translate: 8px -8px;
+  opacity: 0.3;
+  z-index: -2;
+}
+/* petites grappes : 2 anneaux suffisent ; le 3e n'apparaît qu'à partir de md */
+body.grappes-pile .cluster-pastille:not(.cluster-md):not(.cluster-lg) .cluster-pile i:nth-child(3) {
+  display: none;
+}
+body.grappes-pile .cluster-nombre {
+  position: absolute;
+  right: -11px;
+  bottom: -9px;
+  background: var(--ivory);
+  color: #15130f;
+  font-size: 9px;
+  line-height: 1.5;
+  padding: 0 4px;
+  border-radius: 2px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
+  font-size: 11px;
+}
+
 /* ── sprint « zoom fluide » : la chorégraphie (V5 : sec, jamais de rebond) ──
    naître/voler = inline (Carte.tsx, positions calculées) ; ici les entrées
    fixes : l'encre se dépose (pins pan-in), le tampon frappe (pastilles). */

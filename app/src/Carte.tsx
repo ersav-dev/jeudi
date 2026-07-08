@@ -256,7 +256,17 @@ export default function Carte({
     const gabarit =
       compte >= 80 ? ' cluster-lg' : compte >= 15 ? ' cluster-md' : compte <= 3 ? ' cluster-duo' : ''
     el.className = 'cluster-pastille mono' + gabarit
-    el.textContent = String(compte)
+    // structure à double lecture : le chiffre (toujours) + la pile d'anneaux
+    // (masquée par défaut, révélée par les variantes de style .grappes-*
+    // testées au banc d'essai — voir index.css « variantes de grappes »)
+    const pile = document.createElement('span')
+    pile.className = 'cluster-pile'
+    pile.innerHTML = '<i></i><i></i><i></i>'
+    el.appendChild(pile)
+    const nombre = document.createElement('span')
+    nombre.className = 'cluster-nombre'
+    nombre.textContent = String(compte)
+    el.appendChild(nombre)
     el.title = `${compte} lieux`
     el.addEventListener('click', (ev) => {
       ev.stopPropagation()

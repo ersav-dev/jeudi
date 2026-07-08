@@ -3,13 +3,61 @@
 // le clustering/la chorégraphie sans auth ni onboarding.
 // servi par vite en dev via /carte-dev.html — JAMAIS inclus au build
 // (aucune référence depuis index.html ; page dev volontairement orpheline).
-import { StrictMode } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Carte from './Carte'
 import ERSAN from './ersan'
 import type { Lieu } from './db'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './index.css'
+
+// ── comparateur de styles de grappes : commute une classe sur <body>,
+// les variantes CSS (index.css « variantes de grappes ») font le reste.
+const STYLES_GRAPPES = [
+  { cle: '', nom: 'actuel' },
+  { cle: 'grappes-anneau', nom: 'anneau' },
+  { cle: 'grappes-pile', nom: 'tas de pins' },
+] as const
+
+function SelecteurGrappes() {
+  const [actif, setActif] = useState('')
+  const choisir = (cle: string) => {
+    document.body.classList.remove('grappes-anneau', 'grappes-pile')
+    if (cle) document.body.classList.add(cle)
+    setActif(cle)
+  }
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 10,
+        left: 10,
+        zIndex: 50,
+        display: 'flex',
+        gap: 6,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
+      }}
+    >
+      {STYLES_GRAPPES.map((s) => (
+        <button
+          key={s.cle}
+          onClick={() => choisir(s.cle)}
+          style={{
+            padding: '5px 9px',
+            borderRadius: 3,
+            cursor: 'pointer',
+            border: '1px solid rgba(240, 234, 217, 0.4)',
+            background: actif === s.cle ? '#f0ead9' : 'rgba(21, 19, 15, 0.85)',
+            color: actif === s.cle ? '#15130f' : '#f0ead9',
+          }}
+        >
+          {s.nom}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const lieux: Lieu[] = ERSAN.map((s, i) => ({
   id: `dev-${i}`,
@@ -30,6 +78,7 @@ const lieux: Lieu[] = ERSAN.map((s, i) => ({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <div className="app" style={{ height: '100dvh' }}>
+      <SelecteurGrappes />
       <Carte lieux={lieux} />
     </div>
   </StrictMode>,
