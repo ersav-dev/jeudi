@@ -5013,6 +5013,11 @@ button {
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
+  /* fonte progressive pendant le geste de zoom (16→17) : --fonte-grappes
+     est écrite en continu par Carte.tsx sur le conteneur — les pastilles
+     fondent SOUS le doigt au lieu d'attendre la fin du pinch */
+  transform: scale(calc(1 - 0.35 * var(--fonte-grappes, 0)));
+  opacity: calc(1 - 0.85 * var(--fonte-grappes, 0));
   /* PAS de position ici : maplibre ancre le marker (absolute + transform). */
 }
 /* zone de tap élargie (pouce, de nuit) — comme les pins */
@@ -5044,6 +5049,48 @@ button {
   box-shadow:
     1px 3px 0 rgba(0, 0, 0, 0.65),
     0 0 0 5px rgba(240, 234, 217, 0.28);
+}
+/* duo/trio de trottoir (minPoints 2) : une marque discrète, pas un badge —
+   deux bars à 15 m se lisent « 2 » au lieu de deux pins superposés incliquables */
+.cluster-pastille.cluster-duo {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 9px;
+  border-width: 1.5px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6); /* pas de halo */
+}
+
+/* ── sprint « zoom fluide » : la chorégraphie (V5 : sec, jamais de rebond) ──
+   naître/voler = inline (Carte.tsx, positions calculées) ; ici les entrées
+   fixes : l'encre se dépose (pins pan-in), le tampon frappe (pastilles). */
+@media (prefers-reduced-motion: no-preference) {
+  .pin.pin-depose {
+    animation: deposeEncre 120ms ease-out both;
+  }
+  .cluster-pastille.cluster-frappe {
+    animation: frappeTampon 90ms ease-out both;
+  }
+  .cluster-pastille.cluster-tap {
+    animation: tapPastille 100ms ease-out;
+  }
+}
+@keyframes deposeEncre {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+@keyframes frappeTampon {
+  from {
+    opacity: 0.4;
+    transform: scale(1.15);
+  }
+}
+@keyframes tapPastille {
+  50% {
+    transform: scale(0.92);
+  }
 }
 
 /* ── le tuto « notes en marge » : le carnet prêté ─────────────────

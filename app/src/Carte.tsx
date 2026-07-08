@@ -41,6 +41,65 @@ const NB_PAGES_SHEET = 4
 
 // ── clustering : les propriétés portées par chaque point de l'index ──
 type ProprietesPin = { id: string }
+
+// dernier niveau de zoom où l'index groupe encore (au-delà : pins nus).
+// sert aussi à la fonte progressive des pastilles pendant le pinch.
+const MAXZOOM_GRAPPES = 16
+
+// maplibre possède le transform de l'ÉLÉMENT du marker (positionnement) :
+// impossible d'animer ce transform-là. chaque pin/pastille vit donc dans un
+// porteur neutre (l'élément du marker) et c'est l'enfant qu'on anime.
+// bonus : les transforms CSS (.pin-actif scale 1.3…) redeviennent effectifs.
+const enrober = (el: HTMLElement): HTMLElement => {
+  const porteur = document.createElement('div')
+  // shrink-wrap explicite : l'ancre du marker = le boîtier du pin, même si
+  // le CSS maplibre (.maplibregl-marker { position:absolute }) manquait
+  porteur.style.width = 'max-content'
+  porteur.appendChild(el)
+  return porteur
+}
+
+// V5 « l'encre se dépose, le tampon frappe » : courbe sèche, jamais de rebond
+const COURBE_ENCRE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
+// naissance d'un pin depuis le ventre de son ex-grappe : posé à sa vraie
+// position, il PART visuellement du centroïde (translate écran) et vole
+// jusqu'à sa place. retard = stagger, les proches partent d'abord.
+const naitreDepuis = (el: HTMLElement, dx: number, dy: number, retard: number) => {
+  el.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`
+  el.style.opacity = '0'
+  el.style.willChange = 'transform'
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      el.style.transition = `transform 260ms ${COURBE_ENCRE} ${retard}ms, opacity 160ms ease-out ${retard}ms`
+      el.style.transform = ''
+      el.style.opacity = ''
+      window.setTimeout(() => {
+        el.style.transition = ''
+        el.style.willChange = ''
+      }, 320 + retard)
+    }),
+  )
+}
+
+// absorption : le pin (ou la sous-grappe) vole vers le centroïde de la
+// grappe qui l'avale, puis le marker est retiré. l'appelant a déjà sorti
+// la clé de `poses` : le diffing reste cohérent pendant le vol.
+const absorberVers = (mk: maplibregl.Marker, el: HTMLElement, dx: number, dy: number) => {
+  el.style.willChange = 'transform'
+  el.style.transition = `transform 220ms ease-in, opacity 180ms ease-in`
+  el.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`
+  el.style.opacity = '0'
+  window.setTimeout(() => mk.remove(), 240)
+}
+
+// sortie d'une pastille qui éclate (zoom avant) : elle se résorbe sur place
+const resorber = (mk: maplibregl.Marker, el: HTMLElement) => {
+  el.style.transition = 'transform 160ms ease-in, opacity 140ms ease-in'
+  el.style.transform = 'scale(0.6)'
+  el.style.opacity = '0'
+  window.setTimeout(() => mk.remove(), 180)
+}
 // un résultat de getClusters est soit une grappe, soit un point isolé
 const estGrappe = (
   f: Supercluster.ClusterFeature<Supercluster.AnyProps> | Supercluster.PointFeature<ProprietesPin>,
@@ -119,6 +178,11 @@ export default function Carte({
 
   const valides = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
   const lieuActif = valides.find((l) => l.id === actif) ?? null
+  // chorégraphie coupée en mini (récap figé) et si l'utilisateur demande
+  // moins de mouvement — la pose reste identique, seule l'entrée change
+  const animees =
+    !mini &&
+    !(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   // le lieu affiché est-il dans la sélection « à comparer » ? (pilote le bouton)
   const actifAComparer = !!lieuActif && comparer.includes(lieuActif.id)
   // en mode comparaison, le bloc détails gagne une PAGE de plus (la dernière) :
@@ -187,8 +251,10 @@ export default function Carte({
   // même langage que les pins du carnet. clic = zoom jusqu'à l'éclatement.
   const creerPastilleGrappe = (idGrappe: number, compte: number, lng: number, lat: number) => {
     const el = document.createElement('div')
-    // la taille dit le poids : une grappe de 200 ne ressemble pas à une de 5
-    const gabarit = compte >= 80 ? ' cluster-lg' : compte >= 15 ? ' cluster-md' : ''
+    // la taille dit le poids : une grappe de 200 ne ressemble pas à une de 5,
+    // et un duo/trio de trottoir n'est qu'une discrète marque « 2 »
+    const gabarit =
+      compte >= 80 ? ' cluster-lg' : compte >= 15 ? ' cluster-md' : compte <= 3 ? ' cluster-duo' : ''
     el.className = 'cluster-pastille mono' + gabarit
     el.textContent = String(compte)
     el.title = `${compte} lieux`
@@ -197,14 +263,26 @@ export default function Carte({
       const m = carte.current
       const index = indexRef.current
       if (!m || !index) return
+      const zActuel = m.getZoom()
       let z: number
       try {
         z = index.getClusterExpansionZoom(idGrappe)
       } catch {
         /* l'index a été reconstruit entre temps : on zoome quand même un cran */
-        z = Math.floor(m.getZoom()) + 2
+        z = Math.floor(zActuel) + 2
       }
-      m.easeTo({ center: [lng, lat], zoom: Math.min(z, 18) })
+      // paliers : jamais plus de ~2,5 crans par tap — chaque tap déplie UN
+      // étage de la hiérarchie (feuilletage), au lieu d'un saut aveugle de
+      // 4 niveaux. durée proportionnelle au chemin parcouru.
+      const zCible = Math.min(z, zActuel + 2.5, 17.5)
+      const duree = Math.min(850, Math.max(280, 320 * (zCible - zActuel)))
+      // frappe brève au tap (confirmation tactile) avant le départ
+      el.classList.remove('cluster-tap')
+      void el.offsetWidth // relance l'animation si re-tap rapide
+      el.classList.add('cluster-tap')
+      // offset : la grappe visée atterrit AU-DESSUS du centre, pas sous le
+      // bottom-sheet/carrousel qui occupent le bas de l'écran
+      m.easeTo({ center: [lng, lat], zoom: zCible, duration: duree, offset: [0, -40] })
     })
     return el
   }
@@ -281,6 +359,11 @@ export default function Carte({
   // qui s'y trouve, en diffant contre l'existant (crée les nouveaux, retire
   // les disparus, ne touche pas au reste). Appelé sur moveend/zoomend — jamais
   // à chaque frame.
+  //
+  // Chorégraphie (V5 « l'objet ») : au zoom avant, les pins NAISSENT du ventre
+  // de leur ex-grappe et volent vers leur place ; au zoom arrière, la grappe
+  // les AVALE (ils volent vers son centroïde) puis frappe comme un tampon.
+  // Tout est transform/opacity sur l'élément INTERNE (maplibre garde le sien).
   const poserVisibles = () => {
     const m = carte.current
     const index = indexRef.current
@@ -296,49 +379,146 @@ export default function Carte({
       Math.min(85, b.getNorth() + margeY),
     ]
     const grappes = index.getClusters(bbox, Math.floor(m.getZoom()))
+
+    // les clés voulues d'abord : le diffing a besoin de la photo complète
     const voulus = new Set<string>()
+    for (const f of grappes) {
+      voulus.add(estGrappe(f) ? `c:${f.properties.cluster_id}` : `l:${f.properties.id}`)
+    }
+    const a = actifRef.current
+    if (a && lieuxParId.current.get(a)) voulus.add(`l:${a}`)
+
+    // ── préparation de la chorégraphie ──────────────────────────────────
+    // origines : leafId → point écran du centroïde de sa grappe SORTANTE
+    // destinations : leafId → point écran du centroïde de sa grappe ENTRANTE
+    const origines = new Map<string, { x: number; y: number }>()
+    const destinations = new Map<string, { x: number; y: number }>()
+    if (animees) {
+      for (const [cle, mk] of poses.current) {
+        if (voulus.has(cle) || !cle.startsWith('c:')) continue
+        const pt = m.project(mk.getLngLat())
+        try {
+          for (const feuille of index.getLeaves(Number(cle.slice(2)), Infinity)) {
+            origines.set((feuille.properties as ProprietesPin).id, pt)
+          }
+        } catch {
+          /* index reconstruit entre temps : pas d'animation pour celle-ci */
+        }
+      }
+      for (const f of grappes) {
+        if (!estGrappe(f)) continue
+        const cle = `c:${f.properties.cluster_id}`
+        if (poses.current.has(cle)) continue
+        const [lng, lat] = f.geometry.coordinates as [number, number]
+        const pt = m.project([lng, lat])
+        try {
+          for (const feuille of index.getLeaves(f.properties.cluster_id, Infinity)) {
+            destinations.set((feuille.properties as ProprietesPin).id, pt)
+          }
+        } catch {
+          /* idem : on saute l'animation, jamais la pose */
+        }
+      }
+    }
+    // stagger par grappe d'origine : les pins proches du centroïde partent
+    // les premiers ; plafond bas pour rester sous les 300 ms de la V5
+    const rangs = new Map<{ x: number; y: number }, number>()
+
+    // ── pose des entrants ───────────────────────────────────────────────
+    const poserLieu = (l: Lieu) => {
+      const cle = `l:${l.id}`
+      if (poses.current.has(cle)) return
+      const el = creerPinLieu(l)
+      pinEls.current[l.id] = el
+      poses.current.set(
+        cle,
+        new maplibregl.Marker({ element: enrober(el) }).setLngLat([l.lng, l.lat]).addTo(m),
+      )
+      if (!animees) return
+      const de = origines.get(l.id)
+      if (de) {
+        const ici = m.project([l.lng, l.lat])
+        const rang = rangs.get(de) ?? 0
+        rangs.set(de, rang + 1)
+        naitreDepuis(el, de.x - ici.x, de.y - ici.y, Math.min(rang * 12, 96))
+      } else {
+        // pan-in ou premier rendu : l'encre se dépose, sec
+        el.classList.add('pin-depose')
+      }
+    }
     for (const f of grappes) {
       const [lng, lat] = f.geometry.coordinates as [number, number]
       if (estGrappe(f)) {
         const cle = `c:${f.properties.cluster_id}`
-        voulus.add(cle)
-        if (!poses.current.has(cle)) {
-          const el = creerPastilleGrappe(f.properties.cluster_id, f.properties.point_count, lng, lat)
-          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(m))
+        if (poses.current.has(cle)) continue
+        const el = creerPastilleGrappe(f.properties.cluster_id, f.properties.point_count, lng, lat)
+        poses.current.set(
+          cle,
+          new maplibregl.Marker({ element: enrober(el) }).setLngLat([lng, lat]).addTo(m),
+        )
+        if (!animees) continue
+        // une grappe née d'une grappe plus large : elle naît de son parent ;
+        // sinon (pan-in, avalement de pins) : elle frappe comme un tampon
+        let feuille0: string | undefined
+        try {
+          feuille0 = (index.getLeaves(f.properties.cluster_id, 1)[0]?.properties as ProprietesPin)?.id
+        } catch {
+          feuille0 = undefined
+        }
+        const de = feuille0 ? origines.get(feuille0) : undefined
+        if (de) {
+          const ici = m.project([lng, lat])
+          naitreDepuis(el, de.x - ici.x, de.y - ici.y, 0)
+        } else {
+          el.classList.add('cluster-frappe')
         }
       } else {
-        const cle = `l:${f.properties.id}`
-        voulus.add(cle)
-        if (!poses.current.has(cle)) {
-          const l = lieuxParId.current.get(f.properties.id)
-          if (!l) continue
-          const el = creerPinLieu(l)
-          pinEls.current[l.id] = el
-          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([l.lng, l.lat]).addTo(m))
-        }
+        const l = lieuxParId.current.get(f.properties.id)
+        if (l) poserLieu(l)
       }
     }
     // le lieu SÉLECTIONNÉ garde toujours son pin, même si sa grappe l'avale :
     // la sélection reste visible (le pin se superpose à la pastille).
-    const a = actifRef.current
     if (a) {
       const l = lieuxParId.current.get(a)
-      if (l) {
-        const cle = `l:${a}`
-        voulus.add(cle)
-        if (!poses.current.has(cle)) {
-          const el = creerPinLieu(l)
-          pinEls.current[l.id] = el
-          poses.current.set(cle, new maplibregl.Marker({ element: el }).setLngLat([l.lng, l.lat]).addTo(m))
-        }
-      }
+      if (l) poserLieu(l)
     }
-    // retire ce qui a quitté la vue ou changé de grappe
+
+    // ── retrait des sortants ────────────────────────────────────────────
     for (const [cle, mk] of [...poses.current]) {
-      if (!voulus.has(cle)) {
+      if (voulus.has(cle)) continue
+      poses.current.delete(cle)
+      const estLieu = cle.startsWith('l:')
+      const el = (estLieu ? pinEls.current[cle.slice(2)] : null) ?? (mk.getElement().firstElementChild as HTMLElement | null)
+      if (estLieu) delete pinEls.current[cle.slice(2)]
+      if (!animees || !el) {
         mk.remove()
-        poses.current.delete(cle)
-        if (cle.startsWith('l:')) delete pinEls.current[cle.slice(2)]
+        continue
+      }
+      if (estLieu) {
+        const vers = destinations.get(cle.slice(2))
+        if (vers) {
+          // avalé par une grappe naissante : il vole vers elle
+          const de = m.project(mk.getLngLat())
+          absorberVers(mk, el, vers.x - de.x, vers.y - de.y)
+        } else {
+          mk.remove() // sorti du viewport : sec, pas de théâtre hors champ
+        }
+      } else {
+        // pastille sortante : avalée par plus grande (vol) ou éclatée (résorption)
+        let feuille0: string | undefined
+        try {
+          feuille0 = (index.getLeaves(Number(cle.slice(2)), 1)[0]?.properties as ProprietesPin)?.id
+        } catch {
+          feuille0 = undefined
+        }
+        const vers = feuille0 ? destinations.get(feuille0) : undefined
+        const de = m.project(mk.getLngLat())
+        const auChamp =
+          de.x > -60 && de.y > -60 && de.x < m.getContainer().clientWidth + 60 && de.y < m.getContainer().clientHeight + 60
+        if (!auChamp) mk.remove()
+        else if (vers) absorberVers(mk, el, vers.x - de.x, vers.y - de.y)
+        else resorber(mk, el)
       }
     }
     appliquerEtats()
@@ -453,12 +633,30 @@ export default function Carte({
     carte.current.on('moveend', rafraichir)
     carte.current.on('zoomend', rafraichir)
 
+    // fonte progressive des pastilles PENDANT le geste de zoom (16→17) :
+    // une seule CSS var écrite (throttle rAF), lue par .cluster-pastille en
+    // scale/opacity — les grappes fondent sous le doigt, et le vrai swap de
+    // zoomend (chorégraphié) devient presque invisible.
+    let rafFonte = 0
+    const surZoomContinu = () => {
+      if (rafFonte) return
+      rafFonte = requestAnimationFrame(() => {
+        rafFonte = 0
+        const z = carte.current?.getZoom()
+        if (z == null) return
+        const d = Math.min(Math.max(z - MAXZOOM_GRAPPES, 0), 1)
+        cont.style.setProperty('--fonte-grappes', d.toFixed(3))
+      })
+    }
+    carte.current.on('zoom', surZoomContinu)
+
     const posesCourantes = poses.current
     const pins = pinEls.current
     return () => {
       window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true)
       window.removeEventListener('deviceorientation', onOrient, true)
       if (onceEnAttente) cont.removeEventListener('click', onceEnAttente)
+      if (rafFonte) cancelAnimationFrame(rafFonte)
       window.clearInterval(suiviMoi)
       posesCourantes.forEach((mk) => mk.remove())
       posesCourantes.clear()
@@ -476,11 +674,11 @@ export default function Carte({
   useEffect(() => {
     const validesL = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
     lieuxParId.current = new Map(validesL.map((l) => [l.id, l]))
-    // les grappes ne servent qu'aux vues LARGES (ville entière) — de près on
-    // veut les pins, pas des ronds : plus aucune grappe au-delà du zoom 14,
-    // et il faut au moins 4 lieux collés pour en former une (les paires/trios
-    // restent des pins lisibles).
-    const index = new Supercluster<ProprietesPin>({ radius: 40, maxZoom: 14, minPoints: 4 })
+    // grappes jusqu'au trottoir : minPoints 2 (deux bars à 15 m ne se rendent
+    // plus en pins superposés incliquables) et l'agrégation tient jusqu'au
+    // zoom 16 — au-delà, seuls des lieux réellement confondus resteraient
+    // groupés, on rend les pins nus. les duos/trios ont leur gabarit dédié.
+    const index = new Supercluster<ProprietesPin>({ radius: 40, maxZoom: MAXZOOM_GRAPPES, minPoints: 2 })
     index.load(
       validesL.map((l) => ({
         type: 'Feature' as const,
