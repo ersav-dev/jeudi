@@ -1819,6 +1819,7 @@ export default function App() {
                       {!m.reel && <span className="mono tampon-demo">démo</span>}
                       {estPro && (
                         <span
+                          className="sceau-cire"
                           style={{
                             color: 'var(--red)',
                             marginLeft: 7,
@@ -2250,7 +2251,7 @@ function Validation({
               className="carte-lieu fiche-carte validation-carte"
               style={{
                 transform: `translateX(${vDrag.x}px) rotate(${vDrag.x / 20}deg)`,
-                transition: vDrag.actif ? 'none' : 'transform .35s cubic-bezier(.2,1.2,.4,1)',
+                transition: vDrag.actif ? 'none' : 'transform 240ms var(--pose)',
               }}
               onPointerDown={(e) => {
                 vDepart.current = e.clientX

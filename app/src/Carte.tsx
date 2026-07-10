@@ -59,8 +59,8 @@ const enrober = (el: HTMLElement): HTMLElement => {
   return porteur
 }
 
-// V5 « l'encre se dépose, le tampon frappe » : courbe sèche, jamais de rebond
-const COURBE_ENCRE = 'cubic-bezier(0.22, 1, 0.36, 1)'
+// V5 « l'encre se dépose, le tampon frappe » : LA pose (§6), jamais de rebond
+const COURBE_ENCRE = 'var(--pose)'
 
 // naissance d'un pin depuis le ventre de son ex-grappe : posé à sa vraie
 // position, il PART visuellement du centroïde (translate écran) et vole
@@ -71,7 +71,7 @@ const naitreDepuis = (el: HTMLElement, dx: number, dy: number, retard: number) =
   el.style.willChange = 'transform'
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
-      el.style.transition = `transform 260ms ${COURBE_ENCRE} ${retard}ms, opacity 160ms ease-out ${retard}ms`
+      el.style.transition = `transform 260ms ${COURBE_ENCRE} ${retard}ms, opacity 160ms ${COURBE_ENCRE} ${retard}ms`
       el.style.transform = ''
       el.style.opacity = ''
       window.setTimeout(() => {
@@ -87,7 +87,7 @@ const naitreDepuis = (el: HTMLElement, dx: number, dy: number, retard: number) =
 // la clé de `poses` : le diffing reste cohérent pendant le vol.
 const absorberVers = (mk: maplibregl.Marker, el: HTMLElement, dx: number, dy: number) => {
   el.style.willChange = 'transform'
-  el.style.transition = `transform 220ms ease-in, opacity 180ms ease-in`
+  el.style.transition = `transform 220ms var(--tourne), opacity 180ms var(--tourne)`
   el.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`
   el.style.opacity = '0'
   window.setTimeout(() => mk.remove(), 240)
@@ -95,7 +95,7 @@ const absorberVers = (mk: maplibregl.Marker, el: HTMLElement, dx: number, dy: nu
 
 // sortie d'une pastille qui éclate (zoom avant) : elle se résorbe sur place
 const resorber = (mk: maplibregl.Marker, el: HTMLElement) => {
-  el.style.transition = 'transform 160ms ease-in, opacity 140ms ease-in'
+  el.style.transition = 'transform 160ms var(--tourne), opacity 140ms var(--tourne)'
   el.style.transform = 'scale(0.6)'
   el.style.opacity = '0'
   window.setTimeout(() => mk.remove(), 180)

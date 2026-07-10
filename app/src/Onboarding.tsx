@@ -264,7 +264,7 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
         className="onboard-carte"
         style={{
           transform: `translateX(${drag.x}px) rotate(${drag.x / 14}deg)`,
-          transition: drag.actif ? 'none' : 'transform .3s ease',
+          transition: drag.actif ? 'none' : 'transform 240ms var(--pose)',
         }}
         onPointerDown={(e) => {
           depart.current = e.clientX

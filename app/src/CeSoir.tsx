@@ -319,7 +319,7 @@ function QuestionsSwipe({
           className="qs-choix"
           style={{
             transform: `translate(${drag.x}px, ${drag.y < 0 ? drag.y * 0.4 : 0}px)`,
-            transition: drag.actif ? 'none' : 'transform .3s cubic-bezier(.2,1.2,.4,1)',
+            transition: drag.actif ? 'none' : 'transform 240ms var(--pose)',
           }}
         >
           {/* on voit les voisins (estompés) → on sait ce qui vient avant/après */}
@@ -379,6 +379,13 @@ function Deck({
   const [voixIndex, setVoixIndex] = useState(0)
   const [drag, setDrag] = useState({ x: 0, y: 0, actif: false })
   const depart = useRef({ x: 0, y: 0 })
+  // V5 §6 : la carte relâchée PART comme une carte jetée — elle hérite de la
+  // vitesse du geste (px/ms), le verdict tombe à la fin du vol (240 ms)
+  const [envol, setEnvol] = useState<{ x: number; y: number } | null>(null)
+  const vitesse = useRef({ vx: 0, vy: 0, t: 0 })
+  const envolFin = useRef<(() => void) | null>(null)
+  // démontage en plein vol : on solde le verdict — jamais de swipe perdu
+  useEffect(() => () => envolFin.current?.(), [])
   // lot B : les lieux « jetés » au récap (appui long) → ils sortent de la vue
   const [jetes, setJetes] = useState<Set<string>>(new Set())
 
@@ -418,8 +425,16 @@ function Deck({
   }
 
   const lieu = deck[index]
-  const rotation = drag.x / 18
-  const verdict = drag.x > 60 ? 'valide' : drag.x < -60 ? 'bof' : null
+  const rotation = (envol ? envol.x : drag.x) / 18
+  const verdict = envol
+    ? envol.x > 0
+      ? 'valide'
+      : 'bof'
+    : drag.x > 60
+      ? 'valide'
+      : drag.x < -60
+        ? 'bof'
+        : null
   const nbPhotos = lieu.photos.length
 
   // même honnêteté que la fiche : une voix sans auteurId = du seed → « démo »
@@ -440,21 +455,48 @@ function Deck({
     setVoixIndex(0)
   }
 
+  // le jet : la carte part avec la vitesse du geste, puis le verdict tombe
+  const jeter = (v: Verdict) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      suivant(v) // pas de vol : le verdict tombe sec
+      return
+    }
+    const sens = v === 'valide' ? 1 : -1
+    // plancher 1,2 px/ms : une carte se JETTE, elle ne se range pas
+    const vx = Math.max(Math.abs(vitesse.current.vx), 1.2) * sens
+    setEnvol({ x: drag.x + vx * 240, y: drag.y * 0.3 + vitesse.current.vy * 120 })
+    const fin = () => {
+      envolFin.current = null
+      window.clearTimeout(timer)
+      setEnvol(null)
+      suivant(v)
+    }
+    const timer = window.setTimeout(fin, 240)
+    envolFin.current = fin
+  }
+
   const onDown = (e: React.PointerEvent) => {
+    if (envol) return // la carte précédente est encore en vol
     depart.current = { x: e.clientX, y: e.clientY }
+    vitesse.current = { vx: 0, vy: 0, t: performance.now() }
     setDrag({ x: 0, y: 0, actif: true })
     ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
   }
   const onMove = (e: React.PointerEvent) => {
     if (!drag.actif) return
-    setDrag({ x: e.clientX - depart.current.x, y: e.clientY - depart.current.y, actif: true })
+    const x = e.clientX - depart.current.x
+    const y = e.clientY - depart.current.y
+    const t = performance.now()
+    const dt = t - vitesse.current.t
+    if (dt > 0) vitesse.current = { vx: (x - drag.x) / dt, vy: (y - drag.y) / dt, t }
+    setDrag({ x, y, actif: true })
   }
   const onUp = (e: React.PointerEvent) => {
     const cible = e.target as HTMLElement
     if (drag.x > 90) {
-      suivant('valide')
+      jeter('valide')
     } else if (drag.x < -90) {
-      suivant('bof')
+      jeter('bof')
     } else if (
       // swipe haut/bas sur la photo = feuilleter (partout pareil dans l'app)
       Math.abs(drag.y) > 40 &&
@@ -490,10 +532,13 @@ function Deck({
       )}
       <div className="pile">
         <div
+          key={lieu.id} /* nouvelle carte = nouveau nœud : pas de glissement hérité */
           className="carte-lieu"
           style={{
-            transform: `translate(${drag.x}px, ${drag.y * 0.3}px) rotate(${rotation}deg)`,
-            transition: drag.actif ? 'none' : 'transform .35s cubic-bezier(.2,1.2,.4,1)',
+            transform: envol
+              ? `translate(${envol.x}px, ${envol.y}px) rotate(${rotation}deg)`
+              : `translate(${drag.x}px, ${drag.y * 0.3}px) rotate(${rotation}deg)`,
+            transition: drag.actif ? 'none' : 'transform 240ms var(--pose)',
           }}
           onPointerDown={onDown}
           onPointerMove={onMove}

@@ -154,14 +154,15 @@ body::before,
 }
 
 /* ── splash ── */
-@keyframes stampIn {
-  0% { transform: rotate(-2deg) scale(1.6); opacity: 0; }
-  60% { transform: rotate(-2deg) scale(0.96); opacity: 1; }
-  100% { transform: rotate(-2deg) scale(1); opacity: 1; }
+/* signature 1 — LE TAMPON FRAPPE : scale 1.15→1 en 90 ms, une seule fois,
+   jamais en boucle. `scale`/`translate` (propriétés séparées) : la frappe
+   compose avec le transform décoratif de l'élément sans l'écraser. */
+@keyframes frappeTampon {
+  from { opacity: 0; scale: 1.15; }
 }
+/* le dépôt d'encre : apparition sèche (§1 — l'encre ne « fade in » pas) */
 @keyframes inkIn {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; translate: 0 10px; }
 }
 .splash {
   position: fixed;
@@ -188,13 +189,14 @@ body::before,
   letter-spacing: 2px;
   border-radius: var(--rayon);
   box-shadow: inset 0 0 18px color-mix(in srgb, var(--red) 25%, transparent);
-  animation: stampIn 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both 0.25s;
+  transform: rotate(-2deg);
+  animation: frappeTampon 90ms var(--frappe) 0.15s backwards;
 }
 .splash-tagline {
   font-style: italic;
   font-size: 21px;
   color: var(--ivory);
-  animation: inkIn 0.8s ease-out both 0.8s;
+  animation: inkIn 150ms var(--pose) 0.35s backwards;
 }
 .splash-pitch {
   font-family: 'Caveat', cursive;
@@ -202,7 +204,7 @@ body::before,
   color: var(--ivory-faded);
   text-align: center;
   line-height: 1.4;
-  animation: inkIn 0.8s ease-out both 1.4s;
+  animation: inkIn 150ms var(--pose) 0.55s backwards;
 }
 
 /* ── l'écran de connexion (magic-link) ── */
@@ -379,7 +381,7 @@ body::before,
   gap: 14px;
   align-items: center;
   box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
-  animation: inkIn 0.25s ease-out both;
+  animation: inkIn 150ms var(--pose) backwards;
 }
 
 /* ── desktop : les fixed se calent sur le conteneur 480px ── */
@@ -392,14 +394,35 @@ body::before,
   }
 }
 
-/* ── transitions de pages — fondu PUR : un transform sur un parent
-   casserait le position:fixed des enfants (météo, fab, nav) ── */
+/* ── signature 4 — LA PAGE TOURNE : l'écran entrant arrive de la tranche
+   droite (translate 12px + rotateY 1.5deg), 240 ms --tourne.
+   `translate`/`rotate` (propriétés séparées) composent avec les transforms
+   décoratifs (fab, toast…) au lieu de les écraser ; `backwards` (pas both) :
+   à la fin, retour aux valeurs de cascade → aucun containing block résiduel
+   pour les enfants position:fixed (voiles, popovers). ── */
 @keyframes pageIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+}
+@keyframes pageTourne {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+    rotate: y 1.5deg;
+  }
 }
 .page > * {
-  animation: pageIn 0.25s ease-out both;
+  animation: pageTourne 240ms var(--tourne) backwards;
+}
+/* exceptions : la carte plein écran (canvas MapLibre — un transform de 240 ms
+   déplacerait ses enfants fixed et coûte cher) et « ce soir » (la météo du
+   portefeuille est fixed DANS l'écran : la tourne la ferait sauter) → fondu
+   pur. le toast, lui, se dépose comme l'encre. */
+.page > .carte,
+.page > .cesoir {
+  animation: pageIn 240ms var(--tourne) backwards;
+}
+.page > .toast {
+  animation: inkIn 150ms var(--pose) backwards;
 }
 
 /* ── le tampon logo ── */
@@ -476,7 +499,7 @@ body::before,
   border-radius: var(--rayon);
   box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
   padding: 12px 14px;
-  animation: sheet-monte 0.18s ease;
+  animation: sheet-monte 150ms var(--pose);
 }
 .notif-section + .notif-section {
   margin-top: 14px;
@@ -839,7 +862,7 @@ body::before,
   border-radius: var(--rayon);
   box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
   padding: 5px;
-  animation: sheet-monte 0.14s ease;
+  animation: sheet-monte 150ms var(--pose);
 }
 /* le menu le plus à droite (« filtres ») s'ouvre vers la gauche */
 .menu-critere-droite .menu-critere-pop {
@@ -1442,7 +1465,7 @@ body::before,
   cursor: pointer;
   color: var(--ivory);
   opacity: 0.5;
-  transition: opacity 0.15s ease, transform 0.12s ease;
+  transition: opacity 150ms var(--pose), transform 120ms var(--pose);
 }
 .idx-favori:hover {
   opacity: 0.85;
@@ -1549,10 +1572,23 @@ body::before,
   font-size: 21px;
   text-transform: none;
   padding: 8px 6px;
+  position: relative;
 }
+/* index·carte : le trait se tire aussi (même signature que la nav du bas) */
 .topbar .topbar-basculer button.on {
-  text-decoration-thickness: 2.5px;
-  text-underline-offset: 6px;
+  text-decoration: none;
+}
+.topbar .topbar-basculer button.on::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 2px;
+  height: 2.5px;
+  background: var(--red);
+  border-radius: var(--rayon);
+  transform-origin: 0 50%;
+  animation: traitTire 180ms var(--pose);
 }
 /* le compteur de spots, au bout de la ligne « trier » : discret */
 .idx-tri-compteur {
@@ -1813,7 +1849,7 @@ button {
   height: 40px;
   transform: translate(-50%, -50%) rotate(0deg);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 150ms var(--pose);
   pointer-events: none;
 }
 .pin-moi-cap::before {
@@ -1883,7 +1919,7 @@ button {
 }
 @media (prefers-reduced-motion: no-preference) {
   .pin.label-on::before {
-    animation: inkIn 0.18s ease both;
+    animation: inkIn 150ms var(--pose) backwards;
   }
 }
 /* feedback au survol : un halo, sans bouger l'ancre du pin */
@@ -2124,16 +2160,16 @@ button {
   border-radius: var(--rayon);
   padding: 12px 14px 12px;
   box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
-  animation: sheet-monte 0.22s ease;
+  animation: sheet-monte 150ms var(--pose);
   overflow: hidden;
   touch-action: none;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
 }
+/* le dépôt du papier : la feuille se pose (translate compose, n'écrase rien) */
 @keyframes sheet-monte {
-  from { transform: translateY(10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { opacity: 0; translate: 0 10px; }
 }
 .carte-sheet-x {
   position: absolute;
@@ -3206,7 +3242,7 @@ button {
   font-size: 13px;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, transform 0.12s;
+  transition: background 120ms var(--pose), color 120ms var(--pose), transform 120ms var(--pose);
 }
 /* A7 : on tire vers le haut → le bouton s'allume (relâcher = valider) */
 .qs-valider.pret {
@@ -3340,7 +3376,7 @@ button {
   50% { border-color: #d9913b; }
 }
 .mot.entouré.pulse::after {
-  animation: pulseReco 0.6s ease-in-out 2;
+  animation: pulseReco 0.3s var(--pose) 2;
 }
 
 /* le deck */
@@ -3420,6 +3456,8 @@ button {
   border: 3px solid;
   border-radius: var(--rayon);
   pointer-events: none;
+  /* VALIDÉ/bof franchit le seuil : une frappe, une seule */
+  animation: frappeTampon 90ms var(--frappe) backwards;
 }
 .tampon.valide {
   color: var(--red);
@@ -3791,7 +3829,7 @@ button {
   align-items: center;
   justify-content: center;
   touch-action: none;
-  animation: sheet-monte 0.18s ease;
+  animation: sheet-monte 150ms var(--pose);
 }
 .photo-zoom img {
   max-width: 100%;
@@ -3982,7 +4020,7 @@ button {
   border-radius: var(--rayon);
   padding: 12px 14px;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 150ms var(--pose);
 }
 .onboard-curateur.suivi {
   border-left-color: var(--red);
@@ -4206,7 +4244,7 @@ button {
   font-size: 11px;
   color: #7cb342;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 150ms var(--pose);
 }
 .reglages-sauve.on {
   opacity: 1;
@@ -4523,14 +4561,9 @@ button {
   border-color: #9a948a;
   background: rgba(20, 18, 14, 0.25);
 }
-/* le coup de tampon : il claque en se posant */
-@keyframes tamponHit {
-  0% { transform: translate(-50%, -50%) rotate(-12deg) scale(1.5); opacity: 0; }
-  60% { transform: translate(-50%, -50%) rotate(-12deg) scale(0.95); opacity: 1; }
-  100% { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; }
-}
+/* le coup de tampon : LA frappe (scale compose avec le translate/rotate de base) */
 .tampon-perso.claque {
-  animation: tamponHit 0.25s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation: frappeTampon 90ms var(--frappe) backwards;
 }
 /* mini-aperçu de la photo prise dans le kit */
 .photo-mini {
@@ -4800,7 +4833,7 @@ button {
   font-size: 17px;
   color: var(--ivory);
   opacity: 0.3;
-  transition: opacity 0.15s, color 0.15s;
+  transition: opacity 150ms var(--pose), color 150ms var(--pose);
 }
 .roue-item.sel {
   color: var(--red);
@@ -4913,16 +4946,21 @@ button {
 .nav-item.actif {
   opacity: 1;
 }
+/* signature 3 — LE TRAIT SE TIRE : l'underline se dessine de gauche à droite */
+@keyframes traitTire {
+  from { transform: scaleX(0); }
+}
 .nav-item.actif::after {
   content: '';
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: calc(50% - 11px);
   bottom: -8px;
   width: 22px;
   height: 3px;
   background: var(--red);
   border-radius: var(--rayon);
+  transform-origin: 0 50%;
+  animation: traitTire 180ms var(--pose);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5206,25 +5244,20 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
    fixes : l'encre se dépose (pins pan-in), le tampon frappe (pastilles). */
 @media (prefers-reduced-motion: no-preference) {
   .pin.pin-depose {
-    animation: deposeEncre 120ms ease-out both;
+    animation: deposeEncre 120ms var(--pose) both;
   }
   .cluster-pastille.cluster-frappe {
-    animation: frappeTampon 90ms ease-out both;
+    /* frappeTampon : défini en tête de feuille (le splash s'en sert aussi) */
+    animation: frappeTampon 90ms var(--frappe) both;
   }
   .cluster-pastille.cluster-tap {
-    animation: tapPastille 100ms ease-out;
+    animation: tapPastille 100ms var(--frappe);
   }
 }
 @keyframes deposeEncre {
   from {
     opacity: 0;
     transform: scale(0.85);
-  }
-}
-@keyframes frappeTampon {
-  from {
-    opacity: 0.4;
-    transform: scale(1.15);
   }
 }
 @keyframes tapPastille {
@@ -5238,7 +5271,6 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
    jamais bloquant : les pointer-events ne vivent que sur le texte. */
 @keyframes noteMargeIn {
   from { opacity: 0; translate: 0 7px; }
-  to { opacity: 1; translate: 0 0; }
 }
 .note-marge {
   display: flex;
@@ -5247,7 +5279,8 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   gap: 7px;
   pointer-events: none;
   z-index: 3;
-  animation: noteMargeIn 0.7s ease-out both 0.4s;
+  /* l'encre se dépose (150 ms), après que la page s'est posée (délai gardé) */
+  animation: noteMargeIn 150ms var(--pose) 0.4s backwards;
 }
 .note-marge-texte {
   pointer-events: auto;
@@ -5340,7 +5373,6 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
 /* le mot scotché de bienvenue : un bout de papier de travers, du vrai scotch */
 @keyframes motScotcheIn {
   from { opacity: 0; translate: 0 10px; }
-  to { opacity: 1; translate: 0 0; }
 }
 .mot-scotche {
   position: fixed;
@@ -5357,7 +5389,7 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   cursor: pointer;
   text-align: left;
-  animation: motScotcheIn 0.6s ease-out both 0.5s;
+  animation: motScotcheIn 150ms var(--pose) 0.5s backwards;
 }
 .mot-scotche::before {
   /* le scotch, à cheval sur le bord haut */
@@ -5458,12 +5490,18 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
     transform: rotate(-5deg);
   }
 }
-/* le développement : du sombre vers l'image, 400 ms, CSS only */
+/* signature 2 — LE POLAROÏD SE DÉVELOPPE : du charbon vers l'image, 400 ms
+   (la SEULE durée > 300 ms : c'est la signature, §6). CSS only. */
 .album-developpe .album-fenetre img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  animation: albumDeveloppement 400ms ease-out both;
+  animation: albumDeveloppement 400ms var(--pose) both;
+}
+/* le tirage de la fiche se développe aussi à l'ouverture (le src change au
+   feuilletage sans re-monter l'img : le développement ne joue qu'une fois) */
+.fiche-carte .carte-photo img {
+  animation: albumDeveloppement 400ms var(--pose) backwards;
 }
 @keyframes albumDeveloppement {
   from {
@@ -5487,9 +5525,46 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   letter-spacing: 0.3px;
   color: var(--ivory-faded);
 }
+/* ── signature 5 — LA CIRE COULE : le sceau apparaît (scale radial, 240 ms).
+   sceau super pote, Grand Jeudi. `scale` compose avec les transforms. ── */
+@keyframes cireCoule {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+.sceau-cire {
+  animation: cireCoule 240ms var(--pose) backwards;
+}
+.grand-jeudi-bandeau {
+  animation: cireCoule 240ms var(--pose) backwards;
+}
+
+/* ── prefers-reduced-motion : tournes et frappes → opacité simple ── */
 @media (prefers-reduced-motion: reduce) {
   .album-vide .album-fenetre svg,
-  .album-developpe .album-fenetre img {
+  .album-developpe .album-fenetre img,
+  .fiche-carte .carte-photo img,
+  .nav-item.actif::after,
+  .topbar .topbar-basculer button.on::after,
+  .tampon,
+  .tampon-perso.claque,
+  .sceau-cire,
+  .grand-jeudi-bandeau,
+  .attente-auth-logo,
+  .pin-moi::before {
     animation: none;
+  }
+  /* la page ne tourne plus, l'encre se dépose sans glisser */
+  .page > *,
+  .page > .carte,
+  .page > .cesoir,
+  .page > .toast {
+    animation: pageIn 150ms ease-out backwards;
+  }
+  .splash-tampon,
+  .splash-tagline,
+  .splash-pitch {
+    animation: pageIn 150ms ease-out backwards;
   }
 }

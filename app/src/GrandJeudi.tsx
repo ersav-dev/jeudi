@@ -53,6 +53,7 @@ export default function GrandJeudi({
           CE JEUDI
         </div>
         <h1
+          className="sceau-cire"
           style={{
             fontStyle: 'italic',
             fontSize: 46,

@@ -3,13 +3,14 @@ import { useEffect, useRef } from 'react'
 // le splash : le tampon claque, la tagline s'encre, on entre. tap = passer.
 export default function Splash({ onFini }: { onFini: () => void }) {
   // onFini est recréé à chaque render du parent → on le garde dans une ref
-  // pour que le timer de 3,8 s ne reparte JAMAIS de zéro (deps []).
+  // pour que le timer de 1,8 s ne reparte JAMAIS de zéro (deps []).
   const finiRef = useRef(onFini)
   useEffect(() => {
     finiRef.current = onFini
   }, [onFini])
   useEffect(() => {
-    const t = setTimeout(() => finiRef.current(), 3800)
+    // V5 §7 : 1,8 s max — un bel objet ne fait pas attendre
+    const t = setTimeout(() => finiRef.current(), 1800)
     return () => clearTimeout(t)
   }, [])
 
