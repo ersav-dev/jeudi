@@ -2956,7 +2956,7 @@ function Fiche({
                     <span key={l.nom} className="mono tip-lecture">
                       {l.nom} :{' '}
                       {l.type === 'gradue' ? (
-                        {/* pastilles ●●○ à l'encre pleine — la cire de la fiche reste au tampon */}
+                        /* pastilles ●●○ à l'encre pleine — la cire de la fiche reste au tampon */
                         <span style={{ color: 'var(--encre)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>
                       ) : (
                         <span>{l.oui ? 'oui' : 'non'}</span>
