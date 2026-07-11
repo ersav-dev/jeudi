@@ -182,12 +182,15 @@ export default function LigneIndex({
               </div>
             </div>
             <div className="idx-infos">
-              <div className="idx-nom-rang">
-                <span className="idx-nom">{lieu.nom}</span>
-                {signet()}
-              </div>
-              <div className="mono idx-dist">
-                <IPosition taille={11} /> {formatDistance(dist)} · {tempsMarche(dist)} min
+              {/* la ligne du registre : nom serif à gauche, méta mono à droite */}
+              <div className="idx-ligne1">
+                <div className="idx-nom-rang">
+                  <span className="idx-nom">{lieu.nom}</span>
+                  {signet()}
+                </div>
+                <div className="mono idx-dist">
+                  <IPosition taille={11} /> {formatDistance(dist)} · {tempsMarche(dist)} min
+                </div>
               </div>
               {sig ? (
                 <div className="mono idx-sig">

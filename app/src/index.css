@@ -700,14 +700,16 @@ body::before,
   margin: 2px 0 0;
 }
 
-/* ── les fiches recto/verso de l'index ── */
+/* ── l'index = le REGISTRE du carnet (§7) : chaque lieu est une LIGNE,
+   pas une carte — un filet graphite sépare les entrées, rien d'autre ── */
 .idx-carte {
   list-style: none;
-  background: var(--paper);
-  border: 1px solid rgba(239, 233, 216, 0.15);
-  border-radius: var(--rayon);
-  padding: 14px;
-  margin-bottom: 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+  border-radius: 0;
+  padding: 14px 2px 12px;
+  margin-bottom: 0;
   position: relative;
   touch-action: pan-y;
   user-select: none;
@@ -715,6 +717,7 @@ body::before,
 /* un spot du cercle (lecture seule) : liseré rouge cire à gauche */
 .idx-carte.idx-cercle {
   border-left: 3px solid var(--red);
+  padding-left: 10px;
 }
 /* à découvrir (jamais sorti) : un petit tag en haut à GAUCHE (loin du menu ⋯),
    sur fond charbon pour qu'il ne déborde pas / ne soit pas coupé */
@@ -1008,32 +1011,37 @@ body::before,
 .idx-polaroid {
   flex: 0 0 96px;
 }
+/* §7 : la vignette n'est plus un polaroïd incliné — une photo posée droite,
+   coins 3px (la page massicotée), c'est tout */
 .idx-photo {
-  background: var(--encre);
-  padding: 5px 5px 12px;
-  transform: rotate(-2deg);
+  background: none;
+  padding: 0;
   position: relative;
 }
 .idx-photo > img,
 .idx-photo > .idx-sansphoto {
   display: block;
   width: 100%;
-  height: 78px;
+  height: 84px;
   object-fit: cover;
   background: #2a261f;
+  border-radius: var(--rayon);
 }
 .idx-sansphoto {
   display: flex !important;
   align-items: center;
   justify-content: center;
   color: rgba(239, 233, 216, 0.45);
+  /* règle d'or §5 : c'est l'app qui parle → serif italic, pas Caveat */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 13px;
 }
 /* même allure que le tampon de validation : encadré épais, 2 lignes, incliné */
 .idx-tampon {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
+  bottom: 6px;
+  right: 6px;
   transform: rotate(-8deg);
   border: 2.5px solid var(--red);
   border-radius: var(--rayon);
@@ -1082,8 +1090,23 @@ body::before,
   flex: 1;
   min-width: 0;
 }
+/* la 1re ligne du registre : nom à gauche, méta mono alignée à DROITE
+   (padding-right : la place du menu ⋯ posé en absolu ; nom long → la méta
+   descend d'une ligne, toujours à droite) */
+.idx-ligne1 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding-right: 50px;
+}
+.idx-ligne1 .idx-dist {
+  margin-left: auto;
+}
 .idx-nom {
   font-family: 'Instrument Serif', serif;
+  font-style: italic; /* §5 : la voix du carnet */
   font-size: 21px;
   color: var(--ivory);
   line-height: 1.1;
@@ -1091,7 +1114,8 @@ body::before,
 .idx-dist {
   font-size: 11px;
   color: rgba(239, 233, 216, 0.6);
-  margin-top: 3px;
+  white-space: nowrap;
+  text-align: right;
 }
 .idx-sig {
   font-size: 11px;
@@ -1335,8 +1359,10 @@ body::before,
   padding: 8px;
   text-align: center;
 }
+/* §5 : les chiffres (distance, heure) en mono TABULAIRE — ils tombent droit */
 .idx-case-gros {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
   font-size: 17px;
   color: var(--ivory);
 }
@@ -1426,13 +1452,17 @@ body::before,
   justify-content: center;
   height: 100%;
   color: rgba(239, 233, 216, 0.45);
+  /* règle d'or §5 : voix de l'app → serif italic */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 17px;
 }
 .idx-photos .idx-nom {
   margin-top: 8px;
 }
 
-/* l'indicateur de pages : infos · photos · plan */
+/* l'indicateur de pages : infos · photos · plan — des TRAITS de crayon,
+   pas des points iOS ; le trait actif se tire (signature 3, §6) */
 .idx-points {
   display: flex;
   align-items: center;
@@ -1440,9 +1470,8 @@ body::before,
   margin-top: 12px;
 }
 .idx-points > span:not(.idx-points-lbl):not(.idx-points-tester) {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 12px;
+  height: 2px;
   background: rgba(239, 233, 216, 0.25);
 }
 .idx-points > span:not(.idx-points-lbl):not(.idx-points-tester) {
@@ -1452,7 +1481,8 @@ body::before,
 .idx-points > span:not(.idx-points-lbl):not(.idx-points-tester).on {
   background: var(--ivory);
   opacity: 0.85;
-  transform: scale(1.2);
+  transform-origin: left center;
+  animation: traitSeTire 180ms var(--pose);
 }
 .idx-points-lbl {
   margin-left: 6px;
@@ -1490,11 +1520,11 @@ body::before,
   transform: scale(0.85);
 }
 
-/* le menu d'options "⋯" en haut à droite de la fiche */
+/* le menu d'options "⋯" en haut à droite de la ligne du registre */
 .idx-menu-zone {
   position: absolute;
-  top: 20px;
-  right: 12px;
+  top: 14px;
+  right: 2px;
   z-index: 3;
 }
 .idx-menu-btn {
@@ -2234,6 +2264,7 @@ button {
 }
 .carte-sheet-nom {
   font-family: 'Instrument Serif', serif;
+  font-style: italic; /* §5 : la voix du carnet, comme la fiche */
   font-size: 21px;
   color: var(--print-white);
   padding-right: 18px;
@@ -2308,18 +2339,20 @@ button {
 .carte-sheet-pied.nu {
   justify-content: center;
 }
+/* les pages du sheet : des traits de crayon, l'actif SE TIRE (§6, sign. 3) */
 .carte-sheet-pagedots {
   display: flex;
   gap: 4px;
 }
 .carte-sheet-pagedots span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: 12px;
+  height: 2px;
   background: rgba(239, 233, 216, 0.4);
 }
 .carte-sheet-pagedots span.on {
-  background: var(--red);
+  background: var(--encre);
+  transform-origin: left center;
+  animation: traitSeTire 180ms var(--pose);
 }
 .carte-sheet-fiche {
   margin-left: auto;
@@ -2332,11 +2365,10 @@ button {
   font-size: 11px;
   cursor: pointer;
 }
-/* lieu sélectionné « à comparer » : le bouton devient « comparer » en jaune */
+/* lieu sélectionné « à comparer » : l'étiquette passe au jaune comparaison */
 .carte-sheet-fiche.comparer {
-  border-color: #d8ad44;
-  color: #f0c95a;
-  background: rgba(216, 173, 68, 0.14);
+  background: #d8ad44;
+  color: var(--nuit);
 }
 
 /* #11 : le carrousel horizontal des lieux, en bas */
@@ -2357,6 +2389,8 @@ button {
 .carte-carrousel::-webkit-scrollbar {
   display: none;
 }
+/* §7 : les cartes du carrousel = des ÉTIQUETTES PAPIER (papier d'impression,
+   encre dessus, ombre de contact) — la photo vit dans le sheet, pas ici */
 .carte-card {
   position: relative;
   flex: 0 0 auto;
@@ -2369,49 +2403,35 @@ button {
   max-width: 190px;
   height: 78px;
   text-align: left;
-  background: rgba(20, 18, 14, 0.92);
-  border: 1px solid rgba(239, 233, 216, 0.2);
+  background: var(--print-white);
+  border: none;
   border-radius: var(--rayon);
   padding: 8px 10px;
   cursor: pointer;
   overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  opacity: 0.85;
 }
-/* la photo du lieu en fond : floue + sombre, pour que le nom reste lisible */
+/* l'étiquette ne porte pas de photo : elle dit le nom, c'est tout */
 .carte-card-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(2px) brightness(0.42) saturate(0.85);
-  z-index: 0;
-  pointer-events: none;
-}
-/* un voile dégradé en plus, du bas vers le haut, sous le texte */
-.carte-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to top, rgba(20, 18, 14, 0.85) 10%, rgba(20, 18, 14, 0.15) 90%);
-  pointer-events: none;
+  display: none;
 }
 .carte-card.on {
-  border-color: var(--red);
-}
-.carte-card.on .carte-card-bg {
-  filter: blur(1.5px) brightness(0.5) saturate(1);
+  opacity: 1;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1.5px #211d19; /* l'étiquette épinglée : cernée à l'encre */
 }
 .carte-card-nom {
   position: relative;
   z-index: 2;
   font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 17px;
-  color: var(--print-white);
+  color: #211d19;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 .carte-card-dist {
   position: relative;
@@ -2421,16 +2441,17 @@ button {
   justify-content: space-between;
   align-items: baseline;
   font-size: 11px;
-  color: var(--ivory);
+  color: rgba(33, 29, 25, 0.72);
   letter-spacing: 0.5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .carte-card-min {
   opacity: 0.6;
 }
-/* #11+ : carte marquée « à comparer » (clic long) */
+/* #11+ : carte marquée « à comparer » (clic long) — cerne doré */
 .carte-card.a-comparer {
-  border-color: #c99a2e;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1.5px #c99a2e;
 }
 .carte-card-vs {
   position: absolute;
@@ -2998,11 +3019,34 @@ button {
   font-size: 11px;
   cursor: pointer;
 }
-/* contrôles zoom/boussole/géoloc : on garde le rendu natif maplibre,
-   on agrandit juste un peu la cible tactile sans déformer les icônes */
+/* §7 : contrôles zoom/boussole = des INSTRUMENTS mono — carrés 3px,
+   encre sur nuit-2, ombre de contact. Les glyphes +/− sont dessinés au
+   mono (l'icône native saute) ; boussole et géoloc gardent leur icône,
+   ré-encrée par le filtre plus bas. */
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
+}
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  background-image: none;
+  filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon::after,
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon::after {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--encre);
+}
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon::after {
+  content: '+';
+}
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon::after {
+  content: '−';
 }
 /* contrôles de carte : en bas à droite (zone du pouce), au-dessus du + */
 .maplibregl-ctrl-bottom-right {
@@ -3037,14 +3081,16 @@ button {
   pointer-events: none;
 }
 .maplibregl-ctrl-group {
-  background: var(--paper-2) !important;
+  background: var(--paper-2) !important; /* encre sur nuit-2 */
   border: 1px solid rgba(239, 233, 216, 0.25);
-  border-radius: var(--rayon);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5) !important;
+  border-radius: var(--rayon); /* le carré 3px de l'instrument */
+  overflow: hidden; /* les coins natifs arrondis des boutons sautent */
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5) !important; /* ombre de contact */
 }
 .maplibregl-ctrl-group button {
   width: 40px;
   height: 40px;
+  border-radius: 0;
 }
 .maplibregl-ctrl-group button + button {
   border-top: 1px dotted rgba(239, 233, 216, 0.25) !important;
@@ -3549,8 +3595,16 @@ button {
   background: rgba(251, 248, 241, 0.35);
   border-radius: var(--rayon);
 }
+/* signature 3 (§6) : le trait actif SE TIRE — il se dessine, il n'apparaît pas */
+@keyframes traitSeTire {
+  from {
+    transform: scaleX(0);
+  }
+}
 .photo-tirets span.on {
   background: var(--print-white);
+  transform-origin: left center;
+  animation: traitSeTire 180ms var(--pose);
 }
 .carte-photo {
   position: relative;
@@ -3850,6 +3904,32 @@ button {
   padding: calc(16px + env(safe-area-inset-top)) 20px calc(30px + env(safe-area-inset-bottom));
   max-width: 480px;
   margin: 0 auto;
+  /* la page se pose (§6 --pose), elle ne slide pas façon iOS */
+  animation: sheet-monte 150ms var(--pose);
+}
+/* §7 : la poignée = un COIN CORNÉ, pas une barre grise iOS. Au-dessus de la
+   diagonale : l'ombre de la table (le pli découpe la page) ; en dessous : le
+   dos de la feuille qui prend la lumière. Il défile avec la page — c'est le
+   coin de la page, pas un widget flottant. */
+.fiche::after,
+.carte-sheet::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    225deg,
+    #0d0b08 0%,
+    #0d0b08 49.5%,
+    #2e2a23 50%,
+    var(--nuit-3) 100%
+  );
+  border-bottom-left-radius: var(--rayon);
+  box-shadow: -1px 1px 1px rgba(0, 0, 0, 0.35);
 }
 .fiche-retour {
   margin-bottom: 14px;
@@ -3940,29 +4020,36 @@ button {
 .fiche-tips {
   margin-top: 26px;
 }
+/* le label de section : au crayon (le budget --cire reste au tampon) */
 .fiche-tips .lbl {
   display: block;
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--graphite);
   margin-bottom: 10px;
 }
+/* §7 : les tips SANS bulles — chaque voix sur sa ligne de marge (même langue
+   que .carte-voix du deck), un filet graphite entre deux voix */
 .tip {
-  padding: 10px 0;
-  border-bottom: 1px dotted rgba(239, 233, 216, 0.25);
+  padding: 10px 0 10px 10px;
+  border-left: 1px solid var(--graphite);
+}
+.tip + .tip {
+  border-top: 1px solid color-mix(in srgb, var(--graphite) 35%, transparent);
 }
 .tip-signature {
   font-size: 11px;
   letter-spacing: 0.5px;
+  color: var(--encre-3);
 }
-/* le nom du recommandeur, cliquable → sa carte */
+/* le nom du recommandeur, cliquable → sa carte (à l'encre, pas à la cire) */
 .tip-auteur-lien {
   background: none;
   border: none;
   padding: 0;
   font: inherit;
-  color: var(--red);
+  color: var(--encre);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -4776,7 +4863,7 @@ button {
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--graphite); /* label système : au crayon, pas à la cire */
   margin-bottom: 6px;
 }
 /* infos pratiques sur la fiche : distance · ouvert/fermé */
@@ -4792,9 +4879,11 @@ button {
   padding: 10px 8px;
   text-align: center;
 }
+/* §5 : chiffres en mono tabulaire, comme partout dans le carnet */
 .fiche-case-gros {
-  font-family: 'Instrument Serif', serif;
-  font-size: 21px;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
   color: var(--ivory);
 }
 .fiche-case-gros.ouvert {
@@ -4821,10 +4910,35 @@ button {
   text-align: center;
   text-decoration: none;
 }
+/* §7 : les boutons d'action = des ÉTIQUETTES PAPIER collées sur la page —
+   papier d'impression, encre au mono, ombre de contact, très léger biais */
+.fiche-actions .valider,
+.fiche-adopter,
+.idx-itineraire,
+.carte-sheet-fiche {
+  background: var(--print-white);
+  color: #211d19;
+  border: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  border-radius: var(--rayon);
+}
+.fiche-actions .valider {
+  padding: 12px 10px;
+  transform: rotate(-0.6deg);
+}
+.fiche-actions .valider + .valider {
+  transform: rotate(0.5deg);
+}
+.fiche-actions .valider:active {
+  transform: translateY(1px);
+}
 .fiche-emmener {
-  background: none;
-  border: 1px solid var(--red);
-  color: var(--red);
+  background: var(--print-white);
 }
 .fiche-partage {
   margin-top: 0;
