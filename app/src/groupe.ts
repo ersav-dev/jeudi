@@ -4,7 +4,8 @@
 // triangulation des envies + contraintes), puis le groupe « réagit »
 // (langage de réactions agrégé). Aucune dépendance UI ici — que de la logique.
 //
-// Branché sur l'écran labo EcranGroupe.tsx (compose → swipe → match).
+// Branché sur « sortir à plusieurs » (onglet cercle) — EcranGroupe.tsx
+// (compose → swipe → match).
 // ════════════════════════════════════════════════════════════════
 import {
   type Lieu,

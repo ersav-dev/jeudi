@@ -12,10 +12,12 @@ import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
 import { MEMBRES } from './seed'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
+import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
 
-// Écran « labo » : surface le moteur de recherche/reco personnalisé.
-// Philosophie (CONCEPT.md) : la recherche RÉPOND (pull) → tout le public, mais
-// confiance d'abord, et « ça répond, ça ne liste pas » (sans intention = pour toi).
+// L'onglet « trouver » (ex-labo, promu à part entière) : le moteur de
+// recherche/reco personnalisé. Philosophie (CONCEPT.md) : la recherche RÉPOND
+// (pull) → tout le public, mais confiance d'abord, et « ça répond, ça ne
+// liste pas » (sans intention = pour toi).
 export default function Recherche({
   lieux,
   onOuvrir,
@@ -108,11 +110,16 @@ export default function Recherche({
   // échelle) ont migré vers les classes .labo-* en fin d'index.css
   const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
 
+  // la promesse du grand jeudi : une ligne, pas un bouton (le jour J, c'est
+  // la bannière — posée par App — qui prend le relais)
+  const joursGJ = joursAvantGrandJeudi(new Date())
+
   return (
     <div style={{ color: 'var(--ivory)' }}>
+      {/* l'en-tête d'onglet : la voix serif, la glose mono */}
       <h2 className="labo-titre">trouver.</h2>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 14px' }}>
-        ce que tu cherches, croisé avec tes habitudes
+        dis ce que tu cherches, jeudi répond
       </p>
 
       <input
@@ -210,6 +217,13 @@ export default function Recherche({
           <p style={{ opacity: 0.5, fontStyle: 'italic' }}>rien sous la main. essaie une autre envie.</p>
         )}
       </div>
+
+      {/* le grand jeudi : pas un bouton, une promesse (le 1ᵉʳ jeudi du mois) */}
+      {!estCeLeGrandJeudi(new Date()) && (
+        <p className="mono gj-promesse">
+          le grand jeudi · dans {joursGJ} jour{joursGJ > 1 ? 's' : ''}
+        </p>
+      )}
     </div>
   )
 }

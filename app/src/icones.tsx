@@ -85,6 +85,13 @@ export const ISignet = ({ taille, plein }: { taille?: number; plein?: boolean })
     <path d="M7 4h10v16l-5-3.5L7 20z" />
   </svg>
 )
+// la loupe (onglet « trouver ») : le verre et son manche, à l'encre
+export const ILoupe = ({ taille }: { taille?: number }) => (
+  <Svg taille={taille}>
+    <circle cx="10.5" cy="10.5" r="6.3" />
+    <path d="M15.2 15.2 20 20" />
+  </Svg>
+)
 // l'anneau (super pote) : deux cercles concentriques, l'anneau intérieur de la
 // confiance — un sceau, PAS une étoile (la DA les interdit).
 export const IAnneau = ({ taille }: { taille?: number }) => (

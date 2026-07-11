@@ -6,7 +6,7 @@
 //
 // Moteur PUR : il ne lit pas le stockage lui-même. Le caller lui passe
 // l'historique (construit depuis db.ts) → reste testable et sans couplage.
-// Branché sur l'écran labo EcranRecherche.tsx.
+// Branché sur l'onglet « trouver » — EcranRecherche.tsx.
 // ════════════════════════════════════════════════════════════════
 import {
   type Lieu,

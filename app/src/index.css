@@ -5616,29 +5616,12 @@ button {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   V5 bloc 4 — chasse au slop : écrans labo (trouver · avec mes
-   potes) + onglets du labo. Classes migrées des styles inline qui
+   V5 bloc 4 — chasse au slop : écrans « trouver » (onglet) et
+   « sortir à plusieurs » (dans le cercle). Le labo est mort — ses
+   sous-onglets aussi. Classes migrées des styles inline qui
    violaient la charte : rayon unique (plus de pilules 999px ni de
    coins 10-12px), échelle typo 34/21/17/13/11, encres aux tokens.
    ══════════════════════════════════════════════════════════════ */
-
-/* les onglets du labo : des étiquettes, pas des boutons web */
-.labo-onglet {
-  flex: 1;
-  padding: 9px 4px;
-  border-radius: var(--rayon);
-  border: 1px solid var(--ivory-faded);
-  background: transparent;
-  color: var(--ivory);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-}
-.labo-onglet.on {
-  border-color: var(--encre); /* l'onglet actif s'encre (§4 : pas de cire d'état) */
-  background: var(--encre);
-  color: var(--nuit);
-}
 
 /* la voix du carnet : même titre que partout ailleurs */
 .labo-titre {
@@ -5746,4 +5729,64 @@ button {
 /* fiche « à travers leurs yeux » : la lecture d'un critère (11, l'échelle) */
 .tip-lecture {
   font-size: 11px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   la nav respire — le labo est mort, ses habitants ont déménagé :
+   « sortir à plusieurs » (cercle) · le grand jeudi (rendez-vous).
+   ══════════════════════════════════════════════════════════════ */
+
+/* l'entrée du match de groupe : l'étiquette papier, EN TÊTE du cercle
+   (même matière que « invite un pote », marges recadrées) */
+.sortir-groupe {
+  margin: 2px auto 22px;
+}
+
+/* la bannière du jour J (1ᵉʳ jeudi du mois) : une étiquette papier posée en
+   tête de « ce soir » et « trouver ». UNE cire : le cap — c'est l'événement. */
+.gj-banniere {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 13px 16px;
+  background: var(--nuit-2);
+  border: 1px solid color-mix(in srgb, var(--graphite) 45%, transparent);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); /* posée, pas flottante */
+  text-align: left;
+  transform: rotate(-0.6deg);
+  cursor: pointer;
+}
+.gj-banniere:active {
+  transform: rotate(-0.6deg) translateY(1px);
+}
+.gj-banniere-cap {
+  display: block;
+  letter-spacing: 2px;
+  color: var(--cire); /* LA cire de la bannière (sanctionnée : c'est le jour J) */
+}
+.gj-banniere-mot {
+  display: block;
+  margin-top: 4px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.15;
+  color: var(--encre);
+}
+
+/* la promesse, les autres jours (dans « trouver ») : une ligne mono, pas un
+   bouton — le rendez-vous s'annonce, il ne se demande pas */
+.gj-promesse {
+  margin: 30px 0 0;
+  text-align: center;
+  letter-spacing: 1px;
+  color: var(--encre-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* l'écran du grand jeudi en plein écran (hérite du voile .fiche) */
+.gj-plein .gj-voile {
+  min-height: 76vh; /* le retour reste en haut, le voile occupe la nuit */
 }

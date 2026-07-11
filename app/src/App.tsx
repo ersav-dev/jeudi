@@ -9,10 +9,12 @@ import type { Session } from '@supabase/supabase-js'
 import PickerCouleur from './PickerCouleur'
 import { importerSeed, MEMBRES } from './seed'
 import { srcPhoto } from './photos'
-import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau } from './icones'
+import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
-import GrandJeudi from './GrandJeudi'
+import GrandJeudi from './EcranGrandJeudi'
+// le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
+import { estCeLeGrandJeudi } from './grandJeudi'
 import {
   mesCriteres,
   ajouterCritere,
@@ -137,7 +139,10 @@ const VISIBILITES: { v: Visibilite; icone: React.ReactNode; label: string }[] = 
   { v: 'public', icone: <IGlobe taille={15} />, label: 'public' },
 ]
 
-type Onglet = 'cesoir' | 'macarte' | 'cercle' | 'profil' | 'labo'
+// la nav respire : 5 onglets explicites, le labo est mort. « trouver » est
+// l'ex-recherche du labo promue à part entière ; le match de groupe vit dans
+// « le cercle » ; le grand jeudi n'est plus un onglet, c'est un rendez-vous.
+type Onglet = 'cesoir' | 'trouver' | 'macarte' | 'cercle' | 'profil'
 
 const labelHeure = (x: number) => `${Math.floor(x) % 24}h${x % 1 === 0.5 ? '30' : ''}`
 // valeur de départ quand une borne passe d'inconnue à définie
@@ -330,7 +335,7 @@ function StatProfil({ n, l, onClick }: { n: React.ReactNode; l: string; onClick?
   )
 }
 
-function Reglages({ lieux }: { lieux: Lieu[] }) {
+function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => void }) {
   const [couleur, setCouleur] = useState(() => lireCouleur())
   const [s1, setS1] = useState(() => String(lireSeuils()[0]))
   const [s2, setS2] = useState(() => String(lireSeuils()[1]))
@@ -562,7 +567,25 @@ function Reglages({ lieux }: { lieux: Lieu[] }) {
       >
         relire les notes en marge
       </button>
+
+      {/* le grand jeudi arrive tout seul (1ᵉʳ jeudi du mois) — cette ligne de
+          colophon sert juste à jeter un œil sans attendre le jour J */}
+      <button className="lien reglages-relire" onClick={onGrandJeudi}>
+        aperçu du grand jeudi
+      </button>
     </div>
+  )
+}
+
+// ── la bannière du jour J : le 1ᵉʳ jeudi du mois, en tête de « ce soir »
+// et « trouver ». une étiquette papier + UNE cire (le cap) — elle ouvre
+// l'écran du grand jeudi (le voile). ──
+function BanniereGrandJeudi({ onOuvrir }: { onOuvrir: () => void }) {
+  return (
+    <button className="gj-banniere" onClick={onOuvrir}>
+      <span className="mono gj-banniere-cap">le grand jeudi</span>
+      <span className="gj-banniere-mot">ce soir, le voile tombe. toute la ville.</span>
+    </button>
   )
 }
 
@@ -584,7 +607,18 @@ export default function App() {
   // appui long = barré (sans foot / refuge). timer du long-press.
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
-  const [labo, setLabo] = useState<'trouver' | 'potos' | 'grandjeudi'>('trouver')
+  // le match de groupe vit dans l'onglet cercle : l'étiquette « sortir à
+  // plusieurs → » ouvre le parcours composer → trianguler → swiper → match
+  const [sortieGroupe, setSortieGroupe] = useState(false)
+  // l'écran du grand jeudi : ouvert par la bannière du jour J, ou par la
+  // ligne « aperçu du grand jeudi » des réglages (pour tester sans attendre)
+  const [gjOuvert, setGjOuvert] = useState(false)
+  // entrer dans « le cercle » ramène toujours à sa racine (jamais au milieu
+  // du parcours de groupe) — navigation retour propre
+  const allerAuCercle = () => {
+    setSortieGroupe(false)
+    setOnglet('cercle')
+  }
   // mes critères (ma façon de juger un lieu) — binaire / gradué ●●○
   const [criteres, setCriteres] = useState(() => mesCriteres())
   const [nouvCrit, setNouvCrit] = useState('')
@@ -1062,7 +1096,7 @@ export default function App() {
                   carte
                 </button>
               </span>
-            ) : (
+            ) : onglet === 'trouver' ? null : ( // « trouver » porte son propre en-tête d'onglet
               <span className="topbar-titre">
                 {onglet === 'cesoir'
                   ? 'ce soir'
@@ -1459,14 +1493,29 @@ export default function App() {
       )}
 
       {onglet === 'cesoir' && (
-        <CeSoir
-          lieux={mesLieux}
-          onVoir={(l) => ouvrirFiche(l, mesLieux)}
-          onComparer={(ids) => {
-            setComparer(ecrireComparer(ids))
-            setCompaOuverte(true)
-          }}
-        />
+        <>
+          {estCeLeGrandJeudi(new Date()) && (
+            <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
+          )}
+          <CeSoir
+            lieux={mesLieux}
+            onVoir={(l) => ouvrirFiche(l, mesLieux)}
+            onComparer={(ids) => {
+              setComparer(ecrireComparer(ids))
+              setCompaOuverte(true)
+            }}
+          />
+        </>
+      )}
+
+      {/* « trouver » : l'ex-recherche du labo, promue onglet à part entière */}
+      {onglet === 'trouver' && (
+        <>
+          {estCeLeGrandJeudi(new Date()) && (
+            <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
+          )}
+          <Recherche lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+        </>
       )}
 
       {onglet === 'profil' && (
@@ -1509,7 +1558,7 @@ export default function App() {
                 <StatProfil
                   n={`${proches.length}/${CAP_PROCHES}`}
                   l="super potes"
-                  onClick={() => setOnglet('cercle')}
+                  onClick={allerAuCercle}
                 />
               </div>
             </div>
@@ -1570,12 +1619,12 @@ export default function App() {
           </TitreSection>
           <div className="profil-potes">
             {membresCercle.filter((m) => proches.includes(m.id)).map((m) => (
-              <button key={m.id} className="profil-pote" onClick={() => setOnglet('cercle')}>
+              <button key={m.id} className="profil-pote" onClick={allerAuCercle}>
                 <span className="exlibris-initiale">{m.prenom[0]}</span>
                 <span className="mono profil-pote-nom">{m.prenom}</span>
               </button>
             ))}
-            <button className="profil-pote" onClick={() => setOnglet('cercle')}>
+            <button className="profil-pote" onClick={allerAuCercle}>
               {/* la place vide : un ex-libris pas encore frappé */}
               <span className="exlibris-initiale vide">+</span>
               <span className="mono profil-pote-nom">ajouter</span>
@@ -1619,7 +1668,7 @@ export default function App() {
           </div>
 
           <TitreSection>réglages</TitreSection>
-          <Reglages lieux={lieux} />
+          <Reglages lieux={lieux} onGrandJeudi={() => setGjOuvert(true)} />
 
           <button
             className="lien"
@@ -1633,8 +1682,23 @@ export default function App() {
         </div>
       )}
 
-      {onglet === 'cercle' && !curateur && (
+      {/* le match de groupe (ex-labo « avec mes potes ») vit ici : l'étiquette
+          en tête du cercle ouvre le parcours composer → trianguler → swiper → match */}
+      {onglet === 'cercle' && !curateur && sortieGroupe && (
         <div className="cercle">
+          <button className="lien fiche-retour" onClick={() => setSortieGroupe(false)}>
+            ← le cercle
+          </button>
+          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+        </div>
+      )}
+
+      {onglet === 'cercle' && !curateur && !sortieGroupe && (
+        <div className="cercle">
+          {/* sortir à plusieurs : l'entrée du match de groupe, une étiquette papier */}
+          <button className="inviter-pote sortir-groupe" onClick={() => setSortieGroupe(true)}>
+            sortir à plusieurs →
+          </button>
           <p className="mono cercle-compteur">
             {membresCercle.length} membres · {proches.length}/{CAP_PROCHES} super potes
           </p>
@@ -1748,6 +1812,17 @@ export default function App() {
         />
       )}
 
+      {/* le grand jeudi — plein écran, comme un voile posé sur tout (la fiche
+          d'un lieu, rendue APRÈS, passe par-dessus quand on en ouvre un) */}
+      {gjOuvert && (
+        <div className="fiche gj-plein">
+          <button className="lien fiche-retour" onClick={() => setGjOuvert(false)}>
+            ← revenir
+          </button>
+          <GrandJeudi lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+        </div>
+      )}
+
       {fiche && (
         <Fiche
           key={fiche.id}
@@ -1766,7 +1841,7 @@ export default function App() {
           }}
           onCurateur={(nom) => {
             setFiche(null)
-            setOnglet('cercle')
+            allerAuCercle()
             setCurateur(nom)
           }}
         />
@@ -1823,29 +1898,6 @@ export default function App() {
         </div>
       )}
 
-      {onglet === 'labo' && (
-        <div style={{ paddingBottom: 90 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-            {(['trouver', 'potos', 'grandjeudi'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setLabo(t)}
-                className={`labo-onglet${labo === t ? ' on' : ''}`}
-              >
-                {t === 'trouver' ? 'trouver' : t === 'potos' ? 'avec mes potes' : 'grand jeudi'}
-              </button>
-            ))}
-          </div>
-          {labo === 'trouver' ? (
-            <Recherche lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
-          ) : labo === 'potos' ? (
-            <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
-          ) : (
-            <GrandJeudi lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
-          )}
-        </div>
-      )}
-
       {flash && (
         <div className="toast">
           <span className="mono">{flash}</span>
@@ -1867,6 +1919,14 @@ export default function App() {
             <span className="nav-lbl">ce soir</span>
           </button>
           <button
+            className={`nav-item ${onglet === 'trouver' ? 'actif' : ''}`}
+            onClick={() => setOnglet('trouver')}
+            aria-label="trouver"
+          >
+            <ILoupe taille={24} />
+            <span className="nav-lbl">trouver</span>
+          </button>
+          <button
             className={`nav-item ${onglet === 'macarte' ? 'actif' : ''}`}
             onClick={() => setOnglet('macarte')}
             aria-label="ma carte"
@@ -1876,7 +1936,7 @@ export default function App() {
           </button>
           <button
             className={`nav-item ${onglet === 'cercle' ? 'actif' : ''}`}
-            onClick={() => setOnglet('cercle')}
+            onClick={allerAuCercle}
             aria-label="le cercle"
           >
             <ICercle taille={24} />
@@ -1885,18 +1945,10 @@ export default function App() {
           <button
             className={`nav-item ${onglet === 'profil' ? 'actif' : ''}`}
             onClick={() => setOnglet('profil')}
-            aria-label="mon profil"
+            aria-label="moi"
           >
             <ITampon taille={24} />
-            <span className="nav-lbl">mon profil</span>
-          </button>
-          <button
-            className={`nav-item ${onglet === 'labo' ? 'actif' : ''}`}
-            onClick={() => setOnglet('labo')}
-            aria-label="labo"
-          >
-            <IGlobe taille={24} />
-            <span className="nav-lbl">labo</span>
+            <span className="nav-lbl">moi</span>
           </button>
         </nav>
       )}

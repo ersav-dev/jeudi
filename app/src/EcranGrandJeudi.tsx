@@ -6,7 +6,9 @@ import { type Lieu, formatDistance, distanceM } from './db'
 // Le reste du temps : ton cercle. Mais cette nuit, le VOILE TOMBE → tous les
 // spots PUBLICS de la ville, d'un coup, jusqu'au matin. Le super-pouvoir de l'app.
 // Le déballage (spectacle), à ne pas confondre avec la recherche (qui répond).
-// ⚠️ ici le déclenchement est manuel (démo) ; en vrai = un jeudi sur X, push.
+// Ce n'est PLUS une option : c'est le 1ᵉʳ jeudi du mois, automatique
+// (src/grandJeudi.ts). Le jour J, la bannière de « ce soir » et « trouver »
+// ouvre cet écran ; les autres jours, l'aperçu vit dans les réglages.
 // V5 : le drame reste, mais dans les règles — serif italique, filets graphite,
 // et UNE seule cire : le bouton d'entrée (la cire coule dessus, signature 5).
 // ════════════════════════════════════════════════════════════════

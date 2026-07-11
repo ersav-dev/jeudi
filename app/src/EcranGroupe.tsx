@@ -25,7 +25,8 @@ type Prop = { score: ScoreGroupe; reactions: ReactionsLieu }
 // ont migré vers les classes .labo-* en fin d'index.css
 const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
 
-// Écran labo : le VRAI parcours du match de groupe (concept « on se voit où »).
+// « sortir à plusieurs » (dans l'onglet cercle) : le VRAI parcours du match de
+// groupe (concept « on se voit où »).
 // composer le groupe + départs → triangulation → je swipe → le 1er qui matche gagne.
 // Local + cercle simulé (Karim/Léa réagissent tout seuls).
 export default function Groupe({
@@ -97,7 +98,7 @@ export default function Groupe({
   if (etape === 'compose') {
     return (
       <div style={{ color: 'var(--ivory)' }}>
-        <h2 className="labo-titre">avec mes potes.</h2>
+        <h2 className="labo-titre">sortir à plusieurs.</h2>
         <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 16px' }}>
           chacun son départ · l'app triangule · le 1er qui matche gagne
         </p>
