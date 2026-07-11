@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
-import Supercluster from 'supercluster'
+import type { FeatureCollection, Point } from 'geojson'
 import {
   maPosition,
   etatHoraire,
@@ -10,9 +10,11 @@ import {
   tempsMarche,
   propreteWcLabel,
   estAMoi,
+  lireFavoris,
   type Lieu,
 } from './db'
-import { IBallon } from './icones'
+import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
+import { IAnneau, IBallon } from './icones'
 import { srcPhoto } from './photos'
 
 // fond sombre gratuit (tuiles raster Carto dark) — style inline : aucun
@@ -39,12 +41,35 @@ const moi = (): [number, number] => [maPosition.lng, maPosition.lat]
 // le bloc « détails » : page 0 = photo claire (sans texte) · 1 le mot · 2 recommandé · 3 pratique
 const NB_PAGES_SHEET = 4
 
-// ── clustering : les propriétés portées par chaque point de l'index ──
-type ProprietesPin = { id: string }
+// ── la poussière d'encre : TOUS les lieux valides en points GPU (source +
+// layer circle MapLibre — 750 points ne coûtent rien). C'est le remplaçant
+// du clustering : plus AUCUNE pastille chiffrée, à aucun zoom (on zoomait et
+// on ne voyait que la grappe, jamais les lieux). La poussière reste TOUJOURS
+// visible sous les pins : la texture de la ville.
+const SOURCE_POUSSIERE = 'poussiere'
+const LAYER_POUSSIERE = 'poussiere-points'
+// hitbox élargie autour d'un tap/appui sur la poussière (un pouce, de nuit)
+const HITBOX_POUSSIERE = 12
 
-// dernier niveau de zoom où l'index groupe encore (au-delà : pins nus).
-// sert aussi à la fonte progressive des pastilles pendant le pinch.
-const MAXZOOM_GRAPPES = 16
+// ── pins DOM par PRIORITÉ progressive : combien de pins NOMMÉS selon le
+// zoom. ~14 à z<12,5 · ~40 à z13,5 · TOUS les visibles dès z≥14,5 — au zoom
+// quartier on voit tout en pins nommés (LE reproche des grappes à régler).
+const ZOOM_TOUT_EN_PINS = 14.5
+const plafondPins = (z: number): number => {
+  if (z >= ZOOM_TOUT_EN_PINS) return Infinity
+  if (z < 12.5) return 14
+  return Math.round(14 + (z - 12.5) * 26) // z13,5 → ~40, puis croît jusqu'au « tout »
+}
+
+// l'appui long (pins, poussière, carrousel) : un seul seuil partout
+const APPUI_LONG_MS = 450
+// tolérance de mouvement avant d'annuler l'appui (c'est un pan, pas un appui)
+const TREMBLE_PX = 8
+
+// les ~8 suggestions de marques, orientées sorties. Ces émojis sont des
+// CANDIDATS de contenu utilisateur (il en choisit un pour SON lieu), pas du
+// chrome — l'exception assumée de la DA (décision Ersan, voir marques.ts).
+const SUGGESTIONS_MARQUES = ['🍺', '🍷', '🍕', '☕', '💃', '🎶', '🌿', '❤️'] as const
 
 // maplibre possède le transform de l'ÉLÉMENT du marker (positionnement) :
 // impossible d'animer ce transform-là. chaque pin/pastille vit donc dans un
@@ -59,52 +84,15 @@ const enrober = (el: HTMLElement): HTMLElement => {
   return porteur
 }
 
-// V5 « l'encre se dépose, le tampon frappe » : LA pose (§6), jamais de rebond
-const COURBE_ENCRE = 'var(--pose)'
-
-// naissance d'un pin depuis le ventre de son ex-grappe : posé à sa vraie
-// position, il PART visuellement du centroïde (translate écran) et vole
-// jusqu'à sa place. retard = stagger, les proches partent d'abord.
-const naitreDepuis = (el: HTMLElement, dx: number, dy: number, retard: number) => {
-  el.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`
+// retrait d'un pin : fondu court 150 ms --pose (V5 « l'encre se range ») —
+// plus de vol vers un centroïde : les grappes sont mortes. La naissance,
+// elle, passe par la classe CSS .pin-depose (même durée, même courbe).
+const retirerEnFondu = (mk: maplibregl.Marker, el: HTMLElement) => {
+  el.style.transition = 'transform 150ms var(--pose), opacity 150ms var(--pose)'
+  el.style.transform = 'scale(0.85)'
   el.style.opacity = '0'
-  el.style.willChange = 'transform'
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      el.style.transition = `transform 260ms ${COURBE_ENCRE} ${retard}ms, opacity 160ms ${COURBE_ENCRE} ${retard}ms`
-      el.style.transform = ''
-      el.style.opacity = ''
-      window.setTimeout(() => {
-        el.style.transition = ''
-        el.style.willChange = ''
-      }, 320 + retard)
-    }),
-  )
+  window.setTimeout(() => mk.remove(), 170)
 }
-
-// absorption : le pin (ou la sous-grappe) vole vers le centroïde de la
-// grappe qui l'avale, puis le marker est retiré. l'appelant a déjà sorti
-// la clé de `poses` : le diffing reste cohérent pendant le vol.
-const absorberVers = (mk: maplibregl.Marker, el: HTMLElement, dx: number, dy: number) => {
-  el.style.willChange = 'transform'
-  el.style.transition = `transform 220ms var(--tourne), opacity 180ms var(--tourne)`
-  el.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`
-  el.style.opacity = '0'
-  window.setTimeout(() => mk.remove(), 240)
-}
-
-// sortie d'une pastille qui éclate (zoom avant) : elle se résorbe sur place
-const resorber = (mk: maplibregl.Marker, el: HTMLElement) => {
-  el.style.transition = 'transform 160ms var(--tourne), opacity 140ms var(--tourne)'
-  el.style.transform = 'scale(0.6)'
-  el.style.opacity = '0'
-  window.setTimeout(() => mk.remove(), 180)
-}
-// un résultat de getClusters est soit une grappe, soit un point isolé
-const estGrappe = (
-  f: Supercluster.ClusterFeature<Supercluster.AnyProps> | Supercluster.PointFeature<ProprietesPin>,
-): f is Supercluster.ClusterFeature<Supercluster.AnyProps> =>
-  (f.properties as { cluster?: boolean }).cluster === true
 
 // ── labels anti-collision : géométrie pure (aucune lecture du DOM) ──
 const PLAFOND_LABELS = 8
@@ -136,14 +124,23 @@ export default function Carte({
 }) {
   const conteneur = useRef<HTMLDivElement>(null)
   const carte = useRef<maplibregl.Map | null>(null)
-  // ── clustering supercluster : l'index (reconstruit quand `lieux` change),
-  // les lieux valides par id, et les markers actuellement posés (diffing).
-  // clés de `poses` : `l:<id de lieu>` (pin isolé) ou `c:<cluster_id>` (grappe).
-  const indexRef = useRef<Supercluster<ProprietesPin> | null>(null)
+  // les lieux valides par id, et les markers actuellement posés (diffing,
+  // clé = id de lieu — plus de préfixes l:/c: depuis la mort des grappes)
   const lieuxParId = useRef<Map<string, Lieu>>(new Map())
   const poses = useRef<Map<string, maplibregl.Marker>>(new Map())
   // #11 : le lieu sélectionné — pilote le bottom-sheet, le carrousel et le grisé
   const [actif, setActif] = useState<string | null>(null)
+  // ── les marques émoji (chantier 2) : Record<lieuId, émoji>, source
+  // marques.ts (localStorage + pub/sub). En state : la pastille du sheet et
+  // le panneau re-rendent tout seuls quand une marque bouge.
+  const [marques, setMarques] = useState<Record<string, string>>(() => lireMarques())
+  // le panneau de marque, ancré au point (appui long) — null = fermé
+  const [panneauMarque, setPanneauMarque] = useState<{ id: string; x: number; y: number } | null>(
+    null,
+  )
+  const marqueInput = useRef<HTMLInputElement>(null)
+  // suivi de l'appui long sur la POUSSIÈRE (les pins ont le leur, en closure)
+  const pressCarte = useRef<{ timer: number; fired: boolean; x: number; y: number } | null>(null)
   // les éléments DOM des pins de LIEUX posés, par id (pour colorer/griser sans re-créer)
   const pinEls = useRef<Record<string, HTMLElement>>({})
   // cadrage initial : UNE seule fois — consulter une fiche ne recadre plus jamais
@@ -166,6 +163,7 @@ export default function Carte({
   const actifRef = useRef<string | null>(actif)
   const vusRef = useRef(vus)
   const comparerRef = useRef(comparer)
+  const marquesRef = useRef(marques)
   // synchronisées après chaque rendu (règle react-hooks/refs : pas d'écriture
   // pendant le rendu) ; cet effet est déclaré AVANT ceux qui les consomment.
   useEffect(() => {
@@ -174,7 +172,8 @@ export default function Carte({
     actifRef.current = actif
     vusRef.current = vus
     comparerRef.current = comparer
-  }, [setActif, onVoir, actif, vus, comparer])
+    marquesRef.current = marques
+  }, [setActif, onVoir, actif, vus, comparer, marques])
 
   const valides = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
   const lieuActif = valides.find((l) => l.id === actif) ?? null
@@ -203,98 +202,153 @@ export default function Carte({
     const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
     const valide = l.tampon?.v === 'valide'
     const ferme = etatHoraire(l.horaires)?.ouvert === false
+    const marque = marquesRef.current[l.id]
     const el = document.createElement('div')
-    // pins homogènes (façon Airbnb/Google) : la photo vit dans la fiche au tap,
-    // pas sur la carte. point rouge = toi · pastille ivoire + initiale = curateur.
-    el.className = `pin${sig ? ' pin-curateur' : ''}${valide ? ' pin-valide' : ''}${ferme ? ' pin-ferme' : ''}`
-    if (sig) {
-      // une teinte par curateur + son initiale à l'encre (garde-fou : nom vide)
-      el.style.background = teinteCurateur(sig.auteur)
-      el.textContent = sig.auteur ? sig.auteur.charAt(0).toUpperCase() : ''
-      // recommandé par plusieurs : un badge avec le nombre de voix
-      if (nbVoix > 1) {
-        const badge = document.createElement('span')
-        badge.className = 'pin-badge mono'
-        badge.textContent = String(nbVoix)
-        el.appendChild(badge)
+    if (marque) {
+      // lieu MARQUÉ : l'émoji choisi par l'utilisateur dans une pastille
+      // papier, À LA PLACE du pin standard. L'émoji est du CONTENU utilisateur
+      // (il l'a posé lui-même) — exception assumée à la règle « jamais
+      // d'émoji dans le chrome » (décision Ersan, voir marques.ts).
+      el.className = `pin pin-marque${ferme ? ' pin-ferme' : ''}`
+      el.textContent = marque
+    } else {
+      // pins homogènes (façon Airbnb/Google) : la photo vit dans la fiche au tap,
+      // pas sur la carte. point rouge = toi · pastille ivoire + initiale = curateur.
+      el.className = `pin${sig ? ' pin-curateur' : ''}${valide ? ' pin-valide' : ''}${ferme ? ' pin-ferme' : ''}`
+      if (sig) {
+        // une teinte par curateur + son initiale à l'encre (garde-fou : nom vide)
+        el.style.background = teinteCurateur(sig.auteur)
+        el.textContent = sig.auteur ? sig.auteur.charAt(0).toUpperCase() : ''
+        // recommandé par plusieurs : un badge avec le nombre de voix
+        if (nbVoix > 1) {
+          const badge = document.createElement('span')
+          badge.className = 'pin-badge mono'
+          badge.textContent = String(nbVoix)
+          el.appendChild(badge)
+        }
+      }
+      // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
+      if (l.match === 'diffuse') {
+        const ballon = document.createElement('span')
+        ballon.className = 'pin-ballon'
+        ballon.title = 'on y voit les matchs'
+        ballon.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
+        el.appendChild(ballon)
       }
     }
-    // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
-    if (l.match === 'diffuse') {
-      const ballon = document.createElement('span')
-      ballon.className = 'pin-ballon'
-      ballon.title = 'on y voit les matchs'
-      ballon.innerHTML =
-        '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
-      el.appendChild(ballon)
-    }
-    // le nom s'affiche en label sous le pin (au zoom suffisant)
+    // le diffing des marques compare ce dataset à l'état courant (effet [marques])
+    el.dataset.marque = marque ?? ''
+    // le nom s'affiche en label sous le pin (au zoom suffisant) — l'émoji, lui,
+    // ne va JAMAIS dans les labels texte (le label reste le nom, point).
     el.setAttribute('data-nom', l.nom)
     el.title = l.nom
-    // priorité d'affichage du label : validé > recommandé par plusieurs > ouvert
+    // priorité d'affichage du label : marqué > validé > plusieurs voix > ouvert
     const ouvertMaintenant = etatHoraire(l.horaires)?.ouvert === true
-    el.dataset.prio = String((valide ? 3 : 0) + (nbVoix > 1 ? 2 : 0) + (ouvertMaintenant ? 1 : 0))
+    el.dataset.prio = String(
+      (marque ? 4 : 0) + (valide ? 3 : 0) + (nbVoix > 1 ? 2 : 0) + (ouvertMaintenant ? 1 : 0),
+    )
     // #11 : 1er tap = sélectionne (nom+desc en bottom-sheet, carte en couleur,
     // le reste grisé) · 2e tap sur le même pin = la fiche détaillée.
-    el.addEventListener('click', (ev) => {
+    //
+    // ⚠️ ARBITRAGE appui long (chantier 2) : l'appui long sur un pin ouvrait
+    // conceptuellement « à comparer » (comme les cartes du carrousel). Décision :
+    // sur la CARTE, l'appui long ouvre LE panneau de marque — et la bascule
+    // « à comparer » y entre comme dernière ligne. Un seul geste, tout au même
+    // endroit. (Le carrousel, lui, garde son appui long direct.)
+    let press: { timer: number; fired: boolean; x: number; y: number } | null = null
+    el.addEventListener('pointerdown', (ev) => {
+      press = { fired: false, timer: 0, x: ev.clientX, y: ev.clientY }
+      if (mini) return // mini = récap figé : pas de panneau, le tap reste
+      press.timer = window.setTimeout(() => {
+        if (press) press.fired = true
+        ouvrirPanneauRef.current(l.id)
+      }, APPUI_LONG_MS)
+    })
+    el.addEventListener('pointermove', (ev) => {
+      // le doigt dérive : c'est un pan de carte, pas un appui ni un tap
+      if (press && (Math.abs(ev.clientX - press.x) > TREMBLE_PX || Math.abs(ev.clientY - press.y) > TREMBLE_PX)) {
+        window.clearTimeout(press.timer)
+        press = null
+      }
+    })
+    const annuler = () => {
+      if (press) {
+        window.clearTimeout(press.timer)
+        press = null
+      }
+    }
+    el.addEventListener('pointercancel', annuler)
+    el.addEventListener('pointerleave', annuler)
+    el.addEventListener('pointerup', (ev) => {
       ev.stopPropagation()
+      const p = press
+      press = null
+      if (!p) return // parti en pan (ou déjà annulé) : pas une sélection
+      window.clearTimeout(p.timer)
+      if (p.fired) return // c'était l'appui long → le panneau est déjà là
       if (el.classList.contains('pin-actif')) {
         onVoirRef.current?.(l)
         return
       }
       setActifRef.current(l.id)
     })
+    // le click résiduel (après pointerup) ne doit pas atteindre la carte
+    // (sinon le handler poussière re-sélectionnerait sous le pin)
+    el.addEventListener('click', (ev) => ev.stopPropagation())
     return el
   }
 
-  // ── fabrique la pastille d'une grappe : rond encre ivoire + compte au mono,
-  // même langage que les pins du carnet. clic = zoom jusqu'à l'éclatement.
-  const creerPastilleGrappe = (idGrappe: number, compte: number, lng: number, lat: number) => {
-    const el = document.createElement('div')
-    // la taille dit le poids : une grappe de 200 ne ressemble pas à une de 5,
-    // et un duo/trio de trottoir n'est qu'une discrète marque « 2 »
-    const gabarit =
-      compte >= 80 ? ' cluster-lg' : compte >= 15 ? ' cluster-md' : compte <= 3 ? ' cluster-duo' : ''
-    el.className = 'cluster-pastille mono' + gabarit
-    // structure à double lecture : le chiffre (toujours) + la pile d'anneaux
-    // (masquée par défaut, révélée par les variantes de style .grappes-*
-    // testées au banc d'essai — voir index.css « variantes de grappes »)
-    const pile = document.createElement('span')
-    pile.className = 'cluster-pile'
-    pile.innerHTML = '<i></i><i></i><i></i>'
-    el.appendChild(pile)
-    const nombre = document.createElement('span')
-    nombre.className = 'cluster-nombre'
-    nombre.textContent = String(compte)
-    el.appendChild(nombre)
-    el.title = `${compte} lieux`
-    el.addEventListener('click', (ev) => {
-      ev.stopPropagation()
-      const m = carte.current
-      const index = indexRef.current
-      if (!m || !index) return
-      const zActuel = m.getZoom()
-      let z: number
-      try {
-        z = index.getClusterExpansionZoom(idGrappe)
-      } catch {
-        /* l'index a été reconstruit entre temps : on zoome quand même un cran */
-        z = Math.floor(zActuel) + 2
+  // ── ouvre le panneau de marque, ancré au lieu (appui long pin/poussière) ──
+  const ouvrirPanneauMarque = (id: string) => {
+    if (mini) return // le récap est figé : pas de panneau
+    const m = carte.current
+    const l = lieuxParId.current.get(id)
+    if (!m || !l) return
+    // .carte est fixed inset:0 → les coords projetées = les coords viewport
+    const pt = m.project([l.lng, l.lat])
+    setPanneauMarque({ id, x: pt.x, y: pt.y })
+    navigator.vibrate?.(30)
+  }
+  const ouvrirPanneauRef = useRef(ouvrirPanneauMarque)
+
+  // ── la poussière d'encre : le GeoJSON de TOUS les lieux valides ──
+  const donneesPoussiere = (): FeatureCollection<Point, { id: string }> => ({
+    type: 'FeatureCollection',
+    features: [...lieuxParId.current.values()].map((l) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [l.lng, l.lat] },
+      properties: { id: l.id },
+    })),
+  })
+
+  // le lieu de poussière le plus proche d'un point écran (hitbox élargie
+  // ~12 px) — null si rien sous le doigt. queryRenderedFeatures : le GPU a
+  // déjà les points, aucun calcul JS sur les 750 lieux.
+  const lieuSousPoint = (p: { x: number; y: number }): string | null => {
+    const m = carte.current
+    if (!m || !m.getLayer(LAYER_POUSSIERE)) return null
+    const feats = m.queryRenderedFeatures(
+      [
+        [p.x - HITBOX_POUSSIERE, p.y - HITBOX_POUSSIERE],
+        [p.x + HITBOX_POUSSIERE, p.y + HITBOX_POUSSIERE],
+      ],
+      { layers: [LAYER_POUSSIERE] },
+    )
+    let meilleur: string | null = null
+    let dMin = Infinity
+    for (const f of feats) {
+      const id = (f.properties as { id?: string }).id
+      const l = id ? lieuxParId.current.get(id) : undefined
+      if (!id || !l) continue
+      const q = m.project([l.lng, l.lat])
+      const d = (q.x - p.x) ** 2 + (q.y - p.y) ** 2
+      if (d < dMin) {
+        dMin = d
+        meilleur = id
       }
-      // paliers : jamais plus de ~2,5 crans par tap — chaque tap déplie UN
-      // étage de la hiérarchie (feuilletage), au lieu d'un saut aveugle de
-      // 4 niveaux. durée proportionnelle au chemin parcouru.
-      const zCible = Math.min(z, zActuel + 2.5, 17.5)
-      const duree = Math.min(850, Math.max(280, 320 * (zCible - zActuel)))
-      // frappe brève au tap (confirmation tactile) avant le départ
-      el.classList.remove('cluster-tap')
-      void el.offsetWidth // relance l'animation si re-tap rapide
-      el.classList.add('cluster-tap')
-      // offset : la grappe visée atterrit AU-DESSUS du centre, pas sous le
-      // bottom-sheet/carrousel qui occupent le bas de l'écran
-      m.easeTo({ center: [lng, lat], zoom: zCible, duration: duree, offset: [0, -40] })
-    })
-    return el
+    }
+    return meilleur
   }
 
   // ── réapplique les états volatils sur les pins POSÉS (survit au diffing) :
@@ -365,171 +419,81 @@ export default function Carte({
     }
   }
 
-  // ── LE cœur : interroge l'index sur la bbox visible et pose UNIQUEMENT ce
-  // qui s'y trouve, en diffant contre l'existant (crée les nouveaux, retire
-  // les disparus, ne touche pas au reste). Appelé sur moveend/zoomend — jamais
-  // à chaque frame.
+  // ── LE cœur : pose en DOM les N meilleurs lieux VISIBLES (N selon le
+  // zoom), en diffant contre l'existant (crée les nouveaux, retire les
+  // disparus, ne touche pas au reste). La poussière d'encre (layer GPU)
+  // montre déjà TOUT le monde : les pins n'habillent que les prioritaires —
+  // et TOUS les visibles dès le zoom quartier (z ≥ 14,5).
   //
-  // Chorégraphie (V5 « l'objet ») : au zoom avant, les pins NAISSENT du ventre
-  // de leur ex-grappe et volent vers leur place ; au zoom arrière, la grappe
-  // les AVALE (ils volent vers son centroïde) puis frappe comme un tampon.
-  // Tout est transform/opacity sur l'élément INTERNE (maplibre garde le sien).
+  // Priorité : marqué (émoji) > à moi/validé > favori/à comparer > tip du
+  // cercle > proximité du centre de vue. Appelé sur moveend/zoomend — jamais
+  // à chaque frame. Naissances/retraits : fondu court 150 ms --pose.
   const poserVisibles = () => {
     const m = carte.current
-    const index = indexRef.current
-    if (!m || !index) return
+    if (!m) return
     const b = m.getBounds()
-    // marge de 20 % autour du viewport : pas de pop au ras du bord en fin de pan
-    const margeX = (b.getEast() - b.getWest()) * 0.2
-    const margeY = (b.getNorth() - b.getSouth()) * 0.2
-    const bbox: [number, number, number, number] = [
-      b.getWest() - margeX,
-      Math.max(-85, b.getSouth() - margeY),
-      b.getEast() + margeX,
-      Math.min(85, b.getNorth() + margeY),
-    ]
-    const grappes = index.getClusters(bbox, Math.floor(m.getZoom()))
+    // marge de 10 % autour du viewport : pas de pop au ras du bord en fin de pan
+    const margeX = (b.getEast() - b.getWest()) * 0.1
+    const margeY = (b.getNorth() - b.getSouth()) * 0.1
+    const ouest = b.getWest() - margeX
+    const est = b.getEast() + margeX
+    const sud = b.getSouth() - margeY
+    const nord = b.getNorth() + margeY
+    const centre = m.getCenter()
+    const marquesL = marquesRef.current
+    const favoris = new Set(lireFavoris())
+    const aComparer = new Set(comparerRef.current)
 
-    // les clés voulues d'abord : le diffing a besoin de la photo complète
+    // le rang d'un lieu (plus haut = pin posé d'abord)
+    const score = (l: Lieu): number => {
+      if (marquesL[l.id]) return 5 // marqué : toujours posé, dès z11
+      if (estAMoi(l) || l.tampon?.v === 'valide') return 4
+      if (favoris.has(l.id) || aComparer.has(l.id)) return 3
+      if (l.tipsCercle?.length) return 2
+      return 1
+    }
+
+    const visibles: { l: Lieu; s: number; d: number }[] = []
+    for (const l of lieuxParId.current.values()) {
+      if (l.lng < ouest || l.lng > est || l.lat < sud || l.lat > nord) continue
+      visibles.push({ l, s: score(l), d: distanceM(l, centre) })
+    }
+    visibles.sort((x, y) => y.s - x.s || x.d - y.d)
+
+    const plafond = plafondPins(m.getZoom())
     const voulus = new Set<string>()
-    for (const f of grappes) {
-      voulus.add(estGrappe(f) ? `c:${f.properties.cluster_id}` : `l:${f.properties.id}`)
+    for (const v of visibles) {
+      if (voulus.size >= plafond) break
+      voulus.add(v.l.id)
     }
+    // le lieu SÉLECTIONNÉ garde toujours son pin, même non prioritaire
     const a = actifRef.current
-    if (a && lieuxParId.current.get(a)) voulus.add(`l:${a}`)
+    if (a && lieuxParId.current.has(a)) voulus.add(a)
 
-    // ── préparation de la chorégraphie ──────────────────────────────────
-    // origines : leafId → point écran du centroïde de sa grappe SORTANTE
-    // destinations : leafId → point écran du centroïde de sa grappe ENTRANTE
-    const origines = new Map<string, { x: number; y: number }>()
-    const destinations = new Map<string, { x: number; y: number }>()
-    if (animees) {
-      for (const [cle, mk] of poses.current) {
-        if (voulus.has(cle) || !cle.startsWith('c:')) continue
-        const pt = m.project(mk.getLngLat())
-        try {
-          for (const feuille of index.getLeaves(Number(cle.slice(2)), Infinity)) {
-            origines.set((feuille.properties as ProprietesPin).id, pt)
-          }
-        } catch {
-          /* index reconstruit entre temps : pas d'animation pour celle-ci */
-        }
-      }
-      for (const f of grappes) {
-        if (!estGrappe(f)) continue
-        const cle = `c:${f.properties.cluster_id}`
-        if (poses.current.has(cle)) continue
-        const [lng, lat] = f.geometry.coordinates as [number, number]
-        const pt = m.project([lng, lat])
-        try {
-          for (const feuille of index.getLeaves(f.properties.cluster_id, Infinity)) {
-            destinations.set((feuille.properties as ProprietesPin).id, pt)
-          }
-        } catch {
-          /* idem : on saute l'animation, jamais la pose */
-        }
-      }
-    }
-    // stagger par grappe d'origine : les pins proches du centroïde partent
-    // les premiers ; plafond bas pour rester sous les 300 ms de la V5
-    const rangs = new Map<{ x: number; y: number }, number>()
-
-    // ── pose des entrants ───────────────────────────────────────────────
-    const poserLieu = (l: Lieu) => {
-      const cle = `l:${l.id}`
-      if (poses.current.has(cle)) return
+    // ── pose des entrants (naissance : l'encre se dépose, .pin-depose) ──
+    for (const id of voulus) {
+      if (poses.current.has(id)) continue
+      const l = lieuxParId.current.get(id)
+      if (!l) continue
       const el = creerPinLieu(l)
-      pinEls.current[l.id] = el
+      pinEls.current[id] = el
       poses.current.set(
-        cle,
+        id,
         new maplibregl.Marker({ element: enrober(el) }).setLngLat([l.lng, l.lat]).addTo(m),
       )
-      if (!animees) return
-      const de = origines.get(l.id)
-      if (de) {
-        const ici = m.project([l.lng, l.lat])
-        const rang = rangs.get(de) ?? 0
-        rangs.set(de, rang + 1)
-        naitreDepuis(el, de.x - ici.x, de.y - ici.y, Math.min(rang * 12, 96))
-      } else {
-        // pan-in ou premier rendu : l'encre se dépose, sec
-        el.classList.add('pin-depose')
-      }
+      if (animees) el.classList.add('pin-depose')
     }
-    for (const f of grappes) {
-      const [lng, lat] = f.geometry.coordinates as [number, number]
-      if (estGrappe(f)) {
-        const cle = `c:${f.properties.cluster_id}`
-        if (poses.current.has(cle)) continue
-        const el = creerPastilleGrappe(f.properties.cluster_id, f.properties.point_count, lng, lat)
-        poses.current.set(
-          cle,
-          new maplibregl.Marker({ element: enrober(el) }).setLngLat([lng, lat]).addTo(m),
-        )
-        if (!animees) continue
-        // une grappe née d'une grappe plus large : elle naît de son parent ;
-        // sinon (pan-in, avalement de pins) : elle frappe comme un tampon
-        let feuille0: string | undefined
-        try {
-          feuille0 = (index.getLeaves(f.properties.cluster_id, 1)[0]?.properties as ProprietesPin)?.id
-        } catch {
-          feuille0 = undefined
-        }
-        const de = feuille0 ? origines.get(feuille0) : undefined
-        if (de) {
-          const ici = m.project([lng, lat])
-          naitreDepuis(el, de.x - ici.x, de.y - ici.y, 0)
-        } else {
-          el.classList.add('cluster-frappe')
-        }
-      } else {
-        const l = lieuxParId.current.get(f.properties.id)
-        if (l) poserLieu(l)
-      }
-    }
-    // le lieu SÉLECTIONNÉ garde toujours son pin, même si sa grappe l'avale :
-    // la sélection reste visible (le pin se superpose à la pastille).
-    if (a) {
-      const l = lieuxParId.current.get(a)
-      if (l) poserLieu(l)
-    }
-
-    // ── retrait des sortants ────────────────────────────────────────────
-    for (const [cle, mk] of [...poses.current]) {
-      if (voulus.has(cle)) continue
-      poses.current.delete(cle)
-      const estLieu = cle.startsWith('l:')
-      const el = (estLieu ? pinEls.current[cle.slice(2)] : null) ?? (mk.getElement().firstElementChild as HTMLElement | null)
-      if (estLieu) delete pinEls.current[cle.slice(2)]
+    // ── retrait des sortants (fondu court — plus de vol vers un centroïde) ──
+    for (const [id, mk] of [...poses.current]) {
+      if (voulus.has(id)) continue
+      poses.current.delete(id)
+      const el = pinEls.current[id]
+      delete pinEls.current[id]
       if (!animees || !el) {
         mk.remove()
         continue
       }
-      if (estLieu) {
-        const vers = destinations.get(cle.slice(2))
-        if (vers) {
-          // avalé par une grappe naissante : il vole vers elle
-          const de = m.project(mk.getLngLat())
-          absorberVers(mk, el, vers.x - de.x, vers.y - de.y)
-        } else {
-          mk.remove() // sorti du viewport : sec, pas de théâtre hors champ
-        }
-      } else {
-        // pastille sortante : avalée par plus grande (vol) ou éclatée (résorption)
-        let feuille0: string | undefined
-        try {
-          feuille0 = (index.getLeaves(Number(cle.slice(2)), 1)[0]?.properties as ProprietesPin)?.id
-        } catch {
-          feuille0 = undefined
-        }
-        const vers = feuille0 ? destinations.get(feuille0) : undefined
-        const de = m.project(mk.getLngLat())
-        const auChamp =
-          de.x > -60 && de.y > -60 && de.x < m.getContainer().clientWidth + 60 && de.y < m.getContainer().clientHeight + 60
-        if (!auChamp) mk.remove()
-        else if (vers) absorberVers(mk, el, vers.x - de.x, vers.y - de.y)
-        else resorber(mk, el)
-      }
+      retirerEnFondu(mk, el)
     }
     appliquerEtats()
     majLabels()
@@ -544,6 +508,7 @@ export default function Carte({
     poserRef.current = poserVisibles
     majLabelsRef.current = majLabels
     appliquerEtatsRef.current = appliquerEtats
+    ouvrirPanneauRef.current = ouvrirPanneauMarque
   })
 
   useEffect(() => {
@@ -562,9 +527,82 @@ export default function Carte({
     // parfois avec une taille périmée → tuiles et pins désynchronisés.
     // on force un resize une fois la carte prête.
     carte.current.on('load', () => {
-      carte.current?.resize()
+      const m = carte.current
+      if (!m) return
+      m.resize()
+      // ── la poussière d'encre : tous les lieux en points GPU. Rayon ~2 px
+      // à z11 → ~4 px à z14, encre (--encre #EFE9D8) à ~55 %, léger halo.
+      // C'est la texture de la ville, toujours là sous les pins.
+      if (!m.getSource(SOURCE_POUSSIERE)) {
+        m.addSource(SOURCE_POUSSIERE, { type: 'geojson', data: donneesPoussiere() })
+        m.addLayer({
+          id: LAYER_POUSSIERE,
+          type: 'circle',
+          source: SOURCE_POUSSIERE,
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 2, 14, 4],
+            'circle-color': '#EFE9D8',
+            'circle-opacity': 0.55,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#EFE9D8',
+            'circle-stroke-opacity': 0.12,
+          },
+        })
+      }
       poserRef.current()
     })
+    // ── la poussière se touche comme un pin : tap (hitbox ~12 px) =
+    // sélection · appui long = panneau de marque. Les pins DOM au-dessus
+    // stoppent la propagation : ici on ne reçoit que la carte nue.
+    carte.current.on('click', (e) => {
+      const s = pressCarte.current
+      if (s?.fired) {
+        // le click résiduel d'un appui long déjà consommé : avalé
+        pressCarte.current = null
+        return
+      }
+      const id = lieuSousPoint(e.point)
+      if (id) setActifRef.current(id)
+    })
+    const debutAppui = (p: { x: number; y: number }) => {
+      finAppui()
+      const id = lieuSousPoint(p)
+      if (!id) return
+      const suivi = { fired: false, timer: 0, x: p.x, y: p.y }
+      suivi.timer = window.setTimeout(() => {
+        suivi.fired = true
+        ouvrirPanneauRef.current(id)
+      }, APPUI_LONG_MS)
+      pressCarte.current = suivi
+    }
+    const bougeAppui = (p: { x: number; y: number }) => {
+      const s = pressCarte.current
+      if (!s || s.fired) return
+      if (Math.abs(p.x - s.x) > TREMBLE_PX || Math.abs(p.y - s.y) > TREMBLE_PX) {
+        window.clearTimeout(s.timer)
+        pressCarte.current = null
+      }
+    }
+    const finAppui = () => {
+      const s = pressCarte.current
+      if (!s) return
+      window.clearTimeout(s.timer)
+      // appui long déjà tiré : on GARDE le drapeau — le click résiduel qui
+      // suit (souris comme tap) sera avalé par le handler 'click' ci-dessus
+      if (!s.fired) pressCarte.current = null
+    }
+    carte.current.on('mousedown', (e) => debutAppui(e.point))
+    carte.current.on('touchstart', (e) => {
+      if (e.points.length === 1) debutAppui(e.point)
+      else finAppui() // pinch : pas un appui
+    })
+    carte.current.on('mousemove', (e) => bougeAppui(e.point))
+    carte.current.on('touchmove', (e) => bougeAppui(e.point))
+    carte.current.on('mouseup', finAppui)
+    carte.current.on('touchend', finAppui)
+    carte.current.on('touchcancel', finAppui)
+    // la carte bouge : le panneau de marque (ancré au point écran) se ferme
+    carte.current.on('movestart', () => setPanneauMarque(null))
     carte.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
       'bottom-left',
@@ -643,30 +681,13 @@ export default function Carte({
     carte.current.on('moveend', rafraichir)
     carte.current.on('zoomend', rafraichir)
 
-    // fonte progressive des pastilles PENDANT le geste de zoom (16→17) :
-    // une seule CSS var écrite (throttle rAF), lue par .cluster-pastille en
-    // scale/opacity — les grappes fondent sous le doigt, et le vrai swap de
-    // zoomend (chorégraphié) devient presque invisible.
-    let rafFonte = 0
-    const surZoomContinu = () => {
-      if (rafFonte) return
-      rafFonte = requestAnimationFrame(() => {
-        rafFonte = 0
-        const z = carte.current?.getZoom()
-        if (z == null) return
-        const d = Math.min(Math.max(z - MAXZOOM_GRAPPES, 0), 1)
-        cont.style.setProperty('--fonte-grappes', d.toFixed(3))
-      })
-    }
-    carte.current.on('zoom', surZoomContinu)
-
     const posesCourantes = poses.current
     const pins = pinEls.current
     return () => {
       window.removeEventListener('deviceorientationabsolute', onOrient as EventListener, true)
       window.removeEventListener('deviceorientation', onOrient, true)
       if (onceEnAttente) cont.removeEventListener('click', onceEnAttente)
-      if (rafFonte) cancelAnimationFrame(rafFonte)
+      if (pressCarte.current) window.clearTimeout(pressCarte.current.timer)
       window.clearInterval(suiviMoi)
       posesCourantes.forEach((mk) => mk.remove())
       posesCourantes.clear()
@@ -678,31 +699,21 @@ export default function Carte({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── (re)construit l'index supercluster quand les lieux changent, puis pose
-  // la vue courante. `vus` n'est PLUS une dépendance : consulter une fiche ne
-  // reconstruit rien (voir l'effet léger plus bas).
+  // ── quand les lieux changent : la poussière suit (setData) et les pins
+  // repartent de zéro. `vus` n'est PLUS une dépendance : consulter une fiche
+  // ne reconstruit rien (voir l'effet léger plus bas).
   useEffect(() => {
     const validesL = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
     lieuxParId.current = new Map(validesL.map((l) => [l.id, l]))
-    // grappes jusqu'au trottoir : minPoints 2 (deux bars à 15 m ne se rendent
-    // plus en pins superposés incliquables) et l'agrégation tient jusqu'au
-    // zoom 16 — au-delà, seuls des lieux réellement confondus resteraient
-    // groupés, on rend les pins nus. les duos/trios ont leur gabarit dédié.
-    const index = new Supercluster<ProprietesPin>({ radius: 40, maxZoom: MAXZOOM_GRAPPES, minPoints: 2 })
-    index.load(
-      validesL.map((l) => ({
-        type: 'Feature' as const,
-        geometry: { type: 'Point' as const, coordinates: [l.lng, l.lat] },
-        properties: { id: l.id },
-      })),
-    )
-    indexRef.current = index
-    // les cluster_id ne survivent pas à une reconstruction d'index : table rase
+    // les lieux ont pu changer d'identité (filtres, sync) : table rase des pins
     poses.current.forEach((mk) => mk.remove())
     poses.current.clear()
     pinEls.current = {}
     const m = carte.current
     if (!m) return
+    // la source existe dès le 'load' (qui la crée avec les données du moment)
+    const src = m.getSource(SOURCE_POUSSIERE) as maplibregl.GeoJSONSource | undefined
+    src?.setData(donneesPoussiere())
     m.resize()
     poserRef.current()
     // cadrage : UNE seule fois en plein écran (retour de fiche = la vue ne
@@ -742,6 +753,24 @@ export default function Carte({
   useEffect(() => {
     appliquerEtatsRef.current()
   }, [vus, comparer])
+
+  // ── marques : on écoute marques.ts (pose/retrait depuis le panneau, ou
+  // « effacer mes données » ailleurs) → l'état local suit.
+  useEffect(() => sAbonnerMarques(() => setMarques(lireMarques())), [])
+  // quand une marque change, SEULS les pins concernés sont refaits (l'émoji
+  // remplace le pin standard, ou l'inverse) — puis la pose re-diffe : un lieu
+  // fraîchement marqué devient prioritaire et gagne son pin s'il ne l'avait pas.
+  useEffect(() => {
+    for (const [id, mk] of [...poses.current]) {
+      const el = pinEls.current[id]
+      if ((el?.dataset.marque ?? '') !== (marques[id] ?? '')) {
+        poses.current.delete(id)
+        delete pinEls.current[id]
+        mk.remove()
+      }
+    }
+    poserRef.current()
+  }, [marques])
 
   // #11 : la sélection — pin actif en couleur, le reste grisé · recadre la carte ·
   // fait défiler le carrousel vers la carte du lieu choisi.
@@ -798,9 +827,24 @@ export default function Carte({
     })
   }
 
+  // saisie sans émoji : micro-shake du champ (la marque ne se pose pas)
+  const secouerInput = () => {
+    const el = marqueInput.current
+    if (!el) return
+    el.classList.remove('marque-shake')
+    void el.offsetWidth // relance l'animation si re-secousse rapide
+    el.classList.add('marque-shake')
+  }
+
   if (mini) {
     return <div ref={conteneur} className="carte carte-mini" />
   }
+
+  // le lieu du panneau de marque (l'appui long a pu viser un lieu filtré depuis)
+  // — dérivé de `valides` (props), jamais d'une ref pendant le rendu
+  const lieuPanneau = panneauMarque
+    ? (valides.find((l) => l.id === panneauMarque.id) ?? null)
+    : null
 
   return (
     <>
@@ -808,6 +852,88 @@ export default function Carte({
 
       {/* la barre « à comparer » + la table vivent maintenant dans App (source
           unique), rendues sous les filtres → plus de superposition en vue carte. */}
+
+      {/* ── le panneau de marque (appui long sur un pin OU un point de
+          poussière) : suggestions d'émojis, « ton émoji » au clavier natif,
+          retirer, et la bascule « à comparer » en dernière ligne (icône SVG,
+          pas d'émoji : ça, c'est du chrome). Fermé au tap ailleurs (voile). */}
+      {panneauMarque && lieuPanneau && (
+        <>
+          <div className="marque-voile" onPointerDown={() => setPanneauMarque(null)} />
+          <div
+            className={`marque-panneau${panneauMarque.y < 230 ? ' dessous' : ''}`}
+            role="dialog"
+            aria-label={`marquer ${lieuPanneau.nom}`}
+            style={{
+              left: Math.min(Math.max(panneauMarque.x, 132), window.innerWidth - 132),
+              top: panneauMarque.y,
+            }}
+          >
+            <div className="marque-suggestions">
+              {/* des CANDIDATS de marque : du contenu utilisateur, pas du chrome */}
+              {SUGGESTIONS_MARQUES.map((e) => (
+                <button
+                  key={e}
+                  className="marque-sugg"
+                  onClick={() => {
+                    poserMarque(panneauMarque.id, e)
+                    setPanneauMarque(null)
+                  }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            {/* « ton émoji » : clavier natif — l'utilisateur bascule sur SON
+                clavier émoji ; on retient le PREMIER émoji saisi (graphèmes
+                composés compris) ; du texte sans émoji = ignoré, micro-shake */}
+            <input
+              ref={marqueInput}
+              className="marque-input mono"
+              type="text"
+              placeholder="ton émoji"
+              autoComplete="off"
+              enterKeyHint="done"
+              onChange={(ev) => {
+                if (poserMarque(panneauMarque.id, ev.target.value)) setPanneauMarque(null)
+              }}
+              onKeyDown={(ev) => {
+                if (ev.key !== 'Enter') return
+                if (poserMarque(panneauMarque.id, (ev.target as HTMLInputElement).value)) {
+                  setPanneauMarque(null)
+                } else {
+                  secouerInput()
+                }
+              }}
+            />
+            {marques[panneauMarque.id] && (
+              <button
+                className="marque-retirer mono"
+                onClick={() => {
+                  retirerMarque(panneauMarque.id)
+                  setPanneauMarque(null)
+                }}
+              >
+                retirer la marque
+              </button>
+            )}
+            {/* l'ex-appui long « à comparer » vit ICI désormais (arbitrage :
+                un seul geste, tout au même endroit) */}
+            {onComparer && (
+              <button
+                className="marque-comparer mono"
+                onClick={() => {
+                  onComparer(panneauMarque.id)
+                  setPanneauMarque(null)
+                }}
+              >
+                <IAnneau taille={13} />
+                {comparer.includes(panneauMarque.id) ? 'ne plus comparer' : 'à comparer'}
+              </button>
+            )}
+          </div>
+        </>
+      )}
 
       {/* #11 : le nom + la description du lieu choisi, en bas de l'écran */}
       {lieuActif && (
@@ -869,7 +995,16 @@ export default function Carte({
           )}
 
           <div className="carte-sheet-txt">
-            {sheetPage !== 0 && <div className="carte-sheet-nom">{lieuActif.nom}</div>}
+            {sheetPage !== 0 && (
+              <div className="carte-sheet-nom">
+                {lieuActif.nom}
+                {/* la marque du lieu, en petit à côté du nom — CONTENU
+                    utilisateur (son émoji), jamais dans le label du pin */}
+                {marques[lieuActif.id] && (
+                  <span className="carte-sheet-marque">{marques[lieuActif.id]}</span>
+                )}
+              </div>
+            )}
 
             {/* PAGE 1 — le mot */}
             {sheetPage === 1 && (
@@ -970,7 +1105,7 @@ export default function Carte({
                     if (press.current) press.current.fired = true
                     onComparer?.(l.id) // clic long = à comparer (état dans App)
                     navigator.vibrate?.(30)
-                  }, 450)
+                  }, APPUI_LONG_MS)
                 }}
                 onPointerUp={() => {
                   const p = press.current

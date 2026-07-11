@@ -2,6 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { supabase } from './supabase'
 import { adresseDepuis } from './nominatim'
 import { fusionnerTips } from './tips'
+import { lireMarques } from './marques'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -2115,6 +2116,8 @@ export function ajouterBof(lieuId: string): void {
 // ASYNC : le deleteDatabase est ATTENDU via ses callbacks — avant, un reload
 // immédiat derrière l'appel pouvait couper la suppression en plein vol.
 export async function effacerTout(): Promise<void> {
+  // le balayage par préfixe couvre AUSSI `jeudi-marques` (les marques émoji,
+  // marques.ts) — testé : la clé reste dans la famille jeudi-*.
   Object.keys(localStorage)
     .filter((k) => k.startsWith('jeudi-'))
     .forEach((k) => localStorage.removeItem(k))
@@ -2190,6 +2193,7 @@ export async function exporterMesDonnees(): Promise<Record<string, unknown>> {
     suivis: lireSuivis(),
     signales: lireSignales(),
     comparer: lireComparer(),
+    marques: lireMarques(), // les émojis posés sur les lieux (jeudi-marques)
     tagline: lireTagline(),
     couleur: lireCouleur(),
     seuils: lireSeuils(),

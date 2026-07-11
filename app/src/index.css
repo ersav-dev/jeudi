@@ -1745,6 +1745,10 @@ button {
   border-radius: 50%;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   cursor: pointer;
+  /* appui long (panneau de marque) : pas de sélection/loupe iOS pendant les 450 ms */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   /* PAS de position ici : maplibre applique position:absolute + transform
      sur le pin pour l'ancrer à la carte. L'écraser le fait "flotter". */
 }
@@ -4835,170 +4839,14 @@ button {
   border-radius: 50%;
 }
 
-/* ══ clustering carte (perf) : la pastille de grappe ═══════════════════
-   même langage que les pins du carnet : rond encre, ivoire sur charbon
-   inversé (compte à l'encre charbon sur pastille ivoire), mono, ombre
-   portée sèche. clic = zoom jusqu'à l'éclatement de la grappe. */
-.cluster-pastille {
-  min-width: 28px;
-  height: 28px;
-  padding: 0 7px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--ivory);
-  color: var(--nuit);
-  border: 2px solid var(--nuit);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.5),
-    0 0 0 3px rgba(239, 233, 216, 0.22);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  /* fonte progressive pendant le geste de zoom (16→17) : --fonte-grappes
-     est écrite en continu par Carte.tsx sur le conteneur — les pastilles
-     fondent SOUS le doigt au lieu d'attendre la fin du pinch */
-  transform: scale(calc(1 - 0.35 * var(--fonte-grappes, 0)));
-  opacity: calc(1 - 0.85 * var(--fonte-grappes, 0));
-  /* PAS de position ici : maplibre ancre le marker (absolute + transform). */
-}
-/* zone de tap élargie (pouce, de nuit) — comme les pins */
-.cluster-pastille::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-}
-/* feedback au survol : le halo ivoire s'épaissit, sans bouger l'ancre */
-.cluster-pastille:hover {
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.5),
-    0 0 0 4px rgba(239, 233, 216, 0.38);
-}
-/* la taille dit le poids de la grappe : 15+ lieux, puis 80+ (lisibilité de loin) */
-.cluster-pastille.cluster-md {
-  min-width: 36px;
-  height: 36px;
-  font-size: 11px;
-  border-width: 3px;
-}
-.cluster-pastille.cluster-lg {
-  min-width: 46px;
-  height: 46px;
-  font-size: 13px;
-  font-weight: 700;
-  border-width: 3px;
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.5),
-    0 0 0 5px rgba(239, 233, 216, 0.28);
-}
-/* duo/trio de trottoir (minPoints 2) : une marque discrète, pas un badge —
-   deux bars à 15 m se lisent « 2 » au lieu de deux pins superposés incliquables */
-.cluster-pastille.cluster-duo {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  font-size: 11px;
-  border-width: 1.5px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); /* pas de halo */
-}
-
-/* ── variantes de grappes (banc d'essai carte-dev) ─────────────────────
-   la pastille porte deux lectures : .cluster-nombre (le chiffre) et
-   .cluster-pile (3 anneaux « D » empilés, masqués par défaut). une classe
-   sur <body> commute le style — le défaut reste l'actuel, pixel pour pixel.
-   une fois le gagnant choisi, les perdantes seront supprimées. */
-.cluster-pile {
-  display: none;
-}
-/* B. « anneau » : la grappe hérite du langage des pins — un grand anneau
-   rouge, le chiffre à l'encre ivoire dedans. le rond ivoire redevient
-   l'exclusivité des curateurs. */
-body.grappes-anneau .cluster-pastille {
-  background: rgba(20, 18, 14, 0.55);
-  color: var(--ivory);
-  border: 2.5px solid var(--red);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-body.grappes-anneau .cluster-pastille.cluster-md {
-  border-width: 3px;
-}
-body.grappes-anneau .cluster-pastille.cluster-lg {
-  border-width: 3.5px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-body.grappes-anneau .cluster-pastille.cluster-duo {
-  border-width: 1.5px;
-}
-/* C. « tas de pins » : 2-3 anneaux en quinconce dont l'encre s'estompe,
-   le compte en cartouche ivoire accroché bas-droite — une note de marge. */
-body.grappes-pile .cluster-pastille {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-body.grappes-pile .cluster-pile {
-  display: block;
-  position: relative;
-  width: 14px;
-  height: 14px;
-}
-body.grappes-pile .cluster-pile i {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--red);
-  background: radial-gradient(circle at center, var(--red) 0 2px, transparent 2.6px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-body.grappes-pile .cluster-pile i:nth-child(2) {
-  translate: 4px -4px;
-  opacity: 0.55;
-  z-index: -1;
-}
-body.grappes-pile .cluster-pile i:nth-child(3) {
-  translate: 8px -8px;
-  opacity: 0.3;
-  z-index: -2;
-}
-/* petites grappes : 2 anneaux suffisent ; le 3e n'apparaît qu'à partir de md */
-body.grappes-pile .cluster-pastille:not(.cluster-md):not(.cluster-lg) .cluster-pile i:nth-child(3) {
-  display: none;
-}
-body.grappes-pile .cluster-nombre {
-  position: absolute;
-  right: -11px;
-  bottom: -9px;
-  background: var(--ivory);
-  color: var(--nuit);
-  font-size: 11px;
-  line-height: 1.5;
-  padding: 0 4px;
-  border-radius: var(--rayon);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
-  font-size: 11px;
-}
-
-/* ── sprint « zoom fluide » : la chorégraphie (V5 : sec, jamais de rebond) ──
-   naître/voler = inline (Carte.tsx, positions calculées) ; ici les entrées
-   fixes : l'encre se dépose (pins pan-in), le tampon frappe (pastilles). */
+/* ══ la carte sans grappes ═══════════════════════════════════════════
+   les pastilles chiffrées sont MORTES : la poussière d'encre (layer circle
+   GPU, Carte.tsx) montre TOUS les lieux, les pins DOM n'habillent que les
+   prioritaires. Naissance d'un pin = l'encre se dépose (150 ms --pose) ;
+   retrait = fondu inline (Carte.tsx). V5 : sec, jamais de rebond. */
 @media (prefers-reduced-motion: no-preference) {
   .pin.pin-depose {
-    animation: deposeEncre 120ms var(--pose) both;
-  }
-  .cluster-pastille.cluster-frappe {
-    /* frappeTampon : défini en tête de feuille (le splash s'en sert aussi) */
-    animation: frappeTampon 90ms var(--frappe) both;
-  }
-  .cluster-pastille.cluster-tap {
-    animation: tapPastille 100ms var(--frappe);
+    animation: deposeEncre 150ms var(--pose) both;
   }
 }
 @keyframes deposeEncre {
@@ -5007,10 +4855,123 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
     transform: scale(0.85);
   }
 }
-@keyframes tapPastille {
-  50% {
-    transform: scale(0.92);
+
+/* ── la marque émoji (chantier 2) : une pastille papier À LA PLACE du pin.
+   L'émoji est du CONTENU utilisateur (c'est LUI qui l'a posé sur son lieu)
+   — exception assumée à la règle « jamais d'émoji dans le chrome »
+   (décision Ersan, voir marques.ts). */
+.pin.pin-marque {
+  width: 26px;
+  height: 26px;
+  background: var(--nuit-2);
+  border: 1px solid var(--encre);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); /* ombre de contact, jamais un halo */
+}
+
+/* la marque du lieu, en petit à côté du nom dans le bottom-sheet */
+.carte-sheet-marque {
+  margin-left: 7px;
+  font-size: 14px;
+  font-style: normal; /* l'émoji n'hérite pas de l'italique du nom */
+}
+
+/* ── le panneau de marque : appui long sur un pin / un point de poussière.
+   Ancré au point (Carte.tsx pose left/top), fermé au tap ailleurs (voile). */
+.marque-voile {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  /* transparent : il n'existe que pour « tap ailleurs = fermé » */
+  background: transparent;
+}
+.marque-panneau {
+  position: fixed;
+  z-index: 6;
+  transform: translate(-50%, calc(-100% - 14px)); /* posé AU-DESSUS du point */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--nuit-3); /* page soulevée */
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); /* ombre de contact */
+  animation: inkIn 150ms var(--pose) backwards;
+}
+/* point trop haut dans l'écran : le panneau s'ouvre EN DESSOUS */
+.marque-panneau.dessous {
+  transform: translate(-50%, 18px);
+}
+/* les ~8 suggestions : des CANDIDATS de marque (contenu utilisateur) */
+.marque-suggestions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.marque-sugg {
+  width: 46px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  background: var(--nuit-2);
+  border: 1px solid rgba(239, 233, 216, 0.14);
+  border-radius: var(--rayon);
+  cursor: pointer;
+}
+.marque-sugg:active {
+  background: var(--nuit);
+}
+/* « ton émoji » : le champ ouvre le clavier natif — l'utilisateur bascule
+   sur SON clavier émoji, on retient le premier émoji saisi */
+.marque-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--encre);
+  background: var(--nuit-2);
+  border: 1px solid rgba(239, 233, 216, 0.14);
+  border-radius: var(--rayon);
+}
+.marque-input::placeholder {
+  color: var(--graphite);
+}
+/* saisie sans émoji : la marque refuse de se poser — micro-secousse */
+@media (prefers-reduced-motion: no-preference) {
+  .marque-input.marque-shake {
+    animation: marqueShake 120ms var(--frappe) 2;
   }
+}
+@keyframes marqueShake {
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+.marque-retirer,
+.marque-comparer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 9px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--encre);
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon);
+  cursor: pointer;
 }
 
 /* ── le tuto « notes en marge » : le carnet prêté ─────────────────
