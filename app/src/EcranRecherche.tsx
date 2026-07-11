@@ -104,20 +104,13 @@ export default function Recherche({
     }
   }
 
-  const chip = (actif: boolean): React.CSSProperties => ({
-    padding: '5px 12px',
-    borderRadius: 999,
-    border: `1px solid ${actif ? 'var(--red)' : 'var(--ivory-faded)'}`,
-    background: actif ? 'var(--red)' : 'transparent',
-    color: actif ? 'var(--print-white)' : 'var(--ivory)',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 12,
-    cursor: 'pointer',
-  })
+  // V5 bloc 4 : les styles inline (pilules 999px, coins 8-10px, corps hors
+  // échelle) ont migré vers les classes .labo-* en fin d'index.css
+  const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
 
   return (
     <div style={{ color: 'var(--ivory)' }}>
-      <h2 style={{ fontStyle: 'italic', fontSize: 30, margin: '4px 0 2px' }}>trouver.</h2>
+      <h2 className="labo-titre">trouver.</h2>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 14px' }}>
         ce que tu cherches, croisé avec tes habitudes
       </p>
@@ -126,26 +119,16 @@ export default function Recherche({
         value={texte}
         onChange={(e) => setTexte(e.target.value)}
         placeholder="un nom, un quartier, une ambiance…"
-        style={{
-          width: '100%',
-          padding: '11px 14px',
-          borderRadius: 10,
-          border: '1px solid var(--ivory-faded)',
-          background: 'var(--paper-2)',
-          color: 'var(--ivory)',
-          fontFamily: "'Instrument Serif', serif",
-          fontSize: 18,
-          outline: 'none',
-        }}
+        className="labo-champ"
       />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, margin: '12px 0' }}>
         {ENVIES.map((e) => (
-          <button key={e} style={chip(envie === e)} onClick={() => setEnvie(envie === e ? null : e)}>
+          <button key={e} className={chip(envie === e)} onClick={() => setEnvie(envie === e ? null : e)}>
             {e}
           </button>
         ))}
-        <button style={chip(ouvertSeul)} onClick={() => setOuvertSeul((v) => !v)}>
+        <button className={chip(ouvertSeul)} onClick={() => setOuvertSeul((v) => !v)}>
           ouvert
         </button>
       </div>
@@ -154,13 +137,13 @@ export default function Recherche({
         autour de
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 8 }}>
-        <button style={chip(depuis === null)} onClick={() => setDepuis(null)}>
+        <button className={chip(depuis === null)} onClick={() => setDepuis(null)}>
           ici
         </button>
         {POINTS_REPERE.map((p) => (
           <button
             key={p.nom}
-            style={chip(depuis?.nom === p.nom)}
+            className={chip(depuis?.nom === p.nom)}
             onClick={() => setDepuis(depuis?.nom === p.nom ? null : p)}
           >
             {p.nom}
@@ -175,18 +158,8 @@ export default function Recherche({
         }}
         onKeyDown={(e) => e.key === 'Enter' && lancerAdresse()}
         placeholder="…ou une adresse / un métro (Entrée)"
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          borderRadius: 8,
-          border: '1px solid var(--ivory-faded)',
-          background: 'var(--paper-2)',
-          color: 'var(--ivory)',
-          fontFamily: "'Instrument Serif', serif",
-          fontSize: 15,
-          outline: 'none',
-          marginBottom: etatAdr === 'off' ? 14 : 4,
-        }}
+        className="labo-champ petit"
+        style={{ marginBottom: etatAdr === 'off' ? 14 : 4 }}
       />
       {etatAdr !== 'off' && (
         <div
@@ -217,16 +190,11 @@ export default function Recherche({
           <div
             key={lieu.id}
             onClick={() => onOuvrir?.(lieu)}
-            style={{
-              padding: '11px 14px',
-              borderRadius: 10,
-              background: 'var(--paper-2)',
-              border: '1px solid rgba(240,234,217,0.08)',
-              cursor: onOuvrir ? 'pointer' : 'default',
-            }}
+            className="labo-resultat"
+            style={{ cursor: onOuvrir ? 'pointer' : 'default' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-              <span style={{ fontStyle: 'italic', fontSize: 20 }}>{lieu.nom}</span>
+              <span className="labo-nom">{lieu.nom}</span>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, whiteSpace: 'nowrap' }}>
                 {formatDistance(distanceM(lieu, point))}
               </span>

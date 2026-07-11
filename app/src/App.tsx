@@ -1824,17 +1824,7 @@ export default function App() {
               <button
                 key={t}
                 onClick={() => setLabo(t)}
-                style={{
-                  flex: 1,
-                  padding: '9px 4px',
-                  borderRadius: 10,
-                  border: `1px solid ${labo === t ? 'var(--red)' : 'var(--ivory-faded)'}`,
-                  background: labo === t ? 'var(--red)' : 'transparent',
-                  color: labo === t ? 'var(--print-white)' : 'var(--ivory)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  cursor: 'pointer',
-                }}
+                className={`labo-onglet${labo === t ? ' on' : ''}`}
               >
                 {t === 'trouver' ? 'trouver' : t === 'potos' ? 'avec mes potes' : 'grand jeudi'}
               </button>
@@ -2588,9 +2578,11 @@ function Fiche({
           (Math.min(86, Math.max(14, t.y)) / 100) * c.height,
         )
         ctx.rotate((-12 * Math.PI) / 180)
-        const couleurMarque =
-          getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#a8322a'
-        ctx.strokeStyle = t.v === 'valide' ? couleurMarque : '#9a948a'
+        const racine = getComputedStyle(document.documentElement)
+        const couleurMarque = racine.getPropertyValue('--red').trim() || '#a8322a'
+        // le « bof » suit le crayon graphite du carnet (token), pas un gris à part
+        const couleurBof = racine.getPropertyValue('--graphite').trim() || '#8a857a'
+        ctx.strokeStyle = t.v === 'valide' ? couleurMarque : couleurBof
         ctx.fillStyle = ctx.strokeStyle
         ctx.lineWidth = Math.max(3, taille / 8)
         ctx.textAlign = 'center'
@@ -2955,7 +2947,7 @@ function Fiche({
               <div className="tip" key={r.prenom}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
                   {r.lectures.map((l) => (
-                    <span key={l.nom} className="mono" style={{ fontSize: 12 }}>
+                    <span key={l.nom} className="mono tip-lecture">
                       {l.nom} :{' '}
                       {l.type === 'gradue' ? (
                         <span style={{ color: 'var(--red)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>

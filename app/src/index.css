@@ -63,6 +63,21 @@
   /* le grain du papier — SVG feTurbulence généré, jamais une photo */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
 
+  /* encres d'état (bloc 4 — chasse au slop) : chaque statut récurrent a UNE
+     encre, définie ici — plus de hex éparpillés dans les écrans */
+  --encre-papier: #211d19; /* l'encre imprimée sur les étiquettes ivoire */
+  --tirage: #2a261f; /* le dos d'un tirage photo, avant développement */
+  --ouvert: #7cb342; /* horaires « ouvert », sur charbon */
+  --ouvert-papier: #4f7a2a; /* idem, posé sur papier ivoire (popup carte) */
+  --cire-claire: #c87a6b; /* fermé / danger doux — lisible en petit sur charbon (a11y) */
+  --or: #d8ad44; /* l'or doux : le mode comparer, le match diffusé */
+  --or-2: #c99a2e; /* le trait de bordure de l'or */
+  --reco: #d9913b; /* l'encre orange des conditions recommandées */
+  --sauge: #84b6a3; /* le refuge (no foot) — vert-de-gris */
+  --sauge-2: #6b9e8c; /* le trait de bordure du refuge */
+  --vu: #5fb0c9; /* déjà consulté sur la carte — halo cyan */
+  --moi: #14c6b0; /* « moi » sur la carte — défaut ; db.ts la dérive de la marque */
+
   /* anciens noms V4 → alias vers la matière V5 (ne pas casser l'existant) */
   --paper: var(--nuit);
   --paper-2: var(--nuit-2);
@@ -305,8 +320,8 @@ body::before,
   width: 100%;
   padding: 13px 16px;
   background: var(--print-white);
-  color: #211d19;
-  border: 1px solid #211d19;
+  color: var(--encre-papier);
+  border: 1px solid var(--encre-papier);
   border-radius: var(--rayon);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   font-family: 'JetBrains Mono', monospace;
@@ -469,7 +484,7 @@ body::before,
   justify-content: center;
   background: rgba(20, 18, 14, 0.6);
   border: 1px solid rgba(239, 233, 216, 0.2);
-  border-radius: 50%;
+  border-radius: var(--rayon); /* un instrument carré, pas une bulle iOS */
   color: var(--ivory);
   cursor: pointer;
 }
@@ -480,9 +495,10 @@ body::before,
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
-  border-radius: 9px;
+  border-radius: var(--rayon); /* le compte tamponné, pas la pastille iOS */
   background: var(--red);
   color: var(--print-white);
+  font-family: 'JetBrains Mono', monospace; /* §5 : les chiffres en mono */
   font-size: 11px;
   font-weight: 700;
   line-height: 17px;
@@ -649,7 +665,7 @@ body::before,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #2a261f;
+  background: var(--tirage);
   color: rgba(239, 233, 216, 0.5);
   font-family: 'Caveat', cursive;
   font-size: 13px;
@@ -1040,7 +1056,7 @@ body::before,
   width: 100%;
   height: 84px;
   object-fit: cover;
-  background: #2a261f;
+  background: var(--tirage);
   border-radius: var(--rayon);
 }
 .idx-sansphoto {
@@ -1090,7 +1106,7 @@ body::before,
   transform: rotate(6deg);
 }
 .idx-tampon .tampon-recopar {
-  font-size: 7px;
+  font-size: 8px; /* LE corps micro-imprimé des objets-tampons (un seul) */
   letter-spacing: 2px;
   text-transform: uppercase;
   opacity: 0.85;
@@ -1135,7 +1151,7 @@ body::before,
 }
 .idx-sig {
   font-size: 11px;
-  color: #d9913b;
+  color: var(--reco);
   margin-top: 6px;
 }
 .idx-sig-toi {
@@ -1217,12 +1233,12 @@ body::before,
   gap: 3px;
 }
 .idx-pill-match {
-  border-color: #c99a2e;
-  color: #d8ad44;
+  border-color: var(--or-2);
+  color: var(--or);
 }
 .idx-pill-refuge {
-  border-color: #6b9e8c;
-  color: #84b6a3;
+  border-color: var(--sauge-2);
+  color: var(--sauge);
 }
 .idx-pill-match svg,
 .idx-pill-refuge svg {
@@ -1251,12 +1267,12 @@ body::before,
   border-color: var(--red);
 }
 .fiche-signal.match {
-  color: #d8ad44;
-  border-color: #c99a2e;
+  color: var(--or);
+  border-color: var(--or-2);
 }
 .fiche-signal.refuge {
-  color: #84b6a3;
-  border-color: #6b9e8c;
+  color: var(--sauge);
+  border-color: var(--sauge-2);
 }
 /* #22 : la propreté des wc sur la fiche (le seul score) */
 .fiche-wc {
@@ -1304,7 +1320,7 @@ body::before,
   color: rgba(239, 233, 216, 0.5);
 }
 .idx-horaire.ouvert {
-  color: #7cb342;
+  color: var(--ouvert);
 }
 .idx-horaire.ferme {
   color: var(--red);
@@ -1383,7 +1399,7 @@ body::before,
   color: var(--ivory);
 }
 .idx-case-gros.ouvert {
-  color: #7cb342;
+  color: var(--ouvert);
 }
 .idx-case-lbl {
   font-size: 11px;
@@ -1444,7 +1460,7 @@ body::before,
 /* page photos : le tirage en grand remplit l'espace dispo */
 .idx-grande {
   position: relative;
-  background: #2a261f;
+  background: var(--tirage);
   border-radius: var(--rayon);
   overflow: hidden;
   touch-action: none;
@@ -1584,7 +1600,7 @@ body::before,
   background: rgba(239, 233, 216, 0.08);
 }
 .idx-menu-item.danger {
-  color: #c47b6a;
+  color: var(--cire-claire);
 }
 .idx-menu-item.danger.confirm {
   color: var(--red);
@@ -1867,12 +1883,12 @@ button {
 .pin-moi {
   width: 14px;
   height: 14px;
-  background: var(--moi, #14c6b0);
+  background: var(--moi);
   border: 3px solid var(--print-white);
   border-radius: 50%;
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--moi, #14c6b0) 30%, transparent),
-    0 0 14px 3px color-mix(in srgb, var(--moi, #14c6b0) 55%, transparent);
+    0 0 0 2px color-mix(in srgb, var(--moi) 30%, transparent),
+    0 0 14px 3px color-mix(in srgb, var(--moi) 55%, transparent);
 }
 .pin-moi::before {
   content: '';
@@ -1883,7 +1899,7 @@ button {
   height: 14px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--moi, #14c6b0) 45%, transparent);
+  background: color-mix(in srgb, var(--moi) 45%, transparent);
   animation: pulse-moi 2.4s ease-out infinite;
   pointer-events: none;
 }
@@ -1920,13 +1936,13 @@ button {
   height: 0;
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
-  border-bottom: 12px solid var(--moi, #14c6b0);
+  border-bottom: 12px solid var(--moi);
 }
 
 /* le point de géoloc live de MapLibre : même couleur dérivée "moi", cohérent */
 .maplibregl-user-location-dot,
 .maplibregl-user-location-dot::before {
-  background-color: var(--moi, #14c6b0);
+  background-color: var(--moi);
 }
 .pin {
   width: 18px;
@@ -2062,9 +2078,10 @@ button {
   min-width: 15px;
   height: 15px;
   padding: 0 3px;
-  border-radius: 8px;
+  border-radius: var(--rayon); /* le compte tamponné, pas la pastille iOS */
   background: var(--red);
   color: var(--print-white);
+  font-family: 'JetBrains Mono', monospace; /* §5 : les chiffres en mono */
   font-size: 11px;
   font-weight: 700;
   line-height: 15px;
@@ -2093,7 +2110,7 @@ button {
    (distinct du rouge "validé" et du gris "fermé"). outline = ne touche pas au
    box-shadow de l'anneau validé. */
 .pin-vu {
-  outline: 2px solid #5fb0c9;
+  outline: 2px solid var(--vu);
   outline-offset: 2px;
   opacity: 0.8;
 }
@@ -2120,7 +2137,7 @@ button {
   font-size: 11px;
 }
 .popup-h.ouvert {
-  color: #4f7a2a;
+  color: var(--ouvert-papier);
 }
 .popup-h.ferme {
   color: var(--red);
@@ -2332,14 +2349,14 @@ button {
   color: var(--ivory);
 }
 .carte-sheet-pratique .ouvert {
-  color: #9ed3bf;
+  color: var(--ouvert);
 }
 .carte-sheet-pratique .ferme {
-  color: #e58a82;
+  color: var(--cire-claire);
 }
 .carte-sheet-wc {
   letter-spacing: 0.5px;
-  color: #f0c95a;
+  color: var(--or);
 }
 /* le pied : distance · pastilles de pages · bouton fiche */
 .carte-sheet-pied {
@@ -2383,7 +2400,7 @@ button {
 }
 /* lieu sélectionné « à comparer » : l'étiquette passe au jaune comparaison */
 .carte-sheet-fiche.comparer {
-  background: #d8ad44;
+  background: var(--or);
   color: var(--nuit);
 }
 
@@ -2436,7 +2453,7 @@ button {
   opacity: 1;
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1.5px #211d19; /* l'étiquette épinglée : cernée à l'encre */
+    inset 0 0 0 1.5px var(--encre-papier); /* l'étiquette épinglée : cernée à l'encre */
 }
 .carte-card-nom {
   position: relative;
@@ -2444,7 +2461,7 @@ button {
   font-family: 'Instrument Serif', serif;
   font-style: italic;
   font-size: 17px;
-  color: #211d19;
+  color: var(--encre-papier);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2467,7 +2484,7 @@ button {
 .carte-card.a-comparer {
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1.5px #c99a2e;
+    inset 0 0 0 1.5px var(--or-2);
 }
 .carte-card-vs {
   position: absolute;
@@ -2477,7 +2494,7 @@ button {
   font-size: 8px;
   letter-spacing: 0.5px;
   color: var(--nuit);
-  background: #d8ad44;
+  background: var(--or);
   padding: 1px 5px;
   border-radius: var(--rayon);
 }
@@ -2492,7 +2509,7 @@ button {
   align-items: center;
   gap: 8px;
   background: rgba(20, 18, 14, 0.92);
-  border: 1px solid rgba(216, 173, 68, 0.5);
+  border: 1px solid color-mix(in srgb, var(--or) 50%, transparent);
   border-radius: var(--rayon);
   padding: 6px 8px;
 }
@@ -2501,7 +2518,7 @@ button {
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #d8ad44;
+  color: var(--or);
 }
 .carte-comparer-chips {
   flex: 1;
@@ -2536,7 +2553,7 @@ button {
 }
 .carte-comparer-go {
   flex: 0 0 auto;
-  background: #d8ad44;
+  background: var(--or);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2549,16 +2566,16 @@ button {
 
 /* chantier 1 : carte d'index sélectionnée « à comparer » (clic long) */
 .idx-acomparer {
-  box-shadow: inset 0 0 0 1.5px #d8ad44;
+  box-shadow: inset 0 0 0 1.5px var(--or);
 }
 
 /* chantier 1 : pins « à comparer » sur la carte = dorés et moins transparents.
    le pin ACTIF reste bleu (d'où le :not(.pin-actif)) ; on bat .pin-grise/.pin-vu. */
 .carte .pin-acomparer:not(.pin-actif) {
-  background: #d8ad44 !important;
+  background: var(--or) !important;
   opacity: 0.95 !important;
   filter: none !important;
-  box-shadow: 0 0 0 2px var(--nuit), 0 0 7px rgba(216, 173, 68, 0.7) !important;
+  box-shadow: 0 0 0 2px var(--nuit), 0 0 7px color-mix(in srgb, var(--or) 70%, transparent) !important;
 }
 
 /* chantier 1 : dernière page du bloc détails = accès à la table */
@@ -2569,7 +2586,7 @@ button {
   margin-top: 4px;
 }
 .carte-sheet-compa-go {
-  background: #d8ad44;
+  background: var(--or);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2591,7 +2608,7 @@ button {
     padding: 6px 16px 2px;
     font-size: 11px;
     letter-spacing: 0.5px;
-    color: #d8ad44;
+    color: var(--or);
     opacity: 0.85;
   }
 }
@@ -2829,7 +2846,7 @@ button {
 
 /* chantier 1 : « comparer → » dans l'entête de la fiche (mode comparaison) */
 .fiche-compa-go {
-  background: #d8ad44;
+  background: var(--or);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2851,7 +2868,7 @@ button {
   margin: 0 0 10px;
   padding: 6px 10px;
   background: rgba(20, 18, 14, 0.92);
-  border: 1px solid rgba(216, 173, 68, 0.5);
+  border: 1px solid color-mix(in srgb, var(--or) 50%, transparent);
   border-radius: var(--rayon);
 }
 .idx-comparer-titre {
@@ -2859,11 +2876,11 @@ button {
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: #d8ad44;
+  color: var(--or);
 }
 .idx-comparer-go {
   flex: 0 0 auto;
-  background: #d8ad44;
+  background: var(--or);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2945,7 +2962,7 @@ button {
 .tc-coin {
   border-top: none;
   border-bottom: 1px solid rgba(239, 233, 216, 0.18);
-  color: #d8ad44;
+  color: var(--or);
 }
 /* le nom de colonne : NON sticky → il reste collé à sa colonne (sinon il flotte
    et on ne sait plus quelle colonne on lit). */
@@ -2998,10 +3015,10 @@ button {
   opacity: 0.6;
 }
 .tc-cell .ouvert {
-  color: #7fc08a;
+  color: var(--ouvert);
 }
 .tc-cell .ferme {
-  color: #c87a6b;
+  color: var(--cire-claire);
 }
 .tc-wc-pts {
   letter-spacing: 1px;
@@ -3023,8 +3040,8 @@ button {
 }
 /* la meilleure valeur de la ligne : surlignée à l'or doux */
 .tc-best {
-  background: rgba(216, 173, 68, 0.16);
-  box-shadow: inset 2px 0 0 #d8ad44;
+  background: color-mix(in srgb, var(--or) 16%, transparent);
+  box-shadow: inset 2px 0 0 var(--or);
 }
 .tc-fiche {
   background: none;
@@ -3116,7 +3133,7 @@ button {
 }
 .maplibregl-popup-content {
   background: var(--print-white);
-  color: #211d19;
+  color: var(--encre-papier);
   font-family: 'Instrument Serif', serif;
   border-radius: var(--rayon);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
@@ -3428,10 +3445,10 @@ button {
 }
 /* appui long : les conditions optimales, recommandées — à l'encre orange */
 .mot.entouré.reco::after {
-  border-color: #d9913b;
+  border-color: var(--reco);
 }
 .mot.entouré.reco {
-  color: #e8b36a;
+  color: var(--reco);
 }
 /* déjà dans le carnet : entouré au crayon gris, pas au rouge */
 .mot.entouré.deja {
@@ -3454,7 +3471,7 @@ button {
 /* premier tap court : le mot souffle "reste appuyé" en orange, une fois */
 @keyframes pulseReco {
   0%, 100% { border-color: var(--red); }
-  50% { border-color: #d9913b; }
+  50% { border-color: var(--reco); }
 }
 .mot.entouré.pulse::after {
   animation: pulseReco 0.3s var(--pose) 2;
@@ -3504,7 +3521,7 @@ button {
   margin-right: 14px;
 }
 .carte-photo {
-  background: #2a261f;
+  background: var(--tirage);
   height: 230px;
   border-radius: var(--rayon) var(--rayon) 0 0;
   display: flex;
@@ -3733,7 +3750,7 @@ button {
 .recap-tirage-photo {
   position: relative;
   height: 200px;
-  background: #2a261f;
+  background: var(--tirage);
   border-radius: var(--rayon) var(--rayon) 0 0;
   display: flex;
   align-items: center;
@@ -3978,7 +3995,7 @@ button {
   height: 30px;
   background: none;
   border: none;
-  color: #211d19;
+  color: var(--encre-papier);
   cursor: pointer;
   opacity: 0.7;
 }
@@ -4136,7 +4153,7 @@ button {
 }
 .onboard-carte {
   background: var(--print-white);
-  color: #211d19;
+  color: var(--encre-papier);
   width: 220px;
   height: 250px;
   margin: 18px auto;
@@ -4275,7 +4292,7 @@ button {
   font-size: 11px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #c0584f; /* rouge éclairci : plus lisible en petit sur charbon (a11y) */
+  color: var(--cire-claire); /* rouge éclairci : plus lisible en petit sur charbon (a11y) */
 }
 .profil-fiche dd {
   margin: 0;
@@ -4355,7 +4372,7 @@ button {
   width: 100%;
   height: 192px; /* ratio photo d'identité 35:45 */
   object-fit: cover;
-  background: #2a261f;
+  background: var(--tirage);
   border: 3px solid var(--encre); /* fin liseré ivoire, comme une vraie photo d'identité */
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   filter: grayscale(0.12) contrast(1.04);
@@ -4677,7 +4694,7 @@ button {
 /* le tip-légende, écrit directement sous la photo dans le tirage */
 .validation-tip.legende {
   width: 100%;
-  color: #211d19;
+  color: var(--encre-papier);
   border-bottom-color: rgba(33, 29, 25, 0.25);
   font-size: 21px;
   margin-top: 4px;
@@ -4729,8 +4746,8 @@ button {
   background: rgba(20, 18, 14, 0.25);
 }
 .tampon-perso.bof {
-  color: #9a948a;
-  border-color: #9a948a;
+  color: var(--graphite);
+  border-color: var(--graphite);
   background: rgba(20, 18, 14, 0.25);
 }
 /* le coup de tampon : LA frappe (scale compose avec le translate/rotate de base) */
@@ -4902,7 +4919,7 @@ button {
   color: var(--ivory);
 }
 .fiche-case-gros.ouvert {
-  color: #7cb342;
+  color: var(--ouvert);
 }
 .fiche-case-gros.ferme {
   color: var(--ivory-faded);
@@ -4932,7 +4949,7 @@ button {
 .idx-itineraire,
 .carte-sheet-fiche {
   background: var(--print-white);
-  color: #211d19;
+  color: var(--encre-papier);
   border: none;
   font-family: 'JetBrains Mono', monospace;
   font-style: normal;
@@ -4967,7 +4984,7 @@ button {
 .roues {
   display: flex;
   margin: 10px 0;
-  background: linear-gradient(180deg, #1a1712, #131009);
+  background: var(--nuit); /* encastré par l'ombre interne — pas de dégradé (§3) */
   border: 1px solid rgba(239, 233, 216, 0.12);
   border-radius: var(--rayon);
   box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
@@ -5191,11 +5208,11 @@ button {
   }
 }
 
-/* le tampon d'honnêteté : contenu simulé/démo — mono 9px, discret */
+/* le tampon d'honnêteté : contenu simulé/démo — micro-imprimé, discret */
 .tampon-demo,
 .tampon-simule {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 8px; /* LE corps micro-imprimé des objets-tampons (un seul) */
   letter-spacing: 0.5px;
   opacity: 0.4;
   margin-left: 6px;
@@ -5609,7 +5626,7 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   width: min(330px, 84vw);
   z-index: 40;
   background: #e9e1cb;
-  color: #211d19;
+  color: var(--encre-papier);
   border: none;
   border-radius: var(--rayon);
   padding: 26px 22px 16px;
@@ -6129,11 +6146,144 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   .page > .carte,
   .page > .cesoir,
   .page > .toast {
-    animation: pageIn 150ms ease-out backwards;
+    animation: pageIn 150ms var(--pose) backwards;
   }
   .splash-tampon,
   .splash-tagline,
   .splash-pitch {
-    animation: pageIn 150ms ease-out backwards;
+    animation: pageIn 150ms var(--pose) backwards;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   V5 bloc 4 — chasse au slop : écrans labo (trouver · avec mes
+   potes) + onglets du labo. Classes migrées des styles inline qui
+   violaient la charte : rayon unique (plus de pilules 999px ni de
+   coins 10-12px), échelle typo 34/21/17/13/11, encres aux tokens.
+   ══════════════════════════════════════════════════════════════ */
+
+/* les onglets du labo : des étiquettes, pas des boutons web */
+.labo-onglet {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: var(--rayon);
+  border: 1px solid var(--ivory-faded);
+  background: transparent;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.labo-onglet.on {
+  border-color: var(--red);
+  background: var(--red);
+  color: var(--print-white);
+}
+
+/* la voix du carnet : même titre que partout ailleurs */
+.labo-titre {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 34px;
+  margin: 4px 0 2px;
+}
+
+/* le chip : une étiquette massicotée, pas une pilule */
+.labo-chip {
+  padding: 5px 12px;
+  border-radius: var(--rayon);
+  border: 1px solid var(--ivory-faded);
+  background: transparent;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.labo-chip.on {
+  border-color: var(--red);
+  background: var(--red);
+  color: var(--print-white);
+}
+.labo-chip.fixe {
+  cursor: default;
+}
+
+/* la page posée : même matière que les cartes du carnet */
+.labo-carte {
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.08);
+  border-radius: var(--rayon);
+  padding: 14px 16px;
+}
+.labo-nom {
+  font-style: italic;
+  font-size: 21px;
+}
+.labo-vide {
+  font-style: italic;
+  font-size: 21px;
+}
+.labo-cap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--red);
+}
+.labo-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+.labo-reaction {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.labo-resume {
+  font-style: italic;
+  font-size: 17px;
+  opacity: 0.85;
+  margin-top: 10px;
+}
+
+/* le bouton secondaire : un filet mono, pas un bouton web arrondi */
+.labo-btn-ligne {
+  padding: 12px 0;
+  border-radius: var(--rayon);
+  border: 1px solid var(--ivory-faded);
+  background: transparent;
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* le champ de recherche : une ligne du carnet, coin massicoté */
+.labo-champ {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--rayon);
+  border: 1px solid var(--ivory-faded);
+  background: var(--paper-2);
+  color: var(--ivory);
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  outline: none;
+}
+.labo-champ.petit {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.labo-resultat {
+  padding: 11px 14px;
+  border-radius: var(--rayon);
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.08);
+}
+
+/* fiche « à travers leurs yeux » : la lecture d'un critère (11, l'échelle) */
+.tip-lecture {
+  font-size: 11px;
 }

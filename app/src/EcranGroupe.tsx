@@ -21,22 +21,9 @@ const DEPART_SIMULE: Record<string, Repere> = {
 type Etape = 'compose' | 'swipe' | 'match'
 type Prop = { score: ScoreGroupe; reactions: ReactionsLieu }
 
-const chip = (actif: boolean): React.CSSProperties => ({
-  padding: '5px 12px',
-  borderRadius: 999,
-  border: `1px solid ${actif ? 'var(--red)' : 'var(--ivory-faded)'}`,
-  background: actif ? 'var(--red)' : 'transparent',
-  color: actif ? 'var(--print-white)' : 'var(--ivory)',
-  fontFamily: "'JetBrains Mono', monospace",
-  fontSize: 12,
-  cursor: 'pointer',
-})
-const carte: React.CSSProperties = {
-  background: 'var(--paper-2)',
-  border: '1px solid rgba(240,234,217,0.08)',
-  borderRadius: 12,
-  padding: '14px 16px',
-}
+// V5 bloc 4 : les styles inline (pilules 999px, coins 12px, corps hors échelle)
+// ont migré vers les classes .labo-* en fin d'index.css
+const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
 
 // Écran labo : le VRAI parcours du match de groupe (concept « on se voit où »).
 // composer le groupe + départs → triangulation → je swipe → le 1er qui matche gagne.
@@ -110,7 +97,7 @@ export default function Groupe({
   if (etape === 'compose') {
     return (
       <div style={{ color: 'var(--ivory)' }}>
-        <h2 style={{ fontStyle: 'italic', fontSize: 30, margin: '4px 0 2px' }}>avec mes potes.</h2>
+        <h2 className="labo-titre">avec mes potes.</h2>
         <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 16px' }}>
           chacun son départ · l'app triangule · le 1er qui matche gagne
         </p>
@@ -119,9 +106,9 @@ export default function Groupe({
           qui sort ?
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
-          <span style={{ ...chip(true), cursor: 'default' }}>toi</span>
+          <span className="labo-chip on fixe">toi</span>
           {Object.values(PROFILS_MEMBRES).map((m) => (
-            <button key={m.id} style={chip(avec.includes(m.id))} onClick={() => toggleAvec(m.id)}>
+            <button key={m.id} className={chip(avec.includes(m.id))} onClick={() => toggleAvec(m.id)}>
               {m.prenom}
             </button>
           ))}
@@ -131,16 +118,16 @@ export default function Groupe({
           ton départ
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 8 }}>
-          <button style={chip(monDepart.nom === 'ma position')} onClick={() => setMonDepart(repereMaPosition())}>
+          <button className={chip(monDepart.nom === 'ma position')} onClick={() => setMonDepart(repereMaPosition())}>
             ici
           </button>
           {POINTS_REPERE.map((p) => (
-            <button key={p.nom} style={chip(monDepart.nom === p.nom)} onClick={() => setMonDepart(p)}>
+            <button key={p.nom} className={chip(monDepart.nom === p.nom)} onClick={() => setMonDepart(p)}>
               {p.nom}
             </button>
           ))}
         </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.4, marginBottom: 16 }}>
+        <div className="labo-hint">
           {avec.map((id) => `${PROFILS_MEMBRES[id]?.prenom} part de ${DEPART_SIMULE[id]?.nom}`).join(' · ') ||
             'tu sors solo'}
         </div>
@@ -150,7 +137,7 @@ export default function Groupe({
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 22 }}>
           {ENVIES.map((e) => (
-            <button key={e} style={chip(mesEnvies.includes(e))} onClick={() => toggleEnvie(e)}>
+            <button key={e} className={chip(mesEnvies.includes(e))} onClick={() => toggleEnvie(e)}>
               {e}
             </button>
           ))}
@@ -161,22 +148,7 @@ export default function Groupe({
             choisis au moins une envie — le groupe a besoin d'un cap.
           </p>
         )}
-        <button
-          onClick={lancer}
-          disabled={sansEnvie}
-          style={{
-            width: '100%',
-            padding: '13px 0',
-            borderRadius: 12,
-            border: 'none',
-            background: 'var(--red)',
-            color: 'var(--print-white)',
-            fontStyle: 'italic',
-            fontSize: 19,
-            cursor: sansEnvie ? 'default' : 'pointer',
-            opacity: sansEnvie ? 0.4 : 1,
-          }}
-        >
+        <button className="valider" onClick={lancer} disabled={sansEnvie} style={{ width: '100%', padding: '13px 0' }}>
           trianguler →
         </button>
       </div>
@@ -189,9 +161,9 @@ export default function Groupe({
     if (!p) {
       return (
         <div style={{ color: 'var(--ivory)' }}>
-          <p style={{ fontStyle: 'italic', fontSize: 20 }}>plus de propositions.</p>
+          <p className="labo-vide">plus de propositions.</p>
           <p style={{ opacity: 0.6, marginTop: 6 }}>le groupe est difficile ce soir.</p>
-          <button onClick={() => setEtape('compose')} style={{ ...chip(false), marginTop: 14 }}>
+          <button onClick={() => setEtape('compose')} className={chip(false)} style={{ marginTop: 14 }}>
             ↺ recommencer
           </button>
         </div>
@@ -203,8 +175,8 @@ export default function Groupe({
           proposition {i + 1}/{props.length} · à mi-chemin
         </div>
 
-        <div style={{ ...carte, padding: '18px 18px' }}>
-          <div style={{ fontStyle: 'italic', fontSize: 26 }}>{p.score.lieu.nom}</div>
+        <div className="labo-carte" style={{ padding: '18px 18px' }}>
+          <div className="labo-nom">{p.score.lieu.nom}</div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, marginTop: 4 }}>
             {formatDistance(distanceM(p.score.lieu, centre))} du rendez-vous · {p.score.pourquoi}
           </div>
@@ -213,17 +185,14 @@ export default function Groupe({
             style={{
               marginTop: 14,
               paddingTop: 12,
-              borderTop: '1px solid rgba(240,234,217,0.08)',
+              borderTop: '1px solid rgba(239,233,216,0.08)',
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
             }}
           >
             {p.reactions.reactions.map((r) => (
-              <div
-                key={r.membre}
-                style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}
-              >
+              <div key={r.membre} className="labo-reaction">
                 <span style={{ opacity: 0.8 }}>{r.membre}</span>
                 <span style={{ color: r.reaction === 'chaud' ? 'var(--red)' : 'var(--ivory)', opacity: r.reaction === 'chaud' ? 1 : 0.6 }}>
                   {r.reaction}
@@ -231,42 +200,14 @@ export default function Groupe({
               </div>
             ))}
           </div>
-          <div style={{ fontStyle: 'italic', fontSize: 15, opacity: 0.85, marginTop: 10 }}>
-            « {p.reactions.resume} »
-          </div>
+          <div className="labo-resume">« {p.reactions.resume} »</div>
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-          <button
-            onClick={passer}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: '1px solid var(--ivory-faded)',
-              background: 'transparent',
-              color: 'var(--ivory)',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 13,
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={passer} className="labo-btn-ligne" style={{ flex: 1 }}>
             ← passer
           </button>
-          <button
-            onClick={choisir}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: 'none',
-              background: 'var(--red)',
-              color: 'var(--print-white)',
-              fontStyle: 'italic',
-              fontSize: 17,
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={choisir} className="valider" style={{ flex: 1, padding: '12px 0' }}>
             ça me va →
           </button>
         </div>
@@ -281,10 +222,8 @@ export default function Groupe({
   const plein = chauds === total
   return (
     <div style={{ color: 'var(--ivory)' }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: 1, color: 'var(--red)' }}>
-        {plein ? 'ÇA MATCHE' : 'VOTRE CHOIX'}
-      </div>
-      <h2 style={{ fontStyle: 'italic', fontSize: 34, margin: '6px 0 4px' }}>{g.score.lieu.nom}</h2>
+      <div className="labo-cap">{plein ? 'ÇA MATCHE' : 'VOTRE CHOIX'}</div>
+      <h2 className="labo-titre" style={{ margin: '6px 0 4px' }}>{g.score.lieu.nom}</h2>
       <p style={{ fontStyle: 'italic', fontSize: 17, opacity: 0.9 }}>
         {plein ? 'tout le monde est chaud.' : g.reactions.resume}
       </p>
@@ -295,8 +234,8 @@ export default function Groupe({
       {/* le verdict agrégé (score × adhésion) en regard du choix swipé */}
       {verdict && (
         <div
+          className="labo-carte"
           style={{
-            ...carte,
             marginTop: 16,
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 11,
@@ -311,36 +250,14 @@ export default function Groupe({
 
       <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
         {onOuvrir && (
-          <button
-            onClick={() => onOuvrir(g.score.lieu)}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: 'none',
-              background: 'var(--red)',
-              color: 'var(--print-white)',
-              fontStyle: 'italic',
-              fontSize: 17,
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={() => onOuvrir(g.score.lieu)} className="valider" style={{ flex: 1, padding: '12px 0' }}>
             on y va → la fiche
           </button>
         )}
         <button
           onClick={() => setEtape('compose')}
-          style={{
-            flex: onOuvrir ? '0 0 auto' : 1,
-            padding: '12px 16px',
-            borderRadius: 12,
-            border: '1px solid var(--ivory-faded)',
-            background: 'transparent',
-            color: 'var(--ivory)',
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
+          className="labo-btn-ligne"
+          style={{ flex: onOuvrir ? '0 0 auto' : 1, padding: '12px 16px' }}
         >
           ↺ relancer
         </button>

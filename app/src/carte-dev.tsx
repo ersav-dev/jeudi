@@ -47,11 +47,11 @@ function SelecteurGrappes() {
           onClick={() => choisir(s.cle)}
           style={{
             padding: '5px 9px',
-            borderRadius: 3,
+            borderRadius: 'var(--rayon)',
             cursor: 'pointer',
-            border: '1px solid rgba(240, 234, 217, 0.4)',
-            background: actif === s.cle ? '#f0ead9' : 'rgba(21, 19, 15, 0.85)',
-            color: actif === s.cle ? '#15130f' : '#f0ead9',
+            border: '1px solid rgba(239, 233, 216, 0.4)',
+            background: actif === s.cle ? 'var(--encre)' : 'rgba(20, 18, 14, 0.85)',
+            color: actif === s.cle ? 'var(--nuit)' : 'var(--encre)',
           }}
         >
           {s.nom}
