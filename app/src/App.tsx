@@ -316,44 +316,16 @@ function MenuCritere({
 const TAGLINE_MAX = 42
 
 // ── les réglages : où tu es · couleur · porte-monnaie · données · à venir ──
-// ── helpers d'affichage du profil v2 (Insta/Bumble) ──
-const CARTE_PROFIL: React.CSSProperties = {
-  background: 'var(--paper-2)',
-  border: '1px solid rgba(240,234,217,0.08)',
-  borderRadius: 12,
-  padding: '14px 16px',
-}
+// ── helpers d'affichage du profil = la page de garde du carnet (V5 §7) ──
+// un titre de section : un filet graphite + le mot en crayonné, zéro boîte
 function TitreSection({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 11,
-        letterSpacing: 1,
-        color: 'var(--red)',
-        margin: '24px 0 10px',
-      }}
-    >
-      {children}
-    </div>
-  )
+  return <div className="profil-section-titre mono">{children}</div>
 }
+// une stat de la page de garde : mono tabulaire, sur LA ligne des stats
 function StatProfil({ n, l, onClick }: { n: React.ReactNode; l: string; onClick?: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        background: 'none',
-        border: 'none',
-        padding: '0 4px',
-        color: 'var(--ivory)',
-        cursor: onClick ? 'pointer' : 'default',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ fontStyle: 'italic', fontSize: 22 }}>{n}</div>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.55 }}>{l}</div>
+    <button className={`profil-stat mono ${onClick ? 'tape' : ''}`} onClick={onClick}>
+      <span className="profil-stat-n">{n}</span> {l}
     </button>
   )
 }
@@ -1140,7 +1112,11 @@ export default function App() {
                 // les VRAIES demandes (table relations) — plus de tampon démo ici
                 demandes.map((d) => (
                   <div className="notif-ligne" key={d.deId}>
-                    <span className="notif-qui">@{d.prenom.toLowerCase()}</span>
+                    {/* cohérent avec le cercle : le mini ex-libris devant le prénom */}
+                    <span className="notif-qui">
+                      <span className="exlibris-initiale exlibris-mini">{d.prenom[0]}</span>
+                      @{d.prenom.toLowerCase()}
+                    </span>
                     <span className="notif-actions mono">
                       <button className="notif-ok" onClick={() => accepterDemande(d.deId)}>
                         accepter
@@ -1496,8 +1472,10 @@ export default function App() {
       {onglet === 'profil' && (
         <div className="cercle profil-vue">
 
-          {/* ① en-tête : portrait + identité + stats (façon Insta) */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+          {/* ① la page de garde : « ce carnet appartient à — », le prénom
+              par-dessus une ligne pointillée, les stats en mono sur UNE ligne */}
+          <p className="profil-garde-phrase">ce carnet appartient à —</p>
+          <div className="profil-garde">
             <label className="profil-id">
               <svg className="profil-trombone" viewBox="0 0 28 72" aria-hidden="true">
                 <path
@@ -1516,18 +1494,14 @@ export default function App() {
               <input type="file" accept="image/*" capture="user" hidden onChange={changerPhotoProfil} />
             </label>
 
-            <div style={{ flex: 1, paddingTop: 4, color: 'var(--ivory)' }}>
-              <div style={{ fontStyle: 'italic', fontSize: 26, lineHeight: 1.1 }}>
-                {prenom}
-                <span style={{ opacity: 0.65 }}>
-                  {' '}
-                  · {ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ans` : '—'}
-                </span>
-              </div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.55, marginTop: 3 }}>
+            <div className="profil-garde-droite">
+              {/* le prénom : la main (Caveat), posée sur la ligne pointillée */}
+              <div className="hand profil-garde-nom">{prenom}</div>
+              <div className="mono profil-garde-meta">
+                {ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ans · ` : ''}
                 depuis {formatDepuis(depuis)}
               </div>
-              <div style={{ display: 'flex', marginTop: 14 }}>
+              <div className="profil-stats">
                 {/* mes spots à MOI (pas ceux du cercle) */}
                 <StatProfil n={mesSpots.length} l="spots" />
                 <StatProfil n={mesSpots.filter((x) => x.tampon?.v === 'valide').length} l="validés" />
@@ -1541,192 +1515,70 @@ export default function App() {
             </div>
           </div>
 
-          {/* ② mes critères (ex-« critère ») */}
+          {/* ② mes critères : des lignes du registre, plus de boîte */}
           <TitreSection>mes critères</TitreSection>
-          <div style={CARTE_PROFIL}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontStyle: 'italic', fontSize: 19 }}>
+          <div className="profil-criteres">
+            <div className="profil-critere-ligne">
+              <span className="profil-critere-nom">
                 {critere.replace(/^(le |la |les |l')/, '')}
               </span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5 }}>
-                ton critère
-              </span>
+              <span className="mono profil-critere-apercu">ton critère</span>
             </div>
-            {criteres.length > 0 && (
-              <div
-                style={{
-                  marginTop: 10,
-                  borderTop: '1px solid rgba(240,234,217,0.08)',
-                  paddingTop: 10,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 9,
-                }}
-              >
-                {criteres.map((c) => (
-                  <div
-                    key={c.id}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
+            {criteres.map((c) => (
+              <div key={c.id} className="profil-critere-ligne">
+                <span className="profil-critere-nom">{c.nom}</span>
+                <span className="profil-critere-droite">
+                  {/* les pastilles ●●○ à l'encre — jamais d'étoiles (DA) */}
+                  <span className={`mono profil-critere-apercu ${c.type === 'gradue' ? 'gradue' : ''}`}>
+                    {apercuCritere(c.type)}
+                  </span>
+                  <button
+                    className="profil-critere-suppr"
+                    onClick={() => setCriteres(supprimerCritere(c.id))}
+                    aria-label="supprimer"
                   >
-                    <span style={{ fontStyle: 'italic', fontSize: 17 }}>{c.nom}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span
-                        style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 12,
-                          letterSpacing: 1,
-                          color: c.type === 'gradue' ? 'var(--red)' : 'var(--ivory)',
-                          opacity: c.type === 'gradue' ? 1 : 0.65,
-                        }}
-                      >
-                        {apercuCritere(c.type)}
-                      </span>
-                      <button
-                        onClick={() => setCriteres(supprimerCritere(c.id))}
-                        aria-label="supprimer"
-                        style={{ background: 'none', border: 'none', color: 'var(--ivory-faded)', cursor: 'pointer', fontSize: 14 }}
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  </div>
-                ))}
+                    ✕
+                  </button>
+                </span>
               </div>
-            )}
+            ))}
 
-            <div
-              style={{
-                marginTop: 12,
-                borderTop: '1px solid rgba(240,234,217,0.08)',
-                paddingTop: 12,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
+            <div className="profil-critere-ajout">
               <input
+                className="profil-critere-input"
                 value={nouvCrit}
                 onChange={(e) => setNouvCrit(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && ajoutCritere()}
                 placeholder="un critère… (le bruit, les cocktails)"
-                style={{
-                  flex: 1,
-                  minWidth: 130,
-                  padding: '8px 11px',
-                  borderRadius: 8,
-                  border: '1px solid var(--ivory-faded)',
-                  background: 'var(--paper)',
-                  color: 'var(--ivory)',
-                  fontFamily: "'Instrument Serif', serif",
-                  fontSize: 16,
-                  outline: 'none',
-                }}
               />
               <button
+                className="mono profil-critere-btn"
                 onClick={() => setNouvType((t) => (t === 'gradue' ? 'binaire' : 'gradue'))}
                 title="bascule le type"
-                style={{
-                  padding: '7px 11px',
-                  borderRadius: 999,
-                  border: '1px solid var(--ivory-faded)',
-                  background: 'transparent',
-                  color: 'var(--ivory)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
               >
                 {nouvType === 'gradue' ? '●●○ gradué' : 'oui/non'}
               </button>
-              <button
-                onClick={ajoutCritere}
-                style={{
-                  padding: '7px 13px',
-                  borderRadius: 999,
-                  border: 'none',
-                  background: 'var(--red)',
-                  color: 'var(--print-white)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <button className="mono profil-critere-btn" onClick={ajoutCritere}>
                 + ajouter
               </button>
             </div>
           </div>
 
-          {/* ③ mes super potes (anneau intérieur, 10 max) */}
+          {/* ③ mes super potes : des ex-libris (initiale au tampon graphite) */}
           <TitreSection>
             mes super potes · {proches.length}/{CAP_PROCHES}
           </TitreSection>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div className="profil-potes">
             {membresCercle.filter((m) => proches.includes(m.id)).map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setOnglet('cercle')}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--ivory)',
-                }}
-              >
-                <span
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    border: '1px solid var(--red)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontStyle: 'italic',
-                    fontSize: 20,
-                  }}
-                >
-                  {m.prenom[0]}
-                </span>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.6 }}>
-                  {m.prenom}
-                </span>
+              <button key={m.id} className="profil-pote" onClick={() => setOnglet('cercle')}>
+                <span className="exlibris-initiale">{m.prenom[0]}</span>
+                <span className="mono profil-pote-nom">{m.prenom}</span>
               </button>
             ))}
-            <button
-              onClick={() => setOnglet('cercle')}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--ivory-faded)',
-              }}
-            >
-              <span
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  border: '1px dashed var(--ivory-faded)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: 24,
-                }}
-              >
-                +
-              </span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, opacity: 0.5 }}>
-                ajouter
-              </span>
+            <button className="profil-pote" onClick={() => setOnglet('cercle')}>
+              {/* la place vide : un ex-libris pas encore frappé */}
+              <span className="exlibris-initiale vide">+</span>
+              <span className="mono profil-pote-nom">ajouter</span>
             </button>
           </div>
 
@@ -1795,6 +1647,9 @@ export default function App() {
                 : lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === m.prenom)).length
               const estPro = proches.includes(m.id)
               return (
+                // l'ex-libris (V5 §7) : initiale au tampon graphite (la seule
+                // exception ronde), prénom serif, critère mono — et le sceau
+                // de cire discret à droite quand c'est un super pote
                 <li
                   key={m.id}
                   className="membre"
@@ -1807,58 +1662,39 @@ export default function App() {
                       setCurateur(m.prenom)
                     }
                   }}
-                  style={estPro ? { borderColor: 'var(--red)' } : undefined}
                 >
-                  <div
-                    className="membre-tete"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}
-                  >
-                    <span className="membre-nom">
-                      {m.prenom}
-                      {/* le tampon d'honnêteté : le décor seed s'assume démo */}
-                      {!m.reel && <span className="mono tampon-demo">démo</span>}
-                      {estPro && (
-                        <span
-                          className="sceau-cire"
-                          style={{
-                            color: 'var(--red)',
-                            marginLeft: 7,
-                            fontSize: 12,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                          }}
-                        >
-                          {/* l'anneau intérieur — jamais d'étoile (DA) */}
-                          <IAnneau taille={12} /> super pote
-                        </span>
-                      )}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleProche(m.id)
-                      }}
-                      style={{
-                        background: estPro ? 'var(--red)' : 'transparent',
-                        color: estPro ? 'var(--print-white)' : 'var(--ivory)',
-                        border: '1px solid var(--red)',
-                        borderRadius: 999,
-                        padding: '4px 10px',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: 10,
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {estPro ? 'retirer' : '+ super pote'}
-                    </button>
+                  <span className="exlibris-initiale">{m.prenom[0]}</span>
+                  <div className="membre-corps">
+                    <div className="membre-tete">
+                      <span className="membre-nom">
+                        {m.prenom}
+                        {/* le tampon d'honnêteté : le décor seed s'assume démo */}
+                        {!m.reel && <span className="mono tampon-demo">démo</span>}
+                      </span>
+                      {/* le sceau : cire posée = super pote · empreinte vide = à sceller.
+                          l'anneau intérieur — jamais d'étoile (DA) */}
+                      <button
+                        className={`membre-sceau ${estPro ? 'scelle sceau-cire' : ''}`}
+                        aria-pressed={estPro}
+                        aria-label={
+                          estPro
+                            ? `retirer ${m.prenom} de tes super potes`
+                            : `faire de ${m.prenom} un super pote`
+                        }
+                        title={estPro ? 'super pote — toucher pour retirer' : '+ super pote'}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleProche(m.id)
+                        }}
+                      >
+                        <IAnneau taille={18} />
+                      </button>
+                    </div>
+                    <p className="hand membre-bio">{m.bio || 'nouveau dans ton cercle.'}</p>
+                    <p className="mono membre-critere">
+                      {m.critere ? `son truc : ${m.critere} · ` : ''}voir ses {nbSpots} spots →
+                    </p>
                   </div>
-                  <p className="hand membre-bio">{m.bio || 'nouveau dans ton cercle.'}</p>
-                  <p className="mono membre-critere">
-                    {m.critere ? `son truc : ${m.critere} · ` : ''}voir ses {nbSpots} spots →
-                  </p>
                 </li>
               )
             })}
@@ -1867,8 +1703,8 @@ export default function App() {
           {cercleReel.length === 0 && (
             <NoteMarge id="cercle-invite" fleche="bas" className="note-marge-cercle" />
           )}
-          {/* LE canal de croissance : le lien d'invitation */}
-          <button className="lien inviter-pote" onClick={inviterUnPote}>
+          {/* LE canal de croissance : l'étiquette papier, mise en avant */}
+          <button className="inviter-pote" onClick={inviterUnPote}>
             invite un pote dans ton cercle →
           </button>
         </div>
