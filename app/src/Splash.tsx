@@ -29,8 +29,9 @@ export default function Splash({ onFini }: { onFini: () => void }) {
       aria-label="entrer"
     >
       <div className="splash-tampon">Jeudi.</div>
-      <div className="splash-tagline">ça dit quoi ce soir ?</div>
-      <div className="splash-pitch">
+      <div className="splash-tagline">je dis où.</div>
+      {/* le texte fondateur reste — mais typographié sobre (mono 11), pas décoratif */}
+      <div className="splash-pitch mono">
         tes vrais potes te disent où.
         <br />
         pas 4 000 avis google.

@@ -3,6 +3,8 @@
 // le clustering/la chorégraphie sans auth ni onboarding.
 // servi par vite en dev via /carte-dev.html — JAMAIS inclus au build
 // (aucune référence depuis index.html ; page dev volontairement orpheline).
+/* eslint-disable react-refresh/only-export-components -- page dev orpheline,
+   le fast-refresh n'a pas d'importance ici */
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Carte from './Carte'

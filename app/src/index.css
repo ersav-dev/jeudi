@@ -164,13 +164,13 @@ body::before,
 @keyframes inkIn {
   from { opacity: 0; translate: 0 10px; }
 }
+/* §7 splash : RIEN que le tampon, « je dis où. » et le grain — pas de dot-grid
+   (la trame pointillée, c'est la page intérieure ; ici c'est la couverture) */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: var(--paper);
-  background-image: radial-gradient(rgba(239, 233, 216, 0.05) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background: var(--nuit);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -198,23 +198,21 @@ body::before,
   color: var(--ivory);
   animation: inkIn 150ms var(--pose) 0.35s backwards;
 }
+/* le texte fondateur : sobre, mono 11 (pas une décoration manuscrite) */
 .splash-pitch {
-  font-family: 'Caveat', cursive;
-  font-size: 21px;
-  color: var(--ivory-faded);
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.7;
+  color: var(--encre-3);
   animation: inkIn 150ms var(--pose) 0.55s backwards;
 }
 
-/* ── l'écran de connexion (magic-link) ── */
+/* ── l'écran de connexion (magic-link) : la couverture du carnet ──
+   même matière que le splash — le charbon, le grain, pas de dot-grid */
 .auth {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: var(--paper);
-  background-image: radial-gradient(rgba(239, 233, 216, 0.05) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background: var(--nuit);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -233,6 +231,7 @@ body::before,
   letter-spacing: 2px;
   border-radius: var(--rayon);
   box-shadow: inset 0 0 18px color-mix(in srgb, var(--red) 25%, transparent);
+  transform: rotate(-2deg); /* un tampon ne frappe jamais parfaitement droit */
 }
 .auth-tagline {
   font-style: italic;
@@ -249,10 +248,11 @@ body::before,
   width: 100%;
   max-width: 320px;
 }
+/* voix de l'app → serif italic (règle d'or : jamais un texte système en Caveat) */
 .auth-sous {
-  font-family: 'Caveat', cursive;
+  font-style: italic;
   font-size: 17px;
-  color: var(--ivory-faded);
+  color: var(--encre-2);
   text-align: center;
   line-height: 1.4;
   margin: 0;
@@ -263,50 +263,63 @@ body::before,
   color: var(--ivory);
   margin: 0;
 }
+/* l'input mail = un filet bas au graphite, pas une boîte sombre */
 .auth-input {
   width: 100%;
-  padding: 13px 16px;
-  background: var(--paper-2);
-  border: 1px solid rgba(239, 233, 216, 0.18);
-  border-radius: var(--rayon);
-  color: var(--ivory);
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--graphite);
+  border-radius: 0;
+  color: var(--encre);
   font-size: 17px;
   text-align: center;
 }
+.auth-input::placeholder {
+  color: var(--encre-3);
+}
 .auth-input:focus {
   outline: none;
-  border-color: var(--red);
+  border-bottom-color: var(--encre);
 }
+/* les boutons = des étiquettes papier : rayon 3, bord encre 1px, ombre de contact */
 .auth-btn {
   width: 100%;
   padding: 13px 16px;
-  background: var(--red);
-  color: var(--print-white);
-  border: none;
+  background: var(--nuit-2);
+  color: var(--encre);
+  border: 1px solid rgba(239, 233, 216, 0.45);
   border-radius: var(--rayon);
-  font-size: 17px;
-  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
   cursor: pointer;
 }
 .auth-btn:disabled {
   opacity: 0.45;
   cursor: default;
 }
+/* l'étiquette claire : lisible, mais plus un bouton-web générique */
 .auth-google {
   width: 100%;
   padding: 13px 16px;
-  background: var(--print-white, var(--encre));
-  color: var(--nuit);
-  border: none;
+  background: var(--print-white);
+  color: #211d19;
+  border: 1px solid #211d19;
   border-radius: var(--rayon);
-  font-size: 17px;
-  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
   cursor: pointer;
 }
+/* label système → mono crayonné, pas de Caveat */
 .auth-ou {
-  font-family: 'Caveat', cursive;
-  font-size: 13px;
-  color: var(--ivory-faded);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--encre-3);
   margin: 2px 0;
 }
 .auth-relance {
@@ -325,7 +338,7 @@ body::before,
   margin: 0;
 }
 
-/* ── la pile derrière la carte du deck ── */
+/* ── la pile derrière la carte du deck : des pages, pas des polaroïds ── */
 .pile {
   position: relative;
 }
@@ -336,7 +349,9 @@ body::before,
   inset: 0;
   margin: auto;
   max-width: 330px;
-  background: var(--print-white);
+  background: var(--nuit-2);
+  border: 1px solid rgba(239, 233, 216, 0.12);
+  border-radius: var(--rayon);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   z-index: -1;
 }
@@ -388,9 +403,6 @@ body::before,
 @media (min-width: 480px) {
   .fab {
     right: calc(50% - 240px + 20px);
-  }
-  .meteo-bas {
-    left: calc(50% - 240px + 20px);
   }
 }
 
@@ -2547,46 +2559,45 @@ button {
   }
 }
 
-/* lot B : carte du deck (polaroïd crème) — distance/temps + description sous
-   le nom. couleurs FONCÉES (fond clair) → lisibles, comme le reste du tirage. */
+/* §7 : la méta du deck — UNE seule ligne, mono crayonné (--encre-3) */
 .carte-meta {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
   font-size: 11px;
-  color: #78716c;
+  color: var(--encre-3);
   margin-top: 4px;
 }
-.carte-meta .ouvert {
-  color: #2e7d32;
-}
+.carte-meta .ouvert,
 .carte-meta .ferme {
-  color: #b04a3a;
+  color: var(--encre-2); /* l'info d'horaire ressort, sans couleur de plus */
 }
 .carte-desc {
   font-size: 11px;
-  color: #57534e;
+  color: var(--encre-3);
   margin: 3px 0 0;
 }
 /* lot B : description dans le tirage « en grand » du récap */
 .recap-tirage-desc {
   font-size: 11px;
-  color: var(--ivory);
-  opacity: 0.8;
-  margin: 0 0 2px;
+  color: var(--encre-2);
+  margin-top: 0;
+  margin-bottom: 2px;
 }
 
-/* récap « ce soir » : comparer tout le récap d'un coup */
+/* récap « ce soir » : comparer tout le récap d'un coup — une étiquette papier */
 .recap-comparer-go {
   display: block;
   margin: 8px auto 0;
-  background: #d8ad44;
-  border: none;
-  color: var(--nuit);
+  background: var(--nuit-2);
+  border: 1px solid rgba(239, 233, 216, 0.45);
+  color: var(--encre);
   border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   padding: 7px 16px;
   font-size: 11px;
-  font-weight: 700;
   letter-spacing: 0.5px;
   cursor: pointer;
 }
@@ -3137,7 +3148,7 @@ button {
   font-size: 13px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--encre-3); /* un label crayonné — la cire reste au bouton valider */
   margin-bottom: 18px;
 }
 .qs-scene {
@@ -3158,7 +3169,8 @@ button {
   width: 100%;
   max-width: 100%;
 }
-/* le carousel : mot central net + voisins estompés (on voit ce qui vient) */
+/* le carousel : mot central net + voisins estompés (on voit ce qui vient).
+   le mot est posé SUR une ligne d'écriture — le filet graphite du carnet */
 .qs-roue {
   display: flex;
   align-items: center;
@@ -3166,6 +3178,8 @@ button {
   gap: 18px;
   width: 100%;
   overflow: hidden;
+  border-bottom: 1px solid rgba(138, 133, 122, 0.35);
+  padding-bottom: 12px;
 }
 .qs-mot {
   font-family: 'Instrument Serif', serif;
@@ -3189,7 +3203,10 @@ button {
   opacity: 0.28;
   white-space: nowrap;
 }
+/* la glose est la voix de l'app → serif italic, pas de Caveat (règle d'or) */
 .qs-glose {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 17px;
   color: var(--ivory-faded);
   line-height: 1.25;
@@ -3218,26 +3235,28 @@ button {
 .qs-fleche.droite {
   right: 0;
 }
+/* la progression : des petits traits de crayon, pas des pastilles rondes */
 .qs-points {
   display: flex;
   gap: 6px;
   margin: 18px 0 22px;
 }
 .qs-points span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 10px;
+  height: 2px;
+  border-radius: var(--rayon);
   background: rgba(239, 233, 216, 0.28);
 }
 .qs-points span.on {
-  background: var(--red);
-  transform: scale(1.3);
+  background: var(--encre);
 }
+/* le valider : une étiquette papier posée — L'usage de cire de cet écran */
 .qs-valider {
-  background: none;
-  border: 1.5px solid var(--red);
-  color: var(--red);
+  background: var(--nuit-2);
+  border: 1px solid var(--cire);
+  color: var(--cire);
   border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   padding: 10px 28px;
   font-size: 13px;
   letter-spacing: 1px;
@@ -3270,7 +3289,7 @@ button {
   display: block;
 }
 .cesoir-rappel-x {
-  color: var(--red);
+  color: var(--encre-2); /* pas de cire ici : elle est réservée au tampon + météo */
   margin-left: 4px;
 }
 .rangée {
@@ -3392,14 +3411,17 @@ button {
 .deck-pique {
   text-align: center;
   margin: 0 0 8px;
-  color: var(--red);
+  color: var(--encre-2); /* budget --cire de l'écran : tampon + météo, pas la pique */
 }
+/* §7 : la carte = UNE PAGE du carnet (posée, pas un polaroïd crème) */
 .carte-lieu {
-  background: var(--print-white);
-  color: #211d19;
-  padding: 12px 12px 16px;
+  background: var(--nuit-2);
+  color: var(--encre);
+  padding: 0 0 16px;
   margin: 10px auto 0;
   max-width: 330px;
+  border: 1px solid rgba(239, 233, 216, 0.12);
+  border-radius: var(--rayon);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   transform-origin: 50% 110%;
   touch-action: none;
@@ -3410,9 +3432,19 @@ button {
 .carte-lieu:active {
   cursor: grabbing;
 }
+/* la marge de la page : le texte respire, la photo est pleine largeur */
+.carte-nom,
+.carte-meta,
+.carte-desc,
+.carte-voix,
+.carte-adresse {
+  margin-left: 14px;
+  margin-right: 14px;
+}
 .carte-photo {
   background: #2a261f;
   height: 230px;
+  border-radius: var(--rayon) var(--rayon) 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3430,18 +3462,28 @@ button {
 }
 .carte-nom {
   font-family: 'Instrument Serif', serif;
-  font-size: 34px; /* §7 : le nom du lieu, la voix du carnet */
+  font-style: italic; /* §7 : nom en serif 34 ITALIQUE — la voix du carnet */
+  font-size: 34px;
   line-height: 1.02;
   margin-top: 10px;
 }
+/* le tip du pote : une ligne de marge (filet graphite), SANS bulle */
+.carte-voix {
+  margin-top: 8px;
+  border-left: 1px solid var(--graphite);
+  padding-left: 10px;
+}
 .carte-tip {
   font-size: 21px;
-  color: #211d19;
-  margin: 2px 0 0;
+  color: var(--encre-2);
+  margin: 0;
+}
+.carte-voix .tip-signature {
+  color: var(--encre-3);
 }
 .carte-adresse {
-  color: #78716c;
-  margin: 6px 0 0;
+  color: var(--encre-3);
+  margin: 6px 14px 0;
   font-size: 11px;
 }
 .tampon {
@@ -3466,8 +3508,8 @@ button {
   transform: translate(-50%, -50%) rotate(-14deg);
 }
 .tampon.bof {
-  color: #78716c;
-  border-color: #78716c;
+  color: var(--graphite); /* le bof, c'est au crayon — la cire est pour le validé */
+  border-color: var(--graphite);
   font-size: 17px;
   transform: translate(-50%, -50%) rotate(10deg);
   text-decoration: line-through;
@@ -3479,6 +3521,16 @@ button {
 .deck-vide {
   text-align: center;
   margin-top: 60px;
+}
+/* règle d'or §5 : le Caveat, c'est la main d'un humain. Ici c'est l'app qui
+   parle (deck vide, piques, placeholder photo, « à jeudi. ») → serif italic. */
+.deck-vide .hand,
+.bientot .hand,
+.recap-titre.hand,
+.sans-photo {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 21px;
 }
 
 /* tirets de progression photos (façon stories) */
@@ -3573,8 +3625,8 @@ button {
   cursor: pointer;
 }
 .recap-vue.on {
-  color: var(--red);
-  border-color: var(--red);
+  color: var(--encre); /* l'onglet actif s'encre — la cire reste aux « validé » */
+  border-color: rgba(239, 233, 216, 0.6);
 }
 /* « en grand » : carrousel horizontal des tirages */
 .recap-grand {
@@ -3586,22 +3638,33 @@ button {
   margin: 0 -4px 8px;
   -webkit-overflow-scrolling: touch;
 }
+/* le tirage « en grand » = une page du carnet, comme la carte du deck */
 .recap-tirage {
   flex: 0 0 78%;
   max-width: 300px;
   scroll-snap-align: center;
-  background: var(--print-white);
-  color: #211d19;
-  border: none;
-  padding: 10px 10px 14px;
+  background: var(--nuit-2);
+  color: var(--encre);
+  border: 1px solid rgba(239, 233, 216, 0.12);
+  border-radius: var(--rayon);
+  padding: 0 0 14px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   text-align: left;
   cursor: pointer;
+}
+.recap-tirage-nom,
+.recap-tirage-desc,
+.recap-tirage-tip,
+.recap-tirage-infos,
+.recap-tirage-plus {
+  margin-left: 12px;
+  margin-right: 12px;
 }
 .recap-tirage-photo {
   position: relative;
   height: 200px;
   background: #2a261f;
+  border-radius: var(--rayon) var(--rayon) 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3625,13 +3688,14 @@ button {
 }
 .recap-tirage-nom {
   font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 21px;
   margin-top: 8px;
 }
 .recap-tirage-tip {
   font-size: 17px;
-  color: #4a443d;
-  margin: 2px 0 0;
+  color: var(--encre-2);
+  margin-top: 2px;
 }
 .recap-tirage-cat {
   position: absolute;
@@ -3653,6 +3717,8 @@ button {
   border: none;
   padding: 8px 0 0;
   cursor: pointer;
+  color: inherit; /* c'est un <button> : sans ça, le nom serait noir sur la page sombre */
+  font: inherit;
 }
 .recap-tirage-infos {
   display: flex;
@@ -3660,13 +3726,11 @@ button {
   gap: 4px 12px;
   margin-top: 6px;
   font-size: 11px;
-  color: #6b635a;
+  color: var(--encre-3);
 }
-.recap-tirage-infos .ouvert {
-  color: #3e7d5a;
-}
+.recap-tirage-infos .ouvert,
 .recap-tirage-infos .ferme {
-  color: #a8322a;
+  color: var(--encre-2);
 }
 .recap-tirage-wc {
   letter-spacing: 1px;
@@ -3675,8 +3739,10 @@ button {
   display: inline-block;
   margin-top: 8px;
   font-size: 11px;
-  color: var(--red);
+  color: var(--encre-2);
   letter-spacing: 0.5px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 /* « sur la carte » : mini-carte des 8 suggestions */
 .recap-carte {
@@ -3696,37 +3762,39 @@ button {
   background: var(--nuit);
 }
 
-/* la météo du porte-monnaie */
+/* la météo du porte-monnaie + le « quand ? » : deux rangées ÉCRITES SUR LA PAGE
+   (elles étaient toutes deux en fixed au même ancrage → superposées) */
 .meteo-bas {
-  position: fixed;
-  left: 20px;
-  bottom: calc(64px + env(safe-area-inset-bottom));
   display: flex;
-  align-items: center;
-  gap: 4px;
-  z-index: 2;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
 }
-/* le libellé "situation du portefeuille ?" posé juste au-dessus de la météo fixe */
 .meteo-bas-lbl {
-  position: fixed;
-  left: 20px;
-  bottom: calc(118px + env(safe-area-inset-bottom));
-  z-index: 2;
+  display: block;
+  margin-top: 20px;
+  color: var(--encre-3);
 }
+/* les chips = des étiquettes papier posées (rayon 3, bord encre, ombre contact) */
 .meteo-choix {
-  background: none;
-  border: none;
+  background: var(--nuit-2);
+  border: 1px solid rgba(239, 233, 216, 0.22);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   color: var(--ivory);
-  opacity: 0.35;
+  opacity: 0.55;
   min-width: 52px;
-  padding: 4px 6px;
+  padding: 5px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
 }
 .meteo-choix.on {
   opacity: 1;
+  border-color: rgba(239, 233, 216, 0.5);
 }
 .meteo-prix {
   font-size: 11px;
@@ -3734,7 +3802,9 @@ button {
   white-space: nowrap;
 }
 .meteo-choix.on .meteo-prix {
-  color: var(--red);
+  /* pas de cire ici : deux rangées (portefeuille + quand) auraient 2 chips
+     rouges en permanence → budget --cire explosé. L'actif s'encre, c'est tout. */
+  color: var(--encre);
 }
 .meteo-sens {
   display: block;
