@@ -13,6 +13,7 @@ import { MEMBRES } from './seed'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
+import CroquisParis from './CroquisParis'
 
 // L'onglet « trouver » (ex-labo, promu à part entière) : le moteur de
 // recherche/reco personnalisé. Philosophie (CONCEPT.md) : la recherche RÉPOND
@@ -139,6 +140,17 @@ export default function Recherche({
           ouvert
         </button>
       </div>
+
+      {/* la ville en un coup d'œil : le croquis choisit la MÊME chose que les
+          chips « autour de » — un seul état (depuis), deux façons de le poser */}
+      <CroquisParis
+        lieux={lieux}
+        actif={depuis?.nom ?? null}
+        onChoisir={(nom) => {
+          const p = POINTS_REPERE.find((r) => r.nom === nom)
+          if (p) setDepuis(depuis?.nom === p.nom ? null : p)
+        }}
+      />
 
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 6 }}>
         autour de

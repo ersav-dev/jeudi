@@ -5921,3 +5921,57 @@ button {
   margin: 8px 0 14px;
   text-align: center;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   trouver — le croquis de paris : « la ville en un coup d'œil ».
+   Un dessin à l'encre (SVG, CroquisParis.tsx), pas un GPS : la Seine
+   au crayon, le périph en pointillés, des zones patatoïdes qui
+   activent les chips « autour de ». Repliable — état mémorisé
+   (localStorage jeudi-croquis-ouvert) ; plafonné à 240px pour ne
+   pas manger les petits écrans.
+   ══════════════════════════════════════════════════════════════ */
+.croquis-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 6px;
+  background: none;
+  border: none;
+  color: var(--encre);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  opacity: 0.5;
+  cursor: pointer;
+}
+.croquis-cadre {
+  overflow: hidden;
+  max-height: 240px;
+  opacity: 1;
+  margin-bottom: 12px;
+  /* se replie comme une page qu'on tourne */
+  transition:
+    max-height 240ms var(--tourne),
+    opacity 240ms var(--tourne),
+    margin-bottom 240ms var(--tourne);
+}
+.croquis-cadre.plie {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 4px;
+}
+.croquis-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+}
+.croquis-zone {
+  cursor: pointer;
+  outline: none;
+}
+/* navigation clavier : la zone visée montre son trait plein */
+.croquis-zone:focus-visible path {
+  stroke-opacity: 1;
+}
