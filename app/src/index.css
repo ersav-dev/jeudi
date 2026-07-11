@@ -5790,3 +5790,134 @@ button {
 .gj-plein .gj-voile {
   min-height: 76vh; /* le retour reste en haut, le voile occupe la nuit */
 }
+
+/* ══ bloc B : le mode « je sais pas » — trois plans tirés du carnet ══
+   une porte DANS « ce soir » (pas un onglet) : l'étiquette sous les chemins,
+   puis trois cartes-plans posées comme des pages. zéro cire ici. */
+
+/* la porte : une étiquette papier en pointillés — un billet plié, pas un CTA */
+.jsp-entree {
+  display: block;
+  margin: 26px auto 0;
+  background: var(--nuit-2);
+  border: 1px dashed rgba(239, 233, 216, 0.38);
+  color: var(--encre-2);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  padding: 9px 18px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transform: rotate(0.6deg); /* posée à la main, pas alignée au pixel */
+}
+.jsp-entree:active {
+  transform: rotate(0.6deg) translateY(1px);
+}
+
+.jsp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+}
+.jsp-compagnies {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 18px;
+}
+/* la carte-plan : une page posée (le biais vient du style inline, alterné) */
+.jsp-plan {
+  width: 100%;
+  background: var(--nuit-2);
+  border: 1px solid color-mix(in srgb, var(--graphite) 45%, transparent);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  padding: 14px 16px 12px;
+  margin-bottom: 12px;
+  text-align: left;
+  /* la pose : `translate` (propriété séparée) compose avec le transform incliné */
+  animation: jsp-pose 240ms var(--tourne) backwards;
+}
+@keyframes jsp-pose {
+  from {
+    opacity: 0;
+    translate: 0 7px;
+  }
+}
+/* le nom de zone : la voix du carnet — serif italic */
+.jsp-zone {
+  display: block;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--encre);
+}
+.jsp-accroche {
+  display: block;
+  font-size: 11px;
+  color: var(--encre-3);
+  margin: 3px 0 10px;
+}
+.jsp-spots {
+  display: flex;
+  flex-direction: column;
+}
+/* un spot du plan : posé sur un filet crayon, tap = la fiche */
+.jsp-spot {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(138, 133, 122, 0.25);
+  padding: 8px 0;
+  text-align: left;
+  color: var(--encre);
+  cursor: pointer;
+}
+.jsp-spot-nom {
+  display: block;
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  line-height: 1.15;
+}
+.jsp-spot-ligne {
+  display: block;
+  font-size: 10.5px;
+  color: var(--encre-2);
+  margin-top: 2px;
+}
+.jsp-va {
+  display: block;
+  margin: 4px 0 0 auto;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.35);
+  color: var(--encre);
+  border-radius: var(--rayon);
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+/* le re-tire : une étiquette papier encrée, la frappe au doigt */
+.jsp-retire {
+  margin: 8px auto 2px;
+  background: var(--nuit-2);
+  border: 1px solid var(--encre);
+  color: var(--encre);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  padding: 9px 24px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 90ms var(--frappe);
+}
+.jsp-retire:active {
+  transform: translateY(1px) scale(0.98);
+}
+.jsp-vide {
+  color: var(--encre-2);
+  margin: 8px 0 14px;
+  text-align: center;
+}

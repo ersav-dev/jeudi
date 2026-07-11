@@ -16,7 +16,9 @@ import {
   tempsMarche,
   etatHoraire,
   propreteWcLabel,
+  lireFavoris,
 } from './db'
+import { tirerPlans, type CompagnieTirage, type Plan } from './plans'
 import { srcPhoto } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
 import NoteMarge from './NoteMarge'
@@ -82,6 +84,8 @@ export default function CeSoir({
   const [compagnie, setCompagnie] = useState<Compagnie | null>(null)
   const [envie, setEnvie] = useState<string | null>(null)
   const [meteo, setMeteo] = useState<Meteo>(() => lireMeteo())
+  // bloc B : la porte « je sais pas » — pas un 6e onglet, un mode DANS ce soir
+  const [surprise, setSurprise] = useState(false)
   // « quand ? » — par défaut MAINTENANT (live). On peut prévisualiser un moment
   // ultérieur (le nom de l'app, c'est une nuit qu'on anticipe). Le défaut reste
   // l'immédiateté ; le décalage est un geste secondaire, opt-in.
@@ -147,18 +151,32 @@ export default function CeSoir({
 
   return (
     <div className="cesoir">
-      {!(compagnie && envie) ? (
-        // #10 : tout en swipe — gauche/droite = changer de choix · haut = valider
-        <QuestionsSwipe
-          nuit={nuit}
-          envies={envies}
-          compagnie={compagnie}
-          onCompagnie={(c) => {
-            setCompagnie(c)
-            setEnvie(null)
-          }}
-          onEnvie={setEnvie}
+      {surprise ? (
+        <JeSaisPas
+          lieux={lieux}
+          maintenant={dateEffective}
+          onVoir={onVoir}
+          onComparer={onComparer}
+          onFermer={() => setSurprise(false)}
         />
+      ) : !(compagnie && envie) ? (
+        <>
+          {/* #10 : tout en swipe — gauche/droite = changer de choix · haut = valider */}
+          <QuestionsSwipe
+            nuit={nuit}
+            envies={envies}
+            compagnie={compagnie}
+            onCompagnie={(c) => {
+              setCompagnie(c)
+              setEnvie(null)
+            }}
+            onEnvie={setEnvie}
+          />
+          {/* la porte de l'aléatoire, sous les chemins existants : une étiquette papier */}
+          <button className="jsp-entree mono" onClick={() => setSurprise(true)}>
+            je sais pas — surprends-moi
+          </button>
+        </>
       ) : (
         <>
           <button
@@ -213,6 +231,102 @@ export default function CeSoir({
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── bloc B : le mode « je sais pas » — trois plans tirés du carnet ──
+// l'app tire trois mini-plans (une zone + deux spots complémentaires) et les
+// pose comme des pages. « re-tire » = nouvelle graine (le hasard côté app,
+// le moteur plans.ts reste pur et testé à graine fixe).
+function JeSaisPas({
+  lieux,
+  maintenant,
+  onVoir,
+  onComparer,
+  onFermer,
+}: {
+  lieux: Lieu[]
+  maintenant: Date
+  onVoir?: (l: Lieu) => void
+  onComparer?: (ids: string[]) => void
+  onFermer: () => void
+}) {
+  const [compagnie, setCompagnie] = useState<CompagnieTirage>('solo')
+  const [graine, setGraine] = useState(() => Math.floor(Math.random() * 1_000_000_000))
+  const favoris = useMemo(() => lireFavoris(), [])
+  // arrondi à la minute : le tirage ne bouge pas sous les yeux à chaque re-rendu
+  const minute = Math.floor(maintenant.getTime() / 60000)
+  const plans = useMemo(
+    () => tirerPlans(lieux, compagnie, graine, { favoris, maintenant: new Date(minute * 60000) }),
+    [lieux, compagnie, graine, favoris, minute],
+  )
+
+  const retirer = () => {
+    navigator.vibrate?.(15) // la frappe légère
+    setGraine(Math.floor(Math.random() * 1_000_000_000))
+  }
+  // « ce plan me va » : les 2 spots côte à côte dans la table de comparaison
+  // (le récap existant, rendue au niveau global) — sans elle, la fiche du 1ᵉʳ
+  const cePlanMeVa = (p: Plan) => {
+    if (onComparer && p.spots.length > 1) onComparer(p.spots.map((s) => s.lieu.id))
+    else if (p.spots[0]) onVoir?.(p.spots[0].lieu)
+  }
+
+  return (
+    <div className="jsp">
+      <h1 className="grande-question qs-titre">je sais pas.</h1>
+      <span className="lbl mono qs-sous">trois plans tirés du carnet</span>
+
+      {/* le langage de chips existant : solo · duo · potos */}
+      <div className="jsp-compagnies">
+        {(['solo', 'duo', 'potos'] as const).map((c) => (
+          <button
+            key={c}
+            className={`meteo-choix ${compagnie === c ? 'on' : ''}`}
+            aria-pressed={compagnie === c}
+            onClick={() => setCompagnie(c)}
+          >
+            <span className="meteo-prix mono">{c}</span>
+          </button>
+        ))}
+      </div>
+
+      {plans.length === 0 && (
+        <p className="hand jsp-vide">pas deux spots ouverts assez proches pour un plan. capture, ou reviens plus tard.</p>
+      )}
+
+      {plans.map((p, i) => (
+        <div
+          className="jsp-plan"
+          key={p.spots.map((s) => s.lieu.id).join('+')}
+          style={{
+            animationDelay: `${i * 70}ms`,
+            transform: `rotate(${i % 2 ? 0.35 : -0.4}deg)`, // posées à la main
+          }}
+        >
+          <span className="jsp-zone">{p.zone}</span>
+          <span className="mono jsp-accroche">{p.accroche}</span>
+          <div className="jsp-spots">
+            {p.spots.map((s) => (
+              <button key={s.lieu.id} className="jsp-spot" onClick={() => onVoir?.(s.lieu)}>
+                <span className="jsp-spot-nom">{s.lieu.nom}</span>
+                <span className="mono jsp-spot-ligne">{s.ligne}</span>
+              </button>
+            ))}
+          </div>
+          <button className="jsp-va mono" onClick={() => cePlanMeVa(p)}>
+            ce plan me va →
+          </button>
+        </div>
+      ))}
+
+      <button className="jsp-retire mono" onClick={retirer}>
+        re-tire
+      </button>
+      <button className="lien" onClick={onFermer}>
+        en vrai, je choisis moi-même
+      </button>
     </div>
   )
 }
