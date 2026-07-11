@@ -70,8 +70,8 @@
   --ouvert: #7cb342; /* horaires « ouvert », sur charbon */
   --ouvert-papier: #4f7a2a; /* idem, posé sur papier ivoire (popup carte) */
   --cire-claire: #c87a6b; /* fermé / danger doux — lisible en petit sur charbon (a11y) */
-  --or: #d8ad44; /* l'or doux : le mode comparer, le match diffusé */
-  --or-2: #c99a2e; /* le trait de bordure de l'or */
+  /* (corrections V5) l'or décoratif est retiré : la cire est l'UNIQUE accent (§4).
+     comparer / match s'encrent à l'ivoire plein, comme tout état actif. */
   --reco: #d9913b; /* l'encre orange des conditions recommandées */
   --sauge: #84b6a3; /* le refuge (no foot) — vert-de-gris */
   --sauge-2: #6b9e8c; /* le trait de bordure du refuge */
@@ -146,16 +146,13 @@ body::before,
 .carte-card-min,
 .carte-meta,
 .fiche-meta,
-.curateur-meta,
 .compteur-horaires,
 .compteur-lbl,
 .deck-compteur,
 .cercle-compteur,
 .fiche-nav-compteur,
-.form-heure,
 .photo-compteur,
 .qs-points,
-.idx-tri-compteur,
 .idx-reglages-compteur,
 .profil-tagline-compteur {
   font-variant-numeric: tabular-nums;
@@ -171,9 +168,12 @@ body::before,
 /* ── splash ── */
 /* signature 1 — LE TAMPON FRAPPE : scale 1.15→1 en 90 ms, une seule fois,
    jamais en boucle. `scale`/`translate` (propriétés séparées) : la frappe
-   compose avec le transform décoratif de l'élément sans l'écraser. */
+   compose avec le transform décoratif de l'élément sans l'écraser.
+   Le cran à 55 % = le décalage d'encre d'1 frame (§6.1) : l'encre ripe
+   d'un demi-pixel avant de se poser. */
 @keyframes frappeTampon {
   from { opacity: 0; scale: 1.15; }
+  55% { translate: 0.6px -0.6px; }
 }
 /* le dépôt d'encre : apparition sèche (§1 — l'encre ne « fade in » pas) */
 @keyframes inkIn {
@@ -212,13 +212,6 @@ body::before,
   font-size: 21px;
   color: var(--ivory);
   animation: inkIn 150ms var(--pose) 0.35s backwards;
-}
-/* le texte fondateur : sobre, mono 11 (pas une décoration manuscrite) */
-.splash-pitch {
-  text-align: center;
-  line-height: 1.7;
-  color: var(--encre-3);
-  animation: inkIn 150ms var(--pose) 0.55s backwards;
 }
 
 /* ── l'écran de connexion (magic-link) : la couverture du carnet ──
@@ -421,8 +414,9 @@ body::before,
   }
 }
 
-/* ── signature 4 — LA PAGE TOURNE : l'écran entrant arrive de la tranche
-   droite (translate 12px + rotateY 1.5deg), 240 ms --tourne.
+/* ── signature 4 — LA PAGE TOURNE : la page pivote sur sa TRANCHE GAUCHE
+   (la reliure — §6 : « origine tranche gauche ») : translate 12px +
+   rotateY 1.5deg, 240 ms --tourne.
    `translate`/`rotate` (propriétés séparées) composent avec les transforms
    décoratifs (fab, toast…) au lieu de les écraser ; `backwards` (pas both) :
    à la fin, retour aux valeurs de cascade → aucun containing block résiduel
@@ -438,6 +432,7 @@ body::before,
   }
 }
 .page > * {
+  transform-origin: left center; /* la reliure : la page tient par sa tranche gauche */
   animation: pageTourne 240ms var(--tourne) backwards;
 }
 /* exceptions : la carte plein écran (canvas MapLibre — un transform de 240 ms
@@ -539,10 +534,13 @@ body::before,
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--graphite); /* label système au crayon — la cire du panneau = la pastille */
   margin-bottom: 8px;
 }
 .notif-vide {
+  /* règle d'or §5 : état vide = l'app qui parle → serif italic, pas Caveat */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   color: var(--ivory-faded);
   font-size: 17px;
   margin: 2px 0;
@@ -577,8 +575,8 @@ body::before,
 }
 .notif-ok {
   background: none;
-  border: 1px solid var(--red);
-  color: var(--red);
+  border: 1px solid rgba(239, 233, 216, 0.45);
+  color: var(--encre);
   border-radius: var(--rayon);
   padding: 3px 9px;
   font-size: 11px;
@@ -592,8 +590,10 @@ body::before,
   cursor: pointer;
 }
 .notif-anoter {
-  font-family: 'Caveat', cursive;
-  font-size: 21px;
+  /* règle d'or §5 : « alors, X ? » est un bouton système, pas une main → serif */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
   cursor: pointer;
 }
 /* vider le centre + garde-fou */
@@ -615,6 +615,8 @@ body::before,
   cursor: pointer;
 }
 .notif-confirm p {
+  font-family: 'Instrument Serif', serif; /* la voix de l'app, pas la main (§5) */
+  font-style: italic;
   font-size: 17px;
   color: var(--ivory);
   margin: 0 0 10px;
@@ -653,27 +655,6 @@ body::before,
   display: block;
 }
 
-/* popup carte = mini-polaroid : grande photo en haut, infos sous le tirage */
-.popup-photo {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  display: block;
-}
-.popup-sansphoto {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--tirage);
-  color: rgba(239, 233, 216, 0.5);
-  font-family: 'Caveat', cursive;
-  font-size: 13px;
-}
-.popup-corps {
-  padding: 8px 2px 2px;
-}
-
 /* ── le cercle ── */
 .cercle-compteur {
   margin: -8px 0 18px;
@@ -709,12 +690,16 @@ body::before,
   font-family: 'Instrument Serif', serif;
   font-size: 21px;
 }
-.membre-titre {
-  font-size: 11px;
-  color: var(--red);
-}
 .membre-bio {
   margin: 4px 0;
+}
+/* bio absente : c'est l'app qui parle (« nouveau dans ton cercle. ») —
+   règle d'or §5 : serif italic, jamais de Caveat pour un texte système */
+.membre-bio-vide {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ivory-faded);
 }
 .membre-critere {
   font-size: 11px;
@@ -746,9 +731,10 @@ body::before,
   touch-action: pan-y;
   user-select: none;
 }
-/* un spot du cercle (lecture seule) : liseré rouge cire à gauche */
+/* un spot du cercle (lecture seule) : liseré au crayon graphite à gauche
+   (pas une cire — le budget §4 reste aux tampons de l'écran) */
 .idx-carte.idx-cercle {
-  border-left: 3px solid var(--red);
+  border-left: 3px solid var(--graphite);
   padding-left: 10px;
 }
 /* à découvrir (jamais sorti) : un petit tag en haut à GAUCHE (loin du menu ⋯),
@@ -769,93 +755,6 @@ body::before,
 }
 .idx-carte:not(.idx-adecouvrir) {
   opacity: 0.82;
-}
-
-/* le filtre de l'index : tout · à découvrir · faits */
-.idx-filtres {
-  display: flex;
-  gap: 6px;
-  margin: 2px 0 14px;
-}
-.idx-filtre {
-  background: none;
-  /* I8 : bordure + texte plus contrastés pour la lisibilité sur charbon */
-  border: 1px solid rgba(239, 233, 216, 0.4);
-  color: var(--ivory);
-  border-radius: var(--rayon);
-  padding: 6px 13px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-}
-.idx-filtre.on {
-  background: var(--red);
-  border-color: var(--red);
-  color: var(--print-white);
-}
-/* les chips Coupe du monde portent leur icône à l'encre */
-.idx-filtres {
-  flex-wrap: wrap;
-}
-.idx-filtre-match,
-.idx-filtre-refuge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.idx-filtre-match svg,
-.idx-filtre-refuge svg {
-  display: block;
-}
-/* appui long = « anti-foot » : le mot « match » est barré, chip grisée */
-.idx-filtre-match.barre {
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  color: var(--ivory-faded);
-  border-color: rgba(239, 233, 216, 0.35);
-  background: none;
-}
-.idx-filtre-match.barre svg {
-  opacity: 0.5;
-}
-
-/* le sélecteur de collection sur "ma carte" : moi · @curateurs */
-/* la rangée « qui » : légère, en texte (≠ les pilules de filtre = « quoi ») */
-.coll-switch {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  overflow-x: auto;
-  margin: 2px 0 10px;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.coll-switch::-webkit-scrollbar {
-  display: none;
-}
-.coll-lbl {
-  flex: 0 0 auto;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--ivory-faded);
-  opacity: 0.6;
-}
-.coll-chip {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  color: var(--ivory-faded);
-  padding: 2px 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-}
-.coll-chip.on {
-  color: var(--red);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1.5px;
 }
 
 /* voir + trier + filtres : 3 menus compacts sur une ligne (popover au tap) */
@@ -940,28 +839,6 @@ body::before,
   color: var(--red);
   font-weight: 700;
 }
-/* les lignes toggle du menu « filtres » (avec une pastille ●/○) */
-.menu-filtre-opt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--ivory);
-  font-size: 13px;
-  padding: 10px 14px;
-  border-radius: var(--rayon);
-  cursor: pointer;
-}
-.menu-filtre-opt.on {
-  color: var(--ivory);
-}
-.menu-filtre-case {
-  color: var(--red);
-  font-size: 11px;
-}
 .idx-reglages-compteur {
   margin-left: auto;
   color: var(--ivory-faded);
@@ -1005,35 +882,14 @@ body::before,
   cursor: pointer;
 }
 .idx-envie.on {
-  background: var(--red);
-  border-color: var(--red);
-  color: var(--print-white);
+  background: var(--encre); /* l'état actif s'encre à l'ivoire plein (§4) */
+  border-color: var(--encre);
+  color: var(--nuit);
 }
 
 .idx-menu-info {
   color: var(--ivory-faded);
   font-style: italic;
-}
-
-/* le Grand Jeudi */
-.grand-jeudi-bandeau {
-  text-align: center;
-  background: var(--red);
-  color: var(--print-white);
-  padding: 6px;
-  border-radius: var(--rayon);
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  font-size: 11px;
-}
-.grand-jeudi-bloc {
-  margin-top: 20px;
-  border-top: 1px dotted rgba(239, 233, 216, 0.2);
-  padding-top: 16px;
-}
-.grand-jeudi-bloc .valider {
-  margin-top: 10px;
 }
 
 .idx-haut {
@@ -1094,7 +950,7 @@ body::before,
   text-transform: uppercase;
 }
 .idx-tampon .tampon-date {
-  font-size: 8px;
+  font-size: 11px; /* §5 : jamais sous le corps 11, même micro-imprimé */
   letter-spacing: 2px;
   opacity: 0.85;
 }
@@ -1106,7 +962,7 @@ body::before,
   transform: rotate(6deg);
 }
 .idx-tampon .tampon-recopar {
-  font-size: 8px; /* LE corps micro-imprimé des objets-tampons (un seul) */
+  font-size: 11px; /* §5 : le plus petit corps de l'échelle, point */
   letter-spacing: 2px;
   text-transform: uppercase;
   opacity: 0.85;
@@ -1179,39 +1035,12 @@ body::before,
 .idx-photo-cat {
   color: var(--red);
 }
-/* #22 : tri (au plus proche / propreté wc) */
-.idx-tri {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: -6px 0 14px;
-  font-size: 11px;
-}
-.idx-tri-lbl {
-  color: var(--red);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.idx-tri-opt {
-  background: none;
-  border: none;
-  color: var(--ivory-faded);
-  cursor: pointer;
-  padding: 2px 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-}
-.idx-tri-opt.on {
-  color: var(--ivory);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 /* #22 : propreté des wc sur la carte index */
 .idx-wc {
   color: var(--ivory-faded);
 }
 .idx-wc-pts {
-  color: var(--red);
+  color: var(--encre); /* pastilles à l'encre pleine, comme sur la fiche */
   letter-spacing: 1px;
 }
 /* #18 : la chip d'envie, plus affirmée (encre ivoire pleine) */
@@ -1219,10 +1048,11 @@ body::before,
   border-color: var(--ivory-faded);
   color: var(--ivory);
 }
-/* #17 : "référence" — recommandé par plusieurs, jamais une étoile */
+/* #17 : "référence" — recommandé par plusieurs, jamais une étoile.
+   à l'encre pleine (comme .fiche-signal.ref) : la cire reste aux tampons */
 .idx-pill-ref {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: var(--encre);
+  color: var(--encre);
   letter-spacing: 1.5px;
 }
 /* #7 : match (on diffuse) / refuge (no foot) avec leur icône */
@@ -1233,8 +1063,8 @@ body::before,
   gap: 3px;
 }
 .idx-pill-match {
-  border-color: var(--or-2);
-  color: var(--or);
+  border-color: var(--encre-2);
+  color: var(--encre);
 }
 .idx-pill-refuge {
   border-color: var(--sauge-2);
@@ -1263,12 +1093,12 @@ body::before,
   border-radius: var(--rayon);
 }
 .fiche-signal.ref {
-  color: var(--red);
-  border-color: var(--red);
+  color: var(--encre); /* « référence » s'encre plein — la cire de la fiche = le tampon */
+  border-color: var(--encre);
 }
 .fiche-signal.match {
-  color: var(--or);
-  border-color: var(--or-2);
+  color: var(--encre);
+  border-color: var(--encre-2);
 }
 .fiche-signal.refuge {
   color: var(--sauge);
@@ -1283,12 +1113,12 @@ body::before,
   font-size: 11px;
 }
 .fiche-wc-lbl {
-  color: var(--red);
+  color: var(--graphite); /* label système au crayon (le budget cire reste au tampon) */
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 .fiche-wc-pts {
-  color: var(--red);
+  color: var(--encre); /* les pastilles ●●○ à l'encre pleine — jamais à la cire */
   letter-spacing: 2px;
   font-size: 13px;
 }
@@ -1407,26 +1237,24 @@ body::before,
   letter-spacing: 1px;
 }
 .idx-itineraire {
+  /* le rouge d'origine était mort : l'étiquette papier (plus bas) le recouvre */
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 10px;
-  border: 1px solid var(--red);
   border-radius: var(--rayon);
   padding: 10px;
-  color: var(--red);
   font-size: 11px;
   letter-spacing: 1px;
   text-decoration: none;
 }
-/* le formulaire de capture : section détail */
+/* le formulaire de capture : section détail — label système au crayon */
 .form-section {
   font-size: 11px;
   letter-spacing: 1px;
-  color: var(--red);
+  color: var(--graphite);
   margin: 18px 0 4px;
 }
-.form-horaires,
 .form-meteo {
   display: flex;
   align-items: center;
@@ -1434,17 +1262,9 @@ body::before,
   gap: 8px;
   margin: 12px 0;
 }
-.form-horaires .lbl,
 .form-meteo .lbl {
   width: 100%;
   margin-bottom: 4px;
-}
-.form-heure {
-  width: 72px;
-}
-.form-heure-aide {
-  font-size: 11px;
-  color: rgba(239, 233, 216, 0.45);
 }
 
 /* les 3 pages occupent STRICTEMENT la même boîte : la carte ne bouge pas au swipe */
@@ -1545,7 +1365,7 @@ body::before,
   opacity: 0.85;
 }
 .idx-favori.on {
-  color: var(--red);
+  color: var(--encre); /* le signet s'encre — la cire du registre reste aux tampons */
   opacity: 1;
 }
 .idx-favori.on:active {
@@ -1648,7 +1468,8 @@ body::before,
   padding: 8px 6px;
   position: relative;
 }
-/* index·carte : le trait se tire aussi (même signature que la nav du bas) */
+/* index·carte : le trait se tire aussi (même signature que la nav du bas),
+   à l'encre — la cire de l'écran reste aux tampons */
 .topbar .topbar-basculer button.on {
   text-decoration: none;
 }
@@ -1659,18 +1480,10 @@ body::before,
   right: 6px;
   bottom: 2px;
   height: 2.5px;
-  background: var(--red);
+  background: var(--encre);
   border-radius: var(--rayon);
   transform-origin: 0 50%;
   animation: traitTire 180ms var(--pose);
-}
-/* le compteur de spots, au bout de la ligne « trier » : discret */
-.idx-tri-compteur {
-  margin-left: auto;
-  color: var(--ivory-faded);
-  opacity: 0.5;
-  font-size: 11px;
-  white-space: nowrap;
 }
 .entete h1 {
   font-style: italic;
@@ -1748,7 +1561,8 @@ button {
   transform: rotate(-1deg) translateY(1px);
 }
 
-/* ── le + de capture ── */
+/* ── le + de capture : une étiquette papier posée (le budget --cire de
+   l'écran reste au tampon-logo + aux tampons du registre) ── */
 .fab {
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
@@ -1757,8 +1571,8 @@ button {
   height: 58px;
   border-radius: var(--rayon);
   border: none;
-  background: var(--red);
-  color: var(--print-white);
+  background: var(--print-white);
+  color: var(--encre-papier);
   font-size: 34px;
   line-height: 0;
   transform: rotate(-2deg);
@@ -1874,12 +1688,9 @@ button {
     radial-gradient(ellipse at center, transparent 52%, rgba(20, 18, 14, 0.55) 100%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
 }
-/* "moi" : un point ivoire qui pulse doucement, distinct des spots rouges */
-/* "moi" = un point TANGERINE chaud "you are here" : le seul accent chaud de la
-   carte (les lieux sont froids/violets, toi tu es chaud). Cœur orange + anneau
-   blanc + halo qui pulse. Couleur SYSTÈME fixe (indépendante de la couleur de
-   marque) → contraste toujours. (Le cap/arc d'orientation = étape suivante,
-   quand on branche la boussole.) */
+/* "moi" = le point "you are here" : le seul accent chaud de la carte.
+   Cœur teal + anneau blanc + halo STATIQUE (plus de pulse : §6, rien ne boucle).
+   Couleur SYSTÈME fixe (indépendante de la couleur de marque) → contraste toujours. */
 .pin-moi {
   width: 14px;
   height: 14px;
@@ -1890,29 +1701,8 @@ button {
     0 0 0 2px color-mix(in srgb, var(--moi) 30%, transparent),
     0 0 14px 3px color-mix(in srgb, var(--moi) 55%, transparent);
 }
-.pin-moi::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--moi) 45%, transparent);
-  animation: pulse-moi 2.4s ease-out infinite;
-  pointer-events: none;
-}
-@keyframes pulse-moi {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(3.6);
-    opacity: 0;
-  }
-}
+/* (corrections V5) : plus de pulse infini (§6 — rien ne boucle hors signatures) ;
+   le halo statique du box-shadow suffit à dire « tu es ici ». */
 /* le cap : une flèche d'orientation autour du point "moi", tournée par la
    boussole (JS pose le rotate). cachée tant qu'aucun cap n'est capté. */
 .pin-moi-cap {
@@ -2003,51 +1793,6 @@ button {
 .pin-curateur:hover {
   box-shadow: 0 0 0 6px rgba(239, 233, 216, 0.25);
 }
-/* spot photographié : un mini-polaroid épinglé sur la carte, dès le départ */
-.pin-photo {
-  width: 46px;
-  height: 46px;
-  background: var(--print-white);
-  padding: 3px 3px 6px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  transform: rotate(-3deg);
-}
-.pin-photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-.pin-photo::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-}
-.pin-photo::before {
-  content: attr(data-nom);
-  position: absolute;
-  top: 108%;
-  left: 50%;
-  transform: translateX(-50%) rotate(3deg);
-  white-space: nowrap;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--ivory);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-}
-.carte.labels-off .pin-photo::before {
-  display: none;
-}
-.pin-photo:hover {
-  box-shadow: 0 0 0 3px var(--red), 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-.pin-photo.pin-valide {
-  box-shadow: 0 0 0 3px var(--red), 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-
 /* lieu fermé maintenant : discret, on met en avant ce qui est ouvert */
 .pin-ferme {
   opacity: 0.4;
@@ -2117,30 +1862,6 @@ button {
 /* spot validé : un anneau rouge autour du pin */
 .pin-valide {
   box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--red), 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-/* qui a recommandé, dans la popup */
-.popup-qui {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--red);
-  margin: 2px 0 4px;
-}
-.popup-plus {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: rgba(33, 29, 25, 0.55);
-  margin-top: 5px;
-}
-.popup-h {
-  display: inline-block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-}
-.popup-h.ouvert {
-  color: var(--ouvert-papier);
-}
-.popup-h.ferme {
-  color: var(--red);
 }
 /* le pin sélectionné grandit (feedback de sélection, façon Airbnb) */
 .carte .pin-actif {
@@ -2356,7 +2077,7 @@ button {
 }
 .carte-sheet-wc {
   letter-spacing: 0.5px;
-  color: var(--or);
+  color: var(--encre);
 }
 /* le pied : distance · pastilles de pages · bouton fiche */
 .carte-sheet-pied {
@@ -2398,9 +2119,9 @@ button {
   font-size: 11px;
   cursor: pointer;
 }
-/* lieu sélectionné « à comparer » : l'étiquette passe au jaune comparaison */
+/* lieu sélectionné « à comparer » : l'étiquette s'encre à l'ivoire plein */
 .carte-sheet-fiche.comparer {
-  background: var(--or);
+  background: var(--encre);
   color: var(--nuit);
 }
 
@@ -2480,121 +2201,37 @@ button {
 .carte-card-min {
   opacity: 0.6;
 }
-/* #11+ : carte marquée « à comparer » (clic long) — cerne doré */
+/* #11+ : carte marquée « à comparer » (clic long) — cerne au crayon graphite */
 .carte-card.a-comparer {
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1.5px var(--or-2);
+    inset 0 0 0 1.5px var(--graphite);
 }
 .carte-card-vs {
   position: absolute;
   top: 5px;
   right: 5px;
   z-index: 2;
-  font-size: 8px;
+  font-size: 11px; /* §5 : jamais sous le corps 11 */
   letter-spacing: 0.5px;
-  color: var(--nuit);
-  background: var(--or);
+  color: var(--print-white);
+  background: var(--encre-papier);
   padding: 1px 5px;
   border-radius: var(--rayon);
 }
-/* #11+ : la barre « à comparer », en haut de la carte */
-.carte-comparer {
-  position: fixed;
-  top: calc(64px + env(safe-area-inset-top));
-  left: 8px;
-  right: 8px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(20, 18, 14, 0.92);
-  border: 1px solid color-mix(in srgb, var(--or) 50%, transparent);
-  border-radius: var(--rayon);
-  padding: 6px 8px;
-}
-.carte-comparer-titre {
-  flex: 0 0 auto;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--or);
-}
-.carte-comparer-chips {
-  flex: 1;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  min-width: 0;
-}
-.carte-comparer-chip {
-  flex: 0 0 auto;
-  background: none;
-  border: 1px solid rgba(239, 233, 216, 0.3);
-  color: var(--ivory);
-  border-radius: var(--rayon);
-  padding: 3px 9px;
-  font-size: 11px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.carte-comparer-x {
-  color: var(--ivory-faded);
-  margin-left: 2px;
-}
-.carte-comparer-vider {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  color: var(--ivory-faded);
-  font-size: 11px;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.carte-comparer-go {
-  flex: 0 0 auto;
-  background: var(--or);
-  border: none;
-  color: var(--nuit);
-  border-radius: var(--rayon);
-  padding: 4px 11px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-}
-
 /* chantier 1 : carte d'index sélectionnée « à comparer » (clic long) */
 .idx-acomparer {
-  box-shadow: inset 0 0 0 1.5px var(--or);
+  box-shadow: inset 0 0 0 1.5px var(--encre);
 }
 
-/* chantier 1 : pins « à comparer » sur la carte = dorés et moins transparents.
-   le pin ACTIF reste bleu (d'où le :not(.pin-actif)) ; on bat .pin-grise/.pin-vu. */
+/* chantier 1 : pins « à comparer » = encrés à l'ivoire, moins transparents.
+   le pin ACTIF reste tel quel (d'où le :not(.pin-actif)) ; on bat .pin-grise/.pin-vu.
+   ombre de CONTACT uniquement (§4 : jamais un halo). */
 .carte .pin-acomparer:not(.pin-actif) {
-  background: var(--or) !important;
+  background: var(--encre) !important;
   opacity: 0.95 !important;
   filter: none !important;
-  box-shadow: 0 0 0 2px var(--nuit), 0 0 7px color-mix(in srgb, var(--or) 70%, transparent) !important;
-}
-
-/* chantier 1 : dernière page du bloc détails = accès à la table */
-.carte-sheet-compa {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-}
-.carte-sheet-compa-go {
-  background: var(--or);
-  border: none;
-  color: var(--nuit);
-  border-radius: var(--rayon);
-  padding: 5px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--nuit), 0 1px 0 rgba(0, 0, 0, 0.5) !important;
 }
 
 /* chantier 1 : incitation à passer en paysage — cachée par défaut,
@@ -2608,12 +2245,14 @@ button {
     padding: 6px 16px 2px;
     font-size: 11px;
     letter-spacing: 0.5px;
-    color: var(--or);
+    color: var(--encre-2);
     opacity: 0.85;
   }
 }
 
-/* §7 : la méta du deck — UNE seule ligne, mono crayonné (--encre-3) */
+/* §7 : la méta du deck — UNE seule ligne, mono. encre-2 (pas le crayonné
+   encre-3) : distance · heure = l'info clé, « un carnet de sorties vit par
+   ses chiffres » (§5) — et encre-3 échouait au contraste AA. */
 .carte-meta {
   display: flex;
   gap: 8px;
@@ -2621,12 +2260,8 @@ button {
   white-space: nowrap;
   overflow: hidden;
   font-size: 11px;
-  color: var(--encre-3);
+  color: var(--encre-2);
   margin-top: 4px;
-}
-.carte-meta .ouvert,
-.carte-meta .ferme {
-  color: var(--encre-2); /* l'info d'horaire ressort, sans couleur de plus */
 }
 .carte-desc {
   font-size: 11px;
@@ -2685,8 +2320,8 @@ button {
   text-align: left;
 }
 .reglages-ville.on {
-  border-color: var(--red);
-  box-shadow: inset 0 0 0 1px var(--red);
+  border-color: var(--encre); /* la ville choisie s'encre — pas de cire ici (§4) */
+  box-shadow: inset 0 0 0 1px var(--encre);
 }
 .reglages-ville.bientot {
   opacity: 0.4;
@@ -2717,11 +2352,14 @@ button {
   font-size: 13px;
   cursor: pointer;
 }
-/* l'irréversible : la cire — une des 2 seules de l'écran */
+/* le danger doux d'abord ; la cire seulement à la CONFIRMATION (l'irréversible),
+   comme .idx-menu-item.danger — le budget §4 de l'écran profil reste au
+   tampon-logo + au tampon d'identité */
 .reglages-action.danger {
-  color: var(--cire);
+  color: var(--cire-claire);
 }
 .reglages-action.danger.confirm {
+  color: var(--cire);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -2786,41 +2424,7 @@ button {
   opacity: 0.5;
 }
 
-/* #4 : fiche d'identité de carnet du curateur (page d'un pote) */
-.curateur-id {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 6px 0 12px;
-}
-.curateur-portrait {
-  flex: 0 0 auto;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--rayon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Instrument Serif', serif;
-  font-size: 28px;
-  color: var(--nuit);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  transform: rotate(-3deg);
-}
-.curateur-id-txt {
-  min-width: 0;
-}
-.curateur-nom {
-  font-family: 'Instrument Serif', serif;
-  font-size: 21px;
-  margin: 0;
-  color: var(--ivory);
-}
-.curateur-meta {
-  font-size: 11px;
-  color: var(--ivory-faded);
-  margin: 1px 0 0;
-}
+/* #4 : la page d'un pote — sa bio, sa bascule index/carte */
 .curateur-bio {
   font-size: 13px;
   color: var(--ivory);
@@ -2846,7 +2450,7 @@ button {
 
 /* chantier 1 : « comparer → » dans l'entête de la fiche (mode comparaison) */
 .fiche-compa-go {
-  background: var(--or);
+  background: var(--encre);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2868,7 +2472,7 @@ button {
   margin: 0 0 10px;
   padding: 6px 10px;
   background: rgba(20, 18, 14, 0.92);
-  border: 1px solid color-mix(in srgb, var(--or) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--encre) 50%, transparent);
   border-radius: var(--rayon);
 }
 .idx-comparer-titre {
@@ -2876,11 +2480,11 @@ button {
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--or);
+  color: var(--encre);
 }
 .idx-comparer-go {
   flex: 0 0 auto;
-  background: var(--or);
+  background: var(--encre);
   border: none;
   color: var(--nuit);
   border-radius: var(--rayon);
@@ -2905,7 +2509,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: var(--charcoal, var(--nuit));
+  background: var(--nuit);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2956,13 +2560,13 @@ button {
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--ivory-faded);
-  background: var(--charcoal, var(--nuit));
+  background: var(--nuit);
   border-top: 1px solid rgba(239, 233, 216, 0.08);
 }
 .tc-coin {
   border-top: none;
   border-bottom: 1px solid rgba(239, 233, 216, 0.18);
-  color: var(--or);
+  color: var(--encre);
 }
 /* le nom de colonne : NON sticky → il reste collé à sa colonne (sinon il flotte
    et on ne sait plus quelle colonne on lit). */
@@ -2972,11 +2576,11 @@ button {
   justify-content: space-between;
   gap: 4px;
   padding: 8px 8px 10px;
-  background: var(--charcoal, var(--nuit));
+  background: var(--nuit);
   border-bottom: 1px solid rgba(239, 233, 216, 0.18);
 }
 .tc-nom {
-  font-family: var(--serif, serif);
+  font-family: 'Instrument Serif', serif;
   font-size: 13px;
   color: var(--ivory);
   line-height: 1.15;
@@ -3038,10 +2642,10 @@ button {
   font-size: 13px;
   line-height: 1.3;
 }
-/* la meilleure valeur de la ligne : surlignée à l'or doux */
+/* la meilleure valeur de la ligne : surlignée à l'encre ivoire, discrète */
 .tc-best {
-  background: color-mix(in srgb, var(--or) 16%, transparent);
-  box-shadow: inset 2px 0 0 var(--or);
+  background: color-mix(in srgb, var(--encre) 16%, transparent);
+  box-shadow: inset 2px 0 0 var(--encre);
 }
 .tc-fiche {
   background: none;
@@ -3164,7 +2768,7 @@ button {
 .basculer button.on {
   color: var(--ivory);
   text-decoration: underline;
-  text-decoration-color: var(--red);
+  text-decoration-color: var(--encre);
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
 }
@@ -3298,7 +2902,7 @@ button {
   background: none;
   border: none;
   color: var(--ivory-faded);
-  font-size: 40px;
+  font-size: 34px; /* §5 : le corps display de l'échelle */
   line-height: 1;
   cursor: pointer;
   /* A3 : cible tactile généreuse (≥ 48px) */
@@ -3383,7 +2987,7 @@ button {
   font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--graphite); /* label système au crayon — la cire reste au tampon + valider */
   margin-bottom: 4px;
 }
 .mot {
@@ -3468,13 +3072,14 @@ button {
   font-size: 11px;
   margin: 0 0 8px;
 }
-/* premier tap court : le mot souffle "reste appuyé" en orange, une fois */
+/* premier tap court : le mot souffle "reste appuyé" en orange, UNE fois
+   (une seule itération : § 3.7, jamais plus de 300 ms d'effet) */
 @keyframes pulseReco {
   0%, 100% { border-color: var(--red); }
   50% { border-color: var(--reco); }
 }
 .mot.entouré.pulse::after {
-  animation: pulseReco 0.3s var(--pose) 2;
+  animation: pulseReco 300ms var(--pose);
 }
 
 /* le deck */
@@ -3602,10 +3207,12 @@ button {
   margin-top: 60px;
 }
 /* règle d'or §5 : le Caveat, c'est la main d'un humain. Ici c'est l'app qui
-   parle (deck vide, piques, placeholder photo, « à jeudi. ») → serif italic. */
+   parle (deck vide, piques, placeholder photo, états vides, « à jeudi. »)
+   → serif italic. */
 .deck-vide .hand,
 .bientot .hand,
 .recap-titre.hand,
+.vide.hand,
 .sans-photo {
   font-family: 'Instrument Serif', serif;
   font-style: italic;
@@ -4125,13 +3732,11 @@ button {
   text-align: center;
 }
 .tip-vide {
-  color: var(--ivory-faded);
-}
-.tips-bientot {
-  margin-top: 14px;
-  font-size: 11px;
-  color: var(--ivory-faded);
+  /* règle d'or §5 : état vide = la voix de l'app → serif italic, pas Caveat */
+  font-family: 'Instrument Serif', serif;
   font-style: italic;
+  font-size: 17px;
+  color: var(--ivory-faded);
 }
 .fiche-meta {
   margin-top: 26px;
@@ -4149,6 +3754,11 @@ button {
   gap: 16px;
 }
 .onboard-sous {
+  /* règle d'or §5 : sous-titre système de l'onboarding = la voix de l'app
+     → serif italic (le Caveat reste aux notes en marge du tuto, écrites par « j. ») */
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
   margin: -6px 0 8px;
 }
 .onboard-carte {
@@ -4229,30 +3839,6 @@ button {
 .onboard-curateur.suivi .onboard-curateur-truc {
   color: var(--red);
 }
-/* l'onglet profil : "mon tampon" */
-.profil-tete {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-.profil-tampon {
-  flex: 0 0 auto;
-  border: 2.5px solid var(--red);
-  border-radius: var(--rayon);
-  color: var(--red);
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 8px 12px;
-  transform: rotate(-6deg);
-}
-.profil-critere {
-  color: var(--ivory-faded);
-  margin-top: 2px;
-}
 /* le portrait : photo d'identité glissée dans le carnet, retenue par un trombone
    (pas un avatar rond, pas un polaroïd) */
 /* le portrait + sa fiche d'identité, côte à côte (vrai carnet) */
@@ -4299,52 +3885,6 @@ button {
   font-size: 13px;
   color: var(--ivory);
   font-family: 'Instrument Serif', serif;
-}
-/* l'âge éditable : un vrai aspect de champ (fond + soulignement) pour qu'on
-   voie qu'on peut taper dedans */
-.profil-age {
-  width: 48px;
-  background: rgba(239, 233, 216, 0.06);
-  border: none;
-  border-bottom: 1.5px solid rgba(239, 233, 216, 0.45);
-  color: var(--ivory);
-  font-family: 'Instrument Serif', serif;
-  font-size: 13px;
-  padding: 1px 4px 1px;
-  border-radius: var(--rayon) var(--rayon) 0 0;
-}
-.profil-age:focus {
-  outline: none;
-  border-bottom-color: var(--red);
-  background: rgba(239, 233, 216, 0.1);
-}
-.profil-age::placeholder {
-  color: rgba(239, 233, 216, 0.45);
-  font-size: 11px;
-  font-style: italic;
-}
-/* âge calculé + date de naissance éditable (sélecteur natif sombre) */
-.profil-age-cell {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.profil-age-val {
-  font-family: 'Instrument Serif', serif;
-  font-size: 13px;
-  color: var(--ivory);
-}
-.profil-naissance {
-  color-scheme: dark;
-  background: rgba(239, 233, 216, 0.06);
-  border: none;
-  border-bottom: 1px dotted rgba(239, 233, 216, 0.4);
-  color: var(--ivory-faded);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 1px 3px;
-  border-radius: var(--rayon) var(--rayon) 0 0;
 }
 /* la date de naissance à l'onboarding */
 .onboard-naissance {
@@ -4754,14 +4294,6 @@ button {
 .tampon-perso.claque {
   animation: frappeTampon 90ms var(--frappe) backwards;
 }
-/* mini-aperçu de la photo prise dans le kit */
-.photo-mini {
-  width: 22px;
-  height: 22px;
-  object-fit: cover;
-  border-radius: var(--rayon);
-  vertical-align: middle;
-}
 .validation-secondaires {
   display: flex;
   gap: 18px;
@@ -4865,27 +4397,6 @@ button {
 .photo-wc-dot.on {
   color: var(--red);
 }
-.photo-kit-legacy {
-  display: flex;
-  gap: 8px;
-}
-.photo-bouton {
-  border: 1px dashed rgba(239, 233, 216, 0.35);
-  border-radius: var(--rayon);
-  padding: 12px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 11px;
-}
-.photo-bouton.pris {
-  border-style: solid;
-  border-color: var(--red);
-  color: var(--ivory);
-}
-
 /* ── fiche : tags + partage ── */
 .fiche-tags {
   margin-top: 22px;
@@ -5162,7 +4673,9 @@ button {
 .nav-item.actif {
   opacity: 1;
 }
-/* signature 3 — LE TRAIT SE TIRE : l'underline se dessine de gauche à droite */
+/* signature 3 — LE TRAIT SE TIRE : l'underline se dessine de gauche à droite.
+   À L'ENCRE, pas à la cire : le chrome ne consomme plus le budget --cire des
+   écrans (§4 max 2/écran — le tampon-logo est la seule cire du chrome). */
 @keyframes traitTire {
   from { transform: scaleX(0); }
 }
@@ -5173,7 +4686,7 @@ button {
   bottom: -8px;
   width: 22px;
   height: 3px;
-  background: var(--red);
+  background: var(--encre);
   border-radius: var(--rayon);
   transform-origin: 0 50%;
   animation: traitTire 180ms var(--pose);
@@ -5184,7 +4697,8 @@ button {
    RGPD · formulaire · cibles tactiles ≥ 44px
    ══════════════════════════════════════════════════════════════ */
 
-/* l'attente de session (authPret) : pas d'écran noir, le tampon respire */
+/* l'attente de session (authPret) : pas d'écran noir — le tampon attend, posé,
+   à demi encré. STATIQUE : rien ne respire en boucle (§6). */
 .attente-auth {
   position: fixed;
   inset: 0;
@@ -5194,25 +4708,14 @@ button {
   place-items: center;
 }
 .attente-auth-logo {
-  animation: attente-respire 1.8s ease-in-out infinite;
-}
-@keyframes attente-respire {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: rotate(-2deg) scale(0.98);
-  }
-  50% {
-    opacity: 0.9;
-    transform: rotate(-2deg) scale(1.02);
-  }
+  opacity: 0.6;
 }
 
-/* le tampon d'honnêteté : contenu simulé/démo — micro-imprimé, discret */
+/* le tampon d'honnêteté : contenu simulé/démo — discret, corps 11 (§5) */
 .tampon-demo,
 .tampon-simule {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; /* LE corps micro-imprimé des objets-tampons (un seul) */
+  font-size: 11px;
   letter-spacing: 0.5px;
   opacity: 0.4;
   margin-left: 6px;
@@ -5284,9 +4787,9 @@ button {
   opacity: 1;
 }
 
-/* fiche : la provenance « chez untel » d'un spot du cercle */
+/* fiche : la provenance « chez untel » d'un spot du cercle — une note en marge */
 .fiche-chez {
-  color: var(--red);
+  color: var(--encre-2);
   opacity: 0.85;
 }
 
@@ -5719,20 +5222,11 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   overflow: hidden;
   color: var(--ivory-faded);
 }
-/* le vide démange : l'appareil photo gratte doucement */
+/* le vide : l'appareil photo attend, posé, légèrement de travers — STATIQUE
+   (§6 : rien ne s'anime en boucle hors les 5 signatures) */
 .album-vide .album-fenetre svg {
-  animation: albumDemange 2.6s ease-in-out infinite;
-}
-@keyframes albumDemange {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: rotate(0deg);
-  }
-  50% {
-    opacity: 0.95;
-    transform: rotate(-5deg);
-  }
+  opacity: 0.7;
+  transform: rotate(-5deg);
 }
 /* signature 2 — LE POLAROÏD SE DÉVELOPPE : du charbon vers l'image, 400 ms
    (la SEULE durée > 300 ms : c'est la signature, §6). CSS only. */
@@ -5755,8 +5249,11 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
     filter: brightness(1);
   }
 }
-/* l'étiquette manuscrite, sous le tirage */
+/* l'étiquette sous le tirage : un label de catégorie SYSTÈME (« la façade »,
+   « les wc ») — règle d'or §5 : jamais de Caveat pour l'app → serif italic */
 .album-etiquette {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
   font-size: 17px;
   line-height: 1.15;
   color: var(--ivory-faded);
@@ -5780,17 +5277,17 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
 .sceau-cire {
   animation: cireCoule 240ms var(--pose) backwards;
 }
-.grand-jeudi-bandeau {
-  animation: cireCoule 240ms var(--pose) backwards;
-}
 
 /* ══════════════════════════════════════════════════════════════
    V5 bloc 3c — ex-libris (cercle), page de garde (profil),
    colophon (réglages), grand jeudi. Classes migrées des styles inline.
    ══════════════════════════════════════════════════════════════ */
 
-/* l'ex-libris : l'initiale frappée au tampon graphite.
-   LA seule exception ronde du carnet (un tampon rond, pas un avatar). */
+/* l'ex-libris : l'initiale frappée au tampon graphite — un tampon rond,
+   pas un avatar. Le rond du carnet reste cadré : les tampons/sceaux (ici),
+   le langage carte gardé par §8 (pins, grappes, pastilles de légende),
+   les perforations physiques (œillet d'étiquette) et les zones de tap
+   invisibles. Jamais d'avatar rond ni de pilule. */
 .exlibris-initiale {
   flex: 0 0 auto;
   width: 40px;
@@ -5839,7 +5336,9 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   cursor: pointer;
 }
 .membre-sceau.scelle {
-  color: var(--cire); /* la cire est posée — 1 des 2 cires de l'écran */
+  /* la cire est posée — l'usage sanctionné par le doc (§7 cercle : le sceau
+     du super pote). C'est LA cire de l'écran, avec le tampon-logo. */
+  color: var(--cire);
 }
 
 /* ── le profil : la page de garde du carnet ── */
@@ -5948,10 +5447,12 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
 .profil-critere-suppr {
   background: none;
   border: none;
-  color: var(--encre-3);
+  /* action destructive : encre-2 lisible (pas le crayonné encre-3) ;
+     padding élargi = cible ≥ 44px, marges négatives = zéro resize visuel */
+  color: var(--encre-2);
   font-size: 13px;
-  padding: 6px 8px;
-  margin: -6px -8px -6px 0;
+  padding: 15px 16px;
+  margin: -15px -16px -15px 0;
   cursor: pointer;
 }
 .profil-critere-ajout {
@@ -6079,8 +5580,10 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
 .gj-voile-btn {
   background: none;
   border: none;
-  color: var(--encre-3);
-  padding: 4px 0;
+  /* un contrôle interactif, pas un hint : encre-2 (contraste AA), pas encre-3 */
+  color: var(--encre-2);
+  padding: 12px 0; /* cible tactile ≥ 44px */
+  min-height: 44px;
   cursor: pointer;
 }
 .gj-ville-meta {
@@ -6128,7 +5631,6 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
 
 /* ── prefers-reduced-motion : tournes et frappes → opacité simple ── */
 @media (prefers-reduced-motion: reduce) {
-  .album-vide .album-fenetre svg,
   .album-developpe .album-fenetre img,
   .fiche-carte .carte-photo img,
   .nav-item.actif::after,
@@ -6136,9 +5638,7 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   .tampon,
   .tampon-perso.claque,
   .sceau-cire,
-  .grand-jeudi-bandeau,
-  .attente-auth-logo,
-  .pin-moi::before {
+  .mot.entouré.pulse::after {
     animation: none;
   }
   /* la page ne tourne plus, l'encre se dépose sans glisser */
@@ -6149,8 +5649,7 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
     animation: pageIn 150ms var(--pose) backwards;
   }
   .splash-tampon,
-  .splash-tagline,
-  .splash-pitch {
+  .splash-tagline {
     animation: pageIn 150ms var(--pose) backwards;
   }
 }
@@ -6175,9 +5674,9 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   cursor: pointer;
 }
 .labo-onglet.on {
-  border-color: var(--red);
-  background: var(--red);
-  color: var(--print-white);
+  border-color: var(--encre); /* l'onglet actif s'encre (§4 : pas de cire d'état) */
+  background: var(--encre);
+  color: var(--nuit);
 }
 
 /* la voix du carnet : même titre que partout ailleurs */
@@ -6200,9 +5699,9 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   cursor: pointer;
 }
 .labo-chip.on {
-  border-color: var(--red);
-  background: var(--red);
-  color: var(--print-white);
+  border-color: var(--encre);
+  background: var(--encre);
+  color: var(--nuit);
 }
 .labo-chip.fixe {
   cursor: default;
@@ -6227,7 +5726,7 @@ body.grappes-pile .cluster-pastille.cluster-lg .cluster-nombre {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 1px;
-  color: var(--red);
+  color: var(--encre-2);
 }
 .labo-hint {
   font-family: 'JetBrains Mono', monospace;

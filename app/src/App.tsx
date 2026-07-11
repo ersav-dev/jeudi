@@ -1690,7 +1690,13 @@ export default function App() {
                         <IAnneau taille={18} />
                       </button>
                     </div>
-                    <p className="hand membre-bio">{m.bio || 'nouveau dans ton cercle.'}</p>
+                    {/* règle d'or §5 : la bio (la main du pote) reste en Caveat ;
+                        le fallback système parle en serif italic */}
+                    {m.bio ? (
+                      <p className="hand membre-bio">{m.bio}</p>
+                    ) : (
+                      <p className="membre-bio membre-bio-vide">nouveau dans ton cercle.</p>
+                    )}
                     <p className="mono membre-critere">
                       {m.critere ? `son truc : ${m.critere} · ` : ''}voir ses {nbSpots} spots →
                     </p>
@@ -2950,7 +2956,8 @@ function Fiche({
                     <span key={l.nom} className="mono tip-lecture">
                       {l.nom} :{' '}
                       {l.type === 'gradue' ? (
-                        <span style={{ color: 'var(--red)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>
+                        {/* pastilles ●●○ à l'encre pleine — la cire de la fiche reste au tampon */}
+                        <span style={{ color: 'var(--encre)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>
                       ) : (
                         <span>{l.oui ? 'oui' : 'non'}</span>
                       )}

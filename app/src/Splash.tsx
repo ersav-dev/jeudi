@@ -28,14 +28,10 @@ export default function Splash({ onFini }: { onFini: () => void }) {
       }}
       aria-label="entrer"
     >
+      {/* §7 : RIEN que le tampon qui frappe, le grain, et « je dis où. » —
+          le pitch fondateur vit ailleurs (onboarding), pas sur la couverture */}
       <div className="splash-tampon">Jeudi.</div>
       <div className="splash-tagline">je dis où.</div>
-      {/* le texte fondateur reste — mais typographié sobre (mono 11), pas décoratif */}
-      <div className="splash-pitch mono">
-        tes vrais potes te disent où.
-        <br />
-        pas 4 000 avis google.
-      </div>
     </div>
   )
 }
