@@ -2170,9 +2170,26 @@ button {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   opacity: 0.85;
 }
-/* l'étiquette ne porte pas de photo : elle dit le nom, c'est tout */
+/* la photo remplit l'étiquette : elle donne faim, elle donne envie de taper.
+   assombrie pour que le nom à l'encre claire passe par-dessus. */
 .carte-card-bg {
-  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  filter: brightness(0.5);
+}
+/* carte AVEC photo : fond nuit + texte encre claire (comme la grande fiche) */
+.carte-card:has(.carte-card-bg) {
+  background: var(--nuit-2);
+}
+.carte-card:has(.carte-card-bg) .carte-card-nom {
+  color: var(--encre);
+}
+.carte-card:has(.carte-card-bg) .carte-card-dist {
+  color: rgba(240, 234, 217, 0.82);
 }
 .carte-card.on {
   opacity: 1;
