@@ -17,8 +17,9 @@ import {
 } from './db'
 
 // ── le profil de préférences d'un membre du groupe ──────────────
-// (en V1 le cercle est simulé : on déduit ces profils de leurs persos.
-//  remplacés par les vraies préférences quand le cloud arrive.)
+// (bloc D : plus de profils simulés — les membres viennent du VRAI cercle.
+//  leurs vraies envies/budgets arriveront du cloud ; en attendant, l'écran
+//  leur applique l'envie du groupe, sans jamais les faire parler.)
 export interface MembrePref {
   id: string
   prenom: string
@@ -26,12 +27,6 @@ export interface MembrePref {
   envies: Envie[]
   /** le plus qu'il est prêt à dépenser : 0 = ça coûte rien · 1 = milieu · 2 = on flambe */
   budgetMax: 0 | 1 | 2
-}
-
-// profils simulés cohérents avec les membres du seed (Karim/Léa)
-export const PROFILS_MEMBRES: Record<string, MembrePref> = {
-  karim: { id: 'karim', prenom: 'Karim', envies: ['apéro', 'incognito', 'tranquilo'], budgetMax: 1 },
-  lea: { id: 'lea', prenom: 'Léa', envies: ['resto', 'gastro', 'tranquilo'], budgetMax: 2 },
 }
 
 /** mon propre profil dans le groupe, construit depuis ma sélection du soir */

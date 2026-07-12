@@ -6,9 +6,10 @@ import {
   tempsMarche,
   etatHoraire,
   propreteWcLabel,
+  spotComplet,
 } from './db'
 import { srcPhoto } from './photos'
-import { ISoleil, INuage, IPluie, IPosition, IBallon, IRefuge, ITrombone } from './icones'
+import { ISoleil, INuage, IPluie, IPosition, IBallon, IRefuge, ITrombone, ISceau } from './icones'
 
 function meteoIcone(m?: string) {
   if (m === 'soleil') return <ISoleil taille={12} />
@@ -124,6 +125,15 @@ export default function LigneIndex({
 
   const aDecouvrir = !valide && lieu.tampon?.v !== 'bof'
 
+  // le sceau du spot complet (≥1 photo + un mot) — LA récompense du carnet,
+  // discrète (cire 14px), posée à côté du nom sur chacune des 3 pages
+  const sceau =
+    estMien && spotComplet(lieu) ? (
+      <span className="sceau-complet" title="spot complet — une photo et un mot">
+        <ISceau taille={14} />
+      </span>
+    ) : null
+
   // le signet (favori), posé juste à côté du nom du lieu — bien visible
   const signet = () => (
     <button
@@ -185,7 +195,10 @@ export default function LigneIndex({
               {/* la ligne du registre : nom serif à gauche, méta mono à droite */}
               <div className="idx-ligne1">
                 <div className="idx-nom-rang">
-                  <span className="idx-nom">{lieu.nom}</span>
+                  <span className="idx-nom">
+                    {lieu.nom}
+                    {sceau}
+                  </span>
                   {signet()}
                 </div>
                 <div className="mono idx-dist">
@@ -286,7 +299,10 @@ export default function LigneIndex({
           </div>
           <div className="idx-photos-bas">
             <span className="idx-nom-rang">
-              <span className="idx-nom">{lieu.nom}</span>
+              <span className="idx-nom">
+                {lieu.nom}
+                {sceau}
+              </span>
               {signet()}
             </span>
             <span className="mono idx-dist-inline">
@@ -306,7 +322,10 @@ export default function LigneIndex({
           </div>
           <div className="idx-verso-tete">
             <span className="idx-nom-rang">
-              <span className="idx-nom">{lieu.nom}</span>
+              <span className="idx-nom">
+                {lieu.nom}
+                {sceau}
+              </span>
               {signet()}
             </span>
             {lieu.adresse && <span className="mono idx-adresse">{lieu.adresse}</span>}

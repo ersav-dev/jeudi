@@ -1,26 +1,27 @@
 // ════════════════════════════════════════════════════════════════
 // jeudi. — LES SUPER POTES (l'anneau intérieur des proches)
-// `proche` est figé dans le seed ; ici on le rend togglable, stocké en local,
-// avec le CAP à 10 (CONCEPT.md « deux anneaux » / [[jeudi-lentille-super-potes]]).
-// Anneau intérieur = la confiance qui pèse (deck, match de groupe, leurs critères).
+// togglable, stocké en local, avec le CAP à 10 (CONCEPT.md « deux anneaux »
+// / [[jeudi-lentille-super-potes]]). Anneau intérieur = la confiance qui
+// pèse (deck, match de groupe, leurs critères).
+// Vrais profils only (bloc D) : plus AUCUN proche fictif pré-rempli —
+// l'anneau se remplit avec de vraies relations (ids uuid du cloud).
 // ════════════════════════════════════════════════════════════════
-import { MEMBRES } from './seed'
 
 const CLE = 'jeudi-proches'
 export const CAP_PROCHES = 10
 
-function defautProches(): string[] {
-  return MEMBRES.filter((m) => m.proche).map((m) => m.id)
-}
+// un vrai membre a un id uuid (cloud) — les ids legacy du seed ('karim',
+// 'lea') sont filtrés à la lecture : le stockage s'assainit tout seul
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export function lesProches(): string[] {
   const raw = localStorage.getItem(CLE)
-  if (raw == null) return defautProches() // jamais touché → on part des proches du seed
+  if (raw == null) return [] // jamais touché → personne (les vrais arrivent)
   try {
     const v = JSON.parse(raw)
-    return Array.isArray(v) ? v : defautProches()
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && UUID.test(x)) : []
   } catch {
-    return defautProches()
+    return []
   }
 }
 
@@ -33,18 +34,17 @@ export function nbProches(): number {
 }
 
 // ════════════════════════════════════════════════════════════════
-// LE CERCLE RÉEL + LE DÉCOR (étape 5) — logique PURE de fusion.
-// Les vrais membres (cloud) passent DEVANT les membres seed (démo) ;
-// dédoublonnage par id, un vrai gagne toujours sur un homonyme seed.
+// LE CERCLE AFFICHÉ (bloc D) — RÉEL uniquement, logique PURE.
+// Plus de fusion seed+réel : les faux membres sont morts. On garde une
+// étape de dédoublonnage (deux relations vers le même id → une entrée).
 // ════════════════════════════════════════════════════════════════
 
-/** un membre tel que l'écran cercle l'affiche (réel OU décor seed) */
+/** un membre tel que l'écran cercle l'affiche (toujours réel désormais) */
 export interface MembreVue {
   id: string
   prenom: string
-  /** vrai membre cloud — pas de tampon « démo » */
+  /** toujours vrai depuis le bloc D — gardé pour la robustesse de l'UI */
   reel: boolean
-  titre?: string
   critere?: string
   tagline?: string
   bio?: string
@@ -52,10 +52,9 @@ export interface MembreVue {
   photoUrl?: string
 }
 
-/** fusionne le cercle réel et le décor : les vrais d'abord, sans doublon d'id */
+/** le cercle affiché : les vrais membres, dédoublonnés par id — rien d'autre */
 export function fusionnerCercle(
   reels: { id: string; prenom: string; critere?: string; bio?: string; insta?: string; photoUrl?: string }[],
-  seed: { id: string; prenom: string; titre?: string; critere?: string; tagline?: string; bio?: string }[] = MEMBRES,
 ): MembreVue[] {
   const vus = new Set<string>()
   const fusion: MembreVue[] = []
@@ -63,11 +62,6 @@ export function fusionnerCercle(
     if (vus.has(m.id)) continue
     vus.add(m.id)
     fusion.push({ ...m, reel: true })
-  }
-  for (const m of seed) {
-    if (vus.has(m.id)) continue
-    vus.add(m.id)
-    fusion.push({ ...m, reel: false })
   }
   return fusion
 }

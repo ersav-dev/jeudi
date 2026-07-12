@@ -11,9 +11,8 @@ vi.mock('../supabase', () => ({
   },
 }))
 
-import { extraireInvite } from '../db'
+import { extraireInvite, spotComplet } from '../db'
 import { fusionnerCercle, prenomDe } from '../cercle'
-import { MEMBRES } from '../seed'
 
 const UUID_A = '123e4567-e89b-42d3-a456-426614174000'
 const UUID_B = '9b2f0c31-4a6d-4e5f-8a7b-2c3d4e5f6a7b'
@@ -41,37 +40,39 @@ describe('extraireInvite (parsing du lien d’invitation)', () => {
   })
 })
 
-describe('fusionnerCercle (cercle réel + décor seed)', () => {
+describe('fusionnerCercle (bloc D : RÉEL uniquement — plus de décor seed)', () => {
   const reel = { id: UUID_A, prenom: 'Nina', bio: 'la vraie', insta: 'nina' }
 
-  it('les vrais membres passent DEVANT le seed, et sont marqués reel', () => {
-    const fusion = fusionnerCercle([reel])
-    expect(fusion[0]).toMatchObject({ id: UUID_A, prenom: 'Nina', reel: true })
-    // le décor seed suit, marqué non réel (tampon démo à l'affichage)
-    expect(fusion.slice(1).map((m) => m.id)).toEqual(MEMBRES.map((m) => m.id))
-    expect(fusion.slice(1).every((m) => !m.reel)).toBe(true)
-  })
-
-  it('dédoublonne par id : un vrai membre gagne toujours sur un seed homonyme', () => {
-    const seed = [
-      { id: 'karim', prenom: 'Karim', critere: 'le bruit' },
-      { id: UUID_A, prenom: 'Nina (seed)' },
-    ]
-    const fusion = fusionnerCercle([reel], seed)
+  it('rend les vrais membres, marqués reel, dans l’ordre', () => {
+    const fusion = fusionnerCercle([reel, { id: UUID_B, prenom: 'Marc' }])
     expect(fusion).toHaveLength(2)
     expect(fusion[0]).toMatchObject({ id: UUID_A, prenom: 'Nina', reel: true })
-    expect(fusion[1]).toMatchObject({ id: 'karim', reel: false })
+    expect(fusion[1]).toMatchObject({ id: UUID_B, prenom: 'Marc', reel: true })
   })
 
-  it('dédoublonne aussi les vrais entre eux (deux relations vers le même id)', () => {
-    const fusion = fusionnerCercle([reel, { id: UUID_A, prenom: 'Nina bis' }], [])
+  it('dédoublonne les vrais entre eux (deux relations vers le même id)', () => {
+    const fusion = fusionnerCercle([reel, { id: UUID_A, prenom: 'Nina bis' }])
     expect(fusion).toHaveLength(1)
     expect(fusion[0].prenom).toBe('Nina')
   })
 
-  it('cercle vide → que le décor, rien ne casse', () => {
-    const fusion = fusionnerCercle([])
-    expect(fusion.map((m) => m.id)).toEqual(MEMBRES.map((m) => m.id))
+  it('cercle vide → VIDE : aucun membre de décor ne réapparaît jamais', () => {
+    expect(fusionnerCercle([])).toEqual([])
+  })
+})
+
+describe('spotComplet (le sceau : ≥ 1 photo ET un mot)', () => {
+  const photo = { type: 'lieu' as const, url: 'x' }
+
+  it('photo + note → complet (le sceau se mérite)', () => {
+    expect(spotComplet({ photos: [photo], note: 'table du fond, demande Momo' })).toBe(true)
+  })
+
+  it('photo sans mot, mot sans photo, ou rien → pas de sceau', () => {
+    expect(spotComplet({ photos: [photo], note: '' })).toBe(false)
+    expect(spotComplet({ photos: [photo], note: '   ' })).toBe(false)
+    expect(spotComplet({ photos: [], note: 'un mot' })).toBe(false)
+    expect(spotComplet({ photos: [], note: '' })).toBe(false)
   })
 })
 

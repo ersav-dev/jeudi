@@ -7,9 +7,9 @@ import Auth from './Auth'
 import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
 import PickerCouleur from './PickerCouleur'
-import { importerSeed, MEMBRES } from './seed'
+import { importerSeed } from './seed'
 import { srcPhoto } from './photos'
-import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau } from './icones'
+import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import GrandJeudi from './EcranGrandJeudi'
@@ -33,7 +33,6 @@ import { rechercher, profilDeGout } from './recherche'
 // le tuto « notes en marge » : le carnet prêté, ses notes qui s'effacent
 import NoteMarge, { MotScotche } from './NoteMarge'
 import { effacerNote, toutRelire } from './tuto'
-import { regardDe, CRITERES_MEMBRES, pastilles } from './regard'
 import portraitDefaut from './assets/portrait.jpg'
 import {
   type Lieu,
@@ -55,6 +54,7 @@ import {
   supprimerLieu,
   majLieu,
   estAMoi,
+  spotComplet,
   adopterLieu,
   // les tips réels (table `tips`) : la voix qu'on pose sur le spot d'un autre
   ecrireTip,
@@ -971,14 +971,15 @@ export default function App() {
 
   // qui possède quoi : mes spots + ceux de mon cercle = "ma carte" ; les
   // éclaireurs hors cercle (proprietaire pub-*) ne vivent que dans "public".
-  // le cercle = les VRAIS membres (relations acceptées) + le décor seed
-  const idsCercle = useMemo(
-    () => new Set([...cercleReel.map((m) => m.id), ...MEMBRES.map((m) => m.id)]),
+  // bloc D : le cercle = les VRAIS membres (relations acceptées), point.
+  const idsCercle = useMemo(() => new Set(cercleReel.map((m) => m.id)), [cercleReel])
+  // l'écran cercle : RÉEL uniquement — plus aucun membre de décor
+  const membresCercle = useMemo(() => fusionnerCercle(cercleReel), [cercleReel])
+  // le cercle pour les tris de confiance (recherche, « pour toi ») : ids + prénoms
+  const cerclePourTri = useMemo(
+    () => cercleReel.flatMap((m) => [m.id, m.prenom]),
     [cercleReel],
   )
-  // l'écran cercle : les vrais membres passent DEVANT, le seed reste le décor
-  // (tampon « démo ») tant qu'on est seul
-  const membresCercle = useMemo(() => fusionnerCercle(cercleReel), [cercleReel])
   // UNE seule source pour les super potes : lesProches() (état `proches`),
   // plus jamais le `proche` figé du seed (il ne sert qu'à amorcer cercle.ts).
   const idsProches = useMemo(() => new Set(proches), [proches])
@@ -1033,11 +1034,7 @@ export default function App() {
         favoris,
         vus: [...vus],
       })
-      const cercle = [
-        ...MEMBRES.flatMap((m) => [m.id, m.prenom]),
-        ...cercleReel.flatMap((m) => [m.id, m.prenom]),
-      ]
-      return rechercher(liste, {}, gout, cercle).map((r) => r.lieu)
+      return rechercher(liste, {}, gout, cerclePourTri).map((r) => r.lieu)
     }
     if (tri === 'oublies') {
       // « à redécouvrir » : les spots jamais consultés remontent (la carte ne dort pas)
@@ -1046,7 +1043,7 @@ export default function App() {
       )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
-  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cercleReel])
+  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cerclePourTri])
 
   // le compteur « N ouverts » — partagé, calculé une fois par liste filtrée
   const nbOuverts = useMemo(
@@ -1514,7 +1511,7 @@ export default function App() {
           {estCeLeGrandJeudi(new Date()) && (
             <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
           )}
-          <Recherche lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          <Recherche lieux={lieux} cercle={cerclePourTri} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
         </>
       )}
 
@@ -1560,6 +1557,11 @@ export default function App() {
                   l="super potes"
                   onClick={allerAuCercle}
                 />
+              </div>
+              {/* machine à photos : la ligne sobre — jamais de pourcentage */}
+              <div className="mono profil-visages">
+                {mesSpots.length} spots ·{' '}
+                {mesSpots.filter((x) => x.photos.length > 0).length} ont un visage
               </div>
             </div>
           </div>
@@ -1689,7 +1691,12 @@ export default function App() {
           <button className="lien fiche-retour" onClick={() => setSortieGroupe(false)}>
             ← le cercle
           </button>
-          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          <Groupe
+            lieux={lieux}
+            membres={cercleReel}
+            onInviter={inviterUnPote}
+            onOuvrir={(l) => ouvrirFiche(l, lieux)}
+          />
         </div>
       )}
 
@@ -1699,16 +1706,16 @@ export default function App() {
           <button className="inviter-pote sortir-groupe" onClick={() => setSortieGroupe(true)}>
             sortir à plusieurs →
           </button>
-          <p className="mono cercle-compteur">
-            {membresCercle.length} membres · {proches.length}/{CAP_PROCHES} super potes
-          </p>
+          {membresCercle.length > 0 && (
+            <p className="mono cercle-compteur">
+              {membresCercle.length} membre{membresCercle.length > 1 ? 's' : ''} ·{' '}
+              {proches.length}/{CAP_PROCHES} super potes
+            </p>
+          )}
           <ul className="membres">
             {membresCercle.map((m) => {
-              // un vrai membre POSSÈDE ses spots (owner_id) ; le décor seed,
-              // lui, ne vit que dans les tips
-              const nbSpots = m.reel
-                ? lieux.filter((l) => l.proprietaire === m.id).length
-                : lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === m.prenom)).length
+              // un vrai membre POSSÈDE ses spots (owner_id)
+              const nbSpots = lieux.filter((l) => l.proprietaire === m.id).length
               const estPro = proches.includes(m.id)
               return (
                 // l'ex-libris (V5 §7) : initiale au tampon graphite (la seule
@@ -1730,11 +1737,7 @@ export default function App() {
                   <span className="exlibris-initiale">{m.prenom[0]}</span>
                   <div className="membre-corps">
                     <div className="membre-tete">
-                      <span className="membre-nom">
-                        {m.prenom}
-                        {/* le tampon d'honnêteté : le décor seed s'assume démo */}
-                        {!m.reel && <span className="mono tampon-demo">démo</span>}
-                      </span>
+                      <span className="membre-nom">{m.prenom}</span>
                       {/* le sceau : cire posée = super pote · empreinte vide = à sceller.
                           l'anneau intérieur — jamais d'étoile (DA) */}
                       <button
@@ -1769,6 +1772,21 @@ export default function App() {
               )
             })}
           </ul>
+          {/* cercle vide : l'ex-libris fantôme — la place du premier pote,
+              déjà encadrée en pointillés (un état vide qui donne envie) */}
+          {membresCercle.length === 0 && (
+            <button className="membre-fantome" onClick={inviterUnPote}>
+              <span className="exlibris-initiale vide" aria-hidden="true">
+                ?
+              </span>
+              <span className="membre-corps membre-fantome-corps">
+                <span className="membre-nom membre-nom-fantome">ton premier pote ici</span>
+                <span className="membre-bio membre-bio-vide">
+                  son prénom, ses spots, ses tips — dès qu'il accepte ton lien.
+                </span>
+              </span>
+            </button>
+          )}
           {/* la note en marge : un cercle sans vrai membre, ça s'invite */}
           {cercleReel.length === 0 && (
             <NoteMarge id="cercle-invite" fleche="bas" className="note-marge-cercle" />
@@ -1832,7 +1850,6 @@ export default function App() {
           onComparer={() => setCompaOuverte(true)}
           onAdopter={adopter}
           dejaAdopte={!estAMoi(fiche) && lieux.some((x) => estAMoi(x) && x.nom === fiche.nom)}
-          proches={proches}
           reels={cercleReel}
           onNaviguer={naviguerFiche}
           onFermer={() => {
@@ -1956,6 +1973,10 @@ export default function App() {
   )
 }
 
+// la relance photos (machine à photos, bloc D) : UNE seule fois, jamais de
+// culpabilisation — le drapeau se pose dès qu'elle a été montrée
+const RELANCE_PHOTO_CLE = 'jeudi-relance-photo'
+
 // ── le swipe de sortie : "alors, Le Bisou ?" (la boucle de données) ──
 function Validation({
   sortie,
@@ -1975,7 +1996,7 @@ function Validation({
   onPlusTard: () => void
 }) {
   const lieu = lieux.find((l) => l.id === sortie.lieuId)
-  const [etape, setEtape] = useState<'verdict' | 'occasions' | 'tampon'>('verdict')
+  const [etape, setEtape] = useState<'verdict' | 'occasions' | 'tampon' | 'relance'>('verdict')
   // pré-cochés avec ce que le carnet sait déjà — et tout reste modifiable
   const [tags, setTags] = useState<string[]>(() => [
     ...(lieu?.compagnies ?? []),
@@ -2081,7 +2102,13 @@ function Validation({
   // cap raisonnable de photos par lieu : au-delà, les plus ANCIENNES sortent
   const CAP_PHOTOS_LIEU = 12
 
+  // le lieu tel qu'il vient d'être enregistré (base de la relance photos)
+  const enregistreRef = useRef<Lieu | null>(null)
+  // les clichés pris PENDANT la relance (après le tampon)
+  const [photosRelance, setPhotosRelance] = useState<PhotoLieu[]>([])
+
   const terminer = async () => {
+    let sansVisage = false
     if (lieu) {
       // le spot d'un autre (cercle RÉEL) : mon tip part dans la table `tips`
       // (l'autre voix) — échec = message visible, on reste là et on peut
@@ -2098,7 +2125,7 @@ function Validation({
       }
       // on AJOUTE les nouvelles photos (on ne remplace jamais les anciennes du même type)
       const photosFusion = [...lieu.photos, ...photos].slice(-CAP_PHOTOS_LIEU)
-      await majLieu({
+      const maj: Lieu = {
         ...lieu,
         // le champ tip reflète l'état final : vidé → le tip s'efface (note: '')
         // — la note d'un spot du cercle RÉEL reste LA voix de son proprio ;
@@ -2114,6 +2141,28 @@ function Validation({
         tampon: { v: 'valide', ...tampon, qui: prenom, date: dateCourte },
         propreteWc: propreteWc ?? lieu.propreteWc,
         recos,
+      }
+      await majLieu(maj)
+      enregistreRef.current = maj
+      // la machine à photos : validation finie SANS aucun cliché sur MON spot
+      sansVisage = estAMoi(lieu) && photosFusion.length === 0
+    }
+    // la relance douce, UNE seule fois — jamais de reproche, juste la porte
+    if (sansVisage && !localStorage.getItem(RELANCE_PHOTO_CLE)) {
+      localStorage.setItem(RELANCE_PHOTO_CLE, 'vue')
+      setEtape('relance')
+      return
+    }
+    onFini()
+  }
+
+  // fin de la relance : on colle les clichés pris (s'il y en a) puis on sort
+  const finirRelance = async () => {
+    const base = enregistreRef.current
+    if (base && photosRelance.length > 0) {
+      await majLieu({
+        ...base,
+        photos: [...base.photos, ...photosRelance].slice(-CAP_PHOTOS_LIEU),
       })
     }
     onFini()
@@ -2285,7 +2334,7 @@ function Validation({
             c'est dit.
           </button>
         </>
-      ) : (
+      ) : etape === 'tampon' ? (
         <>
           <button className="lien retour-etape" onClick={() => setEtape('occasions')}>
             ← corriger le récit
@@ -2331,13 +2380,34 @@ function Validation({
             tamponné.
           </button>
         </>
+      ) : (
+        <>
+          {/* la relance douce (machine à photos) : glissée UNE fois, après un
+              tampon sans cliché — le ton du carnet, zéro culpabilisation */}
+          <h1 className="grande-question">3 clichés, 30 secondes —</h1>
+          <p className="hand relance-sous">et le spot a un visage.</p>
+          <KitPhotos photos={photosRelance} setPhotos={setPhotosRelance} />
+          <div className="validation-secondaires">
+            {photosRelance.length > 0 ? (
+              <button className="valider" onClick={finirRelance}>
+                c'est dans la boîte.
+              </button>
+            ) : (
+              <button className="lien" onClick={onFini}>
+                plus tard
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   )
 }
 
-// ── la carte d'un curateur : tous les spots où sa voix est passée ──
-// (membre seed = décor démo, OU vrai membre du cercle réel — étape 5)
+// ── la carte d'un curateur : les spots d'un VRAI membre du cercle ──
+// bloc D : plus de faux profil curateur — cette carte ne s'ouvre que pour
+// une relation acceptée (les voix « démo » du décor restent de simples
+// signatures texte sur les fiches, sans profil derrière)
 function CarteCurateur({
   curateur,
   lieux,
@@ -2358,13 +2428,22 @@ function CarteCurateur({
   onFermer: () => void
 }) {
   const reel = reels.find((m) => m.prenom === curateur)
-  const membre = MEMBRES.find((m) => m.prenom === curateur)
-  // un vrai membre POSSÈDE ses spots (owner_id) ; le seed vit dans les tips
-  const spots = reel
-    ? lieux.filter((l) => l.proprietaire === reel.id)
-    : lieux.filter((l) => l.tipsCercle?.some((t) => t.auteur === curateur))
+  // un vrai membre POSSÈDE ses spots (owner_id)
+  const spots = reel ? lieux.filter((l) => l.proprietaire === reel.id) : []
   const [vue, setVue] = useState<'liste' | 'carte'>('liste')
   const [confirmRetrait, setConfirmRetrait] = useState(false)
+
+  // garde-fou : la personne a quitté (ou n'a jamais été dans) mon cercle
+  if (!reel) {
+    return (
+      <div className="cercle carte-curateur">
+        <button className="lien fiche-retour" onClick={onFermer}>
+          ← le cercle
+        </button>
+        <p className="hand vide">ce carnet n'est pas dans ton cercle.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="cercle carte-curateur">
@@ -2383,7 +2462,9 @@ function CarteCurateur({
               strokeLinecap="round"
             />
           </svg>
-          {reel && !reel.photoUrl ? (
+          {reel.photoUrl ? (
+            <img className="profil-id-photo" src={reel.photoUrl} alt={curateur} />
+          ) : (
             // vrai membre sans portrait : l'initiale — jamais une fausse photo
             <span
               className="profil-id-photo"
@@ -2392,34 +2473,25 @@ function CarteCurateur({
             >
               {curateur[0]}
             </span>
-          ) : (
-            <img
-              className="profil-id-photo"
-              src={reel?.photoUrl ?? `https://i.pravatar.cc/240?u=${membre?.id ?? curateur}`}
-              alt={curateur}
-            />
           )}
           <span className="profil-id-tampon">{curateur}</span>
         </div>
         <dl className="profil-fiche mono">
           <div>
             <dt>prénom</dt>
-            <dd>
-              {curateur}
-              {!reel && <span className="tampon-demo">démo</span>}
-            </dd>
+            <dd>{curateur}</dd>
           </div>
           <div>
             <dt>spots</dt>
             <dd>{spots.length}</dd>
           </div>
-          {(membre || reel?.critere) && (
+          {reel.critere && (
             <div>
               <dt>critère</dt>
-              <dd>{(reel?.critere ?? membre?.critere ?? '').replace(/^(le |la |les |l')/, '')}</dd>
+              <dd>{reel.critere.replace(/^(le |la |les |l')/, '')}</dd>
             </div>
           )}
-          {reel?.insta && (
+          {reel.insta && (
             <div>
               <dt>insta</dt>
               <dd>@{reel.insta}</dd>
@@ -2427,18 +2499,7 @@ function CarteCurateur({
           )}
         </dl>
       </div>
-      {!reel && (
-        <p className="profil-tagline-vue">
-          {membre?.tagline ? (
-            `« ${membre.tagline} »`
-          ) : (
-            <span className="tagline-exemple">ex. « le roi du dernier verre »</span>
-          )}
-        </p>
-      )}
-      {(reel?.bio ?? membre?.bio) && (
-        <p className="hand curateur-bio">{reel?.bio ?? membre?.bio}</p>
-      )}
+      {reel.bio && <p className="hand curateur-bio">{reel.bio}</p>}
       <span className="basculer mono curateur-basculer">
         <button
           className={vue === 'liste' ? 'on' : ''}
@@ -2470,13 +2531,8 @@ function CarteCurateur({
         ) : (
           <ul className="liste">
             {spots.map((l) => {
-              // vrai membre : son tip = la note du spot (il en est l'auteur) ;
-              // décor seed : sa voix vit dans tipsCercle
-              const tip = reel
-                ? l.note
-                  ? { note: l.note }
-                  : undefined
-                : l.tipsCercle?.find((t) => t.auteur === curateur)
+              // son tip = la note du spot (il en est l'auteur)
+              const tip = l.note ? { note: l.note } : undefined
               return (
                 <li key={l.id} className="lieu">
                   <div
@@ -2504,17 +2560,15 @@ function CarteCurateur({
           </ul>
         ))}
 
-      {/* retirer un VRAI membre — deux taps, jamais silencieux */}
-      {reel && (
-        <button
-          className={`lien retirer-cercle ${confirmRetrait ? 'confirm' : ''}`}
-          onClick={() => (confirmRetrait ? onRetirer(reel) : setConfirmRetrait(true))}
-        >
-          {confirmRetrait
-            ? `sûr ? @${reel.prenom.toLowerCase()} sortira de ton cercle.`
-            : 'retirer de mon cercle'}
-        </button>
-      )}
+      {/* retirer un membre — deux taps, jamais silencieux */}
+      <button
+        className={`lien retirer-cercle ${confirmRetrait ? 'confirm' : ''}`}
+        onClick={() => (confirmRetrait ? onRetirer(reel) : setConfirmRetrait(true))}
+      >
+        {confirmRetrait
+          ? `sûr ? @${reel.prenom.toLowerCase()} sortira de ton cercle.`
+          : 'retirer de mon cercle'}
+      </button>
     </div>
   )
 }
@@ -2530,7 +2584,6 @@ function Fiche({
   onComparer,
   onAdopter,
   dejaAdopte,
-  proches,
   reels,
 }: {
   lieu: Lieu
@@ -2544,8 +2597,6 @@ function Fiche({
   /** adopter un spot qui n'est pas à moi (le copier sur ma carte) */
   onAdopter: (l: Lieu) => void
   dejaAdopte: boolean
-  /** mes super potes (ids) → on affiche leur regard sur ce lieu */
-  proches: string[]
   /** les vrais membres du cercle (owner_id → prénom, « chez untel ») */
   reels: MembreCercle[]
 }) {
@@ -2809,29 +2860,43 @@ function Fiche({
         onPointerDown={onCarteDown}
         onPointerUp={onCarteUp}
       >
-        <div className="carte-photo">
-          {nbPhotos > 1 && (
-            <div className="photo-tirets">
-              {lieu.photos.map((_, i) => (
-                <span key={i} className={i === photoIndex ? 'on' : ''} />
-              ))}
-            </div>
-          )}
-          {nbPhotos > 0 ? (
-            <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
-          ) : (
-            <div className="tirage-vide">
-              <span className="croix">✕</span>
-              <span className="hand sans-photo">pas encore de photo.</span>
-            </div>
-          )}
-          {nbPhotos > 1 && (
-            <span className="mono photo-compteur">
-              {photoIndex + 1}/{nbPhotos}
+        {/* MON spot sans photo : le grand tirage vide s'efface — l'album à
+            trous (juste sous le titre) prend sa place au-dessus du pli */}
+        {!(mien && nbPhotos === 0) && (
+          <div className="carte-photo">
+            {nbPhotos > 1 && (
+              <div className="photo-tirets">
+                {lieu.photos.map((_, i) => (
+                  <span key={i} className={i === photoIndex ? 'on' : ''} />
+                ))}
+              </div>
+            )}
+            {nbPhotos > 0 ? (
+              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+            ) : (
+              <div className="tirage-vide">
+                <span className="croix">✕</span>
+                <span className="hand sans-photo">pas encore de photo.</span>
+              </div>
+            )}
+            {nbPhotos > 1 && (
+              <span className="mono photo-compteur">
+                {photoIndex + 1}/{nbPhotos}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="carte-nom">
+          {lieu.nom}
+          {/* le sceau du spot complet (≥1 photo + un mot) — LA récompense.
+              budget cire de la fiche : le tampon « validé » + ce sceau, rien
+              d'autre n'y parle en --cire (arbitrage §4). */}
+          {mien && spotComplet(lieu) && (
+            <span className="sceau-complet sceau-cire" title="spot complet — une photo et un mot">
+              <ISceau taille={14} />
             </span>
           )}
         </div>
-        <div className="carte-nom">{lieu.nom}</div>
         {nbPhotos > 0 && (
           <button
             className="photo-agrandir"
@@ -2960,21 +3025,26 @@ function Fiche({
           </div>
         )}
         {(lieu.tipsCercle ?? []).map((t, i) => {
-          // #22 : on exploite le critère perso du curateur (sa signature de
-          // goût) — le vrai membre du cercle (auteurId) d'abord, le décor sinon
-          const crit = t.auteurId
-            ? reels.find((m) => m.id === t.auteurId)?.critere
-            : MEMBRES.find((m) => m.prenom === t.auteur)?.critere
+          // #22 : le critère perso du curateur (sa signature de goût) —
+          // seulement pour un VRAI membre du cercle (auteurId)
+          const crit = t.auteurId ? reels.find((m) => m.id === t.auteurId)?.critere : undefined
           return (
             <div className="tip" key={i}>
               <p className="hand">{t.note}</p>
               <span className="mono tip-signature">
                 —{' '}
-                <button className="tip-auteur-lien" onClick={() => onCurateur(t.auteur)}>
-                  @{t.auteur.toLowerCase()}
-                </button>
+                {t.auteurId ? (
+                  // un vrai pote : sa signature ouvre son carnet
+                  <button className="tip-auteur-lien" onClick={() => onCurateur(t.auteur)}>
+                    @{t.auteur.toLowerCase()}
+                  </button>
+                ) : (
+                  // voix du décor (contenu éditorial) : signature TEXTE simple —
+                  // aucun faux profil curateur derrière (bloc D)
+                  <span>@{t.auteur.toLowerCase()}</span>
+                )}
                 {crit && <span className="tip-critere"> · juge {crit}</span>}
-                {/* seul le décor (seed) porte le tampon d'honnêteté */}
+                {/* seul le décor porte le tampon d'honnêteté */}
                 {!t.auteurId && <span className="tampon-demo">démo</span>}
               </span>
             </div>
@@ -2991,39 +3061,8 @@ function Fiche({
         )}
       </div>
 
-      {(() => {
-        // « à travers leurs yeux » : le regard de tes super potes sur ce lieu
-        const regards = proches
-          .filter((id) => CRITERES_MEMBRES[id])
-          .map((id) => ({ prenom: MEMBRES.find((m) => m.id === id)?.prenom ?? id, lectures: regardDe(id, lieu) }))
-          .filter((r) => r.lectures.length)
-        if (!regards.length) return null
-        return (
-          <div className="fiche-tips">
-            <span className="lbl mono">à travers leurs yeux</span>
-            {regards.map((r) => (
-              <div className="tip" key={r.prenom}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
-                  {r.lectures.map((l) => (
-                    <span key={l.nom} className="mono tip-lecture">
-                      {l.nom} :{' '}
-                      {l.type === 'gradue' ? (
-                        /* pastilles ●●○ à l'encre pleine — la cire de la fiche reste au tampon */
-                        <span style={{ color: 'var(--encre)', letterSpacing: 1 }}>{pastilles(l.niveau ?? 1)}</span>
-                      ) : (
-                        <span>{l.oui ? 'oui' : 'non'}</span>
-                      )}
-                    </span>
-                  ))}
-                </div>
-                <span className="mono tip-signature">
-                  — selon {r.prenom} <span className="tampon-simule">simulé</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        )
-      })()}
+      {/* « à travers leurs yeux » (regards simulés) : SUPPRIMÉ — le vrai
+          reviendra quand tes potes poseront leurs critères sur les lieux */}
 
       {mien && !edition ? (
         <div className="fiche-tags">

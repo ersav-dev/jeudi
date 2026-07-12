@@ -9,7 +9,6 @@ import {
   distanceM,
 } from './db'
 import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
-import { MEMBRES } from './seed'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
@@ -21,9 +20,12 @@ import CroquisParis from './CroquisParis'
 // liste pas » (sans intention = pour toi).
 export default function Recherche({
   lieux,
+  cercle,
   onOuvrir,
 }: {
   lieux: Lieu[]
+  /** le VRAI cercle (ids + prénoms) — la confiance d'abord dans le tri */
+  cercle: string[]
   onOuvrir?: (l: Lieu) => void
 }) {
   const [texte, setTexte] = useState('')
@@ -58,9 +60,6 @@ export default function Recherche({
       document.removeEventListener('visibilitychange', relire)
     }
   }, [])
-
-  // ton cercle (prénoms + ids) → la confiance d'abord dans le tri
-  const cercle = useMemo(() => MEMBRES.flatMap((m) => [m.id, m.prenom]), [])
 
   // les habitudes : déduites des tampons (validé/bof) + favoris + vus
   const gout = useMemo(() => {

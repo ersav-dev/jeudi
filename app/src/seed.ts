@@ -1,4 +1,4 @@
-import { type Lieu, type TipCercle, type PhotoLieu, ajouterLieuLocal, nouvelId, getDB } from './db'
+import { type Lieu, type PhotoLieu, ajouterLieuLocal, nouvelId, getDB } from './db'
 // les gros fichiers de données (ERSAN/CURATED/EXTRA) sont importés dynamiquement
 // DANS importerSeed() : ils ne partent plus dans le chunk principal.
 
@@ -45,150 +45,10 @@ const ph = (s: string): PhotoLieu[] => [
   { type: 'wc', url: `https://loremflickr.com/440/320/restroom,sink/all?lock=${hashNum(s + 'w2')}` },
 ]
 
-// ── le cercle simulé : deux membres fictifs pour voir l'app finale
-// (remplacés par de vrais comptes quand le cloud arrive)
-export const MEMBRES = [
-  {
-    id: 'karim',
-    prenom: 'Karim',
-    titre: 'éclaireur du 10e',
-    critere: 'le bruit',
-    tagline: 'le mec qui connaît toujours un dernier rade',
-    bio: 'premier sur les spots du canal. juge tout au bruit.',
-    spots: 23,
-    proche: true, // inner ring (apparaît dans "proches" ET "potes")
-  },
-  {
-    id: 'lea',
-    prenom: 'Léa',
-    titre: 'curatrice · 47 spots',
-    critere: 'la lumière',
-    tagline: 'mange seule, partout, sans gêne',
-    bio: 'sa collection "comptoirs où manger seule" fait référence.',
-    spots: 47,
-    proche: false, // pote (apparaît dans "potes" seulement)
-  },
-]
-
-const TIP = (auteur: string, titre: string, note: string): TipCercle => ({ auteur, titre, note })
-
-// ── l'amorce : les premiers spots d'Ersan, repris de sa liste
-// Google Maps (notes perso conservées telles quelles — ce sont
-// déjà des tips). Coordonnées approximatives, à affiner.
-// Remplacé par le vrai import Takeout dès que le zip arrive.
-
-const SPOTS: Array<Partial<Lieu> & { nom: string; note: string; auteurCercle?: number }> = [
-  {
-    nom: "Le Robinet d'Or",
-    note: 'restaurant avec Christophe, JS, Ben, Stephan et sa copine.',
-    lat: 48.8712, lng: 2.3633,
-    envies: ['resto'], compagnies: ['potos'],
-  },
-  {
-    nom: "L'Abysse Paris — Yannick Alléno",
-    note: 'le grand jeu. + de 100 balles, japonais.',
-    lat: 48.8661, lng: 2.3164,
-    envies: ['gastro'], meteo: 'soleil',
-  },
-  {
-    nom: 'The Office',
-    note: 'à tester !!',
-    lat: 48.8721, lng: 2.3472,
-    envies: ['resto'],
-  },
-  {
-    nom: 'Glacier — 215 rue de Paris, Montreuil',
-    note: 'glace à tester.',
-    lat: 48.8576, lng: 2.4405,
-    envies: ['tranquilo'],
-  },
-  {
-    nom: 'Chez Michel',
-    note: 'super resto : François et Christophe.',
-    lat: 48.88, lng: 2.351,
-    envies: ['resto', 'gastro'], compagnies: ['potos'],
-    tipsCercle: [
-      TIP('Karim', 'éclaireur du 10e', 'le kig ha farz du jeudi. niveau bruit : parfait avant 20h30, blindé après.'),
-      TIP('Léa', 'curatrice · 47 spots', 'banquette du fond, lumière douce. parfait même seule.'),
-    ],
-  },
-  {
-    nom: 'Abri Soba',
-    note: 'à tester. nouilles au sarrasin.',
-    lat: 48.8745, lng: 2.3441,
-    envies: ['resto'],
-    tipsCercle: [
-      TIP('Karim', 'éclaireur du 10e', 'vas-y AVANT 19h30 ou oublie. comptoir nickel en solo.'),
-    ],
-  },
-  {
-    nom: 'Bistro Volnay',
-    note: 'à tester.',
-    lat: 48.8693, lng: 2.3309,
-    envies: ['resto'],
-  },
-  {
-    nom: 'Happatei',
-    note: 'resto Lisa & Théo.',
-    lat: 48.868, lng: 2.336,
-    envies: ['resto'], compagnies: ['potos'],
-    photos: ph('happatei'),
-  },
-  {
-    nom: 'Aki Café',
-    note: 'bon resto. japonais, 10-20 balles.',
-    lat: 48.8665, lng: 2.3357,
-    envies: ['resto', 'alloco'], meteo: 'pluie',
-    tipsCercle: [
-      TIP('Léa', 'curatrice · 47 spots', 'le katsu sando à emporter. lumière triste à l\'intérieur, prends-le et va au jardin du Palais-Royal.'),
-    ],
-  },
-  // fournée 2 (screenshots Google Maps du 11/06)
-  { nom: 'La Coquille', note: 'bar, 10-20 balles.', lat: 48.8721, lng: 2.3528, envies: ['apéro'] },
-  { nom: 'Kehribar', note: 'à tester insta. turc.', lat: 48.8694, lng: 2.3585, envies: ['resto'] },
-  { nom: 'Mian Fan', note: 'à tester. fusion asiatique, 10-20 balles.', lat: 48.8674, lng: 2.3461, envies: ['resto'], meteo: 'pluie' },
-  { nom: 'Naï Naï — Bistrot chic asiatique', note: 'à tester. fondue chinoise.', lat: 48.8682, lng: 2.3449, envies: ['resto'], compagnies: ['duo'] },
-  { nom: 'Duplex Bar', note: 'bar gay à tester.', lat: 48.8597, lng: 2.3547, envies: ['apéro', 'turbo'] },
-  { nom: "Vingt Vins d'Art", note: 'reco xtof. bistro à vins.', lat: 48.8632, lng: 2.3691, envies: ['apéro', 'tranquilo'], compagnies: ['potos'] },
-  { nom: 'Le Louchebem', note: 'viande, les halles. 20-60 balles.', lat: 48.8625, lng: 2.3454, envies: ['resto', 'gastro'] },
-  { nom: 'Chez Marius', note: 'reco xtof. 20-70 balles.', lat: 48.8569, lng: 2.3162, envies: ['resto', 'gastro'], compagnies: ['potos'] },
-  { nom: 'Restaurant À la maison', note: 'resto reco xtof. 40-70 balles.', lat: 48.8702, lng: 2.3401, envies: ['gastro'], compagnies: ['potos'], meteo: 'soleil' },
-  { nom: 'Pacifique', note: 'chinois, 20-30 balles.', lat: 48.8722, lng: 2.3771, envies: ['resto'], photos: ph('pacifique') },
-  { nom: 'Brasserie — Rdv Dina', note: 'rdv Dina. brasserie 20-30.', lat: 48.8705, lng: 2.3433, envies: ['resto'], compagnies: ['duo'] },
-  { nom: 'Au top', note: 'à test. rooftop, français.', lat: 48.8606, lng: 2.3522, envies: ['apéro', 'turbo'], meteo: 'soleil' },
-  { nom: 'JanTchi', note: 'bobun Sainte-Anne. coréen.', lat: 48.8667, lng: 2.3354, envies: ['resto'], meteo: 'pluie' },
-  { nom: "Au P'tit Garage", note: 'dans un garage. bar 1-10 balles.', lat: 48.8639, lng: 2.3768, envies: ['apéro', 'incognito'], meteo: 'pluie' },
-  { nom: 'Poni', note: 'restaurant à tester. brasserie.', lat: 48.8712, lng: 2.3445, envies: ['resto'] },
-  { nom: 'Le Hibou — Paris', note: 'brasserie Odéon, 20-70.', lat: 48.8521, lng: 2.3389, envies: ['resto', 'apéro'] },
-  { nom: 'AVESTA — cuisine kurde', note: 'authentique, 10-20 balles.', lat: 48.8716, lng: 2.3568, envies: ['resto', 'alloco'], meteo: 'pluie' },
-  { nom: 'Pide Paris', note: 'turc, 10-20 balles.', lat: 48.8698, lng: 2.3551, envies: ['alloco', 'resto'], meteo: 'pluie' },
-  { nom: 'Hanoï Cà Phê Opéra', note: 'café/resto sympa. vietnamien.', lat: 48.8701, lng: 2.3327, envies: ['resto', 'tranquilo'] },
-  { nom: 'Restaurant Godjo', note: 'éthiopien, 20-30 balles.', lat: 48.8472, lng: 2.3508, envies: ['resto'], compagnies: ['potos'] },
-  // les spots des membres du cercle (leurs cartes, visibles par toi)
-  {
-    nom: 'Le Syndicat',
-    note: 'cocktails pointus, que des alcools français. niveau bruit : fort mais bon fort.',
-    lat: 48.8714, lng: 2.3551,
-    envies: ['incognito', 'turbo'], compagnies: ['duo', 'potos'],
-    auteurCercle: 0, // Karim
-    photos: ph('syndicat'),
-  },
-  {
-    nom: 'Early June',
-    note: 'vins nature, lumière de fin de journée incroyable. table seule à la fenêtre = bonheur.',
-    lat: 48.8722, lng: 2.3705,
-    envies: ['apéro', 'tranquilo'], compagnies: ['solo', 'duo'],
-    auteurCercle: 1, // Léa
-    photos: ph('earlyjune'),
-  },
-  {
-    nom: 'La Buvette',
-    note: 'minuscule, va-y tôt. les œufs mimosa. lumière de bougie parfaite.',
-    lat: 48.8669, lng: 2.3786,
-    envies: ['apéro', 'incognito'], compagnies: ['duo'],
-    auteurCercle: 1, // Léa
-  },
-]
+// ── vrais profils only (bloc D) : les membres fictifs (Karim/Léa) sont morts.
+// leurs bons spots survivent en DÉCOR PUBLIC ci-dessous (PUBLICS) : les tips
+// restent — voix éditoriales tamponnées « démo » — mais plus aucun faux
+// profil n'existe dans le cercle.
 
 // ── le public : des éclaireurs HORS de ton cercle, dont les spots sont
 // publics autour de toi (simulé en V1 — le vrai public-local vient du cloud).
@@ -229,6 +89,25 @@ const PUBLICS: Array<{
     envies: ['apéro', 'gastro'], compagnies: ['solo', 'duo'], meteo: 'nuageux',
     auteur: 'Tomas', titre: 'fiable',
     note: 'vins nature, planche parfaite. minuscule, on s\'y serre — c\'est le charme.',
+  },
+  // ex-spots du faux cercle (Karim/Léa) : gardés en décor public, voix « démo »
+  {
+    id: 'karim-syndicat', nom: 'Le Syndicat', lat: 48.8714, lng: 2.3551,
+    envies: ['incognito', 'turbo'], compagnies: ['duo', 'potos'],
+    auteur: 'Karim', titre: 'éclaireur du 10e',
+    note: 'cocktails pointus, que des alcools français. niveau bruit : fort mais bon fort.',
+  },
+  {
+    id: 'lea-earlyjune', nom: 'Early June', lat: 48.8722, lng: 2.3705,
+    envies: ['apéro', 'tranquilo'], compagnies: ['solo', 'duo'],
+    auteur: 'Léa', titre: 'curatrice · 47 spots',
+    note: 'vins nature, lumière de fin de journée incroyable. table seule à la fenêtre = bonheur.',
+  },
+  {
+    id: 'lea-buvette', nom: 'La Buvette', lat: 48.8669, lng: 2.3786,
+    envies: ['apéro', 'incognito'], compagnies: ['duo'],
+    auteur: 'Léa', titre: 'curatrice · 47 spots',
+    note: 'minuscule, va-y tôt. les œufs mimosa. lumière de bougie parfaite.',
   },
 ]
 
@@ -271,10 +150,12 @@ function matchDefaut(envies: string[], nom: string): Lieu['match'] {
 
 export async function importerSeed(): Promise<boolean> {
   await dedoublonner()
-  if (localStorage.getItem('jeudi-seed-v18')) return false
+  // v19 : vrais profils only — les spots possédés par les faux membres
+  // (karim/lea) sont purgés (source google) et reviennent en décor public
+  if (localStorage.getItem('jeudi-seed-v19')) return false
   // poser le drapeau AVANT d'insérer : React StrictMode lance
   // l'effet deux fois en dev, sinon double import (course)
-  localStorage.setItem('jeudi-seed-v18', 'fait')
+  localStorage.setItem('jeudi-seed-v19', 'fait')
   // données chargées à la demande (chunks séparés du bundle principal)
   const [{ default: ERSAN }, { CURATED }, { EXTRA }] = await Promise.all([
     import('./ersan'),
@@ -285,33 +166,6 @@ export async function importerSeed(): Promise<boolean> {
   // purge l'ancien seed (v1) avant de réinsérer la version cercle
   for (const l of await db.getAll('lieux')) {
     if (l.source === 'google') await db.delete('lieux', l.id)
-  }
-  // les spots du cercle simulé (Karim/Léa) : on ne garde QUE ceux-là de l'ancien
-  // seed ; mes spots approximatifs sont remplacés par les vraies données (ERSAN).
-  for (const s of SPOTS) {
-    const membre = s.auteurCercle !== undefined ? MEMBRES[s.auteurCercle] : null
-    if (!membre) continue
-    await ajouterLieuLocal({
-      id: nouvelId(),
-      nom: s.nom,
-      lat: s.lat ?? 0,
-      lng: s.lng ?? 0,
-      note: '',
-      visibilite: 'cercle',
-      envies: s.envies ?? [],
-      compagnies: s.compagnies ?? [],
-      meteo: s.meteo,
-      horaires: s.horaires ?? horairesDefaut(s.envies ?? []),
-      match: matchDefaut(s.envies ?? [], s.nom),
-      rooftop: estRooftop(s.nom, s.note),
-      propreteWc: propreteDefaut(),
-      photos: s.photos ?? [],
-      statut: 'actif',
-      creeLe: new Date().toISOString(),
-      source: 'google',
-      proprietaire: membre.id,
-      tipsCercle: [{ auteur: membre.prenom, titre: membre.titre, note: s.note }],
-    })
   }
   // ── le profil ERSAN : ta vraie collection (Google Maps géocodé), en PUBLIC ──
   for (const e of ERSAN) {

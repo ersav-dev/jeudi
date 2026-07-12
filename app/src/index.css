@@ -5975,3 +5975,73 @@ button {
 .croquis-zone:focus-visible path {
   stroke-opacity: 1;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   bloc D — vrais profils only + la machine à photos
+   ══════════════════════════════════════════════════════════════ */
+
+/* l'ex-libris fantôme (cercle vide) : la place du premier pote, déjà
+   encadrée en pointillés — un état vide qui donne envie, pas un reproche */
+.membre-fantome {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 14px;
+  margin-top: 6px;
+  background: none;
+  border: 1px dashed color-mix(in srgb, var(--graphite) 55%, transparent);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  text-align: left;
+  cursor: pointer;
+}
+.membre-fantome > .exlibris-initiale {
+  margin-top: 3px;
+}
+.membre-fantome-corps {
+  display: block;
+}
+.membre-nom-fantome {
+  font-style: italic;
+  color: var(--encre-2);
+}
+.membre-fantome .membre-bio-vide {
+  display: block;
+  margin-top: 4px;
+}
+
+/* le sceau du spot complet (≥1 photo + un mot) : petite cire 14px, posée à
+   côté du nom — LA récompense du carnet, pas un badge gamifié.
+   budget §4 (cire ≤ 2/écran) : sur la fiche, les deux cires = le tampon
+   « validé » + ce sceau (l'horaire « fermé » y parle en ivoire estompé,
+   les actions en étiquettes papier — rien d'autre en --cire). */
+.sceau-complet {
+  display: inline-flex;
+  vertical-align: -1px;
+  margin-left: 7px;
+  color: var(--cire);
+}
+
+/* la ligne sobre du profil : « N spots · M ont un visage » (pas de %) */
+.profil-visages {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--encre-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* la relance photos (après un tampon sans cliché) : la voix du carnet */
+.relance-sous {
+  margin: -8px 0 12px;
+  font-size: 20px;
+}
+
+/* l'état vide du match de groupe : digne, l'invitation en avant */
+.groupe-vide {
+  padding-top: 6px;
+}
+.groupe-vide-mot {
+  margin: 4px 0;
+  font-size: 20px;
+}

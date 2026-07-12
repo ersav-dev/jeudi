@@ -100,6 +100,18 @@ export const IAnneau = ({ taille }: { taille?: number }) => (
     <circle cx="12" cy="12" r="3.6" />
   </Svg>
 )
+// le sceau du spot complet (≥ 1 photo + un mot) : un pâté de cire plein,
+// bord irrégulier, empreinte au centre — PAS une étoile, pas un badge.
+export const ISceau = ({ taille }: { taille?: number }) => (
+  <svg width={taille ?? 14} height={taille ?? 14} viewBox="0 0 24 24" aria-hidden>
+    <path
+      fill="currentColor"
+      stroke="none"
+      d="M12 3.2c1.8 0 2.3 1.3 3.8 1.6 1.5.3 2.6-.5 3.4 1 .8 1.4-.4 2.2-.2 3.7.2 1.4 1.6 1.9 1.1 3.4-.5 1.5-1.8 1.2-2.7 2.4-.8 1.2-.2 2.6-1.6 3.3-1.4.7-2.1-.5-3.8-.5s-2.4 1.2-3.8.5c-1.4-.7-.8-2.1-1.6-3.3-.9-1.2-2.2-.9-2.7-2.4-.5-1.5.9-2 1.1-3.4.2-1.5-1-2.3-.2-3.7.8-1.5 1.9-.7 3.4-1 1.5-.3 2-1.6 3.8-1.6z"
+    />
+    <circle cx="12" cy="12" r="3.8" fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="1.4" />
+  </svg>
+)
 // le trombone (favoris) : « je le clipse, je le garde » — écho au trombone du
 // portrait profil. pas de remplissage (c'est un fil de fer) : actif = trait
 // plus appuyé + couleur de marque (gérée en CSS).

@@ -974,6 +974,13 @@ export function estAMoi(lieu: Lieu): boolean {
   return monId != null && lieu.proprietaire === monId
 }
 
+/** le spot « complet » : au moins une photo ET un mot (la note) — c'est lui
+ *  qui mérite le sceau de cire (la récompense du carnet, pas un badge).
+ *  PUR (pas de notion de propriété ici : l'UI combine avec estAMoi). */
+export function spotComplet(lieu: Pick<Lieu, 'photos' | 'note'>): boolean {
+  return lieu.photos.length > 0 && lieu.note.trim() !== ''
+}
+
 /** adopter un spot du cercle : on en crée SA PROPRE copie privée. la voix
  *  d'origine reste dans tipsCercle ; ta note se vide pour que tu y mettes la tienne. */
 export async function adopterLieu(lieu: Lieu): Promise<Lieu> {
