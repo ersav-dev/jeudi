@@ -17,6 +17,9 @@ import {
   etatHoraire,
   propreteWcLabel,
   lireFavoris,
+  estAMoi,
+  CURATEUR_JEUDI,
+  NOM_JEUDI,
 } from './db'
 import { tirerPlans, type CompagnieTirage, type Plan } from './plans'
 import { srcPhoto } from './photos'
@@ -553,7 +556,16 @@ function Deck({
 
   // même honnêteté que la fiche : une voix sans auteurId = du seed → « démo »
   const voix: { note: string; signature: string; demo?: boolean }[] = [
-    ...(lieu.note ? [{ note: lieu.note, signature: 'toi' }] : []),
+    ...(lieu.note
+      ? [
+          {
+            note: lieu.note,
+            // le fond éditorial « jeudi. » signe de son nom (pas « toi »)
+            signature:
+              !estAMoi(lieu) && lieu.proprietaire === CURATEUR_JEUDI ? NOM_JEUDI : 'toi',
+          },
+        ]
+      : []),
     ...(lieu.tipsCercle ?? []).map((t) => ({ note: t.note, signature: t.auteur, demo: !t.auteurId })),
   ]
   const laVoix = voix[voixIndex % Math.max(voix.length, 1)]

@@ -11,6 +11,8 @@ import {
   propreteWcLabel,
   estAMoi,
   lireFavoris,
+  CURATEUR_JEUDI,
+  NOM_JEUDI,
   type Lieu,
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
@@ -197,8 +199,13 @@ export default function Carte({
   // vu/à comparer) sont appliqués À PART par appliquerEtats().
   const creerPinLieu = (l: Lieu): HTMLElement => {
     // un tip cloud d'un pote sur MON spot ne me déguise pas en curateur :
-    // le point rouge (toi) prime toujours sur la pastille
-    const sig = estAMoi(l) ? undefined : l.tipsCercle?.[0]
+    // le point rouge (toi) prime toujours sur la pastille. Le fond éditorial
+    // « jeudi. » (proprietaire 'jeudi', sans voix nommée) porte la pastille du
+    // fondateur, dérivée de sa propriété.
+    const sig = estAMoi(l)
+      ? undefined
+      : (l.tipsCercle?.[0] ??
+        (l.proprietaire === CURATEUR_JEUDI ? { auteur: NOM_JEUDI, titre: '', note: l.note } : undefined))
     const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
     const valide = l.tampon?.v === 'valide'
     const ferme = etatHoraire(l.horaires)?.ouvert === false
@@ -1021,7 +1028,13 @@ export default function Carte({
                 <span className="carte-sheet-lbl">recommandé par</span>
                 <span className="carte-sheet-reco-liste">
                   {[
-                    ...(lieuActif.note ? ['toi'] : []),
+                    ...(lieuActif.note
+                      ? [
+                          !estAMoi(lieuActif) && lieuActif.proprietaire === CURATEUR_JEUDI
+                            ? NOM_JEUDI
+                            : 'toi',
+                        ]
+                      : []),
                     ...(lieuActif.tipsCercle ?? []).map(
                       (t) => `@${t.auteur.toLowerCase()}`,
                     ),

@@ -54,6 +54,11 @@ const ph = (s: string): PhotoLieu[] => [
 // publics autour de toi (simulé en V1 — le vrai public-local vient du cloud).
 // proprietaire = leur id (pas 'moi', pas un membre du cercle) → ils ne polluent
 // pas "ma carte" ni "le cercle", mais peuplent l'onglet "public".
+// NB : ce bloc GARDE ses curateurs distincts (Sofia, Yanis, Inès…) — raison
+// forte : chacun porte une VOIX éditoriale nommée + titrée dans tipsCercle,
+// tamponnée « démo ». Les fondre dans « jeudi. » effacerait cette texture de
+// « d'autres voix ». Seuls le fond ersan/curated/extra (sans voix nommée)
+// bascule sous le curateur fondateur 'jeudi'.
 const PUBLICS: Array<{
   id: string
   nom: string
@@ -150,12 +155,14 @@ function matchDefaut(envies: string[], nom: string): Lieu['match'] {
 
 export async function importerSeed(): Promise<boolean> {
   await dedoublonner()
-  // v19 : vrais profils only — les spots possédés par les faux membres
-  // (karim/lea) sont purgés (source google) et reviennent en décor public
-  if (localStorage.getItem('jeudi-seed-v19')) return false
+  // v20 : le fond du seed (ersan/curated/extra) devient le carnet éditorial
+  // « jeudi. » (proprietaire 'jeudi') — avant, les spots ersan étaient 'moi' →
+  // ils s'affichaient comme LES SIENS chez chaque nouvel inscrit. Le bump
+  // re-seede les installs existantes (purge source==='google', réinsère).
+  if (localStorage.getItem('jeudi-seed-v20')) return false
   // poser le drapeau AVANT d'insérer : React StrictMode lance
   // l'effet deux fois en dev, sinon double import (course)
-  localStorage.setItem('jeudi-seed-v19', 'fait')
+  localStorage.setItem('jeudi-seed-v20', 'fait')
   // données chargées à la demande (chunks séparés du bundle principal)
   const [{ default: ERSAN }, { CURATED }, { EXTRA }] = await Promise.all([
     import('./ersan'),
@@ -167,7 +174,8 @@ export async function importerSeed(): Promise<boolean> {
   for (const l of await db.getAll('lieux')) {
     if (l.source === 'google') await db.delete('lieux', l.id)
   }
-  // ── le profil ERSAN : ta vraie collection (Google Maps géocodé), en PUBLIC ──
+  // ── le fond ERSAN : géocodé depuis Google Maps, désormais le carnet
+  //    éditorial fondateur signé « jeudi. » (public, visible par TOUS) ──
   for (const e of ERSAN) {
     const envies = cuisineVersEnvies(e.cuisine)
     await ajouterLieuLocal({
@@ -190,7 +198,7 @@ export async function importerSeed(): Promise<boolean> {
       statut: 'actif',
       creeLe: new Date().toISOString(),
       source: 'google',
-      proprietaire: 'moi',
+      proprietaire: 'jeudi', // le carnet fondateur, jamais « à moi »
     })
   }
   // les spots publics d'éclaireurs hors cercle (peuplent l'onglet "public")
@@ -219,7 +227,9 @@ export async function importerSeed(): Promise<boolean> {
   }
   // les spots curated (liste GPT v02, géocodés) — toutes catégories, publics.
   // inclut rooftop + sur l'eau + speakeasy(incognito) + disco + guinguette + street-food…
-  for (const [i, s] of CURATED.entries()) {
+  // attribués à « jeudi. » : un seul éclaireur fondateur cohérent (plus de
+  // faux ids pub-cur-* éparpillés, qui n'affichaient aucun curateur).
+  for (const s of CURATED) {
     await ajouterLieuLocal({
       id: nouvelId(),
       nom: s.nom,
@@ -238,11 +248,12 @@ export async function importerSeed(): Promise<boolean> {
       statut: 'actif',
       creeLe: new Date().toISOString(),
       source: 'google',
-      proprietaire: `pub-cur-${i}`,
+      proprietaire: 'jeudi',
     })
   }
   // extra : Coupe du monde 2026 (match diffuse) + sur l'eau (péniches, quais…)
-  for (const [i, s] of EXTRA.entries()) {
+  // même curateur fondateur « jeudi. » que le reste du fond.
+  for (const s of EXTRA) {
     await ajouterLieuLocal({
       id: nouvelId(),
       nom: s.nom,
@@ -261,7 +272,7 @@ export async function importerSeed(): Promise<boolean> {
       statut: 'actif',
       creeLe: new Date().toISOString(),
       source: 'google',
-      proprietaire: `pub-x-${i}`,
+      proprietaire: 'jeudi',
     })
   }
   return true

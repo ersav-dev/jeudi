@@ -54,6 +54,8 @@ import {
   supprimerLieu,
   majLieu,
   estAMoi,
+  CURATEUR_JEUDI,
+  NOM_JEUDI,
   spotComplet,
   adopterLieu,
   // les tips réels (table `tips`) : la voix qu'on pose sur le spot d'un autre
@@ -2634,6 +2636,9 @@ function Fiche({
   const mien = estAMoi(lieu)
   // le spot appartient à un VRAI membre du cercle → « chez untel »
   const chez = mien ? null : prenomDe(lieu.proprietaire, reels)
+  // le fond éditorial fondateur : sa note est signée « jeudi. » (pas « toi »,
+  // pas un profil cliquable — c'est l'app, honnêtement, pas un faux membre)
+  const editorial = !mien && !chez && lieu.proprietaire === CURATEUR_JEUDI
   const [edition, setEdition] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
@@ -3017,6 +3022,8 @@ function Fiche({
                     @{chez.toLowerCase()}
                   </button>
                 </>
+              ) : editorial ? (
+                `— ${NOM_JEUDI}`
               ) : (
                 '— toi'
               )}

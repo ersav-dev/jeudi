@@ -1122,11 +1122,29 @@ export function etatHoraire(
 
 // ── la "situation du portefeuille" (ex-météo) : ce que coûte le spot ──
 // des valeurs concrètes pour que l'utilisateur sache ce qu'il choisit.
+// ── le carnet éditorial fondateur : « jeudi. » ──
+// tout le fond du seed (mes anciens spots google + curated + extra) est signé
+// « jeudi. », comme si l'app était le premier éclaireur. proprietaire = 'jeudi'
+// → estAMoi() renvoie false : ce carnet n'apparaît JAMAIS comme « à moi » chez
+// un nouvel inscrit (avant, ces spots étaient 'moi' → faussement siens).
+export const CURATEUR_JEUDI = 'jeudi'
+export const NOM_JEUDI = 'jeudi.'
+
+/** le nom AFFICHÉ d'un curateur depuis son id de propriété :
+ *  'jeudi' → « jeudi. » (le fondateur) · un vrai membre → son prénom (fourni
+ *  par l'appelant, seul à connaître le cercle) · sinon l'id brut en repli. */
+export function nomCurateur(proprietaire?: string, prenomReel?: string | null): string {
+  if (proprietaire === CURATEUR_JEUDI) return NOM_JEUDI
+  return prenomReel ?? proprietaire ?? ''
+}
+
 // une teinte stable par curateur (déterministe sur le nom), partagée entre la
 // carte (pins) et l'index (tampon de provenance) — même code couleur partout.
 // pas de rouge cire (réservé à "toi").
 const TEINTES = ['#6b8e9e', '#9e7a6b', '#7d9e6b', '#8e6b9e', '#9e9456', '#6b9e8c']
 export function teinteCurateur(nom: string): string {
+  // jeudi. — le fondateur : une teinte d'encre réservée, stable partout
+  if (nom === NOM_JEUDI || nom === CURATEUR_JEUDI) return '#5f7a91'
   let h = 0
   for (let i = 0; i < nom.length; i++) h = (h * 31 + nom.charCodeAt(i)) >>> 0
   return TEINTES[h % TEINTES.length]
