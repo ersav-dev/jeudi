@@ -198,14 +198,11 @@ export default function Carte({
   // teinte du curateur, badges — inchangée). Les états volatils (actif/grisé/
   // vu/à comparer) sont appliqués À PART par appliquerEtats().
   const creerPinLieu = (l: Lieu): HTMLElement => {
-    // un tip cloud d'un pote sur MON spot ne me déguise pas en curateur :
-    // le point rouge (toi) prime toujours sur la pastille. Le fond éditorial
-    // « jeudi. » (proprietaire 'jeudi', sans voix nommée) porte la pastille du
-    // fondateur, dérivée de sa propriété.
-    const sig = estAMoi(l)
-      ? undefined
-      : (l.tipsCercle?.[0] ??
-        (l.proprietaire === CURATEUR_JEUDI ? { auteur: NOM_JEUDI, titre: '', note: l.note } : undefined))
+    // la pastille avec initiale est un SIGNAL FORT : « un pote de ton cercle a
+    // curé ce spot ». On ne la met QUE pour une vraie voix nommée (tipsCercle).
+    // Le fond éditorial « jeudi. », lui, reste des pins NEUTRES — sinon la carte
+    // devient une mer de « J » qui ne dit rien à personne.
+    const sig = estAMoi(l) ? undefined : l.tipsCercle?.[0]
     const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
     const valide = l.tampon?.v === 'valide'
     const ferme = etatHoraire(l.horaires)?.ouvert === false
