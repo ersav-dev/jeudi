@@ -8,7 +8,8 @@
 // la carte. tap = s'efface (hors zones gestuelles) · et s'efface AUSSI toute
 // seule quand le geste visé est accompli (le parent appelle effacerNote, ou
 // `effaceAuGeste` écoute le 1er pan/tap/scroll une fois la note lue).
-// le mot scotché de bienvenue passe TOUJOURS en premier (une voix à la fois).
+// le mot d'accueil de « j. » vit désormais dans l'onboarding (sa visite) :
+// les notes en marge s'affichent librement, sans plus rien attendre.
 // ════════════════════════════════════════════════════════════════
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { noteVue, effacerNote, texteNote, sAbonnerNotes } from './tuto'
@@ -56,9 +57,6 @@ export default function NoteMarge({
   effaceAuGeste?: boolean
 }) {
   const effacee = useSyncExternalStore(sAbonnerNotes, () => noteVue(id))
-  // le mot scotché d'abord, les marges ensuite : jamais deux voix de tuto
-  // superposées — les notes attendent que le mot de bienvenue soit rangé
-  const motRange = useSyncExternalStore(sAbonnerNotes, () => noteVue('mot-bienvenue'))
   // « prête » = vue à l'écran depuis un instant → le prochain geste l'efface
   const [prete, setPrete] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -66,7 +64,7 @@ export default function NoteMarge({
   // on attend que la note soit VISIBLE (et lisible un instant) avant d'armer
   // l'effacement au geste — sinon le scroll qui la révèle l'efface aussitôt
   useEffect(() => {
-    if (!effaceAuGeste || effacee || prete || !motRange) return
+    if (!effaceAuGeste || effacee || prete) return
     const el = ref.current
     if (!el) return
     let timer: number | undefined
@@ -84,7 +82,7 @@ export default function NoteMarge({
       io.disconnect()
       if (timer) window.clearTimeout(timer)
     }
-  }, [effaceAuGeste, effacee, prete, motRange])
+  }, [effaceAuGeste, effacee, prete])
 
   useEffect(() => {
     if (!prete || effacee) return
@@ -97,7 +95,7 @@ export default function NoteMarge({
     }
   }, [prete, effacee, id])
 
-  if (effacee || !motRange) return null
+  if (effacee) return null
   const texte = texteNote(id)
   if (!texte) return null
 
@@ -124,18 +122,5 @@ export default function NoteMarge({
       {bouton}
       {(fleche === 'bas' || fleche === 'droite') && <FlecheMain sens={fleche} />}
     </div>
-  )
-}
-
-// ── le mot scotché de bienvenue ──────────────────────────────────
-// la PREMIÈRE arrivée dans le carnet prêté : un bout de papier de travers,
-// scotché là par « j. ». tap pour le ranger — jamais revu ensuite.
-export function MotScotche() {
-  const range = useSyncExternalStore(sAbonnerNotes, () => noteVue('mot-bienvenue'))
-  if (range) return null
-  return (
-    <button className="mot-scotche" onClick={() => effacerNote('mot-bienvenue')}>
-      <span className="mot-scotche-texte">{texteNote('mot-bienvenue')}</span>
-    </button>
   )
 }

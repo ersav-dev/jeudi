@@ -31,7 +31,7 @@ import {
 } from './cercle'
 import { rechercher, profilDeGout } from './recherche'
 // le tuto « notes en marge » : le carnet prêté, ses notes qui s'effacent
-import NoteMarge, { MotScotche } from './NoteMarge'
+import NoteMarge from './NoteMarge'
 import { effacerNote, toutRelire } from './tuto'
 import portraitDefaut from './assets/portrait.jpg'
 import {
@@ -420,6 +420,9 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
         <span className="lbl mono">tes réglages</span>
         <span className={`mono reglages-sauve ${sauve ? 'on' : ''}`}>enregistré ✓</span>
       </div>
+
+      {/* la note en marge de « j. » : les réglages différés se découvrent ici */}
+      <NoteMarge id="reglages-differes" className="note-marge-reglages" />
 
       {/* OÙ TU ES (location-native : le centre suit ton GPS) */}
       <button
@@ -1920,10 +1923,6 @@ export default function App() {
           <span className="mono">{flash}</span>
         </div>
       )}
-
-      {/* le mot scotché de bienvenue — 1ʳᵉ arrivée après l'onboarding,
-          rangé d'un tap, jamais revu ensuite */}
-      {!fiche && !ajout && !aValider && <MotScotche />}
 
       {!ajout && !fiche && (
         <nav className="navbas">

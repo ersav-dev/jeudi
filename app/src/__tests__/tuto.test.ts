@@ -47,7 +47,7 @@ describe('la séquence : chaque geste efface SA note, les autres restent', () =>
     effacerNote('deck-swipe')
     expect(noteVue('deck-swipe')).toBe(true)
     expect(noteVue('deck-tape')).toBe(false)
-    expect(noteVue('mot-bienvenue')).toBe(false)
+    expect(noteVue('reglages-differes')).toBe(false)
 
     effacerNote('deck-tape')
     expect(noteVue('deck-swipe')).toBe(true)

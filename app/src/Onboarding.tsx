@@ -1,303 +1,289 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   sauverProfil,
-  lireCouleur,
-  appliquerCouleur,
-  ecrireCouleur,
   ecrireSeuils,
   ecrireSuivis,
   marquerOnboarding,
+  tousLesLieux,
+  distanceM,
+  formatDistance,
+  definirMaPosition,
+  type Lieu,
 } from './db'
-import { ISoleil, INuage, IPluie } from './icones'
-import PickerCouleur from './PickerCouleur'
+import { importerSeed } from './seed'
 
-// ── "le swipe, c'est ta langue ?" ──────────────────────────────
-// Trois canaux de réponse ouverts en même temps. Le canal choisi
-// EST la réponse : swipe = 100, clic = 75, écrit = 0.
+// ════════════════════════════════════════════════════════════════
+// jeudi. — L'ONBOARDING « payoff d'abord, réglages après »
+// A) le payoff : on te situe, puis on te MONTRE 2-3 vrais spots du carnet.
+// C) la visite de « j. » (SKIPPABLE) : il commente 3 coins EN SITUATION,
+//    pour t'apprendre la langue de l'app sans questionnaire abstrait.
+// D) l'appropriation minimale : ton prénom, et c'est parti.
+// tout le reste (couleur, seuils €, critère, cercle) prend des défauts
+// sensés et se règle plus tard dans le profil — plus rien ici.
+// ════════════════════════════════════════════════════════════════
 
-const CRITERES = ['la lumière', 'le bruit', 'les chaises', 'la playlist', 'le staff', 'les wc']
+type Phase = 'situer' | 'payoff' | 'visite' | 'prenom'
 
-// on entre par les curateurs : ta carte n'est jamais vide le premier soir.
-// suivre = un acte de goût ("je sors comme Léa"), jamais un abonnement passif.
-const CURATEURS = [
-  { prenom: 'Karim', titre: 'éclaireur du 10e', truc: 'le bruit' },
-  { prenom: 'Léa', titre: 'curatrice · 47 spots', truc: 'la lumière' },
-  { prenom: 'Sofia', titre: 'éclaireuse du 3e', truc: 'le comptoir' },
-  { prenom: 'Inès', titre: 'curatrice · 61 spots', truc: 'la bougie' },
+// les leçons de « j. », posées EN SITUATION sur un vrai spot (une par coin) :
+// la confiance · le swipe · le vocabulaire.
+const LECONS = [
+  'ici, c’est un pote qui te parle. pas 4 000 inconnus.',
+  'à droite si ça te tente, à gauche on oublie. essaie.',
+  'des tips, jamais des avis. la nuance est tout.',
 ]
 
-// app orientée bars/apéro : majeur uniquement → la date max = aujourd'hui − 18 ans
-function maxNaissance(): string {
-  const d = new Date()
-  d.setFullYear(d.getFullYear() - 18)
-  return d.toISOString().slice(0, 10)
+/** le tip lisible d'un spot : ta note d'abord, sinon la voix du cercle */
+function tipDe(l: Lieu): string {
+  return l.note?.trim() || l.tipsCercle?.[0]?.note?.trim() || ''
+}
+
+/** la méta mono d'un spot : distance (+ l'envie du moment si connue) */
+function metaDe(l: Lieu): string {
+  const d = formatDistance(distanceM(l))
+  return l.envies[0] ? `${d} · ${l.envies[0]}` : d
 }
 
 export default function Onboarding({ onFini }: { onFini: () => void }) {
-  const [drag, setDrag] = useState({ x: 0, actif: false })
-  const [etape, setEtape] = useState<
-    'question' | 'couleur' | 'critere' | 'curateurs' | 'argent'
-  >('question')
-  const [couleur, setCouleur] = useState(() => lireCouleur())
-  const [score, setScore] = useState(100)
-  const [chambre, setChambre] = useState<string | null>(null)
-  const [critere, setCritere] = useState('')
-  // AUCUN défaut perso : le prénom se demande ici, la naissance reste vide tant
-  // que non renseignée (l'âge s'affiche « — » sur le profil si absente)
+  const [phase, setPhase] = useState<Phase>('situer')
   const [prenom, setPrenom] = useState('')
-  const [naissance, setNaissance] = useState('')
-  const [reponseEcrite, setReponseEcrite] = useState('')
-  // qui tu suis : pré-cochés (on entre par les curateurs), mais tu décides
-  const [suivis, setSuivis] = useState<string[]>(() => CURATEURS.map((c) => c.prenom))
-  // les seuils € du porte-monnaie, réglés ici : pluie < s1 · nuageux s1–s2 · soleil s2+
-  const [s1, setS1] = useState('20')
-  const [s2, setS2] = useState('50')
-  const depart = useRef(0)
+  const [majeur, setMajeur] = useState(false)
+  // les vrais spots publics du seed — chargés une fois (le seed est idempotent)
+  const [spots, setSpots] = useState<Lieu[]>([])
+  // bumpé quand la vraie géoloc arrive → les distances se recalculent
+  const [posVersion, setPosVersion] = useState(0)
+  const [sansGps, setSansGps] = useState(false)
+  const [geoEnCours, setGeoEnCours] = useState(false)
+  // le spot déplié dans le payoff (aperçu léger inline)
+  const [apercu, setApercu] = useState<string | null>(null)
+  // la visite : -1 = le mot de « j. », 0..2 = les trois coins
+  const [pas, setPas] = useState(-1)
 
-  const repondre = (s: number, pique?: string) => {
-    setScore(s)
-    if (pique) setChambre(pique)
-    setEtape('couleur')
+  useEffect(() => {
+    let vivant = true
+    // le seed pose les spots publics ; tousLesLieux les remonte (décor).
+    importerSeed()
+      .then(() => tousLesLieux())
+      .then((tous) => {
+        if (vivant) setSpots(tous.filter((l) => l.visibilite === 'public'))
+      })
+      .catch(() => {
+        /* hors-ligne : le payoff affichera son repli digne */
+      })
+    return () => {
+      vivant = false
+    }
+  }, [])
+
+  // les trois spots publics les plus proches (recalcul quand la position bouge)
+  const proches = useMemo(() => {
+    void posVersion // dépendance réelle : la géoloc a pu déplacer « moi »
+    return [...spots].sort((a, b) => distanceM(a) - distanceM(b)).slice(0, 3)
+  }, [spots, posVersion])
+
+  // ── A · la géoloc : repli propre si refus/lenteur (on garde Place Vendôme) ──
+  const situer = () => {
+    const suite = () => setPhase('payoff')
+    if (!navigator.geolocation) {
+      setSansGps(true)
+      suite()
+      return
+    }
+    setGeoEnCours(true)
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        definirMaPosition({ lat: p.coords.latitude, lng: p.coords.longitude })
+        setPosVersion((v) => v + 1)
+        setGeoEnCours(false)
+        suite()
+      },
+      () => {
+        setSansGps(true)
+        setGeoEnCours(false)
+        suite()
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    )
   }
 
-  const choisirCouleur = (c: string) => {
-    setCouleur(c)
-    appliquerCouleur(c) // aperçu live : tout l'écran se recolore
-  }
-
-  const basculerSuivi = (p: string) =>
-    setSuivis((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]))
-
+  // ── D · on sauve le prénom + les défauts différés, puis on entre ──
   const terminer = async () => {
     await sauverProfil({
-      scoreSwipe: score,
-      critere: critere.trim() || 'le feeling',
+      scoreSwipe: 100, // défaut : le swipe est la langue
+      critere: 'le feeling',
       prenom: prenom.trim(),
-      naissance: naissance || undefined,
     })
-    ecrireCouleur(couleur)
-    ecrireSuivis(suivis)
-    // les seuils € (garde-fous : s1 < s2, valeurs positives, sinon défauts)
-    const n1 = Number(s1) || 20
-    const n2 = Number(s2) || 50
-    const seuils: [number, number] = n1 < n2 ? [n1, n2] : [20, 50]
-    ecrireSeuils(seuils)
+    // les réglages différés : la couleur garde le défaut de l'app (on n'écrit
+    // rien), les seuils € prennent la valeur standard, le cercle démarre VIDE
+    // (les vraies invitations le rempliront).
+    ecrireSeuils([20, 50])
+    ecrireSuivis([])
     marquerOnboarding()
     onFini()
   }
 
-  if (etape === 'couleur') {
+  // ── PHASE A · 1 · « on te situe ? » ──────────────────────────────
+  if (phase === 'situer') {
     return (
-      <div className="onboard">
+      <div className="onboard onb-situer">
         <div className="tampon-logo">Jeudi.</div>
-        <h1 className="grande-question">ta couleur de Jeudi.</h1>
-        <p className="hand onboard-sous">
-          le tampon, c'est toi. choisis l'encre — tu pourras la changer plus tard.
-        </p>
-        <PickerCouleur valeur={couleur} onChange={choisirCouleur} />
-        <button className="valider" onClick={() => setEtape('critere')}>
-          c'est mon encre.
+        <h1 className="grande-question">on te situe ?</h1>
+        <p className="onboard-sous">pour te dire ce qui se passe autour de toi.</p>
+        <button className="valider" onClick={situer} disabled={geoEnCours}>
+          {geoEnCours ? 'un instant…' : 'd’accord, situe-moi.'}
+        </button>
+        <button
+          className="lien"
+          onClick={() => {
+            setSansGps(true)
+            setPhase('payoff')
+          }}
+        >
+          plus tard
         </button>
       </div>
     )
   }
 
-  if (etape === 'argent') {
-    const n1 = Number(s1) || 0
-    const n2 = Number(s2) || 0
-    const ok = n1 > 0 && n2 > n1
+  // ── PHASE A · 2 · le payoff : de VRAIS spots, tout de suite ──────
+  if (phase === 'payoff') {
     return (
-      <div className="onboard">
+      <div className="onboard onb-payoff">
         <div className="tampon-logo">Jeudi.</div>
-        <h1 className="grande-question">la météo de ton porte-monnaie.</h1>
-        <p className="hand onboard-sous">
-          on ne te demande jamais ton budget à voix haute. règle tes seuils une fois — par
-          personne, un plat + une boisson, ou deux verres au bar.
-        </p>
-        <div className="onboard-seuils">
-          <label className="mono">
-            <IPluie taille={15} /> ça coûte rien — moins de
-            <input
-              className="onboard-euro"
-              type="number"
-              inputMode="numeric"
-              value={s1}
-              onChange={(e) => setS1(e.target.value)}
-            />
-            €
-          </label>
-          <label className="mono">
-            <INuage taille={15} /> ça va — entre {n1 || '…'} et
-            <input
-              className="onboard-euro"
-              type="number"
-              inputMode="numeric"
-              value={s2}
-              onChange={(e) => setS2(e.target.value)}
-            />
-            €
-          </label>
-          <p className="mono onboard-seuil-soleil">
-            <ISoleil taille={15} /> on flambe — plus de {n2 || '…'} €
+        <h1 className="grande-question">ça dit quoi ce soir ?</h1>
+        {sansGps && <p className="mono onb-sansgps">pas de GPS ? on te montre le centre.</p>}
+        {proches.length > 0 ? (
+          <>
+            <ul className="onb-spots">
+              {proches.map((l) => {
+                const ouvert = apercu === l.id
+                const tip = tipDe(l)
+                return (
+                  <li key={l.id} className="onb-spot">
+                    <button
+                      className="onb-spot-tete"
+                      aria-expanded={ouvert}
+                      onClick={() => setApercu(ouvert ? null : l.id)}
+                    >
+                      <span className="onb-spot-nom">{l.nom}</span>
+                      <span className="mono onb-spot-meta">{metaDe(l)}</span>
+                    </button>
+                    {ouvert && (
+                      <div className="onb-apercu">
+                        {l.description && <p className="mono onb-apercu-desc">{l.description}</p>}
+                        {tip ? (
+                          <p className="hand onb-apercu-tip">{tip}</p>
+                        ) : (
+                          !l.description && (
+                            <p className="mono onb-apercu-desc">un spot du carnet, tout près.</p>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="mono onb-souffle">voilà ce que le carnet sait déjà.</p>
+          </>
+        ) : (
+          <p className="onboard-sous">
+            le carnet se remplit encore. reviens ce soir — il aura des adresses pour toi.
           </p>
-          {!ok && <p className="mono onboard-erreur">le 2ᵉ seuil doit être plus grand que le 1er.</p>}
-        </div>
-
-        <p className="hand onboard-sous onboard-regles-titre">les règles de la maison :</p>
-        <ul className="onboard-regles mono">
-          <li>aucun lieu ne paie pour apparaître. jamais.</li>
-          <li>pas de notes, pas d'étoiles — des tips, pas des avis.</li>
-          <li>publier un lieu = tes propres photos (le lieu, ton verre… et les wc).</li>
-          <li>ton cercle reste petit, exprès. on entre sur invitation.</li>
-        </ul>
-
-        <button className="valider" onClick={terminer} disabled={!ok}>
-          c'est dit. j'entre.
+        )}
+        <button className="valider" onClick={() => setPhase('visite')}>
+          continuer →
         </button>
       </div>
     )
   }
 
-  if (etape === 'curateurs') {
-    return (
-      <div className="onboard">
-        <div className="tampon-logo">Jeudi.</div>
-        <h1 className="grande-question">tu sors comme qui ?</h1>
-        <p className="hand onboard-sous">
-          suis quelques éclaireurs — leur carte devient la tienne, dès ce soir.
-        </p>
-        <ul className="onboard-curateurs">
-          {CURATEURS.map((c) => {
-            const suivi = suivis.includes(c.prenom)
-            return (
-              <li
-                key={c.prenom}
-                className={`onboard-curateur ${suivi ? 'suivi' : ''}`}
-                role="button"
-                tabIndex={0}
-                aria-pressed={suivi}
-                onClick={() => basculerSuivi(c.prenom)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    basculerSuivi(c.prenom)
-                  }
-                }}
-              >
-                <div className="onboard-curateur-tete">
-                  <span className="membre-nom">{c.prenom}</span>
-                </div>
-                <span className="mono onboard-curateur-truc">
-                  juge {c.truc} · {suivi ? 'tu suis ✓' : 'suivre'}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-        <button className="valider" onClick={() => setEtape('argent')}>
-          {suivis.length > 0 ? `continuer (${suivis.length} suivis)` : 'je commence seul'}
-        </button>
-      </div>
-    )
-  }
-
-  if (etape === 'critere') {
-    return (
-      <div className="onboard">
-        <div className="tampon-logo">Jeudi.</div>
-        {chambre && <p className="mono onboard-chambre">{chambre}</p>}
-        <h1 className="grande-question">c'est quoi ton truc ?</h1>
-        <p className="hand onboard-sous">le détail que tu remarques toujours, partout.</p>
-        <div className="onboard-criteres">
-          {CRITERES.map((c) => (
-            <button
-              key={c}
-              className={`mot ${critere === c ? 'entouré' : ''}`}
-              onClick={() => setCritere(c)}
-            >
-              {c}
+  // ── PHASE C · la visite de « j. » (SKIPPABLE partout) ────────────
+  if (phase === 'visite') {
+    const passer = () => setPhase('prenom')
+    // -1 : le mot manuscrit de « j. » qui te tend son carnet
+    if (pas < 0) {
+      return (
+        <div className="onboard onb-visite">
+          <button className="mono onb-passer" onClick={passer}>
+            passer
+          </button>
+          <div className="tampon-logo">Jeudi.</div>
+          <p className="hand onb-jnote">
+            {'tiens, mon carnet des soirs.\nje te montre mes trois coins ?\n— j.'}
+          </p>
+          <div className="onb-visite-actions">
+            <button className="valider" onClick={() => setPas(0)}>
+              montre-moi →
             </button>
-          ))}
+          </div>
         </div>
+      )
+    }
+    // 0..2 : un vrai spot, une leçon EN SITUATION, écrite à la main par « j. »
+    const spot = proches[pas]
+    return (
+      <div className="onboard onb-visite">
+        <button className="mono onb-passer" onClick={passer}>
+          passer
+        </button>
+        <span className="mono onb-visite-compteur">{pas + 1}/3</span>
+        {spot && (
+          <div className="onb-carte-demo">
+            <span className="onb-spot-nom">{spot.nom}</span>
+            <span className="mono onb-spot-meta">{metaDe(spot)}</span>
+            {/* le coin 2 : le swipe, montré sur la carte */}
+            {pas === 1 && (
+              <div className="mono onb-swipe-demo">
+                <span>← on oublie</span>
+                <span>ça te tente →</span>
+              </div>
+            )}
+            {tipDe(spot) && <p className="hand onb-carte-demo-tip">{tipDe(spot)}</p>}
+          </div>
+        )}
+        <p className="hand onb-jnote">{LECONS[pas]}</p>
+        <div className="onb-visite-actions">
+          {pas > 0 && (
+            <button className="lien" onClick={() => setPas(pas - 1)}>
+              ← précédent
+            </button>
+          )}
+          {pas < 2 ? (
+            <button className="valider" onClick={() => setPas(pas + 1)}>
+              suivant →
+            </button>
+          ) : (
+            <button className="valider" onClick={passer}>
+              j’ai pigé →
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── PHASE D · l'appropriation minimale : t'es qui ? ──────────────
+  return (
+    <div className="onboard onb-prenom">
+      <div className="tampon-logo">Jeudi.</div>
+      <h1 className="grande-question">c’est ton carnet maintenant. t’es qui ?</h1>
+      <label className="onboard-naissance mono">
+        ton prénom
         <input
           className="onboard-input"
-          placeholder="ou écris le tien…"
-          value={CRITERES.includes(critere) ? '' : critere}
-          onChange={(e) => setCritere(e.target.value)}
+          placeholder="comment on t’appelle ?"
+          value={prenom}
+          onChange={(e) => setPrenom(e.target.value)}
+          autoFocus
         />
-        <label className="onboard-naissance mono">
-          ton prénom
-          <input
-            className="onboard-input"
-            placeholder="comment on t'appelle ?"
-            value={prenom}
-            onChange={(e) => setPrenom(e.target.value)}
-          />
-        </label>
-        <label className="onboard-naissance mono">
-          ta date de naissance
-          <input
-            type="date"
-            max={maxNaissance()}
-            value={naissance}
-            onChange={(e) => setNaissance(e.target.value)}
-          />
-        </label>
-        <button
-          className="valider"
-          onClick={() => setEtape('curateurs')}
-          disabled={!prenom.trim()}
-        >
-          continuer
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="onboard">
-      <div className="tampon-logo">Jeudi.</div>
-      <h1 className="grande-question">le swipe, c'est ta langue ?</h1>
-      <p className="hand onboard-sous">réponds comme tu veux. on s'adapte.</p>
-
-      <div
-        className="onboard-carte"
-        style={{
-          transform: `translateX(${drag.x}px) rotate(${drag.x / 14}deg)`,
-          transition: drag.actif ? 'none' : 'transform 240ms var(--pose)',
-        }}
-        onPointerDown={(e) => {
-          depart.current = e.clientX
-          setDrag({ x: 0, actif: true })
-          ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-        }}
-        onPointerMove={(e) => drag.actif && setDrag({ x: e.clientX - depart.current, actif: true })}
-        onPointerUp={() => {
-          if (Math.abs(drag.x) > 90) repondre(100)
-          setDrag({ x: 0, actif: false })
-        }}
-      >
-        <span className="onboard-oui">OUI</span>
-      </div>
-
-      <div className="onboard-boutons">
-        <button className="visi-choix" onClick={() => repondre(75)}>
-          non
-        </button>
-        <button className="visi-choix" onClick={() => repondre(75)}>
-          oui
-        </button>
-      </div>
-
-      <input
-        className="onboard-input"
-        placeholder="ou écris-le, si t'insistes…"
-        value={reponseEcrite}
-        onChange={(e) => setReponseEcrite(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') repondre(0, 'noté. au stylo plume, donc.')
-        }}
-      />
+      </label>
+      <label className="onb-majeur mono">
+        <input type="checkbox" checked={majeur} onChange={(e) => setMajeur(e.target.checked)} />
+        j’ai 18 ans ou plus
+      </label>
+      <button className="valider" onClick={terminer} disabled={!prenom.trim() || !majeur}>
+        c’est parti.
+      </button>
     </div>
   )
 }

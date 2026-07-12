@@ -10,7 +10,7 @@
 const CLE = 'jeudi-notes-marge' // les ids des notes DÉJÀ effacées
 
 /** l'écran où la note vit (repérage humain — la logique ne s'en sert pas) */
-export type EcranNote = 'accueil' | 'cesoir' | 'fiche' | 'carte' | 'cercle' | 'validation'
+export type EcranNote = 'cesoir' | 'fiche' | 'carte' | 'cercle' | 'validation' | 'reglages'
 
 export interface NoteTuto {
   id: string
@@ -18,14 +18,10 @@ export interface NoteTuto {
   ecran: EcranNote
 }
 
-/** les notes de l'ancien proprio — chacune UNE fois, au bon moment */
+/** les notes de l'ancien proprio — chacune UNE fois, au bon moment.
+ *  le mot d'accueil de « j. » a migré dans l'onboarding (sa visite guidée) :
+ *  plus de doublon ici. */
 export const NOTES: NoteTuto[] = [
-  {
-    id: 'mot-bienvenue',
-    ecran: 'accueil',
-    texte:
-      "tiens. mon carnet des soirs.\nj'ai laissé des notes en marge — elles s'effacent quand t'as pigé.\n— j.",
-  },
   {
     id: 'deck-swipe',
     ecran: 'cesoir',
@@ -55,6 +51,11 @@ export const NOTES: NoteTuto[] = [
     id: 'valider-carnet',
     ecran: 'validation',
     texte: "c'est là que le carnet devient le tien.",
+  },
+  {
+    id: 'reglages-differes',
+    ecran: 'reglages',
+    texte: 'ta couleur, tes seuils € — tout est là quand tu veux.',
   },
 ]
 

@@ -3765,31 +3765,6 @@ button {
   font-size: 17px;
   margin: -6px 0 8px;
 }
-.onboard-carte {
-  background: var(--print-white);
-  color: var(--encre-papier);
-  width: 220px;
-  height: 250px;
-  margin: 18px auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  touch-action: none;
-  user-select: none;
-  cursor: grab;
-  transform: rotate(-2deg);
-}
-.onboard-oui {
-  font-family: 'Instrument Serif', serif;
-  font-size: 52px;
-  pointer-events: none;
-}
-.onboard-boutons {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-}
 .onboard-input {
   background: transparent;
   border: 1px solid rgba(239, 233, 216, 0.25);
@@ -3800,48 +3775,132 @@ button {
   padding: 10px 12px;
   outline: none;
 }
-.onboard-chambre {
-  color: var(--red);
+/* ── onboarding : le payoff (de vrais spots) ── */
+.onb-sansgps {
+  color: var(--encre-3);
+  margin: -6px 0 4px;
 }
-.onboard-criteres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-/* l'étape "tu sors comme qui ?" : suivre des curateurs */
-.onboard-curateurs {
+.onb-spots {
   list-style: none;
   padding: 0;
-  margin: 16px 0;
+  margin: 8px 0 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
 }
-.onboard-curateur {
-  border: 1px solid rgba(239, 233, 216, 0.18);
-  border-left: 3px solid rgba(239, 233, 216, 0.18);
+.onb-spot {
+  border: 1px solid rgba(239, 233, 216, 0.16);
+  border-left: 3px solid var(--graphite);
   border-radius: var(--rayon);
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: border-color 150ms var(--pose);
+  overflow: hidden;
 }
-.onboard-curateur.suivi {
-  border-left-color: var(--red);
-}
-.onboard-curateur-tete {
+.onb-spot-tete {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--encre);
+  padding: 12px 14px;
+  text-align: left;
+}
+.onb-spot-nom {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 19px;
+}
+.onb-spot-meta {
+  color: var(--encre-3);
+  flex: 0 0 auto;
+}
+.onb-apercu {
+  padding: 0 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.onb-apercu-desc {
+  color: var(--encre-2);
+}
+.onb-apercu-tip {
+  font-size: 19px;
+  color: var(--encre);
+  line-height: 1.35;
+}
+.onb-souffle {
+  color: var(--encre-3);
+  margin: 6px 0 2px;
+}
+/* ── onboarding : la visite de « j. » ── */
+.onb-visite {
+  position: relative;
+}
+.onb-passer {
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top));
+  right: 22px;
+  background: none;
+  border: none;
+  color: var(--encre-2);
+  text-decoration: underline;
+  padding: 6px 2px;
+}
+.onb-visite-compteur {
+  color: var(--encre-3);
+  align-self: flex-start;
+}
+.onb-jnote {
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--encre);
+  white-space: pre-line;
+  margin: 4px 0;
+}
+.onb-visite-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+.onb-carte-demo {
+  border: 1px solid rgba(239, 233, 216, 0.16);
+  border-left: 3px solid var(--graphite);
+  border-radius: var(--rayon);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: rotate(-0.6deg);
+}
+.onb-carte-demo-tip {
+  font-size: 19px;
+  color: var(--encre);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.onb-swipe-demo {
+  display: flex;
+  justify-content: space-between;
+  color: var(--encre-3);
+  margin: 2px 0;
+}
+/* ── onboarding : le prénom (appropriation minimale) ── */
+.onb-majeur {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
-}
-.onboard-curateur-truc {
-  display: block;
-  margin-top: 4px;
   color: var(--ivory-faded);
+  text-transform: none;
+  letter-spacing: 0;
 }
-.onboard-curateur.suivi .onboard-curateur-truc {
-  color: var(--red);
+.onb-majeur input {
+  accent-color: var(--red);
+  width: 16px;
+  height: 16px;
 }
 /* le portrait : photo d'identité glissée dans le carnet, retenue par un trombone
    (pas un avatar rond, pas un polaroïd) */
@@ -4135,20 +4194,7 @@ button {
   letter-spacing: 1px;
 }
 
-/* l'étape "porte-monnaie" : les seuils € + les règles */
-.onboard-seuils {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 16px 0;
-}
-.onboard-seuils label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ivory);
-  font-size: 13px;
-}
+/* le champ € du porte-monnaie (réglages différés, écran profil) */
 .onboard-euro {
   width: 64px;
   background: var(--nuit-2);
@@ -4159,41 +4205,6 @@ button {
   font-size: 17px;
   text-align: center;
   padding: 6px 4px;
-}
-.onboard-seuil-soleil {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ivory-faded);
-  font-size: 13px;
-}
-.onboard-erreur {
-  color: var(--red);
-  font-size: 11px;
-}
-.onboard-regles-titre {
-  margin-top: 8px;
-}
-.onboard-regles {
-  list-style: none;
-  padding: 0;
-  margin: 6px 0 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--ivory-faded);
-}
-.onboard-regles li {
-  padding-left: 14px;
-  position: relative;
-  line-height: 1.4;
-}
-.onboard-regles li::before {
-  content: '·';
-  position: absolute;
-  left: 4px;
-  color: var(--red);
 }
 .onboard .valider {
   align-self: flex-start;
@@ -5078,47 +5089,6 @@ button {
   text-align: right;
 }
 
-/* le mot scotché de bienvenue : un bout de papier de travers, du vrai scotch */
-@keyframes motScotcheIn {
-  from { opacity: 0; translate: 0 10px; }
-}
-.mot-scotche {
-  position: fixed;
-  left: 50%;
-  top: max(19%, calc(70px + env(safe-area-inset-top)));
-  transform: translateX(-50%) rotate(-2.5deg);
-  width: min(330px, 84vw);
-  z-index: 40;
-  background: #e9e1cb;
-  color: var(--encre-papier);
-  border: none;
-  border-radius: var(--rayon);
-  padding: 26px 22px 16px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  text-align: left;
-  animation: motScotcheIn 150ms var(--pose) 0.5s backwards;
-}
-.mot-scotche::before {
-  /* le scotch, à cheval sur le bord haut */
-  content: '';
-  position: absolute;
-  top: -11px;
-  left: 50%;
-  width: 92px;
-  height: 24px;
-  transform: translateX(-50%) rotate(1.8deg);
-  background: rgba(239, 233, 216, 0.28);
-  border: 1px solid rgba(239, 233, 216, 0.14);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-.mot-scotche-texte {
-  display: block;
-  font-family: 'Caveat', cursive;
-  font-size: 21px;
-  line-height: 1.4;
-  white-space: pre-line;
-}
 /* réglages : l'entrée discrète pour tout relire */
 .reglages-relire {
   display: block;
