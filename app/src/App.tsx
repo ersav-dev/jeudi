@@ -3391,8 +3391,10 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
   const [compagnies, setCompagnies] = useState<string[]>([])
   const [meteo, setMeteo] = useState<Meteo | undefined>(undefined)
   const [horaires, setHoraires] = useState<[number | null, number | null] | undefined>(undefined)
-  // import Google Takeout
+  // import Google Takeout — le parcours guidé en 3 étapes
+  const [importOuvert, setImportOuvert] = useState(false)
   const [importMsg, setImportMsg] = useState<string | null>(null)
+  const [importEtat, setImportEtat] = useState<'repos' | 'lecture' | 'ok' | 'erreur'>('repos')
   // anti double-tap sur « c'est dit. » + message doux si pas de position
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
   const [msgPosition, setMsgPosition] = useState<string | null>(null)
@@ -3400,18 +3402,26 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
   const importerFichier = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     if (!f) return
-    setImportMsg('lecture…')
+    setImportEtat('lecture')
+    setImportMsg('je lis ton carnet Google…')
     try {
       const json = JSON.parse(await f.text())
       const n = await importerTakeout(json)
       if (n === 0) {
-        setImportMsg('aucun nouveau lieu (déjà importés ?).')
+        setImportEtat('erreur')
+        setImportMsg('aucune nouvelle adresse (déjà dans ton carnet ?).')
       } else {
-        setImportMsg(`${n} lieux importés.`)
-        setTimeout(onFini, 900)
+        setImportEtat('ok')
+        setImportMsg(`${n} adresse${n > 1 ? 's' : ''} ajoutée${n > 1 ? 's' : ''} à ton carnet.`)
+        setTimeout(onFini, 1100)
       }
     } catch (err) {
+      setImportEtat('erreur')
+      // le message d'erreur d'importerTakeout est déjà lisible (mauvais fichier)
       setImportMsg(err instanceof Error ? err.message : 'fichier illisible.')
+    } finally {
+      // on réarme l'input : réessayer le MÊME fichier redéclenche l'onChange
+      e.target.value = ''
     }
   }
 
@@ -3626,17 +3636,74 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
           </button>
         ))}
       </div>
-      <div className="form-import">
-        <label className="lien">
-          importer mes lieux Google (Takeout .json)
-          <input
-            type="file"
-            accept=".json,application/json"
-            hidden
-            onChange={importerFichier}
-          />
-        </label>
-        {importMsg && <span className="mono form-import-msg">{importMsg}</span>}
+      <div className="takeout">
+        {!importOuvert ? (
+          <button
+            type="button"
+            className="lien takeout-ouvrir"
+            onClick={() => setImportOuvert(true)}
+          >
+            récupérer mes adresses Google
+          </button>
+        ) : (
+          <div className="takeout-panneau">
+            <div className="takeout-tete">
+              <span className="hand takeout-titre">récupère tes adresses Google</span>
+              <button
+                type="button"
+                className="lien takeout-replier"
+                onClick={() => setImportOuvert(false)}
+              >
+                replier
+              </button>
+            </div>
+            <ol className="takeout-etapes mono">
+              <li className="takeout-etape">
+                <span className="takeout-num">1</span>
+                <span>
+                  va sur{' '}
+                  <a
+                    className="takeout-lien"
+                    href="https://takeout.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    takeout.google.com
+                  </a>
+                </span>
+              </li>
+              <li className="takeout-etape">
+                <span className="takeout-num">2</span>
+                <span>
+                  coche seulement « Saved » (tes lieux enregistrés), exporte, télécharge le
+                  .zip, ouvre-le → tu y trouves « Saved Places.json »
+                </span>
+              </li>
+              <li className="takeout-etape">
+                <span className="takeout-num">3</span>
+                <span>dépose ce fichier ici :</span>
+              </li>
+            </ol>
+            <label className="takeout-depot">
+              <input
+                type="file"
+                accept=".json,application/json"
+                hidden
+                onChange={importerFichier}
+              />
+              <span className="hand takeout-depot-txt">déposer « Saved Places.json »</span>
+            </label>
+            {importMsg && (
+              <span
+                className={`mono takeout-msg${
+                  importEtat === 'ok' ? ' takeout-msg-ok' : ''
+                }${importEtat === 'erreur' ? ' takeout-msg-erreur' : ''}`}
+              >
+                {importMsg}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <div className="form-actions">
         <button className="lien" onClick={onAnnule}>

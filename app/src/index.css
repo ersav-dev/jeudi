@@ -4642,18 +4642,7 @@ button {
   cursor: pointer;
 }
 
-/* import Google Takeout */
-.form-import {
-  margin-top: 16px;
-  border-top: 1px dotted rgba(239, 233, 216, 0.2);
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.form-import-msg {
-  color: var(--ivory-faded);
-}
+/* import Google Takeout : styles en fin de fichier (.takeout-*) */
 
 /* ── écrans "bientôt" ── */
 .bientot {
@@ -6031,4 +6020,98 @@ button {
 .groupe-vide-mot {
   margin: 4px 0;
   font-size: 20px;
+}
+
+/* ── import Google guidé : « récupère tes adresses » en 3 étapes ──
+   dans le ton carnet : étiquettes papier, coins massicotés (--rayon), mono
+   pour les étapes, une seule touche de --cire (le sceau du succès). */
+.takeout {
+  margin-top: 16px;
+  border-top: 1px dotted rgba(239, 233, 216, 0.2);
+  padding-top: 14px;
+}
+.takeout-ouvrir {
+  font-size: 15px;
+}
+.takeout-panneau {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: inkIn 150ms var(--pose) backwards;
+}
+.takeout-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.takeout-titre {
+  font-size: 21px;
+}
+.takeout-replier {
+  font-size: 13px;
+  color: var(--encre-3);
+}
+.takeout-etapes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.takeout-etape {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: start;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--encre-2);
+}
+/* le numéro d'étape : un petit tampon graphite, jamais --cire */
+.takeout-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--graphite);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-size: 12px;
+  font-weight: 700;
+}
+.takeout-lien {
+  color: var(--encre);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* la zone de dépôt : une étiquette claire découpée, prête à recevoir le fichier */
+.takeout-depot {
+  display: block;
+  cursor: pointer;
+  padding: 16px 14px;
+  border: 1px dashed var(--graphite);
+  border-radius: var(--rayon);
+  background: var(--nuit-2);
+  text-align: center;
+  transition: border-color 150ms var(--pose);
+}
+.takeout-depot:hover,
+.takeout-depot:focus-within {
+  border-color: var(--encre);
+}
+.takeout-depot-txt {
+  font-size: 19px;
+}
+.takeout-msg {
+  color: var(--encre-2);
+  font-size: 13px;
+}
+/* le seul --cire de l'écran d'import : le sceau du carnet nourri */
+.takeout-msg-ok {
+  color: var(--cire);
+}
+.takeout-msg-erreur {
+  color: var(--cire-claire);
 }
