@@ -57,13 +57,15 @@ describe('croquis de paris — compterSpotsZones', () => {
       { lat: 48.8584, lng: 2.347 }, // châtelet même
       { lat: 48.8532, lng: 2.3692 }, // bastille même
       { lat: 48.8555, lng: 2.34 }, // les halles → châtelet
-      { lat: 48.8535, lng: 2.29 }, // saint-germain : aucune chip → nulle part
+      { lat: 48.8535, lng: 2.29 }, // le champ-de-mars → tour eiffel (Paris couvert !)
+      { lat: 48.828, lng: 2.435 }, // bois de vincennes : hors du carnet
       { lat: 43.2965, lng: 5.3698 }, // marseille : très loin du carnet
     ])
     expect(comptes['Châtelet']).toBe(2)
     expect(comptes['Bastille']).toBe(1)
+    expect(comptes['Tour Eiffel']).toBe(1)
     const total = Object.values(comptes).reduce((a, b) => a + b, 0)
-    expect(total).toBe(3) // les deux hors zones ne comptent nulle part
+    expect(total).toBe(4) // les deux hors zones ne comptent nulle part
   })
 
   it('frontière demi-ouverte : un spot pile sur la limite compte UNE fois', () => {

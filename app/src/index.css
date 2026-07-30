@@ -730,6 +730,12 @@ body::before,
   position: relative;
   touch-action: pan-y;
   user-select: none;
+  /* iOS : ~313 lignes rendues d'un coup = pic mémoire → WebKit tue la page
+     (plantage au boot, onglet par défaut = macarte). content-visibility saute
+     entièrement le rendu (layout, peinture, décodage photos) des lignes hors
+     écran ; la hauteur estimée garde un scroll juste. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 190px;
 }
 /* un spot du cercle (lecture seule) : liseré au crayon graphite à gauche
    (pas une cire — le budget §4 reste aux tampons de l'écran) */
@@ -3987,6 +3993,44 @@ button {
   font-size: 13px;
   padding: 8px 10px;
 }
+.onb-optionnel {
+  text-transform: none;
+  opacity: 0.6;
+}
+/* le portrait à l'onboarding : une petite photo d'identité à coller — même
+   liseré ivoire que .profil-id-photo, format vignette */
+.onb-portrait {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  cursor: pointer;
+}
+.onb-portrait-img {
+  width: 72px;
+  height: 92px; /* ratio photo d'identité 35:45 */
+  object-fit: cover;
+  background: var(--tirage);
+  border: 3px solid var(--encre);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  filter: grayscale(0.12) contrast(1.04);
+}
+.onb-portrait-vide {
+  width: 72px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(239, 233, 216, 0.4);
+  border-radius: var(--rayon);
+  font-size: 10px;
+  color: var(--ivory-faded);
+  text-align: center;
+}
+.onb-portrait-legende {
+  font-size: 11px;
+  color: var(--ivory-faded);
+  letter-spacing: 0.5px;
+}
 .profil-id-photo {
   display: block;
   width: 100%;
@@ -4765,6 +4809,93 @@ button {
 
 /* « invite un pote dans ton cercle » — LE bouton de croissance :
    une étiquette papier posée sur la table (V5), avec son œillet */
+/* ── « retrouve quelqu'un » : la recherche d'amis par prénom ── */
+.cherche-ami {
+  margin: 22px 0 0;
+}
+.cherche-ami-champ {
+  width: 100%;
+  background: rgba(239, 233, 216, 0.06);
+  border: 1px solid rgba(239, 233, 216, 0.25);
+  border-radius: var(--rayon);
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+.cherche-ami-champ::placeholder {
+  color: var(--ivory-faded);
+}
+.cherche-ami-etat {
+  margin: 8px 2px 0;
+  font-size: 11px;
+  color: var(--ivory-faded);
+}
+/* état vide = l'app qui parle → serif italic (règle d'or §5) */
+.cherche-ami-vide {
+  margin: 10px 2px 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ivory-faded);
+}
+.cherche-ami-liste {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cherche-ami-ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+}
+.cherche-ami-photo {
+  width: 34px;
+  height: 42px; /* la petite photo d'identité, pas un rond de réseau social */
+  object-fit: cover;
+  border: 2px solid var(--encre);
+  background: var(--tirage);
+}
+.cherche-ami-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.cherche-ami-critere {
+  font-size: 10px;
+  color: var(--ivory-faded);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cherche-ami-statut {
+  font-size: 10px;
+  color: var(--ivory-faded);
+  white-space: nowrap;
+}
+.cherche-ami-demander {
+  background: none;
+  border: 1.5px solid var(--red);
+  border-radius: var(--rayon);
+  color: var(--red);
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 5px 12px;
+  transform: rotate(-1deg); /* le petit tampon à poser */
+  cursor: pointer;
+}
+.cherche-ami-demander:active {
+  transform: rotate(-1deg) scale(0.96);
+}
+
 .inviter-pote {
   position: relative;
   display: block;
@@ -5690,6 +5821,121 @@ button {
   font-family: 'Instrument Serif', serif;
   font-size: 17px;
   outline: none;
+}
+/* « partager en story » : la porte de sortie vers Instagram, sous les actions */
+.fiche-story {
+  display: block;
+  margin: 10px auto 0;
+  text-align: center;
+}
+
+/* le guide d'installation + la ligne légale, au pied de l'écran d'entrée */
+.guide-install {
+  margin-top: 22px;
+  text-align: center;
+}
+.guide-install-panneau {
+  text-align: left;
+  background: var(--nuit-3);
+  border: 1px solid rgba(239, 233, 216, 0.2);
+  border-radius: var(--rayon);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.guide-install-etapes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 12px;
+}
+.guide-install-etapes li {
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+}
+.auth-legal {
+  display: block;
+  margin-top: 18px;
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--ivory-faded);
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* les boutons du deck (a11y) : les jumeaux du swipe — deux tampons à poser */
+.deck-boutons {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+}
+.deck-btn {
+  min-width: 96px;
+  min-height: 44px;
+  background: none;
+  border-radius: var(--rayon);
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+  cursor: pointer;
+}
+.deck-btn-bof {
+  border: 1.5px solid var(--graphite);
+  color: var(--ivory-faded);
+  transform: rotate(1deg);
+}
+.deck-btn-valide {
+  border: 2px solid var(--red);
+  color: var(--red);
+  transform: rotate(-1.5deg);
+}
+.deck-btn:active {
+  scale: 0.95;
+}
+
+/* la glose d'un mot du lexique : la note griffonnée dans la marge */
+.chip-glose {
+  margin: -4px 2px 12px;
+  font-size: 15px;
+  color: var(--ivory-faded);
+  animation: inkIn 150ms var(--pose) backwards;
+}
+
+/* la porte des langues : EN/FR en haut-droite de l'écran d'entrée */
+.auth-langue {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.35);
+  border-radius: var(--rayon);
+  color: var(--ivory-faded);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+/* « quand » : les deux molettes jour + heure (selects natifs = roue iPhone) */
+.labo-quand-molettes {
+  display: inline-flex;
+  gap: 6px;
+}
+.labo-molette {
+  color-scheme: dark;
+  background: rgba(239, 233, 216, 0.06);
+  border: 1px solid rgba(239, 233, 216, 0.25);
+  border-radius: var(--rayon);
+  color: var(--ivory);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 8px;
 }
 .labo-champ.petit {
   padding: 8px 12px;

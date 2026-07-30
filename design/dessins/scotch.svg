@@ -1,0 +1,5 @@
+<!-- scotch — rectangle de scotch aux bords déchirés. EXCEPTION du set : fill="currentColor", sans stroke.
+     Usage : posé en coin de photo/polaroïd, TOUJOURS en opacity 0.10–0.14 (jamais opaque). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85 28" fill="currentColor">
+  <path d="M3.6 3.1 C30.4 2.2 55.6 2.8 80.9 1.9 L78.4 6.2 L81.6 9.8 L78.9 13.4 L82.1 17.2 L79.2 20.6 L81.4 24.3 C55.2 25.8 28.4 24.9 3.9 25.9 L6.1 21.8 L2.8 18.4 L5.6 14.6 L2.6 11.2 L5.2 7.4 Z"/>
+</svg>

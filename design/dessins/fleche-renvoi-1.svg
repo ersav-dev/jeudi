@@ -1,0 +1,7 @@
+<!-- fleche-renvoi-1 — flèche courbée de note de marge, pointe vers la droite.
+     Usage : relier une note manuscrite (Caveat) à un élément de la fiche ou du deck. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M2.8 32.4 C10.4 31.6 18.9 27.8 26.2 22.1 C33.8 16.2 42.6 10.9 53.9 8.6"/>
+  <path d="M46.4 2.2 C49.1 4.4 51.9 6.6 55.3 8.3"/>
+  <path d="M47.8 15.9 C50.3 13.4 52.6 10.8 55.6 8.7"/>
+</svg>

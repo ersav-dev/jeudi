@@ -17,7 +17,7 @@ import {
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
 import { IAnneau, IBallon } from './icones'
-import { srcPhoto } from './photos'
+import { srcPhoto, photoIndisponible } from './photos'
 
 // fond sombre gratuit (tuiles raster Carto dark) — style inline : aucun
 // fichier de config externe à charger, donc rien à bloquer.
@@ -970,6 +970,7 @@ export default function Carte({
               className="carte-sheet-bg"
               src={srcPhoto(lieuActif.photos[sheetPhoto % lieuActif.photos.length])}
               alt=""
+              onError={photoIndisponible}
             />
           )}
           {/* page 0 = photo claire : pas de voile, pas de texte */}
@@ -1135,7 +1136,7 @@ export default function Carte({
                 }}
               >
                 {l.photos.length > 0 && (
-                  <img className="carte-card-bg" src={srcPhoto(l.photos[0])} alt="" loading="lazy" />
+                  <img className="carte-card-bg" src={srcPhoto(l.photos[0])} alt="" loading="lazy" onError={photoIndisponible} />
                 )}
                 {comparer.includes(l.id) && <span className="carte-card-vs mono">à comparer</span>}
                 <span className="carte-card-nom">{l.nom}</span>
@@ -1225,7 +1226,7 @@ export function TableComparaison({
         {lieux.map((l) => (
           <div key={l.id} className="tc-cell tc-cell-photo">
             {l.photos.length > 0 ? (
-              <img src={srcPhoto(l.photos[0])} alt="" loading="lazy" />
+              <img src={srcPhoto(l.photos[0])} alt="" loading="lazy" onError={photoIndisponible} />
             ) : (
               <span className="tc-vide mono">—</span>
             )}

@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jeudi">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Caveat:wght@500&amp;display=swap');
+    .serif{font-family:'Instrument Serif',Georgia,serif}
+    .hand{font-family:'Caveat',cursive}
+  </style>
+  <rect width="512" height="512" rx="44" fill="#15130f"/>
+  <rect x="116" y="170" width="280" height="128" rx="18" fill="none" stroke="#a8322a" stroke-width="6"/>
+  <text x="256" y="262" class="serif" font-style="italic" font-size="66" fill="#a8322a" text-anchor="middle">Jeudi.</text>
+  <text x="256" y="346" class="hand" font-size="36" fill="#f0ead9" text-anchor="middle">je dis où.</text>
+</svg>

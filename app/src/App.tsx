@@ -8,7 +8,13 @@ import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
 import PickerCouleur from './PickerCouleur'
 import { importerSeed } from './seed'
-import { srcPhoto } from './photos'
+import { jalonner, jalonnerVue } from './jalon'
+import ImportGoogle from './ImportGoogle'
+import ChercherAmis from './ChercherAmis'
+import { t, lireLangue, basculerLangue } from './langue'
+import { suivre } from './analytique'
+import { partagerEnStory } from './partageStory'
+import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
@@ -79,7 +85,9 @@ import {
   viderSorties,
   effacerTout,
   definirMaPosition,
-  importerTakeout,
+  importGoogleFait,
+  doitRelancerImport,
+  marquerRelanceImport,
   distanceM,
   formatDistance,
   tempsMarche,
@@ -426,6 +434,24 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
       {/* la note en marge de « j. » : les réglages différés se découvrent ici */}
       <NoteMarge id="reglages-differes" className="note-marge-reglages" />
 
+      {/* LA COUCHE LÉGALE — toujours à portée (RGPD : info accessible) */}
+      <a
+        className="mono reglages-section reglages-toggle"
+        href="/confidentialite.html"
+        target="_blank"
+        rel="noreferrer"
+        style={{ textDecoration: 'none', display: 'flex' }}
+      >
+        confidentialité &amp; conditions
+        <span className="reglages-chevron">↗</span>
+      </a>
+
+      {/* LA LANGUE — fr/en, bascule + rechargement (langue.ts) */}
+      <button className="mono reglages-section reglages-toggle" onClick={basculerLangue}>
+        {lireLangue() === 'fr' ? 'langue · français' : 'language · english'}
+        <span className="reglages-chevron">{lireLangue() === 'fr' ? 'EN' : 'FR'}</span>
+      </button>
+
       {/* OÙ TU ES (location-native : le centre suit ton GPS) */}
       <button
         className="mono reglages-section reglages-toggle"
@@ -602,6 +628,9 @@ export default function App() {
   const [authPret, setAuthPret] = useState(false)
   const [lieux, setLieux] = useState<Lieu[]>([])
   const [ajout, setAjout] = useState(false)
+  // true = le formulaire d'ajout s'ouvre panneau import Google DÉPLIÉ
+  // (arrivée depuis le bandeau de rappel) — remis à false à la fermeture
+  const [importDirect, setImportDirect] = useState(false)
   const [vue, setVue] = useState<'liste' | 'carte'>('liste')
   // chantier 1 : les lieux « à comparer » + l'ouverture de la table (accès aussi
   // depuis l'index, pas seulement la carte). source de vérité = localStorage.
@@ -612,6 +641,11 @@ export default function App() {
   // appui long = barré (sans foot / refuge). timer du long-press.
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
+  // journal de bord : l'écran affiché (pour situer un plantage iOS — quel
+  // écran tue la page). N'écrit plus une fois la session déclarée stable.
+  useEffect(() => {
+    jalonnerVue(`vue:${onglet}${onglet === 'macarte' ? '·' + vue : ''}`)
+  }, [onglet, vue])
   // le match de groupe vit dans l'onglet cercle : l'étiquette « sortir à
   // plusieurs → » ouvre le parcours composer → trianguler → swiper → match
   const [sortieGroupe, setSortieGroupe] = useState(false)
@@ -733,6 +767,7 @@ export default function App() {
     // le geste visé est accompli (le lien existe) : la note en marge s'efface —
     // jamais AVANT, sinon un échec (« connecte-toi d'abord ») la perdait pour rien
     effacerNote('cercle-invite')
+    suivre('invite_envoyee')
     const texte = `rejoins mon cercle sur jeudi. je dis où. ${lien}`
     if (navigator.share) {
       try {
@@ -744,7 +779,7 @@ export default function App() {
     }
     try {
       await navigator.clipboard.writeText(texte)
-      setFlash('lien copié. envoie-le à ton pote.')
+      setFlash(t('lien copié. envoie-le à ton pote.'))
     } catch {
       setFlash(lien) // dernier repli : montrer le lien
     }
@@ -797,6 +832,8 @@ export default function App() {
   const [curateur, setCurateur] = useState<string | null>(null)
   // petit message éphémère (effacé / signalé / visibilité changée)
   const [flash, setFlash] = useState<string | null>(null)
+  // une nouvelle version du service worker attend (émis par main.tsx) → toast
+  const [majDispo, setMajDispo] = useState(false)
   // filtres COMBINABLES (3 axes qui s'additionnent) :
   //  · statut : tout · à découvrir (pas fait) · faits (validés)
   //  · ouvert : ouvert maintenant (on/off)
@@ -822,6 +859,13 @@ export default function App() {
     appliquerCouleur(lireCouleur())
   }, [])
 
+  // le service worker signale une nouvelle version → on lève le toast
+  useEffect(() => {
+    const onMaj = () => setMajDispo(true)
+    window.addEventListener('jeudi:maj-dispo', onMaj)
+    return () => window.removeEventListener('jeudi:maj-dispo', onMaj)
+  }, [])
+
   // re-render quand la vraie géoloc arrive (les distances se recalculent)
   const [, setPosVersion] = useState(0)
   useEffect(() => {
@@ -842,9 +886,11 @@ export default function App() {
   useEffect(() => {
     capterInvite() // ?invite=<id> → mis de côté, URL nettoyée aussitôt
     chargerMonId().then(() => {
+      jalonner('monId')
       chargerCercle()
     importerSeed().then(() => {
-      recharger()
+      jalonner('seed')
+      recharger().then(() => jalonner('spots'))
       // UNE lecture du stockage : ensuite l'état fait foi (sorties = la cloche,
       // attente = la file de validation ouverte)
       const a = sortiesEnAttente()
@@ -853,6 +899,7 @@ export default function App() {
       setAttenteTotal(a.length)
     })
     lireProfil().then((p) => {
+      jalonner('profil')
       if (p?.prenom) setPrenom(p.prenom.toLowerCase())
       if (p?.critere) setCritere(p.critere)
       // le portrait cloud (Storage) est prioritaire ; sinon le blob local (cache)
@@ -872,6 +919,7 @@ export default function App() {
   // pas répondu, authPret reste faux → on n'affiche ni Auth ni l'app par erreur.
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
+      jalonner(data.session ? 'session' : 'session-vide')
       setSession(data.session)
       setAuthPret(true)
     })
@@ -894,6 +942,7 @@ export default function App() {
   // juste après le premier login (l'écran Auth, lui, ne change pas)
   useEffect(() => {
     if (!session) return
+    suivre('ouverture')
     chargerCercle()
     traiterInviteAttente().then((prenom) => {
       if (prenom) {
@@ -902,6 +951,22 @@ export default function App() {
       }
     })
   }, [session, chargerCercle])
+
+  // le rappel doux « importe tes adresses Google » : tant que rien n'est venu
+  // de Google (source 'google' absente de MES spots), tous les 7 jours, 3 fois
+  // max — coupé net au premier import réussi (couperRelanceImport).
+  const [rappelImport, setRappelImport] = useState(false)
+  useEffect(() => {
+    if (!session || lieux.length === 0) return
+    if (importGoogleFait(lieux) || !doitRelancerImport()) return
+    // hors du corps de l'effet (pas de setState synchrone) ; le garde-fou
+    // doitRelancerImport rend l'affaire idempotente si lieux re-change
+    const t = setTimeout(() => {
+      setRappelImport(true)
+      marquerRelanceImport()
+    }, 0)
+    return () => clearTimeout(t)
+  }, [session, lieux])
 
   const aValider = attente[0] ?? null
   const sortieSuivante = () => setAttente((prev) => prev.slice(1))
@@ -1125,6 +1190,20 @@ export default function App() {
           {bandeauInvite && (
             <button className="mono bandeau-invite" onClick={() => setBandeauInvite(null)}>
               {bandeauInvite}
+            </button>
+          )}
+          {/* le rappel import Google : même bandeau doux — tap = ouvre le
+              formulaire d'ajout, panneau import déplié ; ✕ implicite au tap */}
+          {rappelImport && !bandeauInvite && !ajout && (
+            <button
+              className="mono bandeau-invite"
+              onClick={() => {
+                setRappelImport(false)
+                setImportDirect(true)
+                setAjout(true)
+              }}
+            >
+              tes adresses Google Maps t'attendent — récupère-les →
             </button>
           )}
         </>
@@ -1477,11 +1556,16 @@ export default function App() {
 
           {ajout ? (
             <FormAjout
+              importOuvert={importDirect}
               onFini={() => {
                 setAjout(false)
+                setImportDirect(false)
                 recharger()
               }}
-              onAnnule={() => setAjout(false)}
+              onAnnule={() => {
+                setAjout(false)
+                setImportDirect(false)
+              }}
             />
           ) : (
             <button className="fab" onClick={() => setAjout(true)} aria-label="capturer un lieu">
@@ -1796,6 +1880,8 @@ export default function App() {
           {cercleReel.length === 0 && (
             <NoteMarge id="cercle-invite" fleche="bas" className="note-marge-cercle" />
           )}
+          {/* retrouver quelqu'un qui a déjà l'app : recherche par prénom */}
+          <ChercherAmis idsCercle={cercleReel.map((m) => m.id)} />
           {/* LE canal de croissance : l'étiquette papier, mise en avant */}
           <button className="inviter-pote" onClick={inviterUnPote}>
             invite un pote dans ton cercle →
@@ -1913,9 +1999,9 @@ export default function App() {
 
       {archive && (
         <div className="toast">
-          <span className="mono">archivé.</span>
+          <span className="mono">{t('archivé.')}</span>
           <button className="lien" onClick={annulerArchive}>
-            annuler
+            {t('annuler')}
           </button>
         </div>
       )}
@@ -1923,6 +2009,22 @@ export default function App() {
       {flash && (
         <div className="toast">
           <span className="mono">{flash}</span>
+        </div>
+      )}
+
+      {majDispo && (
+        <div className="toast">
+          <span className="mono">{t('nouvelle version.')}</span>
+          <button
+            className="lien"
+            onClick={() => {
+              // main.tsx applique (skipWaiting) puis recharge — sur CE clic, pas au boot
+              setMajDispo(false)
+              window.dispatchEvent(new Event('jeudi:applique-maj'))
+            }}
+          >
+            {t('recharger')}
+          </button>
         </div>
       )}
 
@@ -1934,7 +2036,7 @@ export default function App() {
             aria-label="ça dit quoi ce soir ?"
           >
             <IEtincelle taille={24} />
-            <span className="nav-lbl">ce soir</span>
+            <span className="nav-lbl">{t('ce soir')}</span>
           </button>
           <button
             className={`nav-item ${onglet === 'trouver' ? 'actif' : ''}`}
@@ -1942,7 +2044,7 @@ export default function App() {
             aria-label="trouver"
           >
             <ILoupe taille={24} />
-            <span className="nav-lbl">trouver</span>
+            <span className="nav-lbl">{t('trouver')}</span>
           </button>
           <button
             className={`nav-item ${onglet === 'macarte' ? 'actif' : ''}`}
@@ -1950,7 +2052,7 @@ export default function App() {
             aria-label="ma carte"
           >
             <ICarnet taille={24} />
-            <span className="nav-lbl">ma carte</span>
+            <span className="nav-lbl">{t('ma carte')}</span>
           </button>
           <button
             className={`nav-item ${onglet === 'cercle' ? 'actif' : ''}`}
@@ -1958,7 +2060,7 @@ export default function App() {
             aria-label="le cercle"
           >
             <ICercle taille={24} />
-            <span className="nav-lbl">le cercle</span>
+            <span className="nav-lbl">{t('le cercle')}</span>
           </button>
           <button
             className={`nav-item ${onglet === 'profil' ? 'actif' : ''}`}
@@ -1966,7 +2068,7 @@ export default function App() {
             aria-label="moi"
           >
             <ITampon taille={24} />
-            <span className="nav-lbl">moi</span>
+            <span className="nav-lbl">{t('moi')}</span>
           </button>
         </nav>
       )}
@@ -2207,7 +2309,7 @@ function Validation({
               {vDrag.x < -60 && <span className="tampon bof">bof</span>}
               <div className="carte-photo">
                 {lieu.photos[0] ? (
-                  <img src={srcPhoto(lieu.photos[0])} alt={lieu.nom} />
+                  <img src={srcPhoto(lieu.photos[0])} alt={lieu.nom} onError={photoIndisponible} />
                 ) : (
                   <div className="tirage-vide">
                     <span className="croix">✕</span>
@@ -2266,6 +2368,7 @@ function Validation({
                   <img
                     src={srcPhoto(photos[0] ?? lieu.photos[0])}
                     alt={lieu.nom}
+                    onError={photoIndisponible}
                   />
                 ) : (
                   <div className="tirage-vide">
@@ -2352,7 +2455,7 @@ function Validation({
             >
               <div className="carte-photo">
                 {(photos[0] ?? lieu.photos[0]) ? (
-                  <img src={srcPhoto(photos[0] ?? lieu.photos[0])} alt={lieu.nom} />
+                  <img src={srcPhoto(photos[0] ?? lieu.photos[0])} alt={lieu.nom} onError={photoIndisponible} />
                 ) : (
                   <div className="tirage-vide">
                     <span className="croix">✕</span>
@@ -2464,7 +2567,7 @@ function CarteCurateur({
             />
           </svg>
           {reel.photoUrl ? (
-            <img className="profil-id-photo" src={reel.photoUrl} alt={curateur} />
+            <img className="profil-id-photo" src={reel.photoUrl} alt={curateur} onError={photoIndisponible} />
           ) : (
             // vrai membre sans portrait : l'initiale — jamais une fausse photo
             <span
@@ -2815,7 +2918,7 @@ function Fiche({
           >
             ✕
           </button>
-          <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+          <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
           {nbPhotos > 1 && (
             <div className="photo-tirets photo-zoom-tirets">
               {lieu.photos.map((_, i) => (
@@ -2876,7 +2979,7 @@ function Fiche({
               </div>
             )}
             {nbPhotos > 0 ? (
-              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
             ) : (
               <div className="tirage-vide">
                 <span className="croix">✕</span>
@@ -3194,6 +3297,17 @@ function Fiche({
         </button>
       </div>
 
+      {/* la carte de story : le spot devient un objet à poster (panel n°1) */}
+      <button
+        className="lien fiche-story"
+        onClick={() => {
+          void partagerEnStory(lieu)
+          suivre('story_partagee', { lieu: lieu.nom })
+        }}
+      >
+        partager en story →
+      </button>
+
       <div className="mono fiche-meta">
         {VISIBILITES.find((x) => x.v === lieu.visibilite)?.icone}{' '}
         {VISIBILITES.find((x) => x.v === lieu.visibilite)?.label} · capturé le{' '}
@@ -3249,7 +3363,7 @@ function AlbumATrous({
             {prise ? (
               <span className="album-cadre album-developpe">
                 <span className="album-fenetre">
-                  <img src={srcPhoto(prise)} alt={etiquette} />
+                  <img src={srcPhoto(prise)} alt={etiquette} onError={photoIndisponible} />
                 </span>
               </span>
             ) : (
@@ -3350,7 +3464,7 @@ function KitPhotos({
                   onClick={() => retirer(p)}
                   title="retirer"
                 >
-                  <img src={srcPhoto(p)} alt={label} />
+                  <img src={srcPhoto(p)} alt={label} onError={photoIndisponible} />
                   <span className="photo-vignette-x">✕</span>
                 </button>
               ))}
@@ -3375,7 +3489,16 @@ function KitPhotos({
   )
 }
 
-function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => void }) {
+function FormAjout({
+  onFini,
+  onAnnule,
+  importOuvert = false,
+}: {
+  onFini: () => void
+  onAnnule: () => void
+  /** true = le panneau import Google s'ouvre déplié (bandeau de rappel) */
+  importOuvert?: boolean
+}) {
   const [nom, setNom] = useState('')
   const [note, setNote] = useState('')
   const [visibilite, setVisibilite] = useState<Visibilite>('prive')
@@ -3391,39 +3514,9 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
   const [compagnies, setCompagnies] = useState<string[]>([])
   const [meteo, setMeteo] = useState<Meteo | undefined>(undefined)
   const [horaires, setHoraires] = useState<[number | null, number | null] | undefined>(undefined)
-  // import Google Takeout — le parcours guidé en 3 étapes
-  const [importOuvert, setImportOuvert] = useState(false)
-  const [importMsg, setImportMsg] = useState<string | null>(null)
-  const [importEtat, setImportEtat] = useState<'repos' | 'lecture' | 'ok' | 'erreur'>('repos')
   // anti double-tap sur « c'est dit. » + message doux si pas de position
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
   const [msgPosition, setMsgPosition] = useState<string | null>(null)
-
-  const importerFichier = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (!f) return
-    setImportEtat('lecture')
-    setImportMsg('je lis ton carnet Google…')
-    try {
-      const json = JSON.parse(await f.text())
-      const n = await importerTakeout(json)
-      if (n === 0) {
-        setImportEtat('erreur')
-        setImportMsg('aucune nouvelle adresse (déjà dans ton carnet ?).')
-      } else {
-        setImportEtat('ok')
-        setImportMsg(`${n} adresse${n > 1 ? 's' : ''} ajoutée${n > 1 ? 's' : ''} à ton carnet.`)
-        setTimeout(onFini, 1100)
-      }
-    } catch (err) {
-      setImportEtat('erreur')
-      // le message d'erreur d'importerTakeout est déjà lisible (mauvais fichier)
-      setImportMsg(err instanceof Error ? err.message : 'fichier illisible.')
-    } finally {
-      // on réarme l'input : réessayer le MÊME fichier redéclenche l'onChange
-      e.target.value = ''
-    }
-  }
 
   const bascule = (set: typeof setEnvies, t: string) =>
     set((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
@@ -3636,75 +3729,7 @@ function FormAjout({ onFini, onAnnule }: { onFini: () => void; onAnnule: () => v
           </button>
         ))}
       </div>
-      <div className="takeout">
-        {!importOuvert ? (
-          <button
-            type="button"
-            className="lien takeout-ouvrir"
-            onClick={() => setImportOuvert(true)}
-          >
-            récupérer mes adresses Google
-          </button>
-        ) : (
-          <div className="takeout-panneau">
-            <div className="takeout-tete">
-              <span className="hand takeout-titre">récupère tes adresses Google</span>
-              <button
-                type="button"
-                className="lien takeout-replier"
-                onClick={() => setImportOuvert(false)}
-              >
-                replier
-              </button>
-            </div>
-            <ol className="takeout-etapes mono">
-              <li className="takeout-etape">
-                <span className="takeout-num">1</span>
-                <span>
-                  va sur{' '}
-                  <a
-                    className="takeout-lien"
-                    href="https://takeout.google.com"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    takeout.google.com
-                  </a>
-                </span>
-              </li>
-              <li className="takeout-etape">
-                <span className="takeout-num">2</span>
-                <span>
-                  coche seulement « Saved » (tes lieux enregistrés), exporte, télécharge le
-                  .zip, ouvre-le → tu y trouves « Saved Places.json »
-                </span>
-              </li>
-              <li className="takeout-etape">
-                <span className="takeout-num">3</span>
-                <span>dépose ce fichier ici :</span>
-              </li>
-            </ol>
-            <label className="takeout-depot">
-              <input
-                type="file"
-                accept=".json,application/json"
-                hidden
-                onChange={importerFichier}
-              />
-              <span className="hand takeout-depot-txt">déposer « Saved Places.json »</span>
-            </label>
-            {importMsg && (
-              <span
-                className={`mono takeout-msg${
-                  importEtat === 'ok' ? ' takeout-msg-ok' : ''
-                }${importEtat === 'erreur' ? ' takeout-msg-erreur' : ''}`}
-              >
-                {importMsg}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      <ImportGoogle ouvertParDefaut={importOuvert} onImporte={() => setTimeout(onFini, 1100)} />
       <div className="form-actions">
         <button className="lien" onClick={onAnnule}>
           laisse tomber

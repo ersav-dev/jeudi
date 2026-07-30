@@ -86,7 +86,7 @@ const PUBLICS: Array<{
   {
     id: 'ines', nom: 'Bisou', lat: 48.8635, lng: 2.3672,
     envies: ['apéro', 'incognito'], compagnies: ['duo'], meteo: 'soleil',
-    auteur: 'Inès', titre: 'curatrice · 61 spots',
+    auteur: 'Inès', titre: 'curatrice',
     note: 'pas de carte : tu dis ton humeur, ils inventent ton cocktail. lumière bougie parfaite.',
   },
   {
@@ -105,13 +105,13 @@ const PUBLICS: Array<{
   {
     id: 'lea-earlyjune', nom: 'Early June', lat: 48.8722, lng: 2.3705,
     envies: ['apéro', 'tranquilo'], compagnies: ['solo', 'duo'],
-    auteur: 'Léa', titre: 'curatrice · 47 spots',
+    auteur: 'Léa', titre: 'curatrice',
     note: 'vins nature, lumière de fin de journée incroyable. table seule à la fenêtre = bonheur.',
   },
   {
     id: 'lea-buvette', nom: 'La Buvette', lat: 48.8669, lng: 2.3786,
     envies: ['apéro', 'incognito'], compagnies: ['duo'],
-    auteur: 'Léa', titre: 'curatrice · 47 spots',
+    auteur: 'Léa', titre: 'curatrice',
     note: 'minuscule, va-y tôt. les œufs mimosa. lumière de bougie parfaite.',
   },
 ]
@@ -159,10 +159,10 @@ export async function importerSeed(): Promise<boolean> {
   // « jeudi. » (proprietaire 'jeudi') — avant, les spots ersan étaient 'moi' →
   // ils s'affichaient comme LES SIENS chez chaque nouvel inscrit. Le bump
   // re-seede les installs existantes (purge source==='google', réinsère).
-  if (localStorage.getItem('jeudi-seed-v20')) return false
+  if (localStorage.getItem('jeudi-seed-v21')) return false
   // poser le drapeau AVANT d'insérer : React StrictMode lance
   // l'effet deux fois en dev, sinon double import (course)
-  localStorage.setItem('jeudi-seed-v20', 'fait')
+  localStorage.setItem('jeudi-seed-v21', 'fait')
   // données chargées à la demande (chunks séparés du bundle principal)
   const [{ default: ERSAN }, { CURATED }, { EXTRA }] = await Promise.all([
     import('./ersan'),

@@ -25,3 +25,5 @@ Thumbs.db
 # backups locaux (volumineux, pas besoin sur GitHub)
 _backups/
 _trash/
+_enrichissement/.google_key
+_enrichissement/osm_paris_cache.json

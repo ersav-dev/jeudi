@@ -1741,6 +1741,60 @@ async function profilsPublics(ids: string[]): Promise<Map<string, LigneProfilPub
   return map
 }
 
+/** cherche des membres par prénom (préfixe, insensible à la casse) — le
+ *  geste « je te retrouve » façon annuaire : la vitrine `profils_publics`
+ *  est lisible par tout connecté, on n'expose donc que ce qui l'est déjà.
+ *  Jamais moi-même dans les résultats. < 2 lettres = rien (pas d'annuaire
+ *  complet en une frappe). Hors-ligne / erreur : liste vide, sans casse. */
+export async function chercherProfils(terme: string): Promise<MembreCercle[]> {
+  await pretAuth
+  const q = terme.trim()
+  if (!monId || q.length < 2) return []
+  try {
+    const { data, error } = await supabase
+      .from('profils_publics')
+      .select('id,prenom,critere,bio,insta,photo_url')
+      .ilike('prenom', `${q}%`)
+      .neq('id', monId)
+      .limit(20)
+    if (error) throw error
+    const membres: MembreCercle[] = []
+    for (const p of (data ?? []) as LigneProfilPublic[]) {
+      membres.push({
+        id: p.id,
+        prenom: p.prenom || 'membre',
+        critere: p.critere ?? undefined,
+        bio: p.bio ?? undefined,
+        insta: p.insta ?? undefined,
+        photoUrl: await portraitSigne(p.photo_url),
+      })
+    }
+    return membres
+  } catch (e) {
+    console.warn('[jeudi] chercherProfils KO (hors-ligne ?)', e)
+    return []
+  }
+}
+
+/** les ids vers qui MA demande est partie et attend — pour que la recherche
+ *  affiche « demandé ✓ » au lieu de reproposer le bouton. */
+export async function demandesEnvoyees(): Promise<string[]> {
+  await pretAuth
+  if (!monId) return []
+  try {
+    const { data, error } = await supabase
+      .from('relations')
+      .select('vers_id')
+      .eq('de_id', monId)
+      .eq('statut', 'demande')
+    if (error) throw error
+    return ((data ?? []) as { vers_id: string }[]).map((r) => r.vers_id)
+  } catch (e) {
+    console.warn('[jeudi] demandesEnvoyees KO (hors-ligne ?)', e)
+    return []
+  }
+}
+
 /** envoie une demande d'ami. Post-0003 : l'insert part TOUJOURS en 'demande'.
  *  Erreurs PARLANTES — l'UI affiche le message tel quel. */
 export async function envoyerDemande(versId: string): Promise<void> {
@@ -2084,6 +2138,52 @@ export function marquerOnboarding(): void {
 }
 export function reinitOnboarding(): void {
   localStorage.removeItem('jeudi-onboard')
+}
+
+// ── l'import Google : fait ? sinon, relance douce ───────────────
+// Le signal « import fait » ne se stocke pas : il se LIT dans les données
+// (un spot à moi avec source 'google' = l'import a eu lieu, sur n'importe
+// quel appareil). La relance, elle, est locale : tous les 7 jours, 3 fois
+// maximum, coupée net au premier import réussi.
+const CLE_RELANCE_IMPORT = 'jeudi-relance-import' // JSON { dernier, compteur }
+const JOURS_RELANCE_IMPORT = 7
+const MAX_RELANCES_IMPORT = 3
+
+export function importGoogleFait(lieux: Lieu[]): boolean {
+  return lieux.some((l) => estAMoi(l) && l.source === 'google')
+}
+export function doitRelancerImport(): boolean {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_RELANCE_IMPORT) ?? 'null') as {
+      dernier: string
+      compteur: number
+    } | null
+    if (!v) return true // jamais relancé
+    if (v.compteur >= MAX_RELANCES_IMPORT) return false
+    return Date.now() - new Date(v.dernier).getTime() > JOURS_RELANCE_IMPORT * 86_400_000
+  } catch {
+    return true
+  }
+}
+export function marquerRelanceImport(): void {
+  let compteur = 0
+  try {
+    compteur =
+      (JSON.parse(localStorage.getItem(CLE_RELANCE_IMPORT) ?? 'null') as { compteur?: number } | null)
+        ?.compteur ?? 0
+  } catch {
+    /* illisible : on repart de zéro */
+  }
+  localStorage.setItem(
+    CLE_RELANCE_IMPORT,
+    JSON.stringify({ dernier: new Date().toISOString(), compteur: compteur + 1 }),
+  )
+}
+export function couperRelanceImport(): void {
+  localStorage.setItem(
+    CLE_RELANCE_IMPORT,
+    JSON.stringify({ dernier: new Date().toISOString(), compteur: MAX_RELANCES_IMPORT }),
+  )
 }
 
 // la tagline du profil (« le roi du dernier verre »)

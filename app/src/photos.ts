@@ -16,3 +16,14 @@ export function srcPhoto(p: { blob?: Blob; url?: string }): string {
   if (p.url) return p.url
   return p.blob ? urlPhoto(p.blob) : ''
 }
+
+// une photo distante qui ne charge pas (service down, hors-ligne, lien mort) :
+// on efface l'<img> — le fond papier/tirage stylé en CSS reprend sa place.
+// JAMAIS l'icône « image cassée » du navigateur devant un utilisateur.
+export function photoIndisponible(e: React.SyntheticEvent<HTMLImageElement>): void {
+  const img = e.currentTarget
+  img.style.visibility = 'hidden'
+  // le même <img> peut feuilleter plusieurs photos (src change) : dès qu'une
+  // photo VALIDE charge, elle a le droit de réapparaître.
+  img.addEventListener('load', () => { img.style.visibility = '' }, { once: true })
+}

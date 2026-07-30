@@ -22,7 +22,8 @@ import {
   NOM_JEUDI,
 } from './db'
 import { tirerPlans, type CompagnieTirage, type Plan } from './plans'
-import { srcPhoto } from './photos'
+import { suivre } from './analytique'
+import { srcPhoto, photoIndisponible } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
 import NoteMarge from './NoteMarge'
 import { effacerNote } from './tuto'
@@ -571,6 +572,7 @@ function Deck({
   const laVoix = voix[voixIndex % Math.max(voix.length, 1)]
 
   const suivant = (v: Verdict) => {
+    if (v === 'valide') suivre('spot_valide', { lieu: lieu.nom })
     effacerNote('deck-swipe') // le geste est fait : la note en marge s'efface
     setVerdicts((prev) => ({ ...prev, [lieu.id]: v }))
     if (v === 'valide') {
@@ -682,7 +684,7 @@ function Deck({
               </div>
             )}
             {nbPhotos > 0 ? (
-              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
             ) : (
               <div className="tirage-vide">
                 <span className="croix">✕</span>
@@ -715,6 +717,16 @@ function Deck({
             une seule à la fois : la 1ʳᵉ carte, puis les suivantes. */}
         {index === 0 && <NoteMarge id="deck-swipe" fleche="coins" className="note-marge-deck" />}
         {index >= 1 && <NoteMarge id="deck-tape" fleche="bas" className="note-marge-deck2" />}
+      </div>
+      {/* a11y (panel WCAG) : le swipe reste la langue, mais plus la SEULE —
+          deux vrais boutons équivalents, focusables, 44px min */}
+      <div className="deck-boutons">
+        <button className="deck-btn deck-btn-bof" onClick={() => jeter('bof')} aria-label={`bof — écarter ${lieu.nom}`}>
+          bof
+        </button>
+        <button className="deck-btn deck-btn-valide" onClick={() => jeter('valide')} aria-label={`validé — garder ${lieu.nom}`}>
+          validé
+        </button>
       </div>
       <p className="mono deck-aide">← bof · validé → · tap tip = autre voix</p>
     </div>
@@ -812,7 +824,7 @@ function RecapTirage({
           </div>
         )}
         {nbPhotos > 0 ? (
-          <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} />
+          <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
         ) : (
           <span className="hand sans-photo">pas de photo.</span>
         )}

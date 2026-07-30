@@ -1,0 +1,4031 @@
+[
+ {
+  "id": "nom:tout-paris",
+  "nom": "Le Tout-Paris",
+  "score": 1,
+  "osm": {
+   "nom": "Le Tout Paris",
+   "lat": 48.8587643,
+   "lng": 2.342319,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 44
+  }
+ },
+ {
+  "id": "nom:bonnie",
+  "nom": "Bonnie",
+  "score": 0.8,
+  "osm": {
+   "nom": "Bonnie Bar et Restaurant",
+   "lat": 48.849846,
+   "lng": 2.3626795,
+   "horaires": "Mo-Su,PH 12:00-14:30,19:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": "mediterranean",
+   "site": "https://bonnie-restaurant.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 19
+  }
+ },
+ {
+  "id": "nom:terraza-mikuna",
+  "nom": "Terraza Mikuna",
+  "score": 0.85,
+  "osm": {
+   "nom": "Terraza mikuna",
+   "lat": 48.8572276,
+   "lng": 2.3538349,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.mikunaparis.com/reservation-terraza-mikuna",
+   "tel": null,
+   "terrasse": null,
+   "distance": 75
+  }
+ },
+ {
+  "id": "nom:ombres",
+  "nom": "Les Ombres",
+  "score": 1,
+  "osm": {
+   "nom": "Les Ombres",
+   "lat": 48.861112,
+   "lng": 2.2985572,
+   "horaires": "12:00-14:00, 19:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": "brasserie;french",
+   "site": "https://www.lesombres-restaurant.com/",
+   "tel": "+33 1 47 53 68 00",
+   "terrasse": null,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:terrasse-musee-d-orsay",
+  "nom": "Terrasse du Musée d'Orsay",
+  "score": 0.8,
+  "osm": {
+   "nom": "Musée d'Orsay",
+   "lat": 48.8597262,
+   "lng": 2.3258604,
+   "horaires": null,
+   "amenity": "bicycle_rental",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 58
+  }
+ },
+ {
+  "id": "nom:rooftop-hotel-fouquet-s-paris",
+  "nom": "Le Rooftop - Hotel Fouquet's Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Le Fouquet's",
+   "lat": 48.8714268,
+   "lng": 2.3012028,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 34
+  }
+ },
+ {
+  "id": "nom:mun-paris",
+  "nom": "Mun Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Mun",
+   "lat": 48.8704646,
+   "lng": 2.3067146,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://restaurant-mun.com/",
+   "tel": "+33 1 40 70 57 05",
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:balcon-paris-galeries-lafayette",
+  "nom": "Balcon Paris - Galeries Lafayette",
+  "score": 0.56,
+  "osm": {
+   "nom": "Galeries Lafayette",
+   "lat": 48.8737728,
+   "lng": 2.3306584,
+   "horaires": "Mo-Sa 09:30-20:30; Su 11:00-19:00",
+   "amenity": "department_store",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 198
+  }
+ },
+ {
+  "id": "nom:villa-m-rooftop",
+  "nom": "Villa M Rooftop",
+  "score": 0.8,
+  "osm": {
+   "nom": "Villa M",
+   "lat": 48.8422922,
+   "lng": 2.3124608,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.hotelvillam-paris15.com/",
+   "tel": "+33 1 70 61 70 40",
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:auteuil",
+  "nom": "Auteuil Brasserie",
+  "score": 1,
+  "osm": {
+   "nom": "Auteuil Brasserie - Restaurant",
+   "lat": 48.848307,
+   "lng": 2.2598214,
+   "horaires": "Mo-Su 09:00-01:30",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "http://www.auteuil-brasserie.com/",
+   "tel": "+33 1 40 71 11 90",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:suite-girafe",
+  "nom": "La Suite Girafe",
+  "score": 0.56,
+  "osm": {
+   "nom": "Girafe",
+   "lat": 48.8625556,
+   "lng": 2.2887639,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "seafood",
+   "site": "https://www.girafeparis.com/fr",
+   "tel": "+33140627061",
+   "terrasse": null,
+   "distance": 123
+  }
+ },
+ {
+  "id": "nom:toit-terrasse-molitor",
+  "nom": "Restaurant Toit Terrasse Molitor",
+  "score": 0.8,
+  "osm": {
+   "nom": "Molitor",
+   "lat": 48.8448885,
+   "lng": 2.2525142,
+   "horaires": null,
+   "amenity": "hotel",
+   "cuisine": null,
+   "site": "https://www.mltr.fr",
+   "tel": "+33 1 56 07 08 50",
+   "terrasse": null,
+   "distance": 55
+  }
+ },
+ {
+  "id": "nom:a-bulles",
+  "nom": "Bar a Bulles",
+  "score": 0.85,
+  "osm": {
+   "nom": "Bar à Bulles",
+   "lat": 48.884373,
+   "lng": 2.3323005,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 107
+  }
+ },
+ {
+  "id": "nom:coeur-sacre",
+  "nom": "Coeur Sacre",
+  "score": 0.6,
+  "osm": {
+   "nom": "Le Corcoran's Sacré Coeur",
+   "lat": 48.8855727,
+   "lng": 2.342251,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 72 34 83 43",
+   "terrasse": null,
+   "distance": 57
+  }
+ },
+ {
+  "id": "nom:station-m-by-maison-montmartre",
+  "nom": "Station M by Maison Montmartre",
+  "score": 0.6,
+  "osm": {
+   "nom": "Hôtel Maison Montmartre",
+   "lat": 48.9004205,
+   "lng": 2.3359785,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 83 75 51 51",
+   "terrasse": null,
+   "distance": 13
+  }
+ },
+ {
+  "id": "nom:little-red-door",
+  "nom": "Little Red Door",
+  "score": 1,
+  "osm": {
+   "nom": "Little Red Door",
+   "lat": 48.8636642,
+   "lng": 2.3635873,
+   "horaires": "Mo-Su 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.lrdparis.com/",
+   "tel": "+33 1 42 71 19 32",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:candelaria",
+  "nom": "Candelaria",
+  "score": 1,
+  "osm": {
+   "nom": "Candelaria",
+   "lat": 48.8629856,
+   "lng": 2.3640177,
+   "horaires": "Su-We 12:30-23:00; Th-Sa 12:30-24:00",
+   "amenity": "bar",
+   "cuisine": "mexican",
+   "site": "http://candelariaparis.com",
+   "tel": null,
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:moonshiner",
+  "nom": "Moonshiner",
+  "score": 1,
+  "osm": {
+   "nom": "Moonshiner",
+   "lat": 48.8556625,
+   "lng": 2.3711461,
+   "horaires": "Mo-Su 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:lavomatic",
+  "nom": "Lavomatic",
+  "score": 1,
+  "osm": {
+   "nom": "Lavomatic",
+   "lat": 48.8684507,
+   "lng": 2.3618395,
+   "horaires": "Tu-We 18:00-01:00; Th-Sa 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.lavomatic.paris/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:epicier",
+  "nom": "L'Epicier",
+  "score": 1,
+  "osm": {
+   "nom": "L’Épicier",
+   "lat": 48.8672861,
+   "lng": 2.3599971,
+   "horaires": "Tu-Th 18:00-01:00; Fr-Sa 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.lepicier.paris/",
+   "tel": "+33 9 74 64 04 11",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:no-entry",
+  "nom": "No Entry",
+  "score": 1,
+  "osm": {
+   "nom": "No Entry",
+   "lat": 48.8818957,
+   "lng": 2.3345641,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:mezcaleria-paris",
+  "nom": "La Mezcaleria Paris",
+  "score": 1,
+  "osm": {
+   "nom": "La Mezcaleria Paris",
+   "lat": 48.8638472,
+   "lng": 2.3656384,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 27
+  }
+ },
+ {
+  "id": "nom:experimental-cocktail-club",
+  "nom": "Experimental Cocktail Club",
+  "score": 1,
+  "osm": {
+   "nom": "Experimental Cocktail Club",
+   "lat": 48.8660562,
+   "lng": 2.3483076,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "http://www.experimentalcocktailclub.com",
+   "tel": "+33 1 45 08 88 09",
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:danico",
+  "nom": "Danico",
+  "score": 1,
+  "osm": {
+   "nom": "Danico",
+   "lat": 48.8671196,
+   "lng": 2.3392939,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:the-cambridge-public-house",
+  "nom": "The Cambridge Public House",
+  "score": 1,
+  "osm": {
+   "nom": "The Cambridge public house",
+   "lat": 48.8614519,
+   "lng": 2.3641684,
+   "horaires": "Mo-Su 15:00-01:30",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.thecambridge.paris/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:nouveau",
+  "nom": "Bar Nouveau",
+  "score": 1,
+  "osm": {
+   "nom": "Bar nouveau",
+   "lat": 48.861504,
+   "lng": 2.3575623,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:frequence",
+  "nom": "Fréquence",
+  "score": 1,
+  "osm": {
+   "nom": "Fréquence",
+   "lat": 48.8548022,
+   "lng": 2.3759556,
+   "horaires": "Tu-Th 18:00-02:00; Fr,Sa 18:00-04:00; Su,Mo,PH closed",
+   "amenity": "bar",
+   "cuisine": "seasonal",
+   "site": "http://duneparis.fr/",
+   "tel": "+33 1 43 57 83 15",
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:combat",
+  "nom": "Combat",
+  "score": 1,
+  "osm": {
+   "nom": "Combat",
+   "lat": 48.8734467,
+   "lng": 2.3822958,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:bisou",
+  "nom": "Bisou.",
+  "score": 1,
+  "osm": {
+   "nom": "Bisou.",
+   "lat": 48.864097,
+   "lng": 2.3658347,
+   "horaires": "Mo-Su 17:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.bar-bisou.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:sister-midnight",
+  "nom": "Sister Midnight",
+  "score": 1,
+  "osm": {
+   "nom": "Sister Midnight",
+   "lat": 48.8814639,
+   "lng": 2.3407486,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.facebook.com/sistermidnightbar/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:harry-s-new-york",
+  "nom": "Harry's New York Bar",
+  "score": 0.8,
+  "osm": {
+   "nom": "Harry's Bar",
+   "lat": 48.8692089,
+   "lng": 2.3321714,
+   "horaires": "Mo-Sa 12:00-02:00; Su 17:00-01:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "www.harrysbar.fr",
+   "tel": null,
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:serpent-a-plume",
+  "nom": "Serpent a Plume",
+  "score": 1,
+  "osm": {
+   "nom": "Serpent à Plume",
+   "lat": 48.8561637,
+   "lng": 2.3666252,
+   "horaires": "Tu 17:00-00:00; We-Su 10:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://serpentaplume.com/",
+   "tel": "+33 140099690",
+   "terrasse": true,
+   "distance": 15
+  }
+ },
+ {
+  "id": "nom:rex-club",
+  "nom": "Rex Club",
+  "score": 1,
+  "osm": {
+   "nom": "Rex Club",
+   "lat": 48.8705803,
+   "lng": 2.3473378,
+   "horaires": "We-Sa 23:55-07:00",
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://rexclub.com",
+   "tel": "+33 142 361096",
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:djoon-club",
+  "nom": "Djoon Club",
+  "score": 1,
+  "osm": {
+   "nom": "Djoon Club",
+   "lat": 48.8365782,
+   "lng": 2.3714028,
+   "horaires": "Fr 23:55-24:00; Sa 00:00-06:00, 23:55-24:00; Su 00:00-06:00, 17:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 45 70 83 49",
+   "terrasse": true,
+   "distance": 18
+  }
+ },
+ {
+  "id": "nom:badaboum",
+  "nom": "Badaboum",
+  "score": 1,
+  "osm": {
+   "nom": "Badaboum",
+   "lat": 48.8535911,
+   "lng": 2.3757106,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://badaboum.paris/",
+   "tel": "+33 1 48 06 50 70",
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:machine-moulin-rouge",
+  "nom": "La Machine du Moulin Rouge",
+  "score": 1,
+  "osm": {
+   "nom": "La Machine du Moulin Rouge",
+   "lat": 48.8841454,
+   "lng": 2.3322002,
+   "horaires": null,
+   "amenity": "theatre",
+   "cuisine": null,
+   "site": "https://www.lamachinedumoulinrouge.com/",
+   "tel": "+33 1 53 41 88 89",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:java",
+  "nom": "La Java",
+  "score": 1,
+  "osm": {
+   "nom": "La Java",
+   "lat": 48.871312,
+   "lng": 2.3736247,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "http://www.la-java.fr/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 39
+  }
+ },
+ {
+  "id": "nom:virage-paris",
+  "nom": "Virage Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Virage",
+   "lat": 48.9005296,
+   "lng": 2.322105,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://virage17.paris/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 12
+  }
+ },
+ {
+  "id": "nom:cabaret-sauvage",
+  "nom": "Cabaret Sauvage",
+  "score": 0.85,
+  "osm": {
+   "nom": "Le Cabaret Sauvage",
+   "lat": 48.8956035,
+   "lng": 2.392393,
+   "horaires": null,
+   "amenity": "theatre",
+   "cuisine": null,
+   "site": "https://www.cabaretsauvage.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 75
+  }
+ },
+ {
+  "id": "nom:gare-gore",
+  "nom": "La Gare - Le Gore",
+  "score": 0.85,
+  "osm": {
+   "nom": "La Gare le Gore",
+   "lat": 48.8953576,
+   "lng": 2.3815508,
+   "horaires": "Mo-Fr 16:00-02:00; Sa-Su 14:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 65
+  }
+ },
+ {
+  "id": "nom:petit-bain",
+  "nom": "Petit Bain",
+  "score": 1,
+  "osm": {
+   "nom": "Petit Bain",
+   "lat": 48.8354828,
+   "lng": 2.3766566,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:glazart",
+  "nom": "Glazart",
+  "score": 1,
+  "osm": {
+   "nom": "Glazart",
+   "lat": 48.899265,
+   "lng": 2.3866197,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://www.glazart.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:nouveau-casino",
+  "nom": "Nouveau Casino",
+  "score": 1,
+  "osm": {
+   "nom": "Nouveau Casino",
+   "lat": 48.8658943,
+   "lng": 2.3778547,
+   "horaires": null,
+   "amenity": "theatre",
+   "cuisine": null,
+   "site": "http://www.nouveaucasino.net/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:kilometre25",
+  "nom": "Kilometre25",
+  "score": 1,
+  "osm": {
+   "nom": "Kilomètre25",
+   "lat": 48.8959945,
+   "lng": 2.3943437,
+   "horaires": "Sa-Mo 00:00-09:00",
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://www.kilometre25.fr/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:panic-room",
+  "nom": "Panic Room",
+  "score": 1,
+  "osm": {
+   "nom": "Panic Room",
+   "lat": 48.861244,
+   "lng": 2.3676094,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://panicroomparis.com/",
+   "tel": "+33 7 45 00 46 10",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:silencio",
+  "nom": "Silencio",
+  "score": 0.8,
+  "osm": {
+   "nom": "Silencio Club",
+   "lat": 48.8688835,
+   "lng": 2.3434141,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:rosa-bonheur-sur-seine",
+  "nom": "Rosa Bonheur sur Seine",
+  "score": 0.7,
+  "osm": {
+   "nom": "Rosa Bonheur sur Seine",
+   "lat": 48.8633271,
+   "lng": 2.3155168,
+   "horaires": "We-Fr 17:00-01:30; Sa 12:00-01:30; Su 12:00-00:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.rosabonheur.fr/rosa-seine",
+   "tel": "+33 1 47 53 66 92",
+   "terrasse": null,
+   "distance": 158
+  }
+ },
+ {
+  "id": "nom:mazette",
+  "nom": "Le Mazette",
+  "score": 1,
+  "osm": {
+   "nom": "Le Mazette",
+   "lat": 48.8433008,
+   "lng": 2.3693115,
+   "horaires": "Tu-We 16:00-00:00; Th 16:00-02:00; Fr 16:00-04:00; Su 14:00-00:00; Sa 14:00-04:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://lemazette.com",
+   "tel": "+33 786 353396",
+   "terrasse": null,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:marcounet",
+  "nom": "Le Marcounet",
+  "score": 0.8,
+  "osm": {
+   "nom": "Péniche Marcounet",
+   "lat": 48.8532124,
+   "lng": 2.3570345,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.peniche-marcounet.fr/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 46
+  }
+ },
+ {
+  "id": "nom:rosa-bonheur-buttes-chaumont",
+  "nom": "Rosa Bonheur Buttes Chaumont",
+  "score": 0.8,
+  "osm": {
+   "nom": "Rosa Bonheur",
+   "lat": 48.8799811,
+   "lng": 2.3862299,
+   "horaires": "Th-Su 12:00-00:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://rosabonheur.fr/rosa-buttes",
+   "tel": "+331 42 00 00 45",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:pavillon-puebla",
+  "nom": "Pavillon Puebla",
+  "score": 1,
+  "osm": {
+   "nom": "Pavillon Puebla",
+   "lat": 48.877254,
+   "lng": 2.3793034,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 17
+  }
+ },
+ {
+  "id": "nom:recyclerie",
+  "nom": "La REcyclerie",
+  "score": 1,
+  "osm": {
+   "nom": "La Recyclerie",
+   "lat": 48.8976169,
+   "lng": 2.3439977,
+   "horaires": "Mo-Th 08:00-24:00; Fr 08:00-02:00; Sa 12:00-02:00; Su 11:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": "canteen",
+   "site": "https://larecyclerie.com/",
+   "tel": "+33 1 42 57 58 49",
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:ground-control",
+  "nom": "Ground Control",
+  "score": 1,
+  "osm": {
+   "nom": "Ground Control",
+   "lat": 48.8433281,
+   "lng": 2.3812968,
+   "horaires": "We-Th 12:00-00:00; Fr-Sa 12:00-01:00; Su 12:00-22:30",
+   "amenity": "food_court",
+   "cuisine": null,
+   "site": "https://www.groundcontrolparis.com",
+   "tel": null,
+   "terrasse": true,
+   "distance": 10
+  }
+ },
+ {
+  "id": "nom:pavillon-canaux",
+  "nom": "Le Pavillon des Canaux",
+  "score": 1,
+  "osm": {
+   "nom": "Pavillon des Canaux",
+   "lat": 48.8874309,
+   "lng": 2.3786908,
+   "horaires": "Tu, Th, Su 11:00-24:00; Fr, Sa 11:00-02:00; We 18:00-24:00; Mo off",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://www.pavillondescanaux.com/",
+   "tel": "+33 1 73 71 82 90",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:cite-fertile",
+  "nom": "La Cite Fertile",
+  "score": 0.85,
+  "osm": {
+   "nom": "Cité Fertile",
+   "lat": 48.8984905,
+   "lng": 2.3994901,
+   "horaires": null,
+   "amenity": "arts_centre",
+   "cuisine": null,
+   "site": "https://citefertile.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 82
+  }
+ },
+ {
+  "id": "nom:prairie-canal",
+  "nom": "La Prairie du Canal",
+  "score": 1,
+  "osm": {
+   "nom": "Prairie du Canal",
+   "lat": 48.8985048,
+   "lng": 2.4413639,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:urfa-durum",
+  "nom": "Urfa Durum",
+  "score": 1,
+  "osm": {
+   "nom": "Urfa Dürüm",
+   "lat": 48.8723831,
+   "lng": 2.3542665,
+   "horaires": "Mo-Sa 11:30-00:00",
+   "amenity": "restaurant",
+   "cuisine": "kebab;mediterranean",
+   "site": "https://www.facebook.com/pages/Urfa-Durum/240014419359256",
+   "tel": "+33 1 48 24 12 84",
+   "terrasse": true,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:as-fallafel",
+  "nom": "L'As du Fallafel",
+  "score": 1,
+  "osm": {
+   "nom": "L'As du Fallafel",
+   "lat": 48.857415,
+   "lng": 2.3590682,
+   "horaires": "Mo-Th 11:00-24:00; Fr 11:00-17:00; Su 11:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": "falafel;israeli",
+   "site": "https://asdufallafel.com/",
+   "tel": "+33 1 48 87 63 60",
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:alain-miam-miam",
+  "nom": "Chez Alain Miam Miam",
+  "score": 1,
+  "osm": {
+   "nom": "Chez Alain Miam Miam",
+   "lat": 48.8622747,
+   "lng": 2.3619516,
+   "horaires": "Tu-Su 09:00-17:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:miznon",
+  "nom": "Miznon",
+  "score": 1,
+  "osm": {
+   "nom": "Miznon",
+   "lat": 48.8571533,
+   "lng": 2.3589476,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:el-nopal",
+  "nom": "El Nopal",
+  "score": 1,
+  "osm": {
+   "nom": "El Nopal",
+   "lat": 48.8778139,
+   "lng": 2.3651201,
+   "horaires": "Mo 12:00-16:00; Tu-Sa 12:00-23:00; Su 12:00-17:00",
+   "amenity": "fast_food",
+   "cuisine": "mexican",
+   "site": "https://elnopalparis.com/",
+   "tel": "+33 7 86 39 63 46",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:taco-mesa",
+  "nom": "Taco Mesa",
+  "score": 1,
+  "osm": {
+   "nom": "Taco Mesa",
+   "lat": 48.8736232,
+   "lng": 2.3480462,
+   "horaires": "Su, Th 12:00-22:00; Fr-Sa 12:00-22:30; Mo-We 12:00-14:30, 18:30-22:00",
+   "amenity": "restaurant",
+   "cuisine": "mexican",
+   "site": "https://tacomesa.fr/",
+   "tel": "+33978810600",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:petit-bao",
+  "nom": "Petit Bao",
+  "score": 1,
+  "osm": {
+   "nom": "Petit Bao",
+   "lat": 48.8567411,
+   "lng": 2.3720813,
+   "horaires": "Mo-Su 9:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": "chinese",
+   "site": "https://www.baofamily.co/",
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:gros-bao",
+  "nom": "Gros Bao",
+  "score": 1,
+  "osm": {
+   "nom": "Gros Bao",
+   "lat": 48.8714907,
+   "lng": 2.3657042,
+   "horaires": "Mo-Fr 12:00-15:00,19:00-23:00; Sa-Su 12:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": "chinese",
+   "site": "https://www.baofamily.co/grosbao",
+   "tel": "+33 1 42 86 97 45",
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:kodawari-ramen",
+  "nom": "Kodawari Ramen",
+  "score": 0.8,
+  "osm": {
+   "nom": "Kodawari Ramen (Yokochō)",
+   "lat": 48.8546284,
+   "lng": 2.3381142,
+   "horaires": "Mo-Su 11:45-23:00",
+   "amenity": "restaurant",
+   "cuisine": "japanese;ramen",
+   "site": "https://kodawari-ramen.com",
+   "tel": "+33 1 43 29 37 67",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:udon-jubey",
+  "nom": "Udon Jubey",
+  "score": 1,
+  "osm": {
+   "nom": "Udon Jubey",
+   "lat": 48.8664432,
+   "lng": 2.3355148,
+   "horaires": "Mo-Sa 11:30-22:30",
+   "amenity": "restaurant",
+   "cuisine": "japanese;udon",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:kintaro",
+  "nom": "Kintaro",
+  "score": 1,
+  "osm": {
+   "nom": "Kintaro",
+   "lat": 48.8689558,
+   "lng": 2.334892,
+   "horaires": "Mo-Su 11:30-22:15",
+   "amenity": "restaurant",
+   "cuisine": "japanese",
+   "site": null,
+   "tel": "+33 1 47 42 13 14",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:neko-ramen",
+  "nom": "Neko Ramen",
+  "score": 1,
+  "osm": {
+   "nom": "Neko Ramen",
+   "lat": 48.8731313,
+   "lng": 2.3423234,
+   "horaires": "Mo-Su 12:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "japanese",
+   "site": "https://www.nekoramen.fr",
+   "tel": null,
+   "terrasse": true,
+   "distance": 13
+  }
+ },
+ {
+  "id": "nom:hakata-choten",
+  "nom": "Hakata Choten",
+  "score": 1,
+  "osm": {
+   "nom": "Hakata Choten",
+   "lat": 48.8671614,
+   "lng": 2.3348035,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "japanese",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 11
+  }
+ },
+ {
+  "id": "nom:trantranzai",
+  "nom": "TranTranZai",
+  "score": 1,
+  "osm": {
+   "nom": "Trantranzai",
+   "lat": 48.8631582,
+   "lng": 2.3498973,
+   "horaires": "12:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "chinese",
+   "site": "https://www.trantranzai.fr",
+   "tel": "+33 9 51 92 24 56",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:pho-banh-cuon-14",
+  "nom": "Pho Banh Cuon 14",
+  "score": 1,
+  "osm": {
+   "nom": "Phở Banh Cuon 14",
+   "lat": 48.8263649,
+   "lng": 2.3595297,
+   "horaires": "Mo-Su 09:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": "vietnamese",
+   "site": "https://pho14paris.fr/fr/chinatown",
+   "tel": "+33145836115",
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:best-tofu",
+  "nom": "Best Tofu",
+  "score": 1,
+  "osm": {
+   "nom": "Best Tofu",
+   "lat": 48.8726219,
+   "lng": 2.3759717,
+   "horaires": "Fr-We 08:00-20:00",
+   "amenity": "fast_food",
+   "cuisine": "asian",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 9
+  }
+ },
+ {
+  "id": "nom:dumbo",
+  "nom": "Dumbo",
+  "score": 1,
+  "osm": {
+   "nom": "Dumbo",
+   "lat": 48.8816622,
+   "lng": 2.336884,
+   "horaires": null,
+   "amenity": "fast_food",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:bouillon-chartier-grands-boulevards",
+  "nom": "Bouillon Chartier Grands Boulevards",
+  "score": 0.8,
+  "osm": {
+   "nom": "Bouillon Chartier",
+   "lat": 48.8719356,
+   "lng": 2.3430137,
+   "horaires": "Mo-Su 11:30-00:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.bouillon-chartier.com/grands-boulevards/",
+   "tel": "+33147708629",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:bouillon-republique",
+  "nom": "Bouillon Republique",
+  "score": 1,
+  "osm": {
+   "nom": "Bouillon République",
+   "lat": 48.8660094,
+   "lng": 2.3646451,
+   "horaires": "Mo-Su 11:30-00:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://bouillonlesite.com/",
+   "tel": "+33 1 42 59 69 31",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:bouillon-pigalle",
+  "nom": "Bouillon Pigalle",
+  "score": 1,
+  "osm": {
+   "nom": "Bouillon Pigalle",
+   "lat": 48.8826186,
+   "lng": 2.3374142,
+   "horaires": "Mo-Su 12:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.bouillonlesite.com",
+   "tel": "+33 1 42 59 69 31",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:septime",
+  "nom": "Septime",
+  "score": 1,
+  "osm": {
+   "nom": "Septime",
+   "lat": 48.8536026,
+   "lng": 2.3809558,
+   "horaires": "Mo 19:00-22:30; Tu-Fr 12:15-14:00,19:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "http://septime-charonne.fr/",
+   "tel": "+33 1 43 67 38 29",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:clamato",
+  "nom": "Clamato",
+  "score": 1,
+  "osm": {
+   "nom": "Clamato",
+   "lat": 48.853589,
+   "lng": 2.3808545,
+   "horaires": "Mo-Fr 12:00-14:30,19:00-22:30; Sa-Su 12:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "seafood",
+   "site": "https://clamato-charonne.fr/",
+   "tel": "+33 1 43 72 74 53",
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:frenchie-a-vins",
+  "nom": "Frenchie Bar a Vins",
+  "score": 0.8,
+  "osm": {
+   "nom": "Restaurant Frenchie",
+   "lat": 48.8677442,
+   "lng": 2.3479751,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.frenchie-restaurant.com/",
+   "tel": "+33 140 39 96 19",
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:mary-celeste",
+  "nom": "Le Mary Celeste",
+  "score": 0.85,
+  "osm": {
+   "nom": "Le Mary Celeste",
+   "lat": 48.861735,
+   "lng": 2.3650034,
+   "horaires": "Mo-Su 18:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "tapas;cocktails",
+   "site": "https://www.lemaryceleste.com/",
+   "tel": "+339 80 72 98 83",
+   "terrasse": null,
+   "distance": 60
+  }
+ },
+ {
+  "id": "nom:bambino",
+  "nom": "Bambino",
+  "score": 1,
+  "osm": {
+   "nom": "Bambino",
+   "lat": 48.8613856,
+   "lng": 2.3699258,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:early-june",
+  "nom": "Early June",
+  "score": 1,
+  "osm": {
+   "nom": "Early June",
+   "lat": 48.8729295,
+   "lng": 2.3632635,
+   "horaires": "We-Su 18:00-01:00; Mo,Tu off",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://early-june.fr/",
+   "tel": "+33 1 42 85 40 74",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:folderol",
+  "nom": "Folderol",
+  "score": 1,
+  "osm": {
+   "nom": "Folderol",
+   "lat": 48.8651961,
+   "lng": 2.3690448,
+   "horaires": "We-Fr 16:00-24:00; Sa-Su 14:00-24:00",
+   "amenity": "ice_cream",
+   "cuisine": null,
+   "site": "https://www.folderol.com/",
+   "tel": "+33 1 43 55 02 57",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:fumoir",
+  "nom": "Le Fumoir",
+  "score": 1,
+  "osm": {
+   "nom": "Le Fumoir",
+   "lat": 48.8604338,
+   "lng": 2.3408561,
+   "horaires": "Mo-Su 11:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.lefumoir.com/",
+   "tel": "+33 1 42 92 00 24",
+   "terrasse": true,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:palette",
+  "nom": "La Palette",
+  "score": 1,
+  "osm": {
+   "nom": "La Palette",
+   "lat": 48.8553805,
+   "lng": 2.3368914,
+   "horaires": "Mo-Su 08:00-02:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:flore",
+  "nom": "Cafe de Flore",
+  "score": 1,
+  "osm": {
+   "nom": "Café de Flore",
+   "lat": 48.8541444,
+   "lng": 2.3326307,
+   "horaires": "Mo-Su 07:30-01:30",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://cafedeflore.fr/",
+   "tel": "+33 1 45 48 55 26",
+   "terrasse": true,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:deux-magots",
+  "nom": "Les Deux Magots",
+  "score": 1,
+  "osm": {
+   "nom": "Les Deux Magots",
+   "lat": 48.854069,
+   "lng": 2.3330634,
+   "horaires": "Mo-Su 07:30-01:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://lesdeuxmagots.fr",
+   "tel": null,
+   "terrasse": true,
+   "distance": 21
+  }
+ },
+ {
+  "id": "nom:pied-cochon",
+  "nom": "Au Pied de Cochon",
+  "score": 1,
+  "osm": {
+   "nom": "Au Pied de Cochon",
+   "lat": 48.8634885,
+   "lng": 2.3437958,
+   "horaires": "24/7",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.pieddecochon.com/",
+   "tel": "+33 1 40 13 77 00",
+   "terrasse": true,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:tambour",
+  "nom": "Le Tambour",
+  "score": 1,
+  "osm": {
+   "nom": "Le Tambour",
+   "lat": 48.8654585,
+   "lng": 2.3447051,
+   "horaires": "07:30-02:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": null,
+   "tel": "+33 1 42 33 06 90",
+   "terrasse": true,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:alsace",
+  "nom": "L'Alsace",
+  "score": 0.8,
+  "osm": {
+   "nom": "Maison de l'Alsace",
+   "lat": 48.8699522,
+   "lng": 2.3058242,
+   "horaires": "Mo-Th 07:00-02:00; Fr-Sa 07:00-04:00; Su 07:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.restaurantalsace.com",
+   "tel": "+33 1 53 93 97 00",
+   "terrasse": true,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:cinq",
+  "nom": "Le Cinq",
+  "score": 1,
+  "osm": {
+   "nom": "Le Cinq",
+   "lat": 48.8686738,
+   "lng": 2.3007762,
+   "horaires": "Tu-Sa 19:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": "fine_dining",
+   "site": "https://www.fourseasons.com/fr/paris/dining/restaurants/le_cinq/",
+   "tel": "+33 1 49 52 71 54",
+   "terrasse": null,
+   "distance": 14
+  }
+ },
+ {
+  "id": "nom:epicure",
+  "nom": "Epicure",
+  "score": 1,
+  "osm": {
+   "nom": "Epicure",
+   "lat": 48.8717179,
+   "lng": 2.3148011,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "fine_dining",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:guy-savoy",
+  "nom": "Guy Savoy",
+  "score": 0.85,
+  "osm": {
+   "nom": "Restaurant Guy Savoy",
+   "lat": 48.8565393,
+   "lng": 2.3395348,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 78
+  }
+ },
+ {
+  "id": "nom:arpege",
+  "nom": "Arpege",
+  "score": 1,
+  "osm": {
+   "nom": "L'Arpège",
+   "lat": 48.855754,
+   "lng": 2.3170135,
+   "horaires": "Mo-Fr 12:00-14:30, 19:30-22:30",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.alain-passard.com/",
+   "tel": "+33 1 47 05 09 06",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:clarence",
+  "nom": "Le Clarence",
+  "score": 1,
+  "osm": {
+   "nom": "Le Clarence",
+   "lat": 48.8674023,
+   "lng": 2.3097941,
+   "horaires": "Mo-Sa 12:30-14:00, 19:30-21:30",
+   "amenity": "restaurant",
+   "cuisine": "fine_dining",
+   "site": null,
+   "tel": "+33 1 82 82 10 10",
+   "terrasse": null,
+   "distance": 10
+  }
+ },
+ {
+  "id": "nom:datil",
+  "nom": "Datil",
+  "score": 1,
+  "osm": {
+   "nom": "Datil",
+   "lat": 48.8636109,
+   "lng": 2.3573253,
+   "horaires": "Mo-Tu 19:15-20:45; We-Fr 12:00-13:30, 19:15-20:45",
+   "amenity": "restaurant",
+   "cuisine": "fine_dining",
+   "site": "https://www.datil-restaurant.fr/",
+   "tel": "+33 1 80 05 74 98",
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:club-coca-cola-quai-photo",
+  "nom": "Club Coca-Cola - Quai de la Photo",
+  "score": 0.8,
+  "osm": {
+   "nom": "Quai de la photo",
+   "lat": 48.8365169,
+   "lng": 2.3752025,
+   "horaires": "May-Oct 12:00-23:30; Nov-Dec We-Su 12:00-23:30; Jan-Apr We-Su 12:00-23:30",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://quaidelaphoto.fr/",
+   "tel": "+33 7 66 43 01 18",
+   "terrasse": true,
+   "distance": 19
+  }
+ },
+ {
+  "id": "nom:ground-control",
+  "nom": "Ground Control",
+  "score": 1,
+  "osm": {
+   "nom": "Ground Control",
+   "lat": 48.8433281,
+   "lng": 2.3812968,
+   "horaires": "We-Th 12:00-00:00; Fr-Sa 12:00-01:00; Su 12:00-22:30",
+   "amenity": "food_court",
+   "cuisine": null,
+   "site": "https://www.groundcontrolparis.com",
+   "tel": null,
+   "terrasse": true,
+   "distance": 10
+  }
+ },
+ {
+  "id": "nom:grand-rex-iconic-club",
+  "nom": "Le Grand Rex - Iconic Club",
+  "score": 0.8,
+  "osm": {
+   "nom": "Le Grand Rex",
+   "lat": 48.8705334,
+   "lng": 2.3476486,
+   "horaires": null,
+   "amenity": "cinema",
+   "cuisine": null,
+   "site": "https://www.legrandrex.com",
+   "tel": "+33 1 45 08 93 89",
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:felicita",
+  "nom": "La Felicità",
+  "score": 0.85,
+  "osm": {
+   "nom": "La Felicità",
+   "lat": 48.8324932,
+   "lng": 2.3725456,
+   "horaires": "Mo-We 09:00-00:00; Th, Fr 09:00-01:00; Sa 12:00-01:00",
+   "amenity": "food_court",
+   "cuisine": null,
+   "site": "https://www.lafelicita.fr/",
+   "tel": null,
+   "terrasse": true,
+   "distance": 109
+  }
+ },
+ {
+  "id": "nom:virage-paris",
+  "nom": "Virage Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Virage",
+   "lat": 48.9005296,
+   "lng": 2.322105,
+   "horaires": null,
+   "amenity": "nightclub",
+   "cuisine": null,
+   "site": "https://virage17.paris/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 12
+  }
+ },
+ {
+  "id": "nom:cite-fertile",
+  "nom": "La Cité Fertile",
+  "score": 0.85,
+  "osm": {
+   "nom": "Cité Fertile",
+   "lat": 48.8984905,
+   "lng": 2.3994901,
+   "horaires": null,
+   "amenity": "arts_centre",
+   "cuisine": null,
+   "site": "https://citefertile.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 82
+  }
+ },
+ {
+  "id": "nom:atelier-lumieres-hisense-stadium-experience",
+  "nom": "Atelier des Lumières - Hisense Stadium Experience",
+  "score": 0.8,
+  "osm": {
+   "nom": "L'Atelier des Lumières",
+   "lat": 48.861591,
+   "lng": 2.3808748,
+   "horaires": null,
+   "amenity": "exhibition_centre",
+   "cuisine": null,
+   "site": "https://www.atelier-lumieres.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 39
+  }
+ },
+ {
+  "id": "nom:belushi-s-gare-nord",
+  "nom": "Belushi's Gare du Nord",
+  "score": 1,
+  "osm": {
+   "nom": "Le Belushi's Bar Gare Du Nord",
+   "lat": 48.8792695,
+   "lng": 2.3580176,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://belushis.com/paris-gare-du-nord",
+   "tel": "+33 7 64 26 12 23",
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:belushi-s-paris-canal",
+  "nom": "Belushi's Paris Canal",
+  "score": 0.6,
+  "osm": {
+   "nom": "Le Belushi's Bar Canal",
+   "lat": 48.8884858,
+   "lng": 2.3790155,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 40 34 34 40",
+   "terrasse": null,
+   "distance": 12
+  }
+ },
+ {
+  "id": "nom:the-french-flair",
+  "nom": "The French Flair",
+  "score": 1,
+  "osm": {
+   "nom": "The French Flair",
+   "lat": 48.8840758,
+   "lng": 2.330537,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 77 12 62 85",
+   "terrasse": true,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:the-moose",
+  "nom": "The Moose",
+  "score": 1,
+  "osm": {
+   "nom": "The Moose Bar",
+   "lat": 48.8518241,
+   "lng": 2.3377078,
+   "horaires": "Mo-Su 12:00-02:00",
+   "amenity": "bar",
+   "cuisine": "canadian",
+   "site": "https://www.mooseparis.com/",
+   "tel": "+33 1 46 33 77 00",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:rush",
+  "nom": "Rush Bar",
+  "score": 1,
+  "osm": {
+   "nom": "Rush Bar",
+   "lat": 48.8613268,
+   "lng": 2.3701752,
+   "horaires": "Mo-Fr 08:00-02:00, Sa 11:00-02:00, Su 11:00-24:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:the-long-hop",
+  "nom": "The Long Hop",
+  "score": 1,
+  "osm": {
+   "nom": "The Long Hop",
+   "lat": 48.8504924,
+   "lng": 2.349006,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.the-long-hop.com",
+   "tel": "+33 1 43 29 40 54",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:the-bombardier",
+  "nom": "The Bombardier",
+  "score": 1,
+  "osm": {
+   "nom": "The Bombardier",
+   "lat": 48.8468643,
+   "lng": 2.347702,
+   "horaires": "Mo-Su 12:00-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.bombardierpub.fr/",
+   "tel": "+33143547922",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:atalante",
+  "nom": "L'Atalante",
+  "score": 1,
+  "osm": {
+   "nom": "L'Atalante",
+   "lat": 48.8896643,
+   "lng": 2.3828361,
+   "horaires": "Mo 17:00-24:00, Tu-Th 17:00-01:30, Fr-Su 12:00-01:30; PH off",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "http://atalanteourcq.fr/",
+   "tel": "+33145261382",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:cuves-fauve",
+  "nom": "Les Cuves de Fauve",
+  "score": 1,
+  "osm": {
+   "nom": "Les Cuves de Fauve",
+   "lat": 48.8532762,
+   "lng": 2.3792125,
+   "horaires": "Mo-Fr 17:30-02:00, Sa,Su 11:30-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://fauvebiere.com/",
+   "tel": "+33749059596",
+   "terrasse": true,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:paname-brewing-company",
+  "nom": "Paname Brewing Company",
+  "score": 1,
+  "osm": {
+   "nom": "Paname Brewing Company",
+   "lat": 48.8878312,
+   "lng": 2.3787631,
+   "horaires": "Mo-Su 11:00-01:00",
+   "amenity": "pub",
+   "cuisine": "burger",
+   "site": "https://www.panamebrewingcompany.com/",
+   "tel": "+33 1 40 36 43 55",
+   "terrasse": true,
+   "distance": 38
+  }
+ },
+ {
+  "id": "nom:kiez-biergarten-montmartre",
+  "nom": "KIEZ Biergarten Montmartre",
+  "score": 1,
+  "osm": {
+   "nom": "Kiez Biergarten Montmartre",
+   "lat": 48.8935904,
+   "lng": 2.3333309,
+   "horaires": "Mo-Su 10:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.kiez.fr/kiezbiergarten/",
+   "tel": "+33 1 46 27 78 46",
+   "terrasse": true,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:mez-beer",
+  "nom": "Mez Beer",
+  "score": 1,
+  "osm": {
+   "nom": "Mez Beer",
+   "lat": 48.839611,
+   "lng": 2.3229184,
+   "horaires": "Mo-Su 17:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 42 84 43 22",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:octopussy",
+  "nom": "Octopussy",
+  "score": 1,
+  "osm": {
+   "nom": "Octopussy",
+   "lat": 48.8935693,
+   "lng": 2.3252942,
+   "horaires": "Mo-Sa 18:00-02:00; Su 16:00-00:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "http://octopussyparis.com/",
+   "tel": "+33 9 73 66 89 65",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:team-brothers",
+  "nom": "Team Brothers",
+  "score": 1,
+  "osm": {
+   "nom": "Team Brothers",
+   "lat": 48.8680831,
+   "lng": 2.3904661,
+   "horaires": null,
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:fondamental-pigalle",
+  "nom": "Le Bar Fondamental - Pigalle",
+  "score": 0.56,
+  "osm": {
+   "nom": "Le Pigalle",
+   "lat": 48.8816252,
+   "lng": 2.3372503,
+   "horaires": null,
+   "amenity": "hotel",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 150
+  }
+ },
+ {
+  "id": "nom:nouvel-institut",
+  "nom": "Le Nouvel Institut",
+  "score": 1,
+  "osm": {
+   "nom": "Le Nouvel Institut",
+   "lat": 48.8492048,
+   "lng": 2.3556646,
+   "horaires": "Mo-Su 07:00-02:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "http://lenouvelinstitut.fr/",
+   "tel": "+33 9 67 51 77 09",
+   "terrasse": true,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:hurling-pub",
+  "nom": "Hurling Pub",
+  "score": 1,
+  "osm": {
+   "nom": "Hurling Pub",
+   "lat": 48.8471395,
+   "lng": 2.348539,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:the-green-goose",
+  "nom": "The Green Goose",
+  "score": 1,
+  "osm": {
+   "nom": "The Green Goose",
+   "lat": 48.8503362,
+   "lng": 2.3905661,
+   "horaires": "Mo-Fr 12:00-14:30,17:00-02:00; Sa,Su 12:00-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "http://www.thegreengoose.fr",
+   "tel": "+33982377341",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:patrick-s-ballon-vert",
+  "nom": "Patrick's - Le Ballon Vert",
+  "score": 1,
+  "osm": {
+   "nom": "Patrick’s Ballon Vert",
+   "lat": 48.8505456,
+   "lng": 2.3863685,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 43 67 43 14",
+   "terrasse": null,
+   "distance": 18
+  }
+ },
+ {
+  "id": "nom:the-blossom-arms",
+  "nom": "The Blossom Arms",
+  "score": 1,
+  "osm": {
+   "nom": "The Blossom Arms",
+   "lat": 48.8917551,
+   "lng": 2.3211268,
+   "horaires": "Mo-Tu 17:00-24:00,We-Su 11:30-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:the-great-canadian-pub",
+  "nom": "The Great Canadian Pub",
+  "score": 0.8,
+  "osm": {
+   "nom": "The Great Canadian",
+   "lat": 48.8541963,
+   "lng": 2.3429728,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "http://www.tgcparis.com",
+   "tel": "+33 1 46 33 54 20",
+   "terrasse": null,
+   "distance": 9
+  }
+ },
+ {
+  "id": "nom:the-bowler",
+  "nom": "The Bowler",
+  "score": 1,
+  "osm": {
+   "nom": "The Bowler",
+   "lat": 48.8729879,
+   "lng": 2.3074334,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:pub-saint-hilaire",
+  "nom": "Pub Saint-Hilaire",
+  "score": 0.6,
+  "osm": {
+   "nom": "Le Pub Saint-Hillaire",
+   "lat": 48.8480996,
+   "lng": 2.3469127,
+   "horaires": "Tu-Th 17:00-02:00, Fr 16:00-03:00, Sa 15:00-03:00, Su 17:00-24:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 14
+  }
+ },
+ {
+  "id": "nom:galway-irish-pub",
+  "nom": "Galway Irish Pub",
+  "score": 1,
+  "osm": {
+   "nom": "Galway Irish Pub",
+   "lat": 48.8539398,
+   "lng": 2.343583,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://galwayirishpub.fr/",
+   "tel": "+33 1 43 29 64 50",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:the-auld-alliance",
+  "nom": "The Auld Alliance",
+  "score": 0.7,
+  "osm": {
+   "nom": "The Auld Alliance",
+   "lat": 48.8553135,
+   "lng": 2.3591057,
+   "horaires": "Mo-Fr 15:00-02:00; Sa-Su 12:00-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://theauldalliance.com/",
+   "tel": "+33 1 48 04 30 40",
+   "terrasse": null,
+   "distance": 156
+  }
+ },
+ {
+  "id": "nom:the-frog-princess",
+  "nom": "The Frog & Princess",
+  "score": 1,
+  "osm": {
+   "nom": "The Frog & Princess",
+   "lat": 48.8522792,
+   "lng": 2.3345868,
+   "horaires": "Th-Sa 17:00-02:00, Mo-We,Su 17:00-01:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.frogpubs.com/fr/pub-princess-paris.php",
+   "tel": "+33 1 40 51 77 38",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:frog-hop-house",
+  "nom": "Frog Hop House",
+  "score": 1,
+  "osm": {
+   "nom": "Frog Hop House",
+   "lat": 48.8689003,
+   "lng": 2.3296085,
+   "horaires": "Su-Tu 10:00-24:00; We 10:00-01:00; Th-Sa 10:00-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.frogpubs.com/fr/pub-frog-hop-house-paris-9.php",
+   "tel": null,
+   "terrasse": null,
+   "distance": 7
+  }
+ },
+ {
+  "id": "nom:frog-xvi",
+  "nom": "Frog XVI",
+  "score": 1,
+  "osm": {
+   "nom": "Frog XVI",
+   "lat": 48.8646895,
+   "lng": 2.2880988,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.frogpubs.com/fr/pub-XVI-paris.php",
+   "tel": "+33 1 47 27 88 88",
+   "terrasse": true,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:the-frog-rosbif",
+  "nom": "The Frog & Rosbif",
+  "score": 1,
+  "osm": {
+   "nom": "The Frog & Rosbif",
+   "lat": 48.8643517,
+   "lng": 2.3503071,
+   "horaires": "Mo,Su 12:00-24:00; Tu-Th 12:00-01:00; Fr-Sa 12:00-02:00; Dec 24-25 off",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://www.frogpubs.com/pub-the-frog-rosbif-paris-1.php",
+   "tel": "+33 1 42 36 34 73",
+   "terrasse": true,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:the-pub",
+  "nom": "The Pub",
+  "score": 1,
+  "osm": {
+   "nom": "The Pub",
+   "lat": 48.8550587,
+   "lng": 2.3626966,
+   "horaires": "We-Fr 17:30-00:00; Sa, Su 14:00-01:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.thepubparis.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:the-harp",
+  "nom": "The Harp Bar",
+  "score": 1,
+  "osm": {
+   "nom": "The Harp Bar",
+   "lat": 48.8845778,
+   "lng": 2.330291,
+   "horaires": "Mo-Fr 00:00-02:00, 17:00-23:59; Sa-Su 00:00-02:00, 13:00-23:59",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 9 74 64 02 23",
+   "terrasse": null,
+   "distance": 4
+  }
+ },
+ {
+  "id": "nom:lush",
+  "nom": "Lush Bar",
+  "score": 1,
+  "osm": {
+   "nom": "Lush",
+   "lat": 48.8851269,
+   "lng": 2.325165,
+   "horaires": "Mo-Th 00:00-02:00, 17:00-23:59; Fr-Su 00:00-02:00, 10:00-23:59",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 43 87 49 46",
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:the-hideout-paris-gare-nord",
+  "nom": "The Hideout Paris Gare du Nord",
+  "score": 0.68,
+  "osm": {
+   "nom": "Gare du Nord",
+   "lat": 48.8800577,
+   "lng": 2.3536952,
+   "horaires": null,
+   "amenity": "parking",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 108
+  }
+ },
+ {
+  "id": "nom:the-coq-bulldog",
+  "nom": "The Coq & Bulldog",
+  "score": 1,
+  "osm": {
+   "nom": "The Coq & Bulldog",
+   "lat": 48.8817263,
+   "lng": 2.3283776,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "http://www.facebook.com/pages/The-Coq-Bulldog-Pub/226637367401560",
+   "tel": "+33 9 82 40 56 36",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:o-sullivans-franklin-d-roosevelt",
+  "nom": "O'Sullivans Franklin D. Roosevelt",
+  "score": 0.8,
+  "osm": {
+   "nom": "O'Sullivans",
+   "lat": 48.8718575,
+   "lng": 2.3096862,
+   "horaires": "Mo-We 12:00-02:00; Th-Fr 12:00-05:00; Sa 18:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.osullivans-pubs.com/",
+   "tel": "+33 1 45 63 28 34",
+   "terrasse": true,
+   "distance": 15
+  }
+ },
+ {
+  "id": "nom:corcoran-s-grands-boulevards",
+  "nom": "Corcoran's Grands Boulevards",
+  "score": 0.8,
+  "osm": {
+   "nom": "Corcoran's Grands Boulevard",
+   "lat": 48.871113,
+   "lng": 2.3441388,
+   "horaires": "Mo-Tu 00:00-02:00, 11:00-24:00; We-Fr 00:00-02:00, 10:30-24:00; Sa 00:00-05:00, 10:30-24:00; Su 00:00-05:00, 11:30-24:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "https://www.corcoransirishpubs.fr/grands-boulevards",
+   "tel": "+33 9 74 73 56 18",
+   "terrasse": true,
+   "distance": 13
+  }
+ },
+ {
+  "id": "nom:corcoran-s-sacre-c-ur",
+  "nom": "Corcoran's Sacré-Cœur",
+  "score": 0.6,
+  "osm": {
+   "nom": "Le Corcoran's Sacré Coeur",
+   "lat": 48.8855727,
+   "lng": 2.342251,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 72 34 83 43",
+   "terrasse": null,
+   "distance": 39
+  }
+ },
+ {
+  "id": "nom:stany-s",
+  "nom": "Stany's",
+  "score": 1,
+  "osm": {
+   "nom": "Stany's",
+   "lat": 48.872324,
+   "lng": 2.3491877,
+   "horaires": "Tu,We 18:00-24:00; Th-Sa 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 6 49 28 28 45",
+   "terrasse": null,
+   "distance": 3
+  }
+ },
+ {
+  "id": "nom:quai-photo",
+  "nom": "Quai de la Photo",
+  "score": 1,
+  "osm": {
+   "nom": "Quai de la photo",
+   "lat": 48.8365169,
+   "lng": 2.3752025,
+   "horaires": "May-Oct 12:00-23:30; Nov-Dec We-Su 12:00-23:30; Jan-Apr We-Su 12:00-23:30",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://quaidelaphoto.fr/",
+   "tel": "+33 7 66 43 01 18",
+   "terrasse": true,
+   "distance": 19
+  }
+ },
+ {
+  "id": "nom:petit-bain",
+  "nom": "Petit Bain",
+  "score": 1,
+  "osm": {
+   "nom": "Petit Bain",
+   "lat": 48.8354828,
+   "lng": 2.3766566,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:nix-nox",
+  "nom": "Nix Nox",
+  "score": 0.7,
+  "osm": {
+   "nom": "Nix Nox",
+   "lat": 48.8351724,
+   "lng": 2.3770858,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 136
+  }
+ },
+ {
+  "id": "nom:bateau-el-alamein",
+  "nom": "Bateau El Alamein",
+  "score": 1,
+  "osm": {
+   "nom": "Bâteau El Alamein",
+   "lat": 48.8343586,
+   "lng": 2.377951,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.bateauelalamein.com",
+   "tel": null,
+   "terrasse": null,
+   "distance": 5
+  }
+ },
+ {
+  "id": "nom:nautes",
+  "nom": "Les Nautes",
+  "score": 0.85,
+  "osm": {
+   "nom": "Les Nautes",
+   "lat": 48.8522378,
+   "lng": 2.3603014,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://lesnautes-paris.com/",
+   "tel": "+33142745953",
+   "terrasse": true,
+   "distance": 120
+  }
+ },
+ {
+  "id": "nom:son-terre",
+  "nom": "Le Son de la Terre",
+  "score": 0.85,
+  "osm": {
+   "nom": "Le Son De La Terre",
+   "lat": 48.8515484,
+   "lng": 2.3511187,
+   "horaires": "Tu-Sa 18:00-24:00; Su 12:00-22:30",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.sondelaterre.fr/",
+   "tel": "+33 6 60 47 38 52",
+   "terrasse": true,
+   "distance": 80
+  }
+ },
+ {
+  "id": "nom:nouvelle-seine",
+  "nom": "La Nouvelle Seine",
+  "score": 1,
+  "osm": {
+   "nom": "La Nouvelle Seine",
+   "lat": 48.8517098,
+   "lng": 2.3505725,
+   "horaires": "Tu-Su 12:00-14:15,19:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://lanouvelleseine.com/",
+   "tel": "+33 1 43 54 08 08",
+   "terrasse": true,
+   "distance": 37
+  }
+ },
+ {
+  "id": "nom:riviera-fuga",
+  "nom": "Riviera Fuga",
+  "score": 1,
+  "osm": {
+   "nom": "Riviera Fuga",
+   "lat": 48.8631838,
+   "lng": 2.3120327,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://riviera-fuga.com/",
+   "tel": "+33 1 81 70 40 49",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:sena",
+  "nom": "Sena",
+  "score": 0.56,
+  "osm": {
+   "nom": "L'Arsenal",
+   "lat": 48.8471235,
+   "lng": 2.367448,
+   "horaires": "Mo-Su 07:00-00:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 157
+  }
+ },
+ {
+  "id": "nom:flow-paris",
+  "nom": "Flow Paris",
+  "score": 0.68,
+  "osm": {
+   "nom": "Flow",
+   "lat": 48.8633256,
+   "lng": 2.3148851,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 113
+  }
+ },
+ {
+  "id": "nom:rosa-bonheur-sur-seine",
+  "nom": "Rosa Bonheur sur Seine",
+  "score": 0.7,
+  "osm": {
+   "nom": "Rosa Bonheur sur Seine",
+   "lat": 48.8633271,
+   "lng": 2.3155168,
+   "horaires": "We-Fr 17:00-01:30; Sa 12:00-01:30; Su 12:00-00:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.rosabonheur.fr/rosa-seine",
+   "tel": "+33 1 47 53 66 92",
+   "terrasse": null,
+   "distance": 158
+  }
+ },
+ {
+  "id": "nom:annette-k",
+  "nom": "Annette K",
+  "score": 0.7,
+  "osm": {
+   "nom": "Annette K",
+   "lat": 48.8413581,
+   "lng": 2.2716467,
+   "horaires": null,
+   "amenity": "biergarten",
+   "cuisine": null,
+   "site": "https://www.annettek.fr",
+   "tel": "+33 1 85 34 27 47",
+   "terrasse": null,
+   "distance": 194
+  }
+ },
+ {
+  "id": "nom:quai-liberte",
+  "nom": "Quai Liberté",
+  "score": 0.85,
+  "osm": {
+   "nom": "Quai Liberté",
+   "lat": 48.8486899,
+   "lng": 2.2797022,
+   "horaires": "Mo-Su 09:00-23:30",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://quailiberte.fr",
+   "tel": "+33 1 45 75 39 13",
+   "terrasse": true,
+   "distance": 86
+  }
+ },
+ {
+  "id": "nom:plage-parisienne",
+  "nom": "La Plage Parisienne",
+  "score": 1,
+  "osm": {
+   "nom": "La Plage Parisienne",
+   "lat": 48.8480855,
+   "lng": 2.2788555,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 15
+  }
+ },
+ {
+  "id": "nom:bateaux-parisiens",
+  "nom": "Bateaux Parisiens",
+  "score": 1,
+  "osm": {
+   "nom": "Bateaux parisiens",
+   "lat": 48.8603828,
+   "lng": 2.2935256,
+   "horaires": null,
+   "amenity": "ferry_terminal",
+   "cuisine": null,
+   "site": "https://www.bateauxparisiens.com/",
+   "tel": "+33 1 44 11 33 36",
+   "terrasse": null,
+   "distance": 36
+  }
+ },
+ {
+  "id": "nom:plat-form",
+  "nom": "PLAT/FORM",
+  "score": 0.7,
+  "osm": {
+   "nom": "PLAT/FORM",
+   "lat": 48.8349127,
+   "lng": 2.3769064,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 7 69 78 72 29",
+   "terrasse": null,
+   "distance": 146
+  }
+ },
+ {
+  "id": "nom:mazette",
+  "nom": "Le Mazette",
+  "score": 1,
+  "osm": {
+   "nom": "Le Mazette",
+   "lat": 48.8433008,
+   "lng": 2.3693115,
+   "horaires": "Tu-We 16:00-00:00; Th 16:00-02:00; Fr 16:00-04:00; Su 14:00-00:00; Sa 14:00-04:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://lemazette.com",
+   "tel": "+33 786 353396",
+   "terrasse": null,
+   "distance": 6
+  }
+ },
+ {
+  "id": "nom:polpo-plage-polpo",
+  "nom": "Polpo Plage / Polpo Brasserie",
+  "score": 0.8,
+  "osm": {
+   "nom": "Polpo - Restaurant",
+   "lat": 48.9002099,
+   "lng": 2.2806642,
+   "horaires": "12:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.polpo-brasserie.fr/",
+   "tel": "+33 1 41 34 32 86",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:aqua",
+  "nom": "Brasserie Aqua",
+  "score": 0.85,
+  "osm": {
+   "nom": "Aqua Restaurant",
+   "lat": 48.8606272,
+   "lng": 2.2251324,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 49 29 50 50",
+   "terrasse": null,
+   "distance": 81
+  }
+ },
+ {
+  "id": "nom:river",
+  "nom": "River Café",
+  "score": 1,
+  "osm": {
+   "nom": "River Café",
+   "lat": 48.8294174,
+   "lng": 2.2603462,
+   "horaires": "Mo-Su 12:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://rivercafe.fr/",
+   "tel": "+33140935020",
+   "terrasse": null,
+   "distance": 10
+  }
+ },
+ {
+  "id": "nom:maison-jaune",
+  "nom": "Maison Jaune",
+  "score": 1,
+  "osm": {
+   "nom": "Maison Jaune",
+   "lat": 48.8282126,
+   "lng": 2.254461,
+   "horaires": "Tu-Sa 12:00-02:30; Tu-Sa 19:00-00:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://maisonjaune.paris",
+   "tel": "+33185180970",
+   "terrasse": null,
+   "distance": 2
+  }
+ },
+ {
+  "id": "nom:rosa-bonheur-a-ouest",
+  "nom": "Rosa Bonheur à l’Ouest",
+  "score": 1,
+  "osm": {
+   "nom": "Rosa Bonheur à l'Ouest",
+   "lat": 48.9051727,
+   "lng": 2.2886763,
+   "horaires": "Th,Fr 18:00-23:00; Sa 12:00-23:00; Su 12:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.rosabonheur.fr/rosa-a-louest",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:concorde-atlantique",
+  "nom": "Concorde Atlantique",
+  "score": 0.85,
+  "osm": {
+   "nom": "Concorde Atlantique",
+   "lat": 48.862117,
+   "lng": 2.3224896,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.bateauconcordeatlantique.com/",
+   "tel": "+33 7 62 93 77 00",
+   "terrasse": null,
+   "distance": 64
+  }
+ },
+ {
+  "id": "nom:michel",
+  "nom": "Chez Michel",
+  "score": 1,
+  "osm": {
+   "nom": "Chez Michel",
+   "lat": 48.8795704,
+   "lng": 2.3522406,
+   "horaires": "Mo-Fr 12:00-13:30,19:00-21:30; Sa,Su off",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.restaurantchezmichel.fr/",
+   "tel": "+33 1 44 53 06 20",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:abri-soba",
+  "nom": "Abri Soba",
+  "score": 1,
+  "osm": {
+   "nom": "Abri Soba",
+   "lat": 48.875021,
+   "lng": 2.3444958,
+   "horaires": "Tu-Sa 12:00-14:00, 19:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "japanese;noodle",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:aki",
+  "nom": "Aki Café",
+  "score": 1,
+  "osm": {
+   "nom": "Aki Café",
+   "lat": 48.8687275,
+   "lng": 2.3365482,
+   "horaires": "Mo-Fr 11:00-20:30; Sa 10:00-20:30",
+   "amenity": "restaurant",
+   "cuisine": "japanese",
+   "site": "https://akiparis.fr/pages/contactez-nous",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:coquille",
+  "nom": "La Coquille",
+  "score": 1,
+  "osm": {
+   "nom": "La coquille",
+   "lat": 48.8642141,
+   "lng": 2.3417384,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:kehribar",
+  "nom": "Kehribar",
+  "score": 1,
+  "osm": {
+   "nom": "Kehribar",
+   "lat": 48.8460828,
+   "lng": 2.3432882,
+   "horaires": "Mo-We 11:00-23:00, Th-Sa 11:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "mediterranean",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:mian-fan",
+  "nom": "Mian Fan",
+  "score": 1,
+  "osm": {
+   "nom": "Mian Fan",
+   "lat": 48.8716074,
+   "lng": 2.3412011,
+   "horaires": "Mo-Sa 12:00-23:00; Su 12:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": "asian",
+   "site": "http://www.mianfan-grands-boulevards.fr/",
+   "tel": "+33 9 67 47 47 06",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:duplex",
+  "nom": "Duplex Bar",
+  "score": 1,
+  "osm": {
+   "nom": "Duplex",
+   "lat": 48.8624459,
+   "lng": 2.3550899,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:vingt-vins-d-art",
+  "nom": "Vingt Vins d'Art",
+  "score": 1,
+  "osm": {
+   "nom": "Vingt Vins d'Art",
+   "lat": 48.8552343,
+   "lng": 2.3580088,
+   "horaires": "Mo-Su 18:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:louchebem",
+  "nom": "Le Louchebem",
+  "score": 1,
+  "osm": {
+   "nom": "Le Louchébem",
+   "lat": 48.8616443,
+   "lng": 2.3443874,
+   "horaires": "Mo-Fr 12:00-14:30,19:00-23:30; Sa 12:00-23:30; Su off",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "http://www.le-louchebem.fr/",
+   "tel": "+33 1 42 33 12 99",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:marius",
+  "nom": "Chez Marius",
+  "score": 1,
+  "osm": {
+   "nom": "Chez Marius",
+   "lat": 48.8765271,
+   "lng": 2.3549639,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french;italian",
+   "site": null,
+   "tel": "+33 1 45 80 46 27",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:a-maison",
+  "nom": "Restaurant À la maison",
+  "score": 0.8,
+  "osm": {
+   "nom": "La Maison",
+   "lat": 48.8830526,
+   "lng": 2.318513,
+   "horaires": "Tu-Sa 17:00-02:00",
+   "amenity": "pub",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 8
+  }
+ },
+ {
+  "id": "nom:pacifique",
+  "nom": "Pacifique",
+  "score": 1,
+  "osm": {
+   "nom": "Pacifique",
+   "lat": 48.873054,
+   "lng": 2.3796868,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "chinese",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:celadon",
+  "nom": "Restaurant Le Céladon",
+  "score": 1,
+  "osm": {
+   "nom": "Le Céladon",
+   "lat": 48.8696738,
+   "lng": 2.3309961,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.leceladon.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:orson",
+  "nom": "Orson",
+  "score": 1,
+  "osm": {
+   "nom": "Orson",
+   "lat": 48.8536233,
+   "lng": 2.3312702,
+   "horaires": "Tu-Sa 19:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.orson.paris",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:on",
+  "nom": "On Restaurant",
+  "score": 1,
+  "osm": {
+   "nom": "On",
+   "lat": 48.8662857,
+   "lng": 2.3327705,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:menekse",
+  "nom": "Menekse",
+  "score": 1,
+  "osm": {
+   "nom": "Menekse",
+   "lat": 48.8516114,
+   "lng": 2.3778571,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "turkish",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:louis-xvi",
+  "nom": "Le Louis XVI",
+  "score": 1,
+  "osm": {
+   "nom": "Le Louis XVI",
+   "lat": 48.8732901,
+   "lng": 2.3235381,
+   "horaires": "Mo 07:00-18:00; Tu-Fr 07:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://lelouis16-paris.fr",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:go-oun",
+  "nom": "Go Oun",
+  "score": 1,
+  "osm": {
+   "nom": "Go-Oun",
+   "lat": 48.8663515,
+   "lng": 2.3353302,
+   "horaires": "Mo-Su 12:00-22:30",
+   "amenity": "restaurant",
+   "cuisine": "korean",
+   "site": "http://www.resto-gooun.com/",
+   "tel": "+33 1 40 15 64 43",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:rosie",
+  "nom": "Brasserie Rosie",
+  "score": 1,
+  "osm": {
+   "nom": "Rosie",
+   "lat": 48.8521994,
+   "lng": 2.3730393,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.brasserierosie.com",
+   "tel": "+33 1 45 70 82 39",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:jantchi",
+  "nom": "JanTchi",
+  "score": 1,
+  "osm": {
+   "nom": "Jantchi",
+   "lat": 48.8660361,
+   "lng": 2.335991,
+   "horaires": "Mo-Th 12:00-14:45,18:30-22:15; Fr 12:00-14:45,18:30-22:30; Sa 11:45-22:30; Su 12:00-15:30",
+   "amenity": "restaurant",
+   "cuisine": "korean",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:poni",
+  "nom": "Poni",
+  "score": 1,
+  "osm": {
+   "nom": "Poni",
+   "lat": 48.8767991,
+   "lng": 2.3369941,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:hibou-paris",
+  "nom": "Le Hibou - Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Le Hibou",
+   "lat": 48.8516588,
+   "lng": 2.3385244,
+   "horaires": "Mo-Su 07:00-02:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://www.lehibou-paris.com/",
+   "tel": "+33143549691",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:pide-paris",
+  "nom": "Pide Paris",
+  "score": 1,
+  "osm": {
+   "nom": "Pidè Paris",
+   "lat": 48.8717766,
+   "lng": 2.3539306,
+   "horaires": "Mo-Th,Su 11:30-23:00; Fr-Sa 11:30-24:00",
+   "amenity": "fast_food",
+   "cuisine": "turkish;pizza",
+   "site": "https://www.pide.paris",
+   "tel": "+33 9 53 70 16 15",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:hanoi-ca-phe-opera",
+  "nom": "Hanoï Cà Phê Opéra",
+  "score": 1,
+  "osm": {
+   "nom": "Hanoi Cà Phê Opéra",
+   "lat": 48.8714582,
+   "lng": 2.3357136,
+   "horaires": "Mo-Su 12:00-02:00",
+   "amenity": "bar",
+   "cuisine": "vietnamese",
+   "site": "https://www.hanoi-caphe.com/",
+   "tel": "+33 1 48 78 03 61",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:godjo",
+  "nom": "Restaurant Godjo",
+  "score": 1,
+  "osm": {
+   "nom": "Godjo",
+   "lat": 48.8476363,
+   "lng": 2.3480323,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "ethiopian",
+   "site": "https://www.godjo.paris",
+   "tel": "+33 1 40 46 82 21",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:antiquaires",
+  "nom": "Les Antiquaires",
+  "score": 1,
+  "osm": {
+   "nom": "Les Antiquaires",
+   "lat": 48.8587025,
+   "lng": 2.3288305,
+   "horaires": "07:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://lesantiquaires.net",
+   "tel": "+33 1 42 61 08 36",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:akrame",
+  "nom": "Restaurant Akrame",
+  "score": 1,
+  "osm": {
+   "nom": "Akrame",
+   "lat": 48.8714228,
+   "lng": 2.3251829,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:mure",
+  "nom": "MÛRE",
+  "score": 1,
+  "osm": {
+   "nom": "Mûre",
+   "lat": 48.8746195,
+   "lng": 2.3386851,
+   "horaires": "Mo-Fr 12:00-14:30",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.mure.family/menu-rue-lafayette",
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:el-guacamole-republique",
+  "nom": "El Guacamole République",
+  "score": 0.8,
+  "osm": {
+   "nom": "El Guacamole",
+   "lat": 48.8713675,
+   "lng": 2.3621526,
+   "horaires": "Mo-Th 11:30-15:00, 18:00-23:00; Fr-Su 11:30-23:30",
+   "amenity": "fast_food",
+   "cuisine": "mexican",
+   "site": "https://www.elguacamoletaqueria.fr",
+   "tel": "+33 9 52 40 06 55",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:petit-cambodge",
+  "nom": "Le Petit Cambodge",
+  "score": 1,
+  "osm": {
+   "nom": "Le petit Cambodge",
+   "lat": 48.8738666,
+   "lng": 2.3705269,
+   "horaires": "Mo-Sa 12:00-14:30, 18:30-22:30; Su 12:00-22:00",
+   "amenity": "restaurant",
+   "cuisine": "asian",
+   "site": "https://lepetitcambodge.fr/",
+   "tel": "+33 1 44 84 83 05",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:tarantula-paris",
+  "nom": "Tarántula Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Tarántula",
+   "lat": 48.8543271,
+   "lng": 2.3760595,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 43 55 90 54",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:yo",
+  "nom": "Yo",
+  "score": 1,
+  "osm": {
+   "nom": "Yo !",
+   "lat": 48.8696781,
+   "lng": 2.3341013,
+   "horaires": "Mo-Sa 12:00-14:00, 19:30-22:30",
+   "amenity": "restaurant",
+   "cuisine": "thai;french",
+   "site": null,
+   "tel": "+33 1 47 42 00 33",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:no-scrum-no-win-rugby",
+  "nom": "No Scrum No Win - Bar Rugby",
+  "score": 1,
+  "osm": {
+   "nom": "No Scrum No Win - Bar Rugby",
+   "lat": 48.8776425,
+   "lng": 2.3278674,
+   "horaires": "Mo-Th 11:00-15:00, 17:00-23:59; Fr 00:00-02:00, 17:00-23:59; Sa 00:00-02:00, 14:30-23:59; Su 00:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.clubhousensnw.com/",
+   "tel": "+33 6 87 07 73 83",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:renommee",
+  "nom": "La Renommée",
+  "score": 1,
+  "osm": {
+   "nom": "La Renommée",
+   "lat": 48.8612719,
+   "lng": 2.343211,
+   "horaires": "Mo-Su 17:30-22:30",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://www.larenommeeparis.com/",
+   "tel": "+33 1 40 39 93 70",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:the-hood-paris",
+  "nom": "The Hood Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "the Hood",
+   "lat": 48.833898,
+   "lng": 2.3154421,
+   "horaires": null,
+   "amenity": "music_school",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:express-lyon",
+  "nom": "Express de Lyon",
+  "score": 1,
+  "osm": {
+   "nom": "Express de Lyon",
+   "lat": 48.8459544,
+   "lng": 2.3720667,
+   "horaires": "Mo-Fr 09:00-00:30; Sa 12:00-00:30",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:daroco-16",
+  "nom": "DAROCO 16",
+  "score": 1,
+  "osm": {
+   "nom": "Daroco 16",
+   "lat": 48.8515008,
+   "lng": 2.2778254,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "italian",
+   "site": "http://www.daroco.fr/",
+   "tel": "+33 1 44 14 91 91",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:eunoe",
+  "nom": "Eunoé",
+  "score": 1,
+  "osm": {
+   "nom": "Eunoé",
+   "lat": 48.8608257,
+   "lng": 2.3789798,
+   "horaires": "Tu-We 12:00-14:30,19:00-22:30; Th-Sa 12:00-14:30,19:00-23:00; Su 12:00-16:00",
+   "amenity": "restaurant",
+   "cuisine": "french;japanese",
+   "site": "http://www.eunoe-restaurant.com/",
+   "tel": "+33 7 67 96 86 36",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:chaumont",
+  "nom": "Le Bar Chaumont",
+  "score": 1,
+  "osm": {
+   "nom": "Le Bar Chaumont",
+   "lat": 48.866209,
+   "lng": 2.344963,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:suan-thai",
+  "nom": "Suan Thaï",
+  "score": 1,
+  "osm": {
+   "nom": "Suan Thai",
+   "lat": 48.8619943,
+   "lng": 2.3640317,
+   "horaires": "Mo-Su 11:00-15:00, 18:00-23:00",
+   "amenity": "restaurant",
+   "cuisine": "thai",
+   "site": "http://suanthai.fr",
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:sushi-b",
+  "nom": "Sushi-B",
+  "score": 1,
+  "osm": {
+   "nom": "Sushi B",
+   "lat": 48.8677062,
+   "lng": 2.337428,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "sushi",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:ebis",
+  "nom": "Ebis",
+  "score": 1,
+  "osm": {
+   "nom": "Ebis",
+   "lat": 48.8653963,
+   "lng": 2.3321572,
+   "horaires": "Mo-Sa 12:00-14:15,19:00-22:15",
+   "amenity": "restaurant",
+   "cuisine": "japanese",
+   "site": null,
+   "tel": "+33 1 42 61 05 90",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:chimere",
+  "nom": "Chimère",
+  "score": 1,
+  "osm": {
+   "nom": "Chimère",
+   "lat": 48.8698899,
+   "lng": 2.3355082,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:auberge",
+  "nom": "L'Auberge Café",
+  "score": 1,
+  "osm": {
+   "nom": "L'Auberge Café",
+   "lat": 48.8582612,
+   "lng": 2.3447141,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:brique-machine-paris-2",
+  "nom": "Brique Machine - Paris 2",
+  "score": 0.6,
+  "osm": {
+   "nom": "Brique Machine - Brique House",
+   "lat": 48.8709276,
+   "lng": 2.3427137,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 42 36 63 33",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:jjan",
+  "nom": "JJAN! 짠",
+  "score": 1,
+  "osm": {
+   "nom": "Jjan !",
+   "lat": 48.8757857,
+   "lng": 2.3276025,
+   "horaires": "11:45-23:00",
+   "amenity": "restaurant",
+   "cuisine": "korean",
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:dar-mima",
+  "nom": "Dar Mima",
+  "score": 0.8,
+  "osm": {
+   "nom": "Dar Mima - Zyriab",
+   "lat": 48.8489962,
+   "lng": 2.3573756,
+   "horaires": "Tu-Su 12:00-14:30,15:30-17:30,19:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "arab",
+   "site": "https://darmima-restaurant.com",
+   "tel": "+33 1 85 14 79 25",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:atelier-veau",
+  "nom": "Atelier du veau",
+  "score": 1,
+  "osm": {
+   "nom": "Atelier Du Veau",
+   "lat": 48.8676812,
+   "lng": 2.3326549,
+   "horaires": null,
+   "amenity": "fast_food",
+   "cuisine": "kebab",
+   "site": "http://www.mipi.pizza",
+   "tel": "+33 1 42 86 80 80",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:loup",
+  "nom": "Loup",
+  "score": 1,
+  "osm": {
+   "nom": "Loup",
+   "lat": 48.8639344,
+   "lng": 2.342597,
+   "horaires": "08:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "http://www.loup-paris.fr/",
+   "tel": "+33 1 42 36 73 23",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:grand-colbert",
+  "nom": "Le Grand Colbert",
+  "score": 1,
+  "osm": {
+   "nom": "Le Grand Colbert",
+   "lat": 48.8664844,
+   "lng": 2.3389311,
+   "horaires": "12:00-24:00",
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://legrandcolbert.fr/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:kodawari-ramen-tsukiji",
+  "nom": "Kodawari Ramen (Tsukiji)",
+  "score": 1,
+  "osm": {
+   "nom": "Kodawari Ramen (Tsukiji)",
+   "lat": 48.8643846,
+   "lng": 2.3362784,
+   "horaires": "Mo-Su 11:45-23:00",
+   "amenity": "restaurant",
+   "cuisine": "japanese;ramen",
+   "site": "https://www.kodawari-ramen.com",
+   "tel": "+33 1 42 61 34 60",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:general",
+  "nom": "Le Général",
+  "score": 1,
+  "osm": {
+   "nom": "Le Général",
+   "lat": 48.8662718,
+   "lng": 2.3668908,
+   "horaires": null,
+   "amenity": "hotel",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 47 00 41 57",
+   "terrasse": null,
+   "distance": 1
+  }
+ },
+ {
+  "id": "nom:pendino",
+  "nom": "Pendino",
+  "score": 1,
+  "osm": {
+   "nom": "Pendino",
+   "lat": 48.8639457,
+   "lng": 2.3345528,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "italian",
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:kodawari-ramen-yokocho",
+  "nom": "Kodawari Ramen (Yokochō)",
+  "score": 1,
+  "osm": {
+   "nom": "Kodawari Ramen (Yokochō)",
+   "lat": 48.8546284,
+   "lng": 2.3381142,
+   "horaires": "Mo-Su 11:45-23:00",
+   "amenity": "restaurant",
+   "cuisine": "japanese;ramen",
+   "site": "https://kodawari-ramen.com",
+   "tel": "+33 1 43 29 37 67",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:blanc",
+  "nom": "Café Blanc",
+  "score": 1,
+  "osm": {
+   "nom": "Café Blanc",
+   "lat": 48.8627417,
+   "lng": 2.3395806,
+   "horaires": "Mo-Fr 00:00-02:00, 07:00-23:59; Sa-Su 00:00-02:00, 08:00-23:59",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": "https://www.privateaser.com/lieu/47699-cafe-blanc",
+   "tel": "+33 1 42 33 55 85",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:dubillot",
+  "nom": "Brasserie Dubillot",
+  "score": 1,
+  "osm": {
+   "nom": "Brasserie Dubillot",
+   "lat": 48.868095,
+   "lng": 2.3519457,
+   "horaires": "Mo-Su 09:00-00:00",
+   "amenity": "restaurant",
+   "cuisine": "french;traditional",
+   "site": "https://lanouvellegarde.com/en/brasserie-dubillot/",
+   "tel": "+33 1 88 61 51 24",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:mezcaleria-paris",
+  "nom": "La Mezcaleria Paris",
+  "score": 1,
+  "osm": {
+   "nom": "La Mezcaleria Paris",
+   "lat": 48.8638472,
+   "lng": 2.3656384,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:moonshiner",
+  "nom": "Moonshiner",
+  "score": 1,
+  "osm": {
+   "nom": "Moonshiner",
+   "lat": 48.8556625,
+   "lng": 2.3711461,
+   "horaires": "Mo-Su 18:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:jaja",
+  "nom": "LA JAJA",
+  "score": 1,
+  "osm": {
+   "nom": "La Jaja",
+   "lat": 48.8660564,
+   "lng": 2.3440191,
+   "horaires": "Tu-Sa 17:00-02:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://lajaja.fr/",
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:griffon",
+  "nom": "Griffon",
+  "score": 1,
+  "osm": {
+   "nom": "Griffon",
+   "lat": 48.8596119,
+   "lng": 2.3572985,
+   "horaires": "We-Su 12:00-24:00",
+   "amenity": "cafe",
+   "cuisine": "coffee_shop;french;tapas",
+   "site": "https://griffon.paris/",
+   "tel": "+33 1 43 36 98 37",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:baan-issan",
+  "nom": "Baan Issan",
+  "score": 1,
+  "osm": {
+   "nom": "Baan Issan",
+   "lat": 48.833747,
+   "lng": 2.3546338,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "thai",
+   "site": null,
+   "tel": null,
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:cheper",
+  "nom": "Cheper",
+  "score": 1,
+  "osm": {
+   "nom": "Chéper",
+   "lat": 48.8592147,
+   "lng": 2.3578986,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": "french",
+   "site": "https://leperchoir.fr/location/cheper/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:clark-hot-dog",
+  "nom": "Clark Hot Dog",
+  "score": 0.8,
+  "osm": {
+   "nom": "Clark hot dog and coffee",
+   "lat": 48.8557065,
+   "lng": 2.3604385,
+   "horaires": null,
+   "amenity": "fast_food",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:petit-dakar",
+  "nom": "Le Petit Dakar",
+  "score": 1,
+  "osm": {
+   "nom": "Le Petit Dakar",
+   "lat": 48.8580531,
+   "lng": 2.361319,
+   "horaires": "Tu-Sa 12:30-14:30;Tu-Su 19:30-22:30",
+   "amenity": "restaurant",
+   "cuisine": "african",
+   "site": "https://www.lepetitdakar.com/",
+   "tel": "+33 1 44 59 34 74",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:miznon-paris",
+  "nom": "Miznon Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Miznon",
+   "lat": 48.872949,
+   "lng": 2.3426102,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:arts-et-metiers",
+  "nom": "Café des Arts et Métiers",
+  "score": 0.85,
+  "osm": {
+   "nom": "Les Arts et Métiers",
+   "lat": 48.865451,
+   "lng": 2.3553243,
+   "horaires": "Mo-Su 07:00-02:00",
+   "amenity": "cafe",
+   "cuisine": null,
+   "site": null,
+   "tel": "+33 1 48 87 83 25",
+   "terrasse": true,
+   "distance": 72
+  }
+ },
+ {
+  "id": "nom:doublevie",
+  "nom": "doublevie",
+  "score": 1,
+  "osm": {
+   "nom": "doublevie",
+   "lat": 48.8864163,
+   "lng": 2.3479153,
+   "horaires": "Tu 18:00-00:00; We 18:00-01:00; Th 18:00-02:00; Fr 16:00-02:00; Sa 15:00-02:00",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": "https://www.doublevieparis.com/",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:harry-s-paris",
+  "nom": "Harry's Bar Paris",
+  "score": 0.8,
+  "osm": {
+   "nom": "Harry's Bar",
+   "lat": 48.8692089,
+   "lng": 2.3321714,
+   "horaires": "Mo-Sa 12:00-02:00; Su 17:00-01:00",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "www.harrysbar.fr",
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:bistrot-victoires",
+  "nom": "Bistrot Victoires",
+  "score": 1,
+  "osm": {
+   "nom": "Bistrot Victoires",
+   "lat": 48.865508,
+   "lng": 2.3403568,
+   "horaires": "Mo-Su 10:00-15:00, 19:00-23:30",
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:balou-paris-3",
+  "nom": "Balou Paris 3",
+  "score": 1,
+  "osm": {
+   "nom": "Balou Paris 3",
+   "lat": 48.8630437,
+   "lng": 2.3518446,
+   "horaires": "Mo 00:00-02:00, 05:00-23:59; Tu 00:00-02:00, 07:00-23:59; We-Su 00:00-02:00, 05:00-23:59",
+   "amenity": "bar",
+   "cuisine": null,
+   "site": "https://www.privateaser.com/lieu/11942-le-balou-ex-la-part-des-ours",
+   "tel": "+33 1 42 72 70 45",
+   "terrasse": true,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:the-highlander-pub",
+  "nom": "The Highlander Pub",
+  "score": 0.8,
+  "osm": {
+   "nom": "The Highlander",
+   "lat": 48.856041,
+   "lng": 2.3398038,
+   "horaires": null,
+   "amenity": "pub",
+   "cuisine": null,
+   "site": "http://pubhighlander.com/",
+   "tel": "+33 6 31 57 88 75",
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:maison-lautrec",
+  "nom": "Maison Lautrec",
+  "score": 1,
+  "osm": {
+   "nom": "La Maison Lautrec",
+   "lat": 48.8811814,
+   "lng": 2.3359631,
+   "horaires": null,
+   "amenity": "restaurant",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ },
+ {
+  "id": "nom:hemingway",
+  "nom": "Bar Hemingway",
+  "score": 1,
+  "osm": {
+   "nom": "Bar Hemingway",
+   "lat": 48.8687856,
+   "lng": 2.3275106,
+   "horaires": null,
+   "amenity": "bar",
+   "cuisine": null,
+   "site": null,
+   "tel": null,
+   "terrasse": null,
+   "distance": 0
+  }
+ }
+]

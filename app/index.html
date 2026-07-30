@@ -21,6 +21,76 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Filet anti-écran-blanc. Si l'app n'a rien monté dans #root après 8 s
+      // (bundle qui ne charge pas, cache service worker corrompu — cas que le
+      // GardeFou React ne peut PAS rattraper car React n'a jamais démarré), on
+      // propose une réinitialisation : purge du service worker + de tous les
+      // caches, puis reload propre. C'est le garde-fou qui garantit qu'un
+      // écran blanc reste réparable en un tap, pour toi comme pour un pote.
+      ;(function () {
+        // affiche l'écran de secours (+ le détail de l'erreur s'il y en a un,
+        // pour pouvoir diagnostiquer un plantage iOS sans câble ni console)
+        function montrerSecours(detail) {
+          var root = document.getElementById('root')
+          if (!root || root.querySelector('#jeudi-reset')) return
+          root.innerHTML =
+            '<div style="min-height:100dvh;display:flex;flex-direction:column;' +
+            'align-items:center;justify-content:center;gap:18px;padding:24px;' +
+            'text-align:center;font-family:system-ui,-apple-system,sans-serif;' +
+            'color:#F0EAD9;background:#15130F">' +
+            '<p style="margin:0;font-size:18px">jeudi. a du mal à démarrer.</p>' +
+            '<button id="jeudi-reset" style="font:inherit;font-size:16px;' +
+            'padding:12px 22px;border-radius:10px;border:1px solid #A8322A;' +
+            'background:#A8322A;color:#fff">réinitialiser</button>' +
+            (detail
+              ? '<pre style="max-width:100%;white-space:pre-wrap;word-break:break-word;' +
+                'font-size:11px;opacity:.6;text-align:left;margin:0">' +
+                String(detail).replace(/</g, '&lt;') +
+                '</pre>'
+              : '') +
+            '</div>'
+          document.getElementById('jeudi-reset').onclick = function () {
+            var fini = function () { location.reload() }
+            var jobs = []
+            if ('serviceWorker' in navigator)
+              jobs.push(
+                navigator.serviceWorker.getRegistrations().then(function (rs) {
+                  return Promise.all(rs.map(function (r) { return r.unregister() }))
+                }),
+              )
+            if (window.caches)
+              jobs.push(
+                caches.keys().then(function (ks) {
+                  return Promise.all(ks.map(function (k) { return caches.delete(k) }))
+                }),
+              )
+            Promise.all(jobs).then(fini, fini)
+          }
+        }
+        var rootVide = function () {
+          var root = document.getElementById('root')
+          return root && root.childElementCount === 0
+        }
+        // erreur fatale AVANT que React monte (bundle qui plante au chargement) :
+        // on l'affiche à l'écran au lieu d'un blanc muet. Invisible si l'app tourne.
+        window.addEventListener('error', function (e) {
+          if (!rootVide()) return
+          montrerSecours(
+            (e.message || 'script bloqué') +
+              (e.filename ? '\n' + e.filename + ':' + e.lineno : ''),
+          )
+        })
+        window.addEventListener('unhandledrejection', function (e) {
+          if (!rootVide()) return
+          montrerSecours(e.reason && (e.reason.stack || e.reason.message || e.reason))
+        })
+        var t = setTimeout(function () {
+          if (rootVide()) montrerSecours('')
+        }, 8000)
+        window.addEventListener('pagehide', function () { clearTimeout(t) })
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -13,6 +13,7 @@ import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
 import CroquisParis from './CroquisParis'
+import { t, lireLangue, glose } from './langue'
 
 // L'onglet « trouver » (ex-labo, promu à part entière) : le moteur de
 // recherche/reco personnalisé. Philosophie (CONCEPT.md) : la recherche RÉPOND
@@ -38,6 +39,16 @@ export default function Recherche({
 
   const [envie, setEnvie] = useState<Envie | null>(null)
   const [ouvertSeul, setOuvertSeul] = useState(false)
+  // « sur l'eau » : péniches, guinguettes, quais — la Seine du croquis et la
+  // chip posent le MÊME état (jamais un filtre fantôme)
+  const [eauSeule, setEauSeule] = useState(false)
+  // « quand ? » — chercher pour un AUTRE moment que maintenant : ce soir,
+  // demain soir, ou l'heure précise. Change l'évaluation ouvert/fermé et le
+  // lexique implicite du moteur (le paramètre `maintenant` de recherche.ts).
+  type Quand = 'maintenant' | 'cesoir' | 'demain' | 'perso'
+  const [quand, setQuand] = useState<Quand>('maintenant')
+  const [persoJour, setPersoJour] = useState(0) // 0 = aujourd'hui, 1 = demain…
+  const [persoDemiHeure, setPersoDemiHeure] = useState(44) // 44 = 22h00
   // « autour de » : null = ma position, sinon un repère choisi
   const [depuis, setDepuis] = useState<Repere | null>(null)
   const [adr, setAdr] = useState('')
@@ -69,7 +80,8 @@ export default function Recherche({
   }, [lieux, favoris, vus])
 
   // a-t-on une intention ? (un mot, une envie, un filtre) — sinon « pour toi »
-  const aIntention = texteRetarde.trim().length > 0 || envie !== null || ouvertSeul
+  const aIntention =
+    texteRetarde.trim().length > 0 || envie !== null || ouvertSeul || eauSeule
 
   // point stabilisé (même référence tant que `depuis` ne change pas) : le
   // useMemo des résultats ne recalcule plus à chaque rendu
@@ -78,17 +90,36 @@ export default function Recherche({
     [depuis],
   )
 
+  // le moment de la recherche : maintenant (défaut), ce soir 22h, demain soir,
+  // ou le jour + l'heure choisis à la molette. Tout « ouvert/fermé » et le
+  // classement du moteur s'évaluent À CE MOMENT-LÀ.
+  const dateEffective = useMemo(() => {
+    const d = new Date()
+    if (quand === 'cesoir') d.setHours(22, 0, 0, 0)
+    else if (quand === 'demain') {
+      d.setDate(d.getDate() + 1)
+      d.setHours(22, 0, 0, 0)
+    } else if (quand === 'perso') {
+      d.setDate(d.getDate() + persoJour)
+      d.setHours(Math.floor(persoDemiHeure / 2), (persoDemiHeure % 2) * 30, 0, 0)
+    }
+    return d
+  }, [quand, persoJour, persoDemiHeure])
+
   const resultats = useMemo(() => {
+    // « sur l'eau » restreint le vivier AVANT le moteur (péniches, quais…)
+    const vivier = eauSeule ? lieux.filter((l) => l.surLeau) : lieux
     // sans intention : on ne LISTE pas le catalogue → « pour toi » (court)
-    if (!aIntention) return pourToi(lieux, gout, { exclureVus: vus, topN: 12, cercle, depuis: point })
+    if (!aIntention)
+      return pourToi(vivier, gout, { exclureVus: vus, topN: 12, cercle, depuis: point }, dateEffective)
     // avec intention : on RÉPOND (peu, ciblé, confiance d'abord, autour du repère)
     const req: Requete = {
       texte: texteRetarde.trim() || undefined,
       envies: envie ? [envie] : undefined,
       ouvertSeulement: ouvertSeul,
     }
-    return rechercher(lieux, req, gout, cercle, point).slice(0, 15)
-  }, [lieux, texteRetarde, envie, ouvertSeul, gout, cercle, aIntention, point, vus])
+    return rechercher(vivier, req, gout, cercle, point, dateEffective).slice(0, 15)
+  }, [lieux, texteRetarde, envie, ouvertSeul, eauSeule, gout, cercle, aIntention, point, vus, dateEffective])
 
   const lancerAdresse = async () => {
     const q = adr.trim()
@@ -117,15 +148,15 @@ export default function Recherche({
   return (
     <div style={{ color: 'var(--ivory)' }}>
       {/* l'en-tête d'onglet : la voix serif, la glose mono */}
-      <h2 className="labo-titre">trouver.</h2>
+      <h2 className="labo-titre">{t('trouver.')}</h2>
       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, margin: '0 0 14px' }}>
-        dis ce que tu cherches, jeudi répond
+        {t('dis ce que tu cherches, jeudi répond')}
       </p>
 
       <input
         value={texte}
         onChange={(e) => setTexte(e.target.value)}
-        placeholder="un nom, un quartier, une ambiance…"
+        placeholder={t('un nom, un quartier, une ambiance…')}
         className="labo-champ"
       />
 
@@ -136,8 +167,77 @@ export default function Recherche({
           </button>
         ))}
         <button className={chip(ouvertSeul)} onClick={() => setOuvertSeul((v) => !v)}>
-          ouvert
+          {t('ouvert')}
         </button>
+        <button className={chip(eauSeule)} onClick={() => setEauSeule((v) => !v)}>
+          {t("sur l'eau")}
+        </button>
+      </div>
+
+      {/* la glose du mot choisi : une note griffonnée dans la marge — le
+          lexique s'apprend au moment où on s'en sert (panel : UX + novices) */}
+      {envie && glose(envie) && (
+        <p className="hand chip-glose">
+          {envie} — {glose(envie)}
+        </p>
+      )}
+
+      {/* « quand ? » — le soir se prépare : chercher pour maintenant (défaut),
+          ce soir, demain soir, ou poser le jour et l'heure à la molette */}
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 6 }}>
+        {t('quand')}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12, alignItems: 'center' }}>
+        {(
+          [
+            ['maintenant', t('maintenant')],
+            ['cesoir', t('ce soir')],
+            ['demain', t('demain soir')],
+            ['perso', t('à l’heure près')],
+          ] as const
+        ).map(([k, label]) => (
+          <button key={k} className={chip(quand === k)} onClick={() => setQuand(k)}>
+            {label}
+          </button>
+        ))}
+        {quand === 'perso' && (
+          <span className="labo-quand-molettes">
+            <select
+              className="labo-molette"
+              value={persoJour}
+              onChange={(e) => setPersoJour(Number(e.target.value))}
+              aria-label="quel jour ?"
+            >
+              {Array.from({ length: 7 }, (_, i) => {
+                const d = new Date()
+                d.setDate(d.getDate() + i)
+                const nom =
+                  i === 0
+                    ? t('aujourd’hui')
+                    : i === 1
+                      ? t('demain')
+                      : d.toLocaleDateString(lireLangue() === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long', day: 'numeric' })
+                return (
+                  <option key={i} value={i}>
+                    {nom}
+                  </option>
+                )
+              })}
+            </select>
+            <select
+              className="labo-molette"
+              value={persoDemiHeure}
+              onChange={(e) => setPersoDemiHeure(Number(e.target.value))}
+              aria-label="à quelle heure ?"
+            >
+              {Array.from({ length: 48 }, (_, i) => (
+                <option key={i} value={i}>
+                  {`${Math.floor(i / 2)}h${i % 2 ? '30' : ''}`}
+                </option>
+              ))}
+            </select>
+          </span>
+        )}
       </div>
 
       {/* la ville en un coup d'œil : le croquis choisit la MÊME chose que les
@@ -149,14 +249,16 @@ export default function Recherche({
           const p = POINTS_REPERE.find((r) => r.nom === nom)
           if (p) setDepuis(depuis?.nom === p.nom ? null : p)
         }}
+        eauActive={eauSeule}
+        onEau={() => setEauSeule((v) => !v)}
       />
 
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 6 }}>
-        autour de
+        {t('autour de')}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 8 }}>
         <button className={chip(depuis === null)} onClick={() => setDepuis(null)}>
-          ici
+          {t('ici')}
         </button>
         {POINTS_REPERE.map((p) => (
           <button
@@ -175,7 +277,7 @@ export default function Recherche({
           setEtatAdr('off') // on retape → l'ancien message ne colle plus
         }}
         onKeyDown={(e) => e.key === 'Enter' && lancerAdresse()}
-        placeholder="…ou une adresse / un métro (Entrée)"
+        placeholder={t('…ou une adresse / un métro (Entrée)')}
         className="labo-champ petit"
         style={{ marginBottom: etatAdr === 'off' ? 14 : 4 }}
       />

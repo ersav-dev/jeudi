@@ -1,0 +1,5 @@
+<!-- cercle-feutre — ellipse d'entourage à main levée ; le trait ne se referme pas exactement,
+     la fin croise le départ. Usage : entourer une date, une heure, un mot important. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 95 56" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M35.2 6.8 C18.6 8.4 4.8 16.2 4.4 27.9 C4.0 39.8 18.4 49.3 40.6 51.1 C63.8 52.9 87.4 45.6 90.8 32.4 C93.9 20.1 77.6 8.9 54.9 6.9 C47.6 6.2 41.4 7.4 36.9 9.6 C33.6 11.2 30.4 8.1 28.9 4.6"/>
+</svg>

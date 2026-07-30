@@ -1,0 +1,5 @@
+<!-- souligne-1 — trait de soulignement ondulé, une seule passe.
+     Usage : souligner un nom de lieu ou un mot-clé dans une fiche ; s'étire via preserveAspectRatio="none" si besoin. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M2.6 7.4 C15.4 5.2 27.8 8.6 40.6 6.9 C53.2 5.3 65.4 8.2 78.2 6.4 C90.4 4.8 104.6 7.6 117.2 5.6"/>
+</svg>

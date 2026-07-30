@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react'
 import {
   ZONES_CROQUIS,
   CHEMINS_ZONES,
+  MONUMENTS_CROQUIS,
   TRAIT_SEINE,
   TRAIT_PERIPH,
   compterSpotsZones,
 } from './croquisZones'
+import { t } from './langue'
 
 // ════════════════════════════════════════════════════════════════
 // jeudi. — LE CROQUIS DE PARIS : choisir sa zone comme sur un carnet
@@ -31,13 +33,19 @@ export default function CroquisParis({
   lieux,
   actif,
   onChoisir,
+  eauActive = false,
+  onEau,
 }: {
-  /** les lieux visibles (mêmes que la recherche) — on ne lit que lat/lng */
-  lieux: { lat: number; lng: number }[]
+  /** les lieux visibles (mêmes que la recherche) — lat/lng + le tag sur-l'eau */
+  lieux: { lat: number; lng: number; surLeau?: boolean }[]
   /** nom du repère actif (depuis?.nom) — la synchro chips ↔ croquis */
   actif: string | null
   /** tape une zone → le caller bascule le repère (même logique que la chip) */
   onChoisir: (repere: string) => void
+  /** la Seine n'est pas une zone, c'est un RUBAN : la taper filtre les spots
+   *  « sur l'eau » (péniches, guinguettes, quais) — même état que la chip */
+  eauActive?: boolean
+  onEau?: () => void
 }) {
   const [ouvert, setOuvert] = useState(lireOuvert)
   const basculer = () => {
@@ -52,19 +60,91 @@ export default function CroquisParis({
   }
 
   const comptes = useMemo(() => compterSpotsZones(lieux), [lieux])
+  const nbEau = useMemo(() => lieux.filter((l) => l.surLeau).length, [lieux])
 
   return (
     <div>
       <button type="button" className="croquis-entete" onClick={basculer} aria-expanded={ouvert}>
-        <span>la ville en un coup d'œil</span>
-        <span style={{ opacity: 0.7 }}>{ouvert ? 'replier' : 'déplier'}</span>
+        <span>{t("la ville en un coup d'œil")}</span>
+        <span style={{ opacity: 0.7 }}>{ouvert ? t('replier') : t('déplier')}</span>
       </button>
       <div className={`croquis-cadre${ouvert ? '' : ' plie'}`} aria-hidden={!ouvert}>
         <svg viewBox="0 0 340 260" className="croquis-svg" role="group" aria-label="croquis de paris — tape une zone pour chercher autour">
           {/* le périph : le bord du carnet, en pointillés légers */}
           <path d={TRAIT_PERIPH} fill="none" stroke="var(--graphite)" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 7" strokeLinecap="round" />
-          {/* la seine : un trait de crayon, sous les zones */}
-          <path d={TRAIT_SEINE} fill="none" stroke="var(--graphite)" strokeWidth="1.4" strokeOpacity="0.55" strokeLinecap="round" />
+          {/* la seine : un trait de crayon, sous les zones — et un QUARTIER
+              LIQUIDE : la taper filtre les spots « sur l'eau ». Le trait
+              visible s'encre quand le filtre est posé ; la surface tapable
+              est un trait invisible bien plus gras (un doigt, de nuit). */}
+          <g
+            className="croquis-zone"
+            role="button"
+            tabIndex={ouvert && onEau ? 0 : -1}
+            aria-pressed={eauActive}
+            aria-label={`la seine — sur l'eau, ${nbEau} spot${nbEau > 1 ? 's' : ''}`}
+            onClick={onEau}
+            onKeyDown={(e) => {
+              if (onEau && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                onEau()
+              }
+            }}
+          >
+            <path
+              d={TRAIT_SEINE}
+              fill="none"
+              stroke={eauActive ? 'var(--encre)' : 'var(--graphite)'}
+              strokeWidth={eauActive ? 2 : 1.4}
+              strokeOpacity={eauActive ? 0.9 : 0.55}
+              strokeLinecap="round"
+            />
+            {/* la hitbox : même tracé, invisible, 16px d'épaisseur */}
+            <path d={TRAIT_SEINE} fill="none" stroke="transparent" strokeWidth="16" pointerEvents="stroke" />
+            {/* l'étiquette couchée le long du fleuve, aval de bercy */}
+            <text
+              x={300}
+              y={219}
+              textAnchor="middle"
+              fontFamily="'Caveat', cursive"
+              fontSize="12"
+              fill="var(--encre)"
+              opacity={eauActive ? 1 : 0.55}
+              transform="rotate(30.5 300 219)"
+            >
+              la seine
+            </text>
+            {nbEau > 0 && (
+              <text
+                x={300}
+                y={230}
+                textAnchor="middle"
+                fontFamily="'JetBrains Mono', monospace"
+                fontSize="8.5"
+                fill="var(--encre)"
+                opacity={eauActive ? 0.8 : 0.45}
+                transform="rotate(30.5 300 230)"
+              >
+                {nbEau}
+              </text>
+            )}
+          </g>
+          {/* les monuments : des gribouillis dans la marge — décoratifs, jamais
+              cliquables. À LA COULEUR DU MEMBRE (--red suit la couleur choisie
+              à l'onboarding/réglages) : ses repères, son encre à lui. */}
+          {MONUMENTS_CROQUIS.map((m) => (
+            <g key={m.nom} transform={`translate(${m.x} ${m.y})`} pointerEvents="none">
+              <title>{m.nom}</title>
+              <path
+                d={m.chemin}
+                fill="none"
+                stroke="var(--red)"
+                strokeOpacity="0.65"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          ))}
           {ZONES_CROQUIS.map((z, i) => {
             const n = comptes[z.repere] ?? 0
             const estActif = actif === z.repere

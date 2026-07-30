@@ -8,7 +8,7 @@ import {
   propreteWcLabel,
   spotComplet,
 } from './db'
-import { srcPhoto } from './photos'
+import { srcPhoto, photoIndisponible } from './photos'
 import { ISoleil, INuage, IPluie, IPosition, IBallon, IRefuge, ITrombone, ISceau } from './icones'
 
 function meteoIcone(m?: string) {
@@ -172,8 +172,10 @@ export default function LigneIndex({
                     src={srcPhoto(lieu.photos[0])}
                     alt={lieu.nom}
                     loading="lazy"
+                    decoding="async"
                     width={110}
                     height={110}
+                    onError={photoIndisponible}
                   />
                 ) : (
                   <span className="hand idx-sansphoto">sa photo</span>
@@ -279,8 +281,10 @@ export default function LigneIndex({
                 src={srcPhoto(lieu.photos[photoIndex])}
                 alt={lieu.nom}
                 loading="lazy"
+                decoding="async"
                 width={640}
                 height={400}
+                onError={photoIndisponible}
               />
             ) : (
               <div className="idx-grande-vide hand">pas encore de photo.</div>

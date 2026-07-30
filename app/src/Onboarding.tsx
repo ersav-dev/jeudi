@@ -11,18 +11,24 @@ import {
   type Lieu,
 } from './db'
 import { importerSeed } from './seed'
+import ImportGoogle from './ImportGoogle'
+import { t } from './langue'
+import { suivre } from './analytique'
 
 // ════════════════════════════════════════════════════════════════
 // jeudi. — L'ONBOARDING « payoff d'abord, réglages après »
 // A) le payoff : on te situe, puis on te MONTRE 2-3 vrais spots du carnet.
 // C) la visite de « j. » (SKIPPABLE) : il commente 3 coins EN SITUATION,
 //    pour t'apprendre la langue de l'app sans questionnaire abstrait.
-// D) l'appropriation minimale : ton prénom, et c'est parti.
+// D) l'appropriation : ton prénom, ta tête (le cercle te reconnaît),
+//    ta date de naissance (optionnelle).
+// E) l'import : « tes adresses dorment dans Google Maps ? » — récupérables
+//    en 3 étapes, skippable (un rappel doux reviendra, App.tsx).
 // tout le reste (couleur, seuils €, critère, cercle) prend des défauts
 // sensés et se règle plus tard dans le profil — plus rien ici.
 // ════════════════════════════════════════════════════════════════
 
-type Phase = 'situer' | 'payoff' | 'visite' | 'prenom'
+type Phase = 'situer' | 'payoff' | 'visite' | 'prenom' | 'import'
 
 // les leçons de « j. », posées EN SITUATION sur un vrai spot (une par coin) :
 // la confiance · le swipe · le vocabulaire.
@@ -47,6 +53,20 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
   const [phase, setPhase] = useState<Phase>('situer')
   const [prenom, setPrenom] = useState('')
   const [majeur, setMajeur] = useState(false)
+  // le portrait (photo d'identité du carnet) + la date de naissance —
+  // demandés dès la création du compte, sans bloquer si on passe
+  const [portrait, setPortrait] = useState<File | null>(null)
+  const [naissance, setNaissance] = useState('')
+  const apercuPortrait = useMemo(
+    () => (portrait ? URL.createObjectURL(portrait) : null),
+    [portrait],
+  )
+  useEffect(() => {
+    // l'object-URL précédent se libère quand la photo change / au démontage
+    return () => {
+      if (apercuPortrait) URL.revokeObjectURL(apercuPortrait)
+    }
+  }, [apercuPortrait])
   // les vrais spots publics du seed — chargés une fois (le seed est idempotent)
   const [spots, setSpots] = useState<Lieu[]>([])
   // bumpé quand la vraie géoloc arrive → les distances se recalculent
@@ -105,18 +125,27 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     )
   }
 
-  // ── D · on sauve le prénom + les défauts différés, puis on entre ──
-  const terminer = async () => {
+  // ── D · on sauve l'identité (prénom + portrait + naissance) + les
+  // défauts différés, puis on propose l'import Google ──
+  const validerIdentite = async () => {
     await sauverProfil({
       scoreSwipe: 100, // défaut : le swipe est la langue
       critere: 'le feeling',
       prenom: prenom.trim(),
+      photo: portrait ?? undefined, // → Storage + photo_url (sauverProfil gère)
+      naissance: naissance || undefined,
     })
     // les réglages différés : la couleur garde le défaut de l'app (on n'écrit
     // rien), les seuils € prennent la valeur standard, le cercle démarre VIDE
     // (les vraies invitations le rempliront).
     ecrireSeuils([20, 50])
     ecrireSuivis([])
+    setPhase('import')
+  }
+
+  // ── E · la fin (après l'import, fait ou passé) ──
+  const finir = () => {
+    suivre('compte_cree')
     marquerOnboarding()
     onFini()
   }
@@ -126,10 +155,10 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     return (
       <div className="onboard onb-situer">
         <div className="tampon-logo">Jeudi.</div>
-        <h1 className="grande-question">on te situe ?</h1>
-        <p className="onboard-sous">pour te dire ce qui se passe autour de toi.</p>
+        <h1 className="grande-question">{t('on te situe ?')}</h1>
+        <p className="onboard-sous">{t('pour te dire ce qui se passe autour de toi.')}</p>
         <button className="valider" onClick={situer} disabled={geoEnCours}>
-          {geoEnCours ? 'un instant…' : 'd’accord, situe-moi.'}
+          {geoEnCours ? t('un instant…') : t('d’accord, situe-moi.')}
         </button>
         <button
           className="lien"
@@ -138,7 +167,7 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
             setPhase('payoff')
           }}
         >
-          plus tard
+          {t('plus tard')}
         </button>
       </div>
     )
@@ -149,8 +178,8 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     return (
       <div className="onboard onb-payoff">
         <div className="tampon-logo">Jeudi.</div>
-        <h1 className="grande-question">ça dit quoi ce soir ?</h1>
-        {sansGps && <p className="mono onb-sansgps">pas de GPS ? on te montre le centre.</p>}
+        <h1 className="grande-question">{t('ça dit quoi ce soir ?')}</h1>
+        {sansGps && <p className="mono onb-sansgps">{t('pas de GPS ? on te montre le centre.')}</p>}
         {proches.length > 0 ? (
           <>
             <ul className="onb-spots">
@@ -183,15 +212,15 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
                 )
               })}
             </ul>
-            <p className="mono onb-souffle">voilà ce que le carnet sait déjà.</p>
+            <p className="mono onb-souffle">{t('voilà ce que le carnet sait déjà.')}</p>
           </>
         ) : (
           <p className="onboard-sous">
-            le carnet se remplit encore. reviens ce soir — il aura des adresses pour toi.
+            {t('le carnet se remplit encore. reviens ce soir — il aura des adresses pour toi.')}
           </p>
         )}
         <button className="valider" onClick={() => setPhase('visite')}>
-          continuer →
+          {t('continuer →')}
         </button>
       </div>
     )
@@ -205,15 +234,15 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
       return (
         <div className="onboard onb-visite">
           <button className="mono onb-passer" onClick={passer}>
-            passer
+            {t('passer')}
           </button>
           <div className="tampon-logo">Jeudi.</div>
           <p className="hand onb-jnote">
-            {'tiens, mon carnet des soirs.\nje te montre mes trois coins ?\n— j.'}
+            {t('tiens, mon carnet des soirs.\nje te montre mes trois coins ?\n— j.')}
           </p>
           <div className="onb-visite-actions">
             <button className="valider" onClick={() => setPas(0)}>
-              montre-moi →
+              {t('montre-moi →')}
             </button>
           </div>
         </div>
@@ -224,7 +253,7 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     return (
       <div className="onboard onb-visite">
         <button className="mono onb-passer" onClick={passer}>
-          passer
+          {t('passer')}
         </button>
         <span className="mono onb-visite-compteur">{pas + 1}/3</span>
         {spot && (
@@ -234,27 +263,27 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
             {/* le coin 2 : le swipe, montré sur la carte */}
             {pas === 1 && (
               <div className="mono onb-swipe-demo">
-                <span>← on oublie</span>
-                <span>ça te tente →</span>
+                <span>{t('← on oublie')}</span>
+                <span>{t('ça te tente →')}</span>
               </div>
             )}
             {tipDe(spot) && <p className="hand onb-carte-demo-tip">{tipDe(spot)}</p>}
           </div>
         )}
-        <p className="hand onb-jnote">{LECONS[pas]}</p>
+        <p className="hand onb-jnote">{t(LECONS[pas])}</p>
         <div className="onb-visite-actions">
           {pas > 0 && (
             <button className="lien" onClick={() => setPas(pas - 1)}>
-              ← précédent
+              {t('← précédent')}
             </button>
           )}
           {pas < 2 ? (
             <button className="valider" onClick={() => setPas(pas + 1)}>
-              suivant →
+              {t('suivant →')}
             </button>
           ) : (
             <button className="valider" onClick={passer}>
-              j’ai pigé →
+              {t('j’ai pigé →')}
             </button>
           )}
         </div>
@@ -262,27 +291,75 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
     )
   }
 
-  // ── PHASE D · l'appropriation minimale : t'es qui ? ──────────────
+  // ── PHASE E · l'import : tes adresses dorment dans Google Maps ────
+  if (phase === 'import') {
+    return (
+      <div className="onboard onb-import">
+        <div className="tampon-logo">Jeudi.</div>
+        <h1 className="grande-question">{t('tes adresses dorment dans Google Maps ?')}</h1>
+        <p className="onboard-sous">
+          {t('récupère-les en 3 étapes — ton carnet démarre plein, pas vide.')}
+        </p>
+        <ImportGoogle ouvertParDefaut onImporte={() => setTimeout(finir, 1100)} />
+        <button className="lien" onClick={finir}>
+          {t('plus tard — je commence à la main')}
+        </button>
+      </div>
+    )
+  }
+
+  // ── PHASE D · l'appropriation : t'es qui ? (prénom + tête + date) ──
   return (
     <div className="onboard onb-prenom">
       <div className="tampon-logo">Jeudi.</div>
-      <h1 className="grande-question">c’est ton carnet maintenant. t’es qui ?</h1>
+      <h1 className="grande-question">{t('c’est ton carnet maintenant. t’es qui ?')}</h1>
       <label className="onboard-naissance mono">
-        ton prénom
+        {t('ton prénom')}
         <input
           className="onboard-input"
-          placeholder="comment on t’appelle ?"
+          placeholder={t('comment on t’appelle ?')}
           value={prenom}
           onChange={(e) => setPrenom(e.target.value)}
           autoFocus
         />
       </label>
+      {/* la photo d'identité du carnet : demandée dès l'entrée (le cercle te
+          reconnaît), mais on n'enferme personne — passable, reprise au profil */}
+      <label className="onb-portrait">
+        {apercuPortrait ? (
+          <img className="onb-portrait-img" src={apercuPortrait} alt="ton portrait" />
+        ) : (
+          <span className="onb-portrait-vide mono">{t('ta tête ici')}</span>
+        )}
+        <span className="mono onb-portrait-legende">
+          {portrait ? t('c’est toi ? parfait.') : t('ta photo — ton cercle te reconnaît')}
+        </span>
+        <input
+          type="file"
+          accept="image/*"
+          capture="user"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) setPortrait(f)
+          }}
+        />
+      </label>
+      <label className="onboard-naissance mono">
+        {t('ta date de naissance')} <span className="onb-optionnel">{t('(si tu veux)')}</span>
+        <input
+          type="date"
+          className="onboard-input"
+          value={naissance}
+          onChange={(e) => setNaissance(e.target.value)}
+        />
+      </label>
       <label className="onb-majeur mono">
         <input type="checkbox" checked={majeur} onChange={(e) => setMajeur(e.target.checked)} />
-        j’ai 18 ans ou plus
+        {t('j’ai 18 ans ou plus')}
       </label>
-      <button className="valider" onClick={terminer} disabled={!prenom.trim() || !majeur}>
-        c’est parti.
+      <button className="valider" onClick={validerIdentite} disabled={!prenom.trim() || !majeur}>
+        {t('c’est parti.')}
       </button>
     </div>
   )

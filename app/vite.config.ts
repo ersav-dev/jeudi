@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (pas 'autoUpdate') : on ne recharge JAMAIS la page tout seul.
+      // Sur iOS standalone, le reload programmatique déclenché par un SW qui
+      // prend la main au boot = écran blanc (bug WebKit connu). À la place, App
+      // affiche un toast « nouvelle version » ; le reload se fait sur le clic.
+      registerType: 'prompt',
       // le manifest est généré ici (public/manifest.webmanifest supprimé — une seule source)
       manifest: {
         name: 'jeudi — je dis où.',
@@ -28,6 +32,13 @@ export default defineConfig({
       workbox: {
         // precache : tout le build + le public (fonts, icônes) ; SPA fallback par défaut
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,woff2}'],
+        // hygiène de cache : purge les précaches des anciens builds (sinon ils
+        // s'empilent et, sous le budget storage riquiqui d'une PWA iOS, une
+        // éviction fait 404 un chunk précaché → bundle qui ne charge pas → blanc).
+        cleanupOutdatedCaches: true,
+        // le nouveau SW prend la main sur l'onglet dès son activation (offline
+        // dès la 1re visite). Il n'est activé qu'après le clic du toast (prompt).
+        clientsClaim: true,
         // og.png ne sert qu'aux scrapers (WhatsApp…) — inutile de le précacher
         globIgnores: ['**/og.png'],
         // le chunk Carte dépasse le plafond par défaut (2 Mo) — marge
