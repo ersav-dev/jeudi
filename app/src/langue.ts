@@ -149,6 +149,26 @@ const EN: Record<string, string> = {
   'c’est fait (ou plus tard)': 'done (or later)',
   'confidentialité & conditions': 'privacy & terms',
 
+  // Ce soir (le deck)
+  'sage.': 'wise.',
+  'à jeudi.': 'see you thursday.',
+  'en vrai non, je sors': 'actually no, I’m going out',
+  'je sais pas — surprends-moi': 'no idea — surprise me',
+  'situation du portefeuille ?': 'how’s the wallet?',
+  'grand soleil — on flambe': 'full sun — we splurge',
+  'nuageux — ça va': 'cloudy — we’re fine',
+  "pluie — c'est la merde": 'rain — things are rough',
+  "t'es difficile ce soir.": 'you’re picky tonight.',
+  "c'est tout ce que j'ai. reviens demain.": 'that’s all I’ve got. come back tomorrow.',
+  'rien dans ta carte pour ça.': 'nothing in your map for that.',
+  "capture des spots, ou élargis l'envie.": 'capture some spots, or widen the craving.',
+  'pas encore de photo.': 'no photo yet.',
+  '← bof · validé → · tap tip = autre voix': '← meh · approved → · tap tip = another voice',
+  'bof': 'meh',
+  'validé': 'approved',
+  'avec qui ?': 'who with?',
+  "l'envie du moment": 'the craving right now',
+
   // Toasts / communs
   'nouvelle version.': 'new version.',
   'recharger': 'reload',

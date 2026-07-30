@@ -23,6 +23,7 @@ import {
 } from './db'
 import { tirerPlans, type CompagnieTirage, type Plan } from './plans'
 import { suivre } from './analytique'
+import { t } from './langue'
 import { srcPhoto, photoIndisponible } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
 import NoteMarge from './NoteMarge'
@@ -69,9 +70,9 @@ function envieVersTag(envie: string): string {
 }
 
 const METEO_LABELS: { m: Meteo; icone: React.ReactNode; label: string }[] = [
-  { m: 'soleil', icone: <ISoleil />, label: 'grand soleil — on flambe' },
-  { m: 'nuageux', icone: <INuage />, label: 'nuageux — ça va' },
-  { m: 'pluie', icone: <IPluie />, label: "pluie — c'est la merde" },
+  { m: 'soleil', icone: <ISoleil />, label: t('grand soleil — on flambe') },
+  { m: 'nuageux', icone: <INuage />, label: t('nuageux — ça va') },
+  { m: 'pluie', icone: <IPluie />, label: t("pluie — c'est la merde") },
 ]
 
 const PIQUES_FIN = ["t'es difficile ce soir.", "c'est tout ce que j'ai. reviens demain."]
@@ -144,10 +145,10 @@ export default function CeSoir({
   if (envie === 'dodo') {
     return (
       <div className="vide bientot">
-        <h1 className="grande-question">sage.</h1>
-        <p className="hand">à jeudi.</p>
+        <h1 className="grande-question">{t('sage.')}</h1>
+        <p className="hand">{t('à jeudi.')}</p>
         <button className="lien" onClick={() => setEnvie(null)}>
-          en vrai non, je sors
+          {t('en vrai non, je sors')}
         </button>
       </div>
     )
@@ -178,7 +179,7 @@ export default function CeSoir({
           />
           {/* la porte de l'aléatoire, sous les chemins existants : une étiquette papier */}
           <button className="jsp-entree mono" onClick={() => setSurprise(true)}>
-            je sais pas — surprends-moi
+            {t('je sais pas — surprends-moi')}
           </button>
         </>
       ) : (
@@ -197,7 +198,7 @@ export default function CeSoir({
         </>
       )}
 
-      <span className="lbl mono meteo-bas-lbl">situation du portefeuille ?</span>
+      <span className="lbl mono meteo-bas-lbl">{t('situation du portefeuille ?')}</span>
       <div className="meteo-bas">
         {METEO_LABELS.map(({ m, icone, label }) => (
           <button
@@ -379,7 +380,7 @@ function QuestionsSwipe({
         : 'pour quoi faire ?'
   // étape 1 : le titre pose déjà « pour quoi faire ? » — le sous-titre glose au
   // lieu de répéter.
-  const sousTitre = etape === 0 ? 'avec qui ?' : "l'envie du moment"
+  const sousTitre = etape === 0 ? t('avec qui ?') : t("l'envie du moment")
   const glose = etape === 0 ? COMPAGNIE_GLOSE[choix as Compagnie] : gloseEnvie(choix)
 
   const valider = () => {
@@ -510,8 +511,8 @@ function Deck({
   if (deck.length === 0) {
     return (
       <div className="deck-vide">
-        <p className="hand">rien dans ta carte pour ça.</p>
-        <p className="mono">capture des spots, ou élargis l'envie.</p>
+        <p className="hand">{t('rien dans ta carte pour ça.')}</p>
+        <p className="mono">{t("capture des spots, ou élargis l'envie.")}</p>
       </div>
     )
   }
@@ -656,7 +657,7 @@ function Deck({
         {index + 1}/{deck.length}
       </span>
       {index === deck.length - 1 && deck.length > 2 && (
-        <p className="mono deck-pique">{PIQUES_FIN[0]}</p>
+        <p className="mono deck-pique">{t(PIQUES_FIN[0])}</p>
       )}
       <div className="pile">
         <div
@@ -688,7 +689,7 @@ function Deck({
             ) : (
               <div className="tirage-vide">
                 <span className="croix">✕</span>
-                <span className="hand sans-photo">pas encore de photo.</span>
+                <span className="hand sans-photo">{t('pas encore de photo.')}</span>
               </div>
             )}
           </div>
@@ -722,13 +723,13 @@ function Deck({
           deux vrais boutons équivalents, focusables, 44px min */}
       <div className="deck-boutons">
         <button className="deck-btn deck-btn-bof" onClick={() => jeter('bof')} aria-label={`bof — écarter ${lieu.nom}`}>
-          bof
+          {t('bof')}
         </button>
         <button className="deck-btn deck-btn-valide" onClick={() => jeter('valide')} aria-label={`validé — garder ${lieu.nom}`}>
-          validé
+          {t('validé')}
         </button>
       </div>
-      <p className="mono deck-aide">← bof · validé → · tap tip = autre voix</p>
+      <p className="mono deck-aide">{t('← bof · validé → · tap tip = autre voix')}</p>
     </div>
   )
 }
