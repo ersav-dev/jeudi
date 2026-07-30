@@ -1122,13 +1122,14 @@ export function etatHoraire(
 
 // ── la "situation du portefeuille" (ex-météo) : ce que coûte le spot ──
 // des valeurs concrètes pour que l'utilisateur sache ce qu'il choisit.
-// ── le carnet éditorial fondateur : « jeudi. » ──
-// tout le fond du seed (mes anciens spots google + curated + extra) est signé
-// « jeudi. », comme si l'app était le premier éclaireur. proprietaire = 'jeudi'
-// → estAMoi() renvoie false : ce carnet n'apparaît JAMAIS comme « à moi » chez
-// un nouvel inscrit (avant, ces spots étaient 'moi' → faussement siens).
+// ── le carnet éditorial fondateur : signé « ersan » ──
+// tout le fond public du seed (spots google d'Ersan + curated + extra) est
+// signé du FONDATEUR EN PERSONNE — le panel le demandait : un curateur réel
+// et identifiable, pas une voix anonyme. L'id interne de propriété reste
+// 'jeudi' (aucune migration de données) ; seul le nom AFFICHÉ change.
+// estAMoi() renvoie toujours false : ce carnet n'apparaît jamais « à moi ».
 export const CURATEUR_JEUDI = 'jeudi'
-export const NOM_JEUDI = 'jeudi.'
+export const NOM_JEUDI = 'ersan'
 
 /** le nom AFFICHÉ d'un curateur depuis son id de propriété :
  *  'jeudi' → « jeudi. » (le fondateur) · un vrai membre → son prénom (fourni
