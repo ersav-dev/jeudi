@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
 import {
   type Lieu,
+  type PhotoLieu,
+  labelTypePhoto,
   type Compagnie,
   type Meteo,
   COMPAGNIES,
@@ -752,7 +754,7 @@ type VueRecap = 'liste' | 'grand' | 'carte'
 // un tirage « en grand » : photo feuilletable (les 2-3 photos du lieu) +
 // infos en bas (catégorie de la photo, distance, état, propreté des wc, tip).
 function labelCatPhoto(t?: string) {
-  return t === 'lieu' ? 'le lieu' : t === 'plat' ? 'le verre' : t === 'wc' ? 'les wc' : ''
+  return t ? labelTypePhoto(t as PhotoLieu['type']) : ''
 }
 
 function RecapTirage({

@@ -64,6 +64,7 @@ import {
   estAMoi,
   CURATEUR_JEUDI,
   NOM_JEUDI,
+  normaliserTypePhoto,
   spotComplet,
   adopterLieu,
   // les tips réels (table `tips`) : la voix qu'on pose sur le spot d'un autre
@@ -3388,8 +3389,12 @@ function Fiche({
 // le pipeline existant (majLieu → televerserPhoto + syncPhotosLieu) et le
 // tirage « se développe » sur place (du sombre vers l'image, CSS only).
 // même langue que le kit photos de la validation (« les wc, c'est la vérité »)
+// 5 preuves, dans l'ordre du parcours d'une soirée — la porte et la
+// terrasse sont optionnelles (le sceau « fiche complète » reste photo+note)
 const CADRES_ALBUM: { type: PhotoLieu['type']; etiquette: string }[] = [
-  { type: 'lieu', etiquette: 'la façade' },
+  { type: 'facade', etiquette: 'la porte' },
+  { type: 'salle', etiquette: 'la salle' },
+  { type: 'terrasse', etiquette: 'la terrasse' },
   { type: 'plat', etiquette: 'ton verre' },
   { type: 'wc', etiquette: 'les wc' },
 ]
@@ -3412,8 +3417,11 @@ function AlbumATrous({
       onPrise(type, f)
     }
   // un cadre par type SANS photo (+ ceux tout juste comblés) ; album complet → rien
+  // ('lieu', l'ancien générique, compte comme « salle »)
   const cadres = CADRES_ALBUM.filter(
-    ({ type }) => !lieu.photos.some((p) => p.type === type) || developpees.includes(type),
+    ({ type }) =>
+      !lieu.photos.some((p) => normaliserTypePhoto(p.type) === type) ||
+      developpees.includes(type),
   )
   if (!cadres.length) return null
   return (
@@ -3460,10 +3468,13 @@ interface Suggestion {
   lng: number
 }
 
-// #8 : le kit photos — 2-3 tirages PAR catégorie (le lieu · ton verre · les wc).
-// on assume la signature jeudi : les WC sont le détail qui dit la vérité.
+// #8 : le kit photos — 2-3 tirages PAR catégorie. Une photo DIT CE QU'ELLE
+// PROUVE : la porte (trouver l'entrée), la salle (l'ambiance vraie), la
+// terrasse (rooftops & péniches), ton verre, les wc (la vérité).
 const CATS_PHOTO = [
-  { type: 'lieu', label: 'le lieu' },
+  { type: 'facade', label: 'la porte' },
+  { type: 'salle', label: 'la salle' },
+  { type: 'terrasse', label: 'la terrasse' },
   { type: 'plat', label: 'ton verre' },
   { type: 'wc', label: 'les wc' },
 ] as const
@@ -3497,7 +3508,7 @@ function KitPhotos({
   return (
     <div className="photos-kit">
       {CATS_PHOTO.map(({ type, label }) => {
-        const prises = photos.filter((p) => p.type === type)
+        const prises = photos.filter((p) => normaliserTypePhoto(p.type) === type)
         return (
           <div key={type} className={`photo-cat ${type === 'wc' ? 'photo-cat-wc' : ''}`}>
             <span className="mono photo-cat-lbl">

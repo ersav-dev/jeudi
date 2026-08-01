@@ -43,12 +43,36 @@ export type Envie = (typeof ENVIES)[number]
 export const METEOS = ['soleil', 'nuageux', 'pluie'] as const
 export type Meteo = (typeof METEOS)[number]
 
+// une photo DIT CE QU'ELLE PROUVE — 5 types, dans l'ordre du parcours
+// d'une soirée. 'lieu' = l'ancien générique (vieux clients), lu « salle ».
+export const TYPES_PHOTO = ['facade', 'salle', 'terrasse', 'plat', 'wc'] as const
+export type TypePhoto = (typeof TYPES_PHOTO)[number]
+
 export interface PhotoLieu {
-  type: 'lieu' | 'plat' | 'wc'
+  type: TypePhoto | 'lieu'
   /** photo prise par le membre (cas réel) */
   blob?: Blob
   /** photo distante — fausses photos de test / futur cloud */
   url?: string
+}
+
+/** l'ancien générique 'lieu' se lit « salle » partout */
+export function normaliserTypePhoto(t: PhotoLieu['type']): TypePhoto {
+  return t === 'lieu' ? 'salle' : t
+}
+
+/** le mot à l'écran pour chaque preuve (à passer dans t() à l'affichage) */
+export function labelTypePhoto(t: PhotoLieu['type']): string {
+  const n = normaliserTypePhoto(t)
+  return n === 'facade'
+    ? 'la porte'
+    : n === 'salle'
+      ? 'la salle'
+      : n === 'terrasse'
+        ? 'la terrasse'
+        : n === 'plat'
+          ? 'le verre · le plat'
+          : 'les wc'
 }
 
 /** un tip d'un membre du cercle sur ce lieu (l'autre voix) */
