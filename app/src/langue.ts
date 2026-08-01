@@ -174,6 +174,17 @@ const EN: Record<string, string> = {
   'envoie à un pote': 'send to a friend',
   'partager en story →': 'share as a story →',
 
+  // Le moment unifié (« quand ? » partout — le deck, le match)
+  'ce soir · 22h': 'tonight · 10pm',
+  'jeudi · 22h': 'thursday · 10pm',
+  'le carnet se règle sur': 'the notebook is set to',
+  'avant le rendez-vous': 'before the meet-up',
+  'spots au vote': 'spots on the ballot',
+  'tape un spot pour l’écarter ou le reprendre': 'tap a spot to drop it or bring it back',
+  'au vote': 'on the ballot',
+  'écarté': 'dropped',
+  'garde au moins deux spots — sinon il n’y a rien à voter.': 'keep at least two spots — otherwise there’s nothing to vote on.',
+
   // Le match de groupe (in-app + page publique /sortie/<token>)
   'sortir': 'go out',
   'on dit où.': 'we say where.',

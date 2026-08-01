@@ -6538,3 +6538,42 @@ button {
   border-radius: 50%;
   background: var(--cire);
 }
+
+/* ── le moment unifié (« quand ? ») + la shortlist choisissable ── */
+.moment-libre {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--nuit-2);
+  border: 1px solid var(--graphite);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-size: 14px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  color-scheme: dark;
+}
+.moment-libre:focus {
+  outline: none;
+  border-color: var(--encre);
+}
+.moment-hint {
+  color: var(--encre-3);
+  margin: 6px 0 0;
+}
+.sg-choix {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  color: var(--encre);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: opacity 150ms var(--pose), border-color 150ms var(--pose);
+}
+.sg-choix.off {
+  opacity: 0.42;
+}
+.sg-choix:not(.off) {
+  border-color: rgba(239, 233, 216, 0.35);
+}

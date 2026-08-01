@@ -31,12 +31,19 @@ import {
   libelleRestant,
   budgetDepuisMeteo,
 } from './sortieGroupe'
+import { lireMoment, dateDuMoment, libelleMoment, momentFutur } from './moment'
 
 type Etape = 'compose' | 'shortlist' | 'suivi'
 
 const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
-const TOP_CANDIDATS = 5
+// le carnet propose 8 candidats, les 5 mieux classés sont précochés —
+// le créateur écarte/reprend d'un tap (minimum 2 pour un vrai vote)
+const POOL_CANDIDATS = 8
+const PRESEL_CANDIDATS = 5
+const MIN_CANDIDATS = 2
 const POLL_MS = 15000
+// « avant le rendez-vous » : la deadline se cale 1h30 avant le moment choisi
+const RDV = -1
 
 // la deadline, posée par le créateur au lancement (minimum serveur : 15 min)
 const DEADLINES: { label: string; minutes: number | null }[] = [
@@ -63,7 +70,13 @@ export default function Groupe({
   const [etape, setEtape] = useState<Etape>(active ? 'suivi' : 'compose')
   const [mesEnvies, setMesEnvies] = useState<Envie[]>(['apéro'])
   const [monDepart, setMonDepart] = useState<Repere>(repereMaPosition())
-  const [deadlineMin, setDeadlineMin] = useState<number | null>(60)
+  // le moment choisi dans « sortir » s'accorde ici : si la sortie est pour
+  // plus tard, la deadline par défaut se cale avant le rendez-vous
+  const [deadlineMin, setDeadlineMin] = useState<number | null>(() =>
+    momentFutur(lireMoment()) ? RDV : 60,
+  )
+  // null = la présélection du carnet (top 5) ; sinon le choix explicite
+  const [selIds, setSelIds] = useState<string[] | null>(null)
   const [vue, setVue] = useState<SortieVue | null>(null)
   const [mesVotes, setMesVotes] = useState<Record<string, ReactionSG>>(() =>
     active ? (lireCleSortie(active.token)?.votes ?? {}) : {},
@@ -86,8 +99,21 @@ export default function Groupe({
   // (celle du deck) remplace l'ancien budget hardcodé — jamais révélée.
   const shortlist = useMemo<ScoreGroupe[]>(() => {
     const moi = monProfil(mesEnvies, budgetDepuisMeteo(lireMeteo()))
-    return classerPourGroupe(lieuxValides, [moi], TOP_CANDIDATS, centre)
+    return classerPourGroupe(lieuxValides, [moi], POOL_CANDIDATS, centre, dateDuMoment(lireMoment()))
   }, [lieuxValides, mesEnvies, centre])
+
+  // la sélection effective : le choix explicite, sinon les 5 mieux classés
+  const idsChoisis = useMemo<Set<string>>(() => {
+    if (selIds) return new Set(selIds)
+    return new Set(shortlist.slice(0, PRESEL_CANDIDATS).map((s) => s.lieu.id))
+  }, [selIds, shortlist])
+
+  const basculerCandidat = (id: string) => {
+    const suivant = new Set(idsChoisis)
+    if (suivant.has(id)) suivant.delete(id)
+    else suivant.add(id)
+    setSelIds([...suivant])
+  }
 
   const charger = useCallback(async () => {
     const a = lireSortieActive()
@@ -139,18 +165,29 @@ export default function Groupe({
   const sansEnvie = mesEnvies.length === 0
 
   const lancer = async () => {
-    if (enCours || !shortlist.length) return
+    const retenus = shortlist.filter((s) => idsChoisis.has(s.lieu.id))
+    if (enCours || retenus.length < MIN_CANDIDATS) return
     setEnCours(true)
     setErreur('')
     try {
       const prenom = (await lireProfil())?.prenom?.trim() || 'moi'
+      const moment = lireMoment()
+      // la deadline : une durée choisie, « avant le rendez-vous » (1h30 avant
+      // le moment, jamais sous le minimum serveur de 15 min), ou pas de limite
+      let deadline: Date | null = null
+      if (deadlineMin === RDV) {
+        const d = new Date(dateDuMoment(moment).getTime() - 90 * 60000)
+        deadline = d.getTime() > Date.now() + 16 * 60000 ? d : new Date(Date.now() + 30 * 60000)
+      } else if (deadlineMin) {
+        deadline = new Date(Date.now() + deadlineMin * 60000)
+      }
       const creee = await creerSortieGroupe({
-        titre: '',
+        titre: moment.cle === 'maintenant' ? 'ce soir' : libelleMoment(moment),
         envies: mesEnvies,
         centre,
-        deadline: deadlineMin ? new Date(Date.now() + deadlineMin * 60000) : null,
+        deadline,
         monPrenom: prenom,
-        candidats: shortlist.map((s) => s.lieu),
+        candidats: retenus.map((s) => s.lieu),
       })
       const a: SortieActive = { ...creee, quand: new Date().toISOString() }
       ecrireSortieActive(a)
@@ -269,6 +306,12 @@ export default function Groupe({
 
         <div className="labo-cap" style={{ marginBottom: 6 }}>{t('on vote jusqu’à quand ?')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 22 }}>
+          {/* la sortie est pour plus tard → la deadline sait se caler avant le rendez-vous */}
+          {momentFutur(lireMoment()) && (
+            <button className={chip(deadlineMin === RDV)} onClick={() => setDeadlineMin(RDV)}>
+              {t('avant le rendez-vous')}
+            </button>
+          )}
           {DEADLINES.map((d) => (
             <button
               key={d.label}
@@ -287,7 +330,10 @@ export default function Groupe({
         )}
         <button
           className="valider"
-          onClick={() => setEtape('shortlist')}
+          onClick={() => {
+            setSelIds(null) // nouvelle shortlist → présélection fraîche du carnet
+            setEtape('shortlist')
+          }}
           disabled={sansEnvie}
           style={{ width: '100%', padding: '13px 0' }}
         >
@@ -299,21 +345,39 @@ export default function Groupe({
 
   // ── ÉTAPE 2 : la shortlist du carnet, avant d'ouvrir le vote ──
   if (etape === 'shortlist') {
+    const nChoisis = shortlist.filter((s) => idsChoisis.has(s.lieu.id)).length
     return (
       <div style={{ color: 'var(--ivory)' }}>
-        <div className="labo-cap" style={{ marginBottom: 10 }}>{t('la shortlist du carnet')}</div>
+        <div className="labo-cap" style={{ marginBottom: 4 }}>{t('la shortlist du carnet')}</div>
+        <p className="mono" style={{ margin: '0 0 10px' }}>
+          {nChoisis} {t('spots au vote')} · {t('tape un spot pour l’écarter ou le reprendre')}
+        </p>
         {shortlist.length === 0 && (
           <p className="labo-vide">{t('rien dans ta carte pour ça.')}</p>
         )}
-        {shortlist.map((p) => (
-          <div key={p.lieu.id} className="labo-carte" style={{ marginBottom: 10 }}>
-            <div className="labo-nom">{p.lieu.nom}</div>
-            <div className="mono" style={{ marginTop: 4 }}>
-              {formatDistance(distanceM(p.lieu, centre))} {t('du rendez-vous')}
-            </div>
-            {p.lieu.note && <p className="hand labo-resume">{p.lieu.note}</p>}
-          </div>
-        ))}
+        {shortlist.map((p) => {
+          const dedans = idsChoisis.has(p.lieu.id)
+          return (
+            <button
+              key={p.lieu.id}
+              className={`labo-carte sg-choix${dedans ? '' : ' off'}`}
+              onClick={() => basculerCandidat(p.lieu.id)}
+              aria-pressed={dedans}
+            >
+              <div className="labo-nom">{p.lieu.nom}</div>
+              <div className="mono" style={{ marginTop: 4 }}>
+                {dedans ? `✓ ${t('au vote')}` : t('écarté')} ·{' '}
+                {formatDistance(distanceM(p.lieu, centre))} {t('du rendez-vous')}
+              </div>
+              {p.lieu.note && <p className="hand labo-resume">{p.lieu.note}</p>}
+            </button>
+          )
+        })}
+        {nChoisis < MIN_CANDIDATS && shortlist.length > 0 && (
+          <p className="mono" style={{ margin: '4px 0 0' }}>
+            {t('garde au moins deux spots — sinon il n’y a rien à voter.')}
+          </p>
+        )}
         {erreur && <p className="mono" style={{ color: 'var(--cire-claire)', margin: '8px 0' }}>{t(erreur)}</p>}
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button onClick={() => setEtape('compose')} className="labo-btn-ligne" style={{ flex: 1 }}>
@@ -322,7 +386,7 @@ export default function Groupe({
           <button
             onClick={() => void lancer()}
             className="valider"
-            disabled={enCours || shortlist.length === 0}
+            disabled={enCours || nChoisis < MIN_CANDIDATS}
             style={{ flex: 1, padding: '12px 0' }}
           >
             {enCours ? t('un instant…') : t('lancer le vote →')}

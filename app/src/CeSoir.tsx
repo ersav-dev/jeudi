@@ -28,6 +28,8 @@ import { srcPhoto, photoIndisponible } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
 import NoteMarge from './NoteMarge'
 import { effacerNote } from './tuto'
+import { type Moment, dateDuMoment, lireMoment, ecrireMoment } from './moment'
+import ChoixMoment from './ChoixMoment'
 const CarteLazy = lazy(() => import('./Carte'))
 function Carte(p: ComponentProps<typeof CarteLazy>) {
   return (
@@ -91,33 +93,23 @@ export default function CeSoir({
   const [meteo, setMeteo] = useState<Meteo>(() => lireMeteo())
   // bloc B : la porte « je sais pas » — pas un 6e onglet, un mode DANS ce soir
   const [surprise, setSurprise] = useState(false)
-  // « quand ? » — par défaut MAINTENANT (live). On peut prévisualiser un moment
-  // ultérieur (le nom de l'app, c'est une nuit qu'on anticipe). Le défaut reste
-  // l'immédiateté ; le décalage est un geste secondaire, opt-in.
-  type Quand = 'maintenant' | 'soir' | 'nuit' | 'jeudi'
-  const [quandKey, setQuandKey] = useState<Quand>('maintenant')
+  // « quand ? » — le MOMENT unifié (moment.ts, audit du cœur 01/08) : les
+  // mêmes presets que le match + « à l'heure près » (l'heure libre). Par
+  // défaut MAINTENANT (live) ; le choix est partagé avec le reste de l'app.
+  const [moment, setMoment] = useState<Moment>(() => lireMoment())
+  const choisirMoment = (m: Moment) => {
+    setMoment(m)
+    ecrireMoment(m)
+  }
   const [, setTick] = useState(0)
   useEffect(() => {
     // seul « maintenant » est vivant (l'app ouverte à 17h59 verra la fête à 18h) ;
     // un moment figé n'a pas besoin de tick.
-    if (quandKey !== 'maintenant') return
+    if (moment.cle !== 'maintenant') return
     const t = setInterval(() => setTick((n) => n + 1), 60_000)
     return () => clearInterval(t)
-  }, [quandKey])
-  const dateEffective = (() => {
-    const d = new Date()
-    if (quandKey === 'soir') d.setHours(22, 0, 0, 0)
-    else if (quandKey === 'nuit') d.setHours(25, 0, 0, 0) // 1h du matin (la fonte)
-    else if (quandKey === 'jeudi') {
-      // jeudi le plus proche : si on est jeudi avant 22h, c'est CE soir (delta 0) ;
-      // jeudi après 22h → celui d'après.
-      const brut = (4 - d.getDay() + 7) % 7
-      const delta = brut === 0 ? (d.getHours() < 22 ? 0 : 7) : brut
-      d.setDate(d.getDate() + delta)
-      d.setHours(22, 0, 0, 0)
-    }
-    return d
-  })()
+  }, [moment.cle])
+  const dateEffective = dateDuMoment(moment)
   const { envies, nuit } = lexiqueDuMoment(dateEffective)
 
   const choisirMeteo = (m: Meteo) => {
@@ -215,27 +207,8 @@ export default function CeSoir({
         {meteo === 'pluie' && <span className="mono pluie-mot">il pleut sur ton porte-monnaie.</span>}
       </div>
 
-      <span className="lbl mono meteo-bas-lbl">quand ?</span>
-      <div className="meteo-bas">
-        {(
-          [
-            ['maintenant', 'maintenant'],
-            ['soir', 'ce soir · 22h'],
-            ['nuit', '1h du mat'],
-            ['jeudi', 'jeudi · 22h'],
-          ] as [Quand, string][]
-        ).map(([k, lbl]) => (
-          <button
-            key={k}
-            className={`meteo-choix ${quandKey === k ? 'on' : ''}`}
-            aria-pressed={quandKey === k}
-            onClick={() => setQuandKey(k)}
-            title={k === 'maintenant' ? 'là, maintenant' : 'prévisualiser ce moment'}
-          >
-            <span className="meteo-prix mono">{lbl}</span>
-          </button>
-        ))}
-      </div>
+      <span className="lbl mono meteo-bas-lbl">{t('quand')} ?</span>
+      <ChoixMoment valeur={moment} onChange={choisirMoment} />
     </div>
   )
 }
