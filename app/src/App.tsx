@@ -1752,7 +1752,11 @@ export default function App() {
           <div className="profil-potes">
             {membresCercle.filter((m) => proches.includes(m.id)).map((m) => (
               <button key={m.id} className="profil-pote" onClick={allerAuCercle}>
-                <span className="exlibris-initiale">{m.prenom[0]}</span>
+                {m.photoUrl ? (
+                  <img className="exlibris-initiale exlibris-photo" src={m.photoUrl} alt="" loading="lazy" onError={photoIndisponible} />
+                ) : (
+                  <span className="exlibris-initiale">{m.prenom[0]}</span>
+                )}
                 <span className="mono profil-pote-nom">{m.prenom}</span>
               </button>
             ))}
@@ -1859,7 +1863,19 @@ export default function App() {
                     }
                   }}
                 >
-                  <span className="exlibris-initiale">{m.prenom[0]}</span>
+                  {/* le portrait quand il existe (dans l'anneau graphite de
+                      l'ex-libris) — sinon l'initiale frappée, jamais un avatar bidon */}
+                  {m.photoUrl ? (
+                    <img
+                      className="exlibris-initiale exlibris-photo"
+                      src={m.photoUrl}
+                      alt=""
+                      loading="lazy"
+                      onError={photoIndisponible}
+                    />
+                  ) : (
+                    <span className="exlibris-initiale">{m.prenom[0]}</span>
+                  )}
                   <div className="membre-corps">
                     <div className="membre-tete">
                       <span className="membre-nom">{m.prenom}</span>

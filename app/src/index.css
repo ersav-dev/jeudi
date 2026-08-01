@@ -6636,3 +6636,10 @@ button {
   text-decoration: none;
   margin-top: 14px;
 }
+
+/* le portrait dans l'anneau de l'ex-libris — même géométrie que l'initiale,
+   la photo remplit le tampon (jamais un avatar bidon : photo réelle ou initiale) */
+.exlibris-photo {
+  object-fit: cover;
+  background: var(--nuit-2);
+}
