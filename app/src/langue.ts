@@ -175,6 +175,14 @@ const EN: Record<string, string> = {
   'partager en story →': 'share as a story →',
 
   // Le match de groupe (in-app + page publique /sortie/<token>)
+  'sortir': 'go out',
+  'on dit où.': 'we say where.',
+  'on dit où ? vote ici :': 'we say where? vote here:',
+  'le match — tes potes votent par un lien': 'the match — your friends vote through one link',
+  'un vote vit': 'a vote is live',
+  'reprendre le match →': 'back to the match →',
+  'voir le verdict →': 'see the verdict →',
+  'c’est dit.': 'settled.',
   'sortir à plusieurs.': 'going out together.',
   'tes potes votent par un lien — app ou pas, sans compte.': 'your friends vote through one link — app or not, no account.',
   "l'envie du groupe": 'the group’s craving',

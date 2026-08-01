@@ -18,6 +18,8 @@ import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
+import BandeauMatch from './BandeauMatch'
+import { lireSortieActive } from './sortieGroupe'
 import GrandJeudi from './EcranGrandJeudi'
 // le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
 import { estCeLeGrandJeudi } from './grandJeudi'
@@ -649,6 +651,9 @@ export default function App() {
   // le match de groupe vit dans l'onglet cercle : l'étiquette « sortir à
   // plusieurs → » ouvre le parcours composer → trianguler → swiper → match
   const [sortieGroupe, setSortieGroupe] = useState(false)
+  // …et depuis la refonte du cœur (audit 01/08), sa porte PRINCIPALE est
+  // l'étiquette « on dit où. » en tête de l'onglet « sortir »
+  const [matchSortir, setMatchSortir] = useState(false)
   // l'écran du grand jeudi : ouvert par la bannière du jour J, ou par la
   // ligne « aperçu du grand jeudi » des réglages (pour tester sans attendre)
   const [gjOuvert, setGjOuvert] = useState(false)
@@ -1166,7 +1171,7 @@ export default function App() {
             ) : onglet === 'trouver' ? null : ( // « trouver » porte son propre en-tête d'onglet
               <span className="topbar-titre">
                 {onglet === 'cesoir'
-                  ? 'ce soir'
+                  ? t('sortir')
                   : onglet === 'cercle'
                     ? 'le cercle'
                     : 'mon profil'}
@@ -1578,11 +1583,23 @@ export default function App() {
         </>
       )}
 
-      {onglet === 'cesoir' && (
+      {/* le match plein écran, ouvert par l'étiquette « on dit où. » */}
+      {onglet === 'cesoir' && matchSortir && (
+        <div className="cercle">
+          <button className="lien fiche-retour" onClick={() => setMatchSortir(false)}>
+            ← {t('sortir')}
+          </button>
+          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+        </div>
+      )}
+
+      {onglet === 'cesoir' && !matchSortir && (
         <>
           {estCeLeGrandJeudi(new Date()) && (
             <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
           )}
+          {/* la porte permanente du match — ou le bandeau de reprise si un vote vit */}
+          <BandeauMatch onOuvrir={() => setMatchSortir(true)} />
           <CeSoir
             lieux={mesLieux}
             onVoir={(l) => ouvrirFiche(l, mesLieux)}
@@ -1788,7 +1805,7 @@ export default function App() {
         <div className="cercle">
           {/* sortir à plusieurs : l'entrée du match de groupe, une étiquette papier */}
           <button className="inviter-pote sortir-groupe" onClick={() => setSortieGroupe(true)}>
-            sortir à plusieurs →
+            {t('on dit où.')} →
           </button>
           {membresCercle.length > 0 && (
             <p className="mono cercle-compteur">
@@ -2031,7 +2048,9 @@ export default function App() {
             aria-label="ça dit quoi ce soir ?"
           >
             <IEtincelle taille={24} />
-            <span className="nav-lbl">{t('ce soir')}</span>
+            {/* la pastille cire : un vote de groupe vit quelque part */}
+            {lireSortieActive() && <span className="nav-pastille" aria-hidden="true" />}
+            <span className="nav-lbl">{t('sortir')}</span>
           </button>
           <button
             className={`nav-item ${onglet === 'trouver' ? 'actif' : ''}`}

@@ -193,7 +193,7 @@ export default function Groupe({
   const partager = async () => {
     if (!active) return
     const url = lienSortie(active.token)
-    const texte = t('on se voit où ? vote ici :')
+    const texte = t('on dit où ? vote ici :')
     try {
       if (navigator.share) {
         await navigator.share({ text: `${texte} ${url}` })
@@ -241,7 +241,7 @@ export default function Groupe({
   if (etape === 'compose') {
     return (
       <div style={{ color: 'var(--ivory)' }}>
-        <h2 className="labo-titre">{t('sortir à plusieurs.')}</h2>
+        <h2 className="labo-titre">{t('on dit où.')}</h2>
         <p className="mono" style={{ margin: '0 0 16px' }}>
           {t('tes potes votent par un lien — app ou pas, sans compte.')}
         </p>
@@ -356,6 +356,7 @@ export default function Groupe({
         {gagnant ? (
           <>
             <h2 className="labo-titre" style={{ margin: '6px 0 4px' }}>{gagnant.nom}</h2>
+            <p className="hand" style={{ margin: '2px 0 0', opacity: 0.9 }}>{t('c’est dit.')}</p>
             <p className="mono" style={{ marginTop: 4 }}>
               {resumeSG(vue.comptes[gagnant.id]) || t('le spot le mieux placé pour le groupe')}
               {total > 0 && ` · ${votants}/${total} ${t('ont voté')}`}

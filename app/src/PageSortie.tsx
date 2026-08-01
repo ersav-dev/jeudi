@@ -136,6 +136,7 @@ export default function PageSortie({ token }: { token: string }) {
         {gagnant ? (
           <>
             <h2 className="sortie-gagnant">{gagnant.nom}.</h2>
+            <p className="hand sortie-mot" style={{ margin: '0 0 8px' }}>{t('c’est dit.')}</p>
             <p className="mono sortie-meta">
               {resumeSG(vue.comptes[gagnant.id]) || t('le spot le mieux placé pour le groupe')}
               {total > 0 && ` · ${votants}/${total} ${t('ont voté')}`}
