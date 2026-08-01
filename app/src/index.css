@@ -6598,3 +6598,31 @@ button {
 .cesoir-moment:active {
   transform: translateY(1px);
 }
+
+/* ── retouches du panel design (01/08 au soir) ── */
+/* la promesse sous le tampon, page invitée : « jeudi. / on dit où. » */
+.sortie-promesse {
+  margin: -14px 0 18px;
+  color: var(--encre-2);
+}
+/* le moment tapable : le chevron dit « je me tape », la cible s'étend à ~44px */
+.cesoir-moment-chev {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--encre-2);
+}
+.cesoir-moment {
+  padding: 8px 4px;
+  margin: -8px -4px;
+}
+/* cibles tactiles : l'étiquette reste fine, la zone de frappe s'étend */
+.labo-chip,
+.meteo-choix {
+  position: relative;
+}
+.labo-chip::before,
+.meteo-choix::before {
+  content: '';
+  position: absolute;
+  inset: -9px -3px;
+}

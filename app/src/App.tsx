@@ -1613,14 +1613,6 @@ export default function App() {
           {estCeLeGrandJeudi(new Date()) && (
             <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
           )}
-          {/* la porte permanente du match — ou le bandeau de reprise si un vote vit
-              (le mien, ou un match du cloud où je suis membre) */}
-          <BandeauMatch
-            onOuvrir={(m) => {
-              setMatchRejoint(m)
-              setMatchSortir(true)
-            }}
-          />
           <CeSoir
             lieux={mesLieux}
             onVoir={(l) => ouvrirFiche(l, mesLieux)}
@@ -1628,6 +1620,17 @@ export default function App() {
               setComparer(ecrireComparer(ids))
               setCompaOuverte(true)
             }}
+            onMatch={() => setMatchSortir(true)}
+            encart={
+              /* la porte du match — SOUS le cœur solo (le rituel d'abord),
+                 bandeau de reprise si un vote vit (le mien ou un du cloud) */
+              <BandeauMatch
+                onOuvrir={(m) => {
+                  setMatchRejoint(m)
+                  setMatchSortir(true)
+                }}
+              />
+            }
           />
         </>
       )}
@@ -2067,7 +2070,7 @@ export default function App() {
           <button
             className={`nav-item ${onglet === 'cesoir' ? 'actif' : ''}`}
             onClick={() => setOnglet('cesoir')}
-            aria-label="ça dit quoi ce soir ?"
+            aria-label={lireSortieActive() ? 'sortir — un vote en cours' : 'ça dit quoi ce soir ?'}
           >
             <IEtincelle taille={24} />
             {/* la pastille cire : un vote de groupe vit quelque part */}

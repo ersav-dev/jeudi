@@ -83,10 +83,17 @@ export default function CeSoir({
   lieux,
   onVoir,
   onComparer,
+  encart,
+  onMatch,
 }: {
   lieux: Lieu[]
   onVoir?: (l: Lieu) => void
   onComparer?: (ids: string[]) => void
+  /** l'étiquette du match (« on dit où. ») — posée SOUS le cœur solo :
+   *  le rituel du deck reste la première chose qu'on voit */
+  encart?: React.ReactNode
+  /** swiper « potos » ouvre la passerelle vers le match (« on dit où. ») */
+  onMatch?: () => void
 }) {
   const [compagnie, setCompagnie] = useState<Compagnie | null>(null)
   const [envie, setEnvie] = useState<string | null>(null)
@@ -160,7 +167,7 @@ export default function CeSoir({
           onClick={() => setReglerMoment((v) => !v)}
           aria-expanded={reglerMoment}
         >
-          {t(libelleMoment(moment))}
+          {t(libelleMoment(moment))} <span className="cesoir-moment-chev">▾</span>
         </button>{' '}
         ?
       </h2>
@@ -187,6 +194,13 @@ export default function CeSoir({
             }}
             onEnvie={setEnvie}
           />
+          {/* « potos » n'est plus une impasse : la passerelle vers le match —
+              vous décidez ensemble, ou je choisis pour la bande (le deck) */}
+          {compagnie === 'potos' && onMatch && (
+            <button className="jsp-entree mono" onClick={onMatch}>
+              {t('vous décidez ensemble ? on dit où. →')}
+            </button>
+          )}
           {/* la porte de l'aléatoire, sous les chemins existants : une étiquette papier */}
           <button className="jsp-entree mono" onClick={() => setSurprise(true)}>
             {t('je sais pas — surprends-moi')}
@@ -200,13 +214,20 @@ export default function CeSoir({
               setCompagnie(null)
               setEnvie(null)
             }}
-            title="recommencer"
+            title={t('recommencer')}
           >
             {compagnie} · {envie} <span className="cesoir-rappel-x">↺</span>
           </button>
+          {compagnie === 'potos' && onMatch && (
+            <button className="jsp-entree mono" onClick={onMatch}>
+              {t('vous décidez ensemble ? on dit où. →')}
+            </button>
+          )}
           <Deck key={`${compagnie}-${envie}-${meteo}`} deck={deck} maintenant={dateEffective} onVoir={onVoir} onComparer={onComparer} />
         </>
       )}
+
+      {encart}
 
       <span className="lbl mono meteo-bas-lbl">{t('situation du portefeuille ?')}</span>
       <div className="meteo-bas">
@@ -222,7 +243,7 @@ export default function CeSoir({
             <span className="meteo-prix mono">{prixMeteo(m)}</span>
           </button>
         ))}
-        {meteo === 'pluie' && <span className="mono pluie-mot">il pleut sur ton porte-monnaie.</span>}
+        {meteo === 'pluie' && <span className="mono pluie-mot">{t('il pleut sur ton porte-monnaie.')}</span>}
       </div>
 
     </div>
@@ -359,17 +380,17 @@ function QuestionsSwipe({
   const motPrec = options[(idx - 1 + n) % n]
   const motSuiv = options[(idx + 1) % n]
 
+  // la question « ça dit quoi [moment] ? » vit désormais en tête d'écran
+  // (cesoir-question) : l'étape 0 ne la répète plus, elle pose la sienne
   const titre =
     etape === 0
       ? nuit
         ? 'encore debout ?'
-        : 'ça dit quoi ce soir ?'
+        : t('avec qui ?')
       : compagnie === 'potos'
         ? 'et ça dit quoi, les potos ?'
         : 'pour quoi faire ?'
-  // étape 1 : le titre pose déjà « pour quoi faire ? » — le sous-titre glose au
-  // lieu de répéter.
-  const sousTitre = etape === 0 ? t('avec qui ?') : t("l'envie du moment")
+  const sousTitre = etape === 0 ? '' : t("l'envie du moment")
   const glose = etape === 0 ? COMPAGNIE_GLOSE[choix as Compagnie] : gloseEnvie(choix)
 
   const valider = () => {
@@ -411,7 +432,7 @@ function QuestionsSwipe({
   return (
     <div className="qs">
       <h1 className="grande-question qs-titre">{titre}</h1>
-      <span className="lbl mono qs-sous">{sousTitre}</span>
+      {sousTitre && <span className="lbl mono qs-sous">{sousTitre}</span>}
 
       <div
         className="qs-scene"

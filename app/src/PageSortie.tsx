@@ -104,6 +104,7 @@ export default function PageSortie({ token }: { token: string }) {
     return (
       <div className="sortie-page">
         <h1 className="sortie-marque">jeudi.</h1>
+      <p className="mono sortie-promesse">{t('on dit où.')}</p>
         <p className="hand sortie-mot">{t(erreur)}</p>
         <a className="valider sortie-cta" href="/">
           {t('découvrir jeudi →')}
@@ -116,6 +117,7 @@ export default function PageSortie({ token }: { token: string }) {
     return (
       <div className="sortie-page">
         <h1 className="sortie-marque">jeudi.</h1>
+      <p className="mono sortie-promesse">{t('on dit où.')}</p>
         <p className="mono sortie-meta">{t('on ouvre le carnet…')}</p>
       </div>
     )
@@ -126,12 +128,17 @@ export default function PageSortie({ token }: { token: string }) {
   const restant = libelleRestant(vue.deadline)
 
   // ── LE VERDICT (vote clos ou deadline passée) ─────────────────
+  // Le calcul de secours (gagnantSG) n'existe QUE si la deadline est tombée
+  // sans gravure du créateur : un match CLOS sans gagnant est ANNULÉ —
+  // jamais un faux « c'est dit. » qui enverrait le groupe au mauvais endroit.
   if (!vue.ouverte) {
     const gagnant =
-      vue.candidats.find((c) => c.id === vue.gagnantId) ?? gagnantSG(vue.candidats, vue.comptes)
+      vue.candidats.find((c) => c.id === vue.gagnantId) ??
+      (vue.statut === 'ouvert' ? gagnantSG(vue.candidats, vue.comptes) : null)
     return (
       <div className="sortie-page">
         <h1 className="sortie-marque">jeudi.</h1>
+      <p className="mono sortie-promesse">{t('on dit où.')}</p>
         <p className="mono sortie-meta">{t('le vote est clos')}</p>
         {gagnant ? (
           <>
@@ -172,6 +179,7 @@ export default function PageSortie({ token }: { token: string }) {
     return (
       <div className="sortie-page">
         <h1 className="sortie-marque">jeudi.</h1>
+      <p className="mono sortie-promesse">{t('on dit où.')}</p>
         <h2 className="sortie-titre">
           {vue.createur ? `${vue.createur} ${t('vous propose.')}` : t('on vous propose.')}
         </h2>
@@ -187,6 +195,9 @@ export default function PageSortie({ token }: { token: string }) {
               <div className="mono sortie-meta">
                 {vue.centre ? `${formatDistance(distanceM(c, vue.centre))} ${t('du rendez-vous')}` : (c.adresse ?? '')}
               </div>
+              {/* le tip manuscrit AVANT le prénom : c'est lui qui donne envie
+                  de voter — une liste sèche est un sondage, un tip est jeudi */}
+              {c.note && <p className="hand sortie-note">« {c.note} »</p>}
             </div>
           ))}
         </div>
@@ -213,6 +224,7 @@ export default function PageSortie({ token }: { token: string }) {
   return (
     <div className="sortie-page">
       <h1 className="sortie-marque">jeudi.</h1>
+      <p className="mono sortie-promesse">{t('on dit où.')}</p>
       <p className="mono sortie-meta">
         {votants}/{total} {t('ont voté')}
         {restant && ` · ${t('il reste')} ${restant}`}
@@ -234,6 +246,7 @@ export default function PageSortie({ token }: { token: string }) {
                 <button
                   key={r}
                   className={`labo-chip${monVote === r ? ' on' : ''}`}
+                  aria-pressed={monVote === r}
                   onClick={() => void voter(c.id, r)}
                 >
                   {t(r)}
@@ -245,7 +258,7 @@ export default function PageSortie({ token }: { token: string }) {
       })}
       <p className="mono sortie-hint">{t('ta réaction reste anonyme — le groupe ne voit que les totaux.')}</p>
       <p className="hand sortie-mot">{t('la discussion, c’est sur WhatsApp. ici, on tranche.')}</p>
-      {erreur && <p className="mono sortie-erreur">{t(erreur)}</p>}
+      <div role="alert">{erreur && <p className="mono sortie-erreur">{t(erreur)}</p>}</div>
     </div>
   )
 }

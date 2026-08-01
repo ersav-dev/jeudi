@@ -488,7 +488,7 @@ export default function Groupe({
           disabled={sansEnvie}
           style={{ width: '100%', padding: '13px 0' }}
         >
-          {t('voir la shortlist →')}
+          {t('voir ce que dit le carnet →')}
         </button>
       </div>
     )
@@ -503,7 +503,7 @@ export default function Groupe({
     const nChoisis = cartes.filter((c) => idsChoisis.has(c.lieu.id)).length
     return (
       <div style={{ color: 'var(--ivory)' }}>
-        <div className="labo-cap" style={{ marginBottom: 4 }}>{t('la shortlist du carnet')}</div>
+        <div className="labo-cap" style={{ marginBottom: 4 }}>{t('le carnet dit.')}</div>
         <p className="mono" style={{ margin: '0 0 10px' }}>
           {nChoisis} {t('spots au vote')} · {t('tape un spot pour l’écarter ou le reprendre')}
         </p>
@@ -595,10 +595,14 @@ export default function Groupe({
   const total = vue.participants.length
   const restant = libelleRestant(vue.deadline)
 
-  // LE VERDICT — où le groupe converge vraiment
+  // LE VERDICT — où le groupe converge vraiment. Le calcul de secours
+  // (gagnantSG) n'a le droit d'exister QUE si la deadline est tombée sans
+  // que le créateur ait gravé : un match CLOS sans gagnant est un match
+  // ANNULÉ — jamais un faux « c'est dit. »
   if (!vue.ouverte) {
     const gagnant =
-      vue.candidats.find((c) => c.id === vue.gagnantId) ?? gagnantSG(vue.candidats, vue.comptes)
+      vue.candidats.find((c) => c.id === vue.gagnantId) ??
+      (vue.statut === 'ouvert' ? gagnantSG(vue.candidats, vue.comptes) : null)
     const lieuGagnant = gagnant?.lieuId ? lieux.find((l) => l.id === gagnant.lieuId) : undefined
     return (
       <div style={{ color: 'var(--ivory)' }}>
@@ -680,7 +684,12 @@ export default function Groupe({
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
                 {REACTIONS_SG.map((r) => (
-                  <button key={r} className={chip(monVote === r)} onClick={() => void voter(c.id, r)}>
+                  <button
+                    key={r}
+                    className={chip(monVote === r)}
+                    aria-pressed={monVote === r}
+                    onClick={() => void voter(c.id, r)}
+                  >
                     {t(r)}
                   </button>
                 ))}
@@ -698,17 +707,26 @@ export default function Groupe({
       )}
 
       <p className="labo-hint">{t('ta réaction reste anonyme — le groupe ne voit que les totaux.')}</p>
-      {erreur && <p className="mono" style={{ color: 'var(--cire-claire)', margin: '8px 0 0' }}>{t(erreur)}</p>}
+      <div role="alert">
+        {erreur && <p className="mono" style={{ color: 'var(--cire-claire)', margin: '8px 0 0' }}>{t(erreur)}</p>}
+      </div>
 
+      {/* « on tranche » vit seul dans la zone du pouce ; renoncer est un
+          geste d'oubli, isolé plus haut — jamais côte à côte (raté de nuit) */}
       {session.createur && (
-        <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-          <button onClick={() => void trancher()} className="labo-btn-ligne" disabled={enCours} style={{ flex: 1 }}>
+        <>
+          <button
+            onClick={() => void trancher()}
+            className="labo-btn-ligne"
+            disabled={enCours}
+            style={{ width: '100%', marginTop: 18 }}
+          >
             {t('on tranche →')}
           </button>
-          <button onClick={nouveauMatch} className="lien" style={{ flex: '0 0 auto' }}>
-            {t('abandonner')}
+          <button onClick={nouveauMatch} className="lien" style={{ marginTop: 14 }}>
+            {t('on oublie ce match')}
           </button>
-        </div>
+        </>
       )}
     </div>
   )
