@@ -140,6 +140,12 @@ export default function PageSortie({ token }: { token: string }) {
         <h1 className="sortie-marque">jeudi.</h1>
       <p className="mono sortie-promesse">{t('on dit où.')}</p>
         <p className="mono sortie-meta">{t('le vote est clos')}</p>
+        {/* « on rejoue. » : l'ancien lien rapatrie ses votants vers le nouveau */}
+        {vue.rematchToken && (
+          <a className="valider sortie-cta" href={`/sortie/${vue.rematchToken}`}>
+            {t('ça se rejoue — revote ici →')}
+          </a>
+        )}
         {gagnant ? (
           <>
             <h2 className="sortie-gagnant">{gagnant.nom}.</h2>

@@ -202,6 +202,8 @@ const EN: Record<string, string> = {
   'voir ce que dit le carnet →': 'see what the notebook says →',
   'le carnet dit.': 'the notebook says.',
   'on oublie ce match': 'forget this match',
+  'on rejoue →': 'rematch →',
+  'ça se rejoue — revote ici →': 'it’s being replayed — revote here →',
   'recommencer': 'start over',
   'il pleut sur ton porte-monnaie.': 'it’s raining on your wallet.',
   'sortir à plusieurs.': 'going out together.',

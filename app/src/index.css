@@ -6626,3 +6626,13 @@ button {
   position: absolute;
   inset: -9px -3px;
 }
+
+/* « ça se rejoue » : le lien-étiquette vers le rejeu, pleine largeur */
+.sg-rejoue {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 14px;
+}

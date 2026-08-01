@@ -90,6 +90,8 @@ describe('parseSortieVue', () => {
     expect(vue).not.toBeNull()
     expect(vue!.createur).toBe('clément')
     expect(vue!.ouverte).toBe(true)
+    // pas de rejeu déclaré → null (le champ arrive avec la migration 0007)
+    expect(vue!.rematchToken).toBeNull()
     // les candidats reviennent triés par ordre
     expect(vue!.candidats.map((c) => c.id)).toEqual(['c1', 'c2'])
     expect(vue!.candidats[0].meteo).toBe('soleil')

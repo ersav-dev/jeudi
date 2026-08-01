@@ -17,6 +17,7 @@ import {
   type MatchOuvert,
   REACTIONS_SG,
   creerSortieGroupe,
+  relancerSortie,
   cloreSortie,
   voirSortie,
   voterSortie,
@@ -411,6 +412,39 @@ export default function Groupe({
     }
   }
 
+  // « on rejoue. » : mêmes spots, nouveau vote (deadline fraîche d'1 h) —
+  // et l'ancien lien rapatrie ses invités vers le nouveau
+  const rejouer = async () => {
+    if (!session?.createur || !vue || enCours) return
+    setEnCours(true)
+    setErreur('')
+    try {
+      const creee = await relancerSortie(
+        session.id,
+        vue,
+        monPrenom,
+        new Date(Date.now() + 60 * 60000),
+      )
+      ecrireSortieActive({ ...creee, quand: new Date().toISOString() })
+      ecrireCleSortie(creee.token, {
+        participantId: creee.participantId,
+        cle: creee.cle,
+        prenom: monPrenom,
+        votes: {},
+      })
+      clotureLancee.current = false
+      setMesVotes({})
+      setVue(null)
+      setSession({ ...creee, createur: true })
+      setCopie(false)
+      setEtape('suivi')
+    } catch (e) {
+      setErreur((e as Error).message)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
   const nouveauMatch = () => {
     // un match abandonné ne reste pas ouvert dans le vide : le créateur le
     // clôt (best-effort) pour que la page des invités affiche le verdict
@@ -641,8 +675,27 @@ export default function Groupe({
             {t('personne n’a tranché — ce sera pour une prochaine.')}
           </p>
         )}
+        {/* le rejeu existe déjà ? tout le monde peut le rejoindre */}
+        {vue.rematchToken && (
+          <a className="labo-btn-ligne sg-rejoue" href={lienSortie(vue.rematchToken)}>
+            {t('ça se rejoue — revote ici →')}
+          </a>
+        )}
+        <div role="alert">
+          {erreur && <p className="mono" style={{ color: 'var(--cire-claire)', margin: '10px 0 0' }}>{t(erreur)}</p>}
+        </div>
+        {session.createur && !vue.rematchToken && (
+          <button
+            onClick={() => void rejouer()}
+            className={gagnant ? 'labo-btn-ligne' : 'valider'}
+            disabled={enCours}
+            style={{ width: '100%', marginTop: 14, padding: gagnant ? undefined : '12px 0' }}
+          >
+            {enCours ? t('un instant…') : t('on rejoue →')}
+          </button>
+        )}
         {session.createur && (
-          <button onClick={nouveauMatch} className="lien" style={{ marginTop: 18 }}>
+          <button onClick={nouveauMatch} className="lien" style={{ marginTop: 14 }}>
             {t('↺ nouveau match')}
           </button>
         )}

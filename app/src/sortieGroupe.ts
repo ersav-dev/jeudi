@@ -80,6 +80,9 @@ export interface SortieVue {
   ouverte: boolean
   centre: { lat: number; lng: number } | null
   gagnantId: string | null
+  /** « on rejoue. » : le token du match qui rejoue celui-ci (s'il existe) —
+   *  la page de l'ancien lien rapatrie ses votants vers le nouveau */
+  rematchToken: string | null
   createur: string
   candidats: CandidatSG[]
   participants: ParticipantVue[]
@@ -116,6 +119,7 @@ export function parseSortieVue(brut: unknown): SortieVue | null {
     centre:
       typeof lat === 'number' && typeof lng === 'number' ? { lat, lng } : null,
     gagnantId: typeof so.gagnant_id === 'string' ? so.gagnant_id : null,
+    rematchToken: typeof so.rematch_token === 'string' ? so.rematch_token : null,
     createur: chaine(so.createur),
     candidats: (Array.isArray(b.candidats) ? b.candidats : [])
       .map((c): CandidatSG => {
@@ -311,6 +315,58 @@ export async function mesMatchsOuverts(): Promise<MatchOuvert[]> {
       deadline: s.deadline,
       estCreateur: s.createur_id === uid,
     }))
+}
+
+/** « on rejoue. » — un match clos repart : mêmes spots, nouveau vote.
+ *  L'ancienne sortie pointe vers la nouvelle (rematch_id) : la page des
+ *  invités de l'ancien lien affichera « ça se rejoue — revote ici → ». */
+export async function relancerSortie(
+  ancienId: string,
+  vue: SortieVue,
+  monPrenom: string,
+  deadline: Date | null,
+): Promise<SortieCreee> {
+  const { data: auth } = await supabase.auth.getSession()
+  const uid = auth.session?.user?.id
+  if (!uid) throw new Error('connecte-toi d’abord pour lancer un match.')
+  const { data: sortie, error: e1 } = await supabase
+    .from('sorties_groupe')
+    .insert({
+      createur_id: uid,
+      titre: vue.titre || null,
+      envies: vue.envies,
+      centre_lat: vue.centre?.lat ?? null,
+      centre_lng: vue.centre?.lng ?? null,
+      deadline: deadline ? deadline.toISOString() : null,
+    })
+    .select('id,token')
+    .single()
+  if (e1 || !sortie) throw new Error('le match n’a pas pu se lancer — réessaie.')
+  const { error: e2 } = await supabase.from('sg_candidats').insert(
+    vue.candidats.map((c, i) => ({
+      sortie_id: sortie.id,
+      lieu_id: c.lieuId ?? null,
+      nom: c.nom,
+      lat: c.lat,
+      lng: c.lng,
+      adresse: c.adresse ?? null,
+      note: c.note ?? null,
+      envies: c.envies,
+      meteo: c.meteo ?? null,
+      ordre: i,
+      propose_par: c.proposePar ?? null,
+    })),
+  )
+  if (e2) throw new Error('les spots n’ont pas suivi — réessaie.')
+  const { data: part, error: e3 } = await supabase
+    .from('sg_participants')
+    .insert({ sortie_id: sortie.id, profil_id: uid, prenom: monPrenom || 'moi' })
+    .select('id,cle')
+    .single()
+  if (e3 || !part) throw new Error('le match est lancé mais sans toi — recharge.')
+  // le fil d'Ariane : l'ancien match pointe vers son rejeu (best-effort)
+  await supabase.from('sorties_groupe').update({ rematch_id: sortie.id }).eq('id', ancienId)
+  return { id: sortie.id, token: sortie.token, participantId: part.id, cle: part.cle }
 }
 
 /** le créateur tranche : clôt le vote et grave le gagnant */
