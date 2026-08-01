@@ -16,6 +16,7 @@ import {
   type Lieu,
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
+import { typeDeLieu, svgTypeLieu } from './typesLieu'
 import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
 
@@ -231,6 +232,14 @@ export default function Carte({
           el.appendChild(badge)
         }
       }
+      // le TYPE du lieu, d'un coup d'œil : un glyphe à l'encre (verre, note,
+      // tasse, cornet, cloche, assiette) — révélé AVEC le label au zoom
+      // quartier (CSS .label-on), pour que la carte reste un carnet, pas
+      // un sapin. Jamais un émoji dans le chrome (DA).
+      const glyphe = document.createElement('span')
+      glyphe.className = 'pin-type'
+      glyphe.innerHTML = svgTypeLieu(typeDeLieu(l))
+      el.appendChild(glyphe)
       // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
       if (l.match === 'diffuse') {
         const ballon = document.createElement('span')

@@ -6643,3 +6643,35 @@ button {
   object-fit: cover;
   background: var(--nuit-2);
 }
+
+/* ── le glyphe de TYPE sur les pins (refonte carte, volet 1) ──
+   révélé AVEC le label (zoom quartier, pins prioritaires) : la carte
+   reste sobre de loin, et raconte de près — verre, note, tasse,
+   cornet, cloche, assiette, au trait. */
+.pin-type {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ivory);
+  border: 1px solid var(--paper);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pin-type svg {
+  width: 11px;
+  height: 11px;
+}
+.pin.label-on .pin-type {
+  display: flex;
+}
+/* le pin curateur porte déjà son badge de voix en haut à droite : le
+   glyphe glisse alors en haut à gauche (le ballon foot, lui, reste rare) */
+.pin-curateur .pin-type {
+  right: auto;
+  left: -8px;
+}
