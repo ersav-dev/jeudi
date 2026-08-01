@@ -169,6 +169,11 @@ const EN: Record<string, string> = {
   'avec qui ?': 'who with?',
   "l'envie du moment": 'the craving right now',
 
+  // La fiche + le récap
+  "m'y emmener": 'take me there',
+  'envoie à un pote': 'send to a friend',
+  'partager en story →': 'share as a story →',
+
   // Toasts / communs
   'nouvelle version.': 'new version.',
   'recharger': 'reload',

@@ -3290,10 +3290,10 @@ function Fiche({
           target="_blank"
           rel="noreferrer"
         >
-          m'y emmener
+          {t("m'y emmener")}
         </a>
         <button className="valider fiche-partage" onClick={partager}>
-          envoie à un pote
+          {t('envoie à un pote')}
         </button>
       </div>
 
@@ -3305,7 +3305,7 @@ function Fiche({
           suivre('story_partagee', { lieu: lieu.nom })
         }}
       >
-        partager en story →
+        {t('partager en story →')}
       </button>
 
       <div className="mono fiche-meta">

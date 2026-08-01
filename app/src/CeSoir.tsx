@@ -874,7 +874,7 @@ function Recap({
 
   return (
     <div className="recap">
-      <p className="hand recap-titre">{PIQUES_FIN[1]}</p>
+      <p className="hand recap-titre">{t(PIQUES_FIN[1])}</p>
       <p className="mono recap-bilan">
         {validés > 0 ? `${validés} validé${validés > 1 ? 's' : ''} ce soir` : 'rien validé — t\'es dur'}
       </p>
