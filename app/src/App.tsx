@@ -1780,12 +1780,7 @@ export default function App() {
           <button className="lien fiche-retour" onClick={() => setSortieGroupe(false)}>
             ← le cercle
           </button>
-          <Groupe
-            lieux={lieux}
-            membres={cercleReel}
-            onInviter={inviterUnPote}
-            onOuvrir={(l) => ouvrirFiche(l, lieux)}
-          />
+          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
         </div>
       )}
 

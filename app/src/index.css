@@ -6361,3 +6361,130 @@ button {
 .takeout-msg-erreur {
   color: var(--cire-claire);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   /sortie/<token> — la page PUBLIQUE du match de groupe.
+   Le carnet tendu à un invité : même matière (nuit, encre, massicot),
+   une seule colonne, la cire réservée au geste principal de l'écran.
+   ══════════════════════════════════════════════════════════════ */
+.sortie-page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 28px 20px calc(40px + env(safe-area-inset-bottom));
+  color: var(--ivory);
+}
+.sortie-marque {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 21px;
+  margin: 0 0 18px;
+  color: var(--encre);
+}
+.sortie-titre {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 34px;
+  margin: 0 0 4px;
+}
+.sortie-gagnant {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 34px;
+  margin: 6px 0 4px;
+}
+.sortie-meta {
+  margin: 0 0 10px;
+}
+.sortie-apercu {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 20px;
+}
+.sortie-carte {
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.08);
+  border-radius: var(--rayon);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.sortie-apercu .sortie-carte {
+  margin-bottom: 0;
+}
+.sortie-nom {
+  font-style: italic;
+  font-size: 21px;
+}
+.sortie-note {
+  color: var(--encre-2);
+  margin: 8px 0 0;
+}
+.sortie-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+.sortie-prenom {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--nuit-2);
+  border: 1px solid var(--graphite);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  padding: 12px 14px;
+  margin: 6px 0 12px;
+}
+.sortie-prenom:focus {
+  outline: none;
+  border-color: var(--encre);
+}
+.sortie-cta {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 4px;
+}
+.sortie-cta-ligne {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid var(--encre);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 11px 0;
+}
+.sortie-mot {
+  color: var(--encre-2);
+  margin: 14px 0 0;
+}
+.sortie-centre {
+  text-align: center;
+}
+.sortie-hint {
+  color: var(--encre-3);
+  margin: 16px 0 0;
+}
+.sortie-erreur {
+  color: var(--cire-claire);
+  margin: 10px 0 0;
+}
+.sortie-porte {
+  border-top: 1px solid rgba(239, 233, 216, 0.2);
+  margin-top: 32px;
+  padding-top: 18px;
+}
+.sortie-porte-texte {
+  font-size: 13px;
+  color: var(--encre-2);
+  margin: 6px 0 14px;
+}
