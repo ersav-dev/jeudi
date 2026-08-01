@@ -19,7 +19,7 @@ import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISol
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
-import { lireSortieActive, type MatchOuvert } from './sortieGroupe'
+import { lireSortieActive, ajouterCandidat, type MatchOuvert } from './sortieGroupe'
 import GrandJeudi from './EcranGrandJeudi'
 // le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
 import { estCeLeGrandJeudi } from './grandJeudi'
@@ -656,6 +656,19 @@ export default function App() {
   const [matchSortir, setMatchSortir] = useState(false)
   // un match du cloud où je suis membre (pas créateur) — je le rejoins in-app
   const [matchRejoint, setMatchRejoint] = useState<MatchOuvert | null>(null)
+  // « + au vote » : quand un match est ouvert, la FICHE sait y envoyer un spot
+  // (on n'amène pas la carte dans le match — on amène le match dans la carte)
+  const ajouterAuVote = async (l: Lieu) => {
+    const m = lireSortieActive() ?? matchRejoint
+    if (!m) return
+    try {
+      const prenom = (await lireProfil())?.prenom?.trim() || 'moi'
+      await ajouterCandidat(m.id, l, prenom)
+      setFlash(`${l.nom.toLowerCase()} ${t('est au vote.')}`)
+    } catch (e) {
+      setFlash((e as Error).message)
+    }
+  }
   // l'écran du grand jeudi : ouvert par la bannière du jour J, ou par la
   // ligne « aperçu du grand jeudi » des réglages (pour tester sans attendre)
   const [gjOuvert, setGjOuvert] = useState(false)
@@ -1962,6 +1975,7 @@ export default function App() {
           onAdopter={adopter}
           dejaAdopte={!estAMoi(fiche) && lieux.some((x) => estAMoi(x) && x.nom === fiche.nom)}
           reels={cercleReel}
+          onAuVote={lireSortieActive() || matchRejoint ? (l) => void ajouterAuVote(l) : undefined}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -2711,6 +2725,7 @@ function Fiche({
   onAdopter,
   dejaAdopte,
   reels,
+  onAuVote,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -2725,6 +2740,8 @@ function Fiche({
   dejaAdopte: boolean
   /** les vrais membres du cercle (owner_id → prénom, « chez untel ») */
   reels: MembreCercle[]
+  /** un match est ouvert → la fiche sait mettre ce spot au vote */
+  onAuVote?: (l: Lieu) => void
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -3318,6 +3335,13 @@ function Fiche({
           {t('envoie à un pote')}
         </button>
       </div>
+
+      {/* un match est ouvert → chaque fiche devient une porte vers le vote */}
+      {onAuVote && (
+        <button className="lien fiche-story" onClick={() => onAuVote(lieu)}>
+          + {t('au vote du match')}
+        </button>
+      )}
 
       {/* la carte de story : le spot devient un objet à poster (panel n°1) */}
       <button

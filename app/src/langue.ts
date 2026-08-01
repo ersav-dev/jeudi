@@ -175,6 +175,10 @@ const EN: Record<string, string> = {
   'partager en story →': 'share as a story →',
 
   // Le moment unifié (« quand ? » partout — le deck, le match)
+  'ça dit quoi': 'what’s the word',
+  'jeudi soir': 'thursday night',
+  'au vote du match': 'on the match ballot',
+  'est au vote.': 'is on the ballot.',
   'ce soir · 22h': 'tonight · 10pm',
   'jeudi · 22h': 'thursday · 10pm',
   'le carnet se règle sur': 'the notebook is set to',

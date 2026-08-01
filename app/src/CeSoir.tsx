@@ -28,7 +28,7 @@ import { srcPhoto, photoIndisponible } from './photos'
 import { ISoleil, INuage, IPluie } from './icones'
 import NoteMarge from './NoteMarge'
 import { effacerNote } from './tuto'
-import { type Moment, dateDuMoment, lireMoment, ecrireMoment } from './moment'
+import { type Moment, dateDuMoment, lireMoment, ecrireMoment, libelleMoment } from './moment'
 import ChoixMoment from './ChoixMoment'
 const CarteLazy = lazy(() => import('./Carte'))
 function Carte(p: ComponentProps<typeof CarteLazy>) {
@@ -102,6 +102,9 @@ export default function CeSoir({
     ecrireMoment(m)
   }
   const [, setTick] = useState(0)
+  // « la question qui s'accorde » : le moment est TAPABLE dans la question —
+  // le régler déplie les presets + l'heure libre, juste sous le titre
+  const [reglerMoment, setReglerMoment] = useState(false)
   useEffect(() => {
     // seul « maintenant » est vivant (l'app ouverte à 17h59 verra la fête à 18h) ;
     // un moment figé n'a pas besoin de tick.
@@ -148,6 +151,21 @@ export default function CeSoir({
 
   return (
     <div className="cesoir">
+      {/* la question fondatrice, qui S'ACCORDE : « ça dit quoi [ce soir] ? »
+          — le moment souligné se tape, et la ville de demain soir s'ouvre */}
+      <h2 className="cesoir-question">
+        {t('ça dit quoi')}{' '}
+        <button
+          className="cesoir-moment"
+          onClick={() => setReglerMoment((v) => !v)}
+          aria-expanded={reglerMoment}
+        >
+          {t(libelleMoment(moment))}
+        </button>{' '}
+        ?
+      </h2>
+      {reglerMoment && <ChoixMoment valeur={moment} onChange={choisirMoment} />}
+
       {surprise ? (
         <JeSaisPas
           lieux={lieux}
@@ -207,8 +225,6 @@ export default function CeSoir({
         {meteo === 'pluie' && <span className="mono pluie-mot">il pleut sur ton porte-monnaie.</span>}
       </div>
 
-      <span className="lbl mono meteo-bas-lbl">{t('quand')} ?</span>
-      <ChoixMoment valeur={moment} onChange={choisirMoment} />
     </div>
   )
 }

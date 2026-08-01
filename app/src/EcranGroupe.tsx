@@ -34,6 +34,8 @@ import {
   budgetDepuisMeteo,
 } from './sortieGroupe'
 import { lireMoment, dateDuMoment, libelleMoment, momentFutur } from './moment'
+import CroquisParis from './CroquisParis'
+import { ZONES_CROQUIS } from './croquisZones'
 
 type Etape = 'compose' | 'shortlist' | 'suivi' | 'proposer'
 
@@ -86,20 +88,32 @@ function ChoixSpot({
   onFermer: () => void
 }) {
   const [q, setQ] = useState('')
+  // le croquis des quartiers : taper une zone filtre la liste (spatial, un tap)
+  const [zone, setZone] = useState<string | null>(null)
+  const dispo = useMemo(() => lieux.filter((l) => !exclus.has(l.id)), [lieux, exclus])
   const resultats = useMemo(() => {
     const terme = q.trim().toLowerCase()
-    const dispo = lieux.filter((l) => !exclus.has(l.id))
-    const filtres = terme
+    const bbox = zone ? ZONES_CROQUIS.find((z) => z.repere === zone)?.bbox : undefined
+    let filtres = bbox
       ? dispo.filter(
-          (l) =>
-            l.nom.toLowerCase().includes(terme) || (l.adresse ?? '').toLowerCase().includes(terme),
+          (l) => l.lat >= bbox[0] && l.lat < bbox[1] && l.lng >= bbox[2] && l.lng < bbox[3],
         )
       : dispo
+    if (terme)
+      filtres = filtres.filter(
+        (l) =>
+          l.nom.toLowerCase().includes(terme) || (l.adresse ?? '').toLowerCase().includes(terme),
+      )
     return [...filtres].sort((a, b) => distanceM(a, centre) - distanceM(b, centre)).slice(0, 12)
-  }, [lieux, exclus, q, centre])
+  }, [dispo, q, zone, centre])
   return (
     <div>
       <div className="labo-cap" style={{ marginBottom: 6 }}>{t('toute ma carte')}</div>
+      <CroquisParis
+        lieux={dispo}
+        actif={zone}
+        onChoisir={(r) => setZone((v) => (v === r ? null : r))}
+      />
       <input
         className="sortie-prenom"
         placeholder={t('un nom, un quartier…')}

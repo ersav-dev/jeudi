@@ -6577,3 +6577,24 @@ button {
 .sg-choix:not(.off) {
   border-color: rgba(239, 233, 216, 0.35);
 }
+
+/* ── « la question qui s'accorde » : ça dit quoi [ce soir] ? ── */
+.cesoir-question {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 27px;
+  margin: 2px 0 14px;
+  color: var(--encre);
+}
+.cesoir-moment {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  border-bottom: 1px dashed var(--encre-2);
+  cursor: pointer;
+}
+.cesoir-moment:active {
+  transform: translateY(1px);
+}
