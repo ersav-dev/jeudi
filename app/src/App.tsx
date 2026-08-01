@@ -19,7 +19,7 @@ import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISol
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
-import { lireSortieActive } from './sortieGroupe'
+import { lireSortieActive, type MatchOuvert } from './sortieGroupe'
 import GrandJeudi from './EcranGrandJeudi'
 // le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
 import { estCeLeGrandJeudi } from './grandJeudi'
@@ -654,6 +654,8 @@ export default function App() {
   // …et depuis la refonte du cœur (audit 01/08), sa porte PRINCIPALE est
   // l'étiquette « on dit où. » en tête de l'onglet « sortir »
   const [matchSortir, setMatchSortir] = useState(false)
+  // un match du cloud où je suis membre (pas créateur) — je le rejoins in-app
+  const [matchRejoint, setMatchRejoint] = useState<MatchOuvert | null>(null)
   // l'écran du grand jeudi : ouvert par la bannière du jour J, ou par la
   // ligne « aperçu du grand jeudi » des réglages (pour tester sans attendre)
   const [gjOuvert, setGjOuvert] = useState(false)
@@ -1589,7 +1591,7 @@ export default function App() {
           <button className="lien fiche-retour" onClick={() => setMatchSortir(false)}>
             ← {t('sortir')}
           </button>
-          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} rejoindre={matchRejoint} />
         </div>
       )}
 
@@ -1598,8 +1600,14 @@ export default function App() {
           {estCeLeGrandJeudi(new Date()) && (
             <BanniereGrandJeudi onOuvrir={() => setGjOuvert(true)} />
           )}
-          {/* la porte permanente du match — ou le bandeau de reprise si un vote vit */}
-          <BandeauMatch onOuvrir={() => setMatchSortir(true)} />
+          {/* la porte permanente du match — ou le bandeau de reprise si un vote vit
+              (le mien, ou un match du cloud où je suis membre) */}
+          <BandeauMatch
+            onOuvrir={(m) => {
+              setMatchRejoint(m)
+              setMatchSortir(true)
+            }}
+          />
           <CeSoir
             lieux={mesLieux}
             onVoir={(l) => ouvrirFiche(l, mesLieux)}

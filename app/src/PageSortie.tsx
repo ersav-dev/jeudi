@@ -225,6 +225,7 @@ export default function PageSortie({ token }: { token: string }) {
             <div className="sortie-nom">{c.nom}</div>
             <div className="mono sortie-meta">
               {vue.centre ? `${formatDistance(distanceM(c, vue.centre))} ${t('du rendez-vous')}` : (c.adresse ?? '')}
+              {c.proposePar && ` · ${t('proposé par')} ${c.proposePar.toLowerCase()}`}
               {resume && ` · ${resume}`}
             </div>
             {c.note && <p className="hand sortie-note">« {c.note} »</p>}

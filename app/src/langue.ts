@@ -240,6 +240,15 @@ const EN: Record<string, string> = {
   'trop cher': 'too pricey',
   'trop loin': 'too far',
   'juste boire': 'just drinks',
+  // les candidats collaboratifs
+  'toute ma carte': 'my whole map',
+  'un nom, un quartier…': 'a name, a neighborhood…',
+  '← retour au match': '← back to the match',
+  '+ piocher dans toute ma carte': '+ pick from my whole map',
+  '+ proposer un spot de ma carte': '+ put one of my spots on the ballot',
+  'proposé par': 'proposed by',
+  'voter avec le groupe →': 'vote with the group →',
+
   // les erreurs du match (affichées telles quelles via t())
   'connecte-toi d’abord pour lancer un match.': 'sign in first to start a match.',
   'le match n’a pas pu se lancer — réessaie.': 'the match couldn’t start — try again.',
@@ -251,6 +260,8 @@ const EN: Record<string, string> = {
   'impossible de rejoindre — le vote est peut-être clos.': 'couldn’t join — the vote may be closed.',
   'impossible de rejoindre — réessaie.': 'couldn’t join — try again.',
   'le vote n’est pas parti — le match est peut-être clos.': 'the vote didn’t go through — the match may be closed.',
+  'le match est plein — 12 spots max, on vote maintenant.': 'the match is full — 12 spots max, time to vote.',
+  'le spot n’est pas parti — le vote est peut-être clos.': 'the spot didn’t go through — the vote may be closed.',
 
   // Toasts / communs
   'nouvelle version.': 'new version.',

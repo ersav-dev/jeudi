@@ -50,6 +50,8 @@ export interface CandidatSG {
   id: string
   /** le spot d'origine dans `lieux` (si toujours vivant) — rouvre la fiche in-app */
   lieuId?: string
+  /** qui l'a mis au vote (« proposé par marie ») — prénom instantané */
+  proposePar?: string
   nom: string
   lat: number
   lng: number
@@ -122,6 +124,7 @@ export function parseSortieVue(brut: unknown): SortieVue | null {
         return {
           id: chaine(o.id),
           lieuId: chaine(o.lieu_id) || undefined,
+          proposePar: chaine(o.propose_par) || undefined,
           nom: chaine(o.nom),
           lat: nombre(o.lat),
           lng: nombre(o.lng),
@@ -237,6 +240,7 @@ export async function creerSortieGroupe(opts: {
       envies: l.envies,
       meteo: l.meteo ?? null,
       ordre: i,
+      propose_par: opts.monPrenom || null,
     })),
   )
   if (e2) throw new Error('les spots n’ont pas suivi — réessaie.')
@@ -247,6 +251,66 @@ export async function creerSortieGroupe(opts: {
     .single()
   if (e3 || !part) throw new Error('le match est lancé mais sans toi — recharge.')
   return { id: sortie.id, token: sortie.token, participantId: part.id, cle: part.cle }
+}
+
+/** proposer un spot à un match ouvert (créateur OU participant inscrit).
+ *  Le serveur garde le cap (12 max) et la fenêtre (vote ouvert). */
+export async function ajouterCandidat(sortieId: string, lieu: Lieu, prenom: string): Promise<void> {
+  const { count } = await supabase
+    .from('sg_candidats')
+    .select('id', { count: 'exact', head: true })
+    .eq('sortie_id', sortieId)
+  const { error } = await supabase.from('sg_candidats').insert({
+    sortie_id: sortieId,
+    lieu_id: /^[0-9a-f-]{36}$/i.test(lieu.id) ? lieu.id : null,
+    nom: lieu.nom,
+    lat: lieu.lat,
+    lng: lieu.lng,
+    adresse: lieu.adresse ?? null,
+    note: lieu.note || null,
+    envies: lieu.envies,
+    meteo: lieu.meteo ?? null,
+    ordre: count ?? 99,
+    propose_par: prenom || null,
+  })
+  if (error)
+    throw new Error(
+      /plein/.test(error.message)
+        ? 'le match est plein — 12 spots max, on vote maintenant.'
+        : 'le spot n’est pas parti — le vote est peut-être clos.',
+    )
+}
+
+/** les matchs ouverts où JE suis (créateur ou participant inscrit) —
+ *  la RLS filtre pour nous. Sert au bandeau « un vote vit » des membres. */
+export interface MatchOuvert {
+  id: string
+  token: string
+  titre: string
+  deadline: string | null
+  estCreateur: boolean
+}
+
+export async function mesMatchsOuverts(): Promise<MatchOuvert[]> {
+  const { data: auth } = await supabase.auth.getSession()
+  const uid = auth.session?.user?.id
+  if (!uid) return []
+  const { data, error } = await supabase
+    .from('sorties_groupe')
+    .select('id,token,titre,deadline,createur_id')
+    .eq('statut', 'ouvert')
+    .order('cree_le', { ascending: false })
+    .limit(5)
+  if (error || !data) return []
+  return (data as { id: string; token: string; titre: string | null; deadline: string | null; createur_id: string }[])
+    .filter((s) => !s.deadline || new Date(s.deadline).getTime() > Date.now())
+    .map((s) => ({
+      id: s.id,
+      token: s.token,
+      titre: s.titre ?? '',
+      deadline: s.deadline,
+      estCreateur: s.createur_id === uid,
+    }))
 }
 
 /** le créateur tranche : clôt le vote et grave le gagnant */
