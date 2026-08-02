@@ -174,6 +174,24 @@ const EN: Record<string, string> = {
   'envoie à un pote': 'send to a friend',
   'partager en story →': 'share as a story →',
 
+  // La fiche lieu (audit 02/08 : le bilingue troué)
+  'les tips': 'the tips',
+  "c'est pour quoi ?": 'what for?',
+  'modifier les infos': 'edit the details',
+  'capturé le': 'captured on',
+  'déjà sur ta carte ✓': 'already on your map ✓',
+  '+ ajouter à ma carte': '+ add to my map',
+  'pour moi': 'just me',
+  'cercle': 'circle',
+  'public': 'public',
+  // les 5 preuves photo
+  'la porte': 'the door',
+  'la salle': 'the room',
+  'la terrasse': 'the terrace',
+  'ton verre': 'your glass',
+  'les wc': 'the toilets',
+  'le verre · le plat': 'the glass · the plate',
+
   // Le moment unifié (« quand ? » partout — le deck, le match)
   'ça dit quoi': 'what’s the word',
   'jeudi soir': 'thursday night',
@@ -303,6 +321,7 @@ export const GLOSSAIRE: Record<string, { fr: string; en: string }> = {
   'disco': { fr: 'on danse', en: 'dancing' },
   'dodo': { fr: 'on reste au lit', en: 'staying in bed' },
   'turbo': { fr: 'vite fait, bien fait', en: 'quick and good' },
+  'rapido': { fr: 'un resto qui va vite', en: 'a fast sit-down bite' },
   'solo': { fr: 'toi et toi-même', en: 'you and yourself' },
   'duo': { fr: 'à deux', en: 'the two of you' },
   'potos': { fr: 'la bande', en: 'the crew' },

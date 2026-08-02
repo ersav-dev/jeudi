@@ -6675,3 +6675,38 @@ button {
   right: auto;
   left: -8px;
 }
+
+/* ── les monuments-repères : le croquis s'oriente ──
+   silhouettes graphite, jamais tapables, sous les pins — des repères
+   de carnet, pas des POI. */
+.monument-repere {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  color: var(--graphite);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+.monument-repere svg {
+  width: 22px;
+  height: 22px;
+}
+.monument-nom {
+  font-family: 'Caveat', cursive;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* le focus au trait d'encre — jamais l'anneau bleu du navigateur */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--encre-2);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
+}

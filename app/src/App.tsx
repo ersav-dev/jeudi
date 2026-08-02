@@ -2457,7 +2457,7 @@ function Validation({
             recommande (orange).
           </p>
           <div className="rangée">
-            <span className="lbl mono">avec qui ?</span>
+            <span className="lbl mono">{t('avec qui ?')}</span>
             {COMPAGNIES.map((t) => (
               <button
                 key={t}
@@ -3171,7 +3171,7 @@ function Fiche({
       {lieu.description && <p className="mono fiche-description">{lieu.description}</p>}
 
       <div className="fiche-tips">
-        <span className="lbl mono">les tips</span>
+        <span className="lbl mono">{t('les tips')}</span>
         {lieu.note && (
           <div className="tip">
             <p className="hand">{lieu.note}</p>
@@ -3234,7 +3234,7 @@ function Fiche({
 
       {mien && !edition ? (
         <div className="fiche-tags">
-          <span className="lbl mono">c'est pour quoi ?</span>
+          <span className="lbl mono">{t("c'est pour quoi ?")}</span>
           <div className="rangée">
             {lieu.envies.filter((e) => e !== 'turbo').map((e) => (
               <span key={e} className="mot fige entouré">
@@ -3245,7 +3245,7 @@ function Fiche({
               <span className="mono fiche-lecture-seule">pas encore renseigné</span>
             )}
           </div>
-          <span className="lbl mono">avec qui ?</span>
+          <span className="lbl mono">{t('avec qui ?')}</span>
           <div className="rangée">
             {COMPAGNIES.map((c) => (
               <span key={c} className={`mot fige ${lieu.compagnies.includes(c) ? 'entouré' : 'estompe'}`}>
@@ -3260,12 +3260,12 @@ function Fiche({
             </span>
           )}
           <button className="lien fiche-modifier" onClick={() => setEdition(true)}>
-            modifier les infos
+            {t('modifier les infos')}
           </button>
         </div>
       ) : mien && edition ? (
         <div className="fiche-tags">
-          <span className="lbl mono">c'est pour quoi ?</span>
+          <span className="lbl mono">{t("c'est pour quoi ?")}</span>
           <div className="rangée">
             {ENVIES.map((e) => (
               <button
@@ -3278,7 +3278,7 @@ function Fiche({
               </button>
             ))}
           </div>
-          <span className="lbl mono">avec qui ?</span>
+          <span className="lbl mono">{t('avec qui ?')}</span>
           <div className="rangée">
             {COMPAGNIES.map((c) => (
               <button
@@ -3316,7 +3316,7 @@ function Fiche({
         </div>
       ) : (
         <div className="fiche-tags">
-          <span className="lbl mono">c'est pour quoi ?</span>
+          <span className="lbl mono">{t("c'est pour quoi ?")}</span>
           <div className="rangée">
             {lieu.envies.filter((e) => e !== 'turbo').map((e) => (
               <span key={e} className="mot fige entouré">
@@ -3324,7 +3324,7 @@ function Fiche({
               </span>
             ))}
           </div>
-          <span className="lbl mono">avec qui ?</span>
+          <span className="lbl mono">{t('avec qui ?')}</span>
           <div className="rangée">
             {COMPAGNIES.map((c) => (
               <span key={c} className={`mot fige ${lieu.compagnies.includes(c) ? 'entouré' : 'estompe'}`}>
@@ -3333,10 +3333,10 @@ function Fiche({
             ))}
           </div>
           {dejaAdopte ? (
-            <p className="mono fiche-lecture-seule">déjà sur ta carte ✓</p>
+            <p className="mono fiche-lecture-seule">{t('déjà sur ta carte ✓')}</p>
           ) : (
             <button className="valider fiche-adopter" onClick={() => onAdopter(lieu)}>
-              + ajouter à ma carte
+              {t('+ ajouter à ma carte')}
             </button>
           )}
         </div>
@@ -3376,8 +3376,8 @@ function Fiche({
 
       <div className="mono fiche-meta">
         {VISIBILITES.find((x) => x.v === lieu.visibilite)?.icone}{' '}
-        {VISIBILITES.find((x) => x.v === lieu.visibilite)?.label} · capturé le{' '}
-        {new Date(lieu.creeLe).toLocaleDateString('fr-FR')}
+        {t(VISIBILITES.find((x) => x.v === lieu.visibilite)?.label ?? '')} · {t('capturé le')}{' '}
+        {new Date(lieu.creeLe).toLocaleDateString(lireLangue() === 'fr' ? 'fr-FR' : 'en-GB')}
       </div>
     </div>
   )
@@ -3453,7 +3453,7 @@ function AlbumATrous({
                 />
               </label>
             )}
-            <span className="hand album-etiquette">{etiquette}</span>
+            <span className="hand album-etiquette">{t(etiquette)}</span>
           </div>
         )
       })}
@@ -3512,7 +3512,7 @@ function KitPhotos({
         return (
           <div key={type} className={`photo-cat ${type === 'wc' ? 'photo-cat-wc' : ''}`}>
             <span className="mono photo-cat-lbl">
-              {label} <span className="photo-cat-n">{prises.length}/{MAX_PAR_CAT}</span>
+              {t(label)} <span className="photo-cat-n">{prises.length}/{MAX_PAR_CAT}</span>
             </span>
             {type === 'wc' && setPropreteWc && (
               <div className="photo-wc-note mono">
@@ -3759,7 +3759,7 @@ function FormAjout({
         ))}
       </div>
       <div className="rangée">
-        <span className="lbl mono">avec qui ?</span>
+        <span className="lbl mono">{t('avec qui ?')}</span>
         {COMPAGNIES.map((t) => (
           <button
             key={t}

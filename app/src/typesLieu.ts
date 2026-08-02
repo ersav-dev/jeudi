@@ -40,7 +40,7 @@ export function labelTypeLieu(t: TypeLieu): string {
       : t === 'cafe'
         ? 'café'
         : t === 'street'
-          ? 'sur le pouce'
+          ? 'rapido'
           : t === 'gastro'
             ? 'grande table'
             : 'resto'

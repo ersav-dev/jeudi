@@ -843,7 +843,7 @@ function RecapTirage({
         )}
         {valide && <span className="recap-stamp mono">validé</span>}
         {nbPhotos > 0 && (
-          <span className="mono recap-tirage-cat">{labelCatPhoto(lieu.photos[photoIndex]?.type)}</span>
+          <span className="mono recap-tirage-cat">{t(labelCatPhoto(lieu.photos[photoIndex]?.type))}</span>
         )}
       </div>
 

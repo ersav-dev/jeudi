@@ -17,6 +17,28 @@ import {
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
 import { typeDeLieu, svgTypeLieu } from './typesLieu'
+
+// les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
+const traitMonument = (d: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
+const MONUMENTS: { nom: string; lat: number; lng: number; trait: string }[] = [
+  // la tour : deux jambes qui se croisent, l'arche
+  { nom: 'tour eiffel', lat: 48.8584, lng: 2.2945, trait: traitMonument('<path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/><path d="M9.5 13h5"/>') },
+  // l'étoile : l'arche pleine
+  { nom: 'arc de triomphe', lat: 48.8738, lng: 2.295, trait: traitMonument('<path d="M5 20V7a7 7 0 0 1 14 0v13"/><path d="M9 20v-6a3 3 0 0 1 6 0v6"/>') },
+  // la butte : le dôme et ses deux petits
+  { nom: 'sacré-cœur', lat: 48.8867, lng: 2.3431, trait: traitMonument('<path d="M8 20v-6a4 4 0 0 1 8 0v6"/><path d="M12 10V7"/><path d="M4 20v-3a2 2 0 0 1 4 0"/><path d="M16 17a2 2 0 0 1 4 0v3"/><path d="M3 20h18"/>') },
+  // l'île : les deux tours carrées
+  { nom: 'notre-dame', lat: 48.853, lng: 2.3499, trait: traitMonument('<path d="M6 20V8h4v12"/><path d="M14 20V8h4v12"/><path d="M10 12h4"/><path d="M4 20h16"/>') },
+  // la montagne : le dôme sur colonnes
+  { nom: 'panthéon', lat: 48.8462, lng: 2.3464, trait: traitMonument('<path d="M7 20v-7M12 20v-7M17 20v-7"/><path d="M5 13a7 5 0 0 1 14 0"/><path d="M4 20h16"/>') },
+  // l'opéra : le fronton
+  { nom: 'opéra', lat: 48.872, lng: 2.3316, trait: traitMonument('<path d="M4 20l8-12 8 12z"/><path d="M8 20v-4M12 20v-6M16 20v-4"/>') },
+  // le dôme doré
+  { nom: 'invalides', lat: 48.856, lng: 2.3126, trait: traitMonument('<path d="M9 20v-5a3 5 0 0 1 6 0v5"/><path d="M12 9V5l2 1"/><path d="M5 20h14"/>') },
+  // la tour noire (le repère du sud)
+  { nom: 'montparnasse', lat: 48.8421, lng: 2.3219, trait: traitMonument('<path d="M9 21V5a6 8 0 0 1 6 0v16"/><path d="M9 9h6M9 14h6"/>') },
+]
 import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
 
@@ -632,6 +654,16 @@ export default function Carte({
         'bottom-right',
       )
     }
+    // ── les MONUMENTS-REPÈRES : le croquis s'oriente comme un vrai carnet ──
+    // des silhouettes à l'encre graphite, discrètes, jamais tapables — elles
+    // situent (la tour, la butte, l'étoile) sans jamais concurrencer les spots.
+    for (const mo of MONUMENTS) {
+      const el = document.createElement('div')
+      el.className = 'monument-repere'
+      el.innerHTML = `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
+      new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
+    }
+
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)
     const elMoi = document.createElement('div')
     elMoi.className = 'pin-moi'
