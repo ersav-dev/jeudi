@@ -6710,3 +6710,37 @@ input:focus-visible {
 button:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* zéro photo : UN cadre large qui invite (jamais cinq trous d'un coup) */
+.album-large {
+  width: 100%;
+  min-height: 84px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── « colle ta liste » : l'import universel ── */
+.import-liste {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.import-liste-hint {
+  color: var(--encre-2);
+  margin: 0;
+}
+.import-liste-zone {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--nuit-2);
+  border: 1px solid var(--graphite);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-size: 13px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.import-liste-zone:focus {
+  outline: none;
+  border-color: var(--encre);
+}

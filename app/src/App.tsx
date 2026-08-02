@@ -10,6 +10,7 @@ import PickerCouleur from './PickerCouleur'
 import { importerSeed } from './seed'
 import { jalonner, jalonnerVue } from './jalon'
 import ImportGoogle from './ImportGoogle'
+import ImportListe from './ImportListe'
 import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
 import { suivre } from './analytique'
@@ -3424,6 +3425,24 @@ function AlbumATrous({
       developpees.includes(type),
   )
   if (!cadres.length) return null
+
+  // ZÉRO photo (le cas des 302 spots importés) : cinq trous seraient un
+  // constat d'échec — on tend UN seul cadre large, une invitation. La
+  // première prise = « la salle » (l'ambiance, la photo canonique) ; dès
+  // qu'elle existe, l'album complet prend le relais pour les autres preuves.
+  if (lieu.photos.length === 0 && developpees.length === 0) {
+    return (
+      <div className="album-trous">
+        <label className="album-cadre album-vide album-large" aria-label={t('sa photo — prends-la ce soir')}>
+          <span className="album-fenetre">
+            <IAppareil taille={19} />
+          </span>
+          <input type="file" accept="image/*" capture="environment" hidden onChange={prendre('salle')} />
+          <span className="hand album-etiquette">{t('sa photo — prends-la ce soir')}</span>
+        </label>
+      </div>
+    )
+  }
   return (
     <div className="album-trous">
       {cadres.map(({ type, etiquette }) => {
@@ -3806,6 +3825,8 @@ function FormAjout({
         ))}
       </div>
       <ImportGoogle ouvertParDefaut={importOuvert} onImporte={() => setTimeout(onFini, 1100)} />
+      {/* l'import universel : des noms collés depuis n'importe où */}
+      <ImportListe onImporte={() => setTimeout(onFini, 300)} />
       <div className="form-actions">
         <button className="lien" onClick={onAnnule}>
           laisse tomber

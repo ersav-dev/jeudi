@@ -192,6 +192,15 @@ const EN: Record<string, string> = {
   'les wc': 'the toilets',
   'le verre · le plat': 'the glass · the plate',
 
+  // L'album à trous + l'import « colle ta liste »
+  'sa photo — prends-la ce soir': 'its photo — take it tonight',
+  'ou colle une liste de noms →': 'or paste a list of names →',
+  'un spot par ligne — depuis tes notes, un article, un message…': 'one spot per line — from your notes, an article, a message…',
+  'retrouver ces spots →': 'find these spots →',
+  'introuvable — vérifie l’orthographe': 'not found — check the spelling',
+  'spots dans mon carnet →': 'spots into my notebook →',
+  'spots ajoutés — ils sont privés, à toi de les publier.': 'spots added — they’re private, publishing is up to you.',
+
   // Le moment unifié (« quand ? » partout — le deck, le match)
   'ça dit quoi': 'what’s the word',
   'jeudi soir': 'thursday night',
