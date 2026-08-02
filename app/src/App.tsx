@@ -14,7 +14,7 @@ import ImportListe from './ImportListe'
 import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
 import { suivre } from './analytique'
-import { partagerEnStory } from './partageStory'
+import { partagerEnStory, partagerMaCarte } from './partageStory'
 import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import Recherche from './EcranRecherche'
@@ -1805,6 +1805,43 @@ export default function App() {
             </label>
           </div>
 
+          {/* la carte de membre : TON carnet devient un objet à poster —
+              portrait, identité, tes preuves. Le lien d'invitation part
+              dans le presse-papier (une image de story ne clique pas). */}
+          <button
+            className="lien fiche-story"
+            onClick={() => {
+              void (async () => {
+                const p = await lireProfil()
+                const miens = lieux.filter((l) => estAMoi(l))
+                try {
+                  await navigator.clipboard.writeText(lienInvitation())
+                } catch {
+                  /* presse-papier indisponible : la carte part quand même */
+                }
+                const ok = await partagerMaCarte({
+                  prenom: p?.prenom?.trim() || 'moi',
+                  tagline: tagline.trim() || undefined,
+                  critere: p?.critere?.trim() || undefined,
+                  nbSpots: miens.length,
+                  portrait: photoUrl ?? undefined,
+                  tirages: miens
+                    .flatMap((l) => l.photos.map((ph) => srcPhoto(ph)))
+                    .filter(Boolean)
+                    .slice(0, 3),
+                  tip: (() => {
+                    const avec = miens.find((l) => l.note.trim())
+                    return avec ? { note: avec.note, lieu: avec.nom } : undefined
+                  })(),
+                })
+                if (ok) setFlash(t('ton lien d’invitation est copié — colle-le en sticker sur ta story.'))
+                suivre('carte_membre_partagee')
+              })()
+            }}
+          >
+            {t('partage ton carnet en story →')}
+          </button>
+
           <TitreSection>réglages</TitreSection>
           <Reglages lieux={lieux} onGrandJeudi={() => setGjOuvert(true)} />
 
@@ -2660,6 +2697,17 @@ function CarteCurateur({
           )}
         </dl>
       </div>
+      {/* SES preuves : une bande de tirages penchés, tirée de ses spots */}
+      {(() => {
+        const tirages = spots.flatMap((s) => s.photos).slice(0, 4)
+        return tirages.length > 0 ? (
+          <div className="membre-tirages">
+            {tirages.map((p, i) => (
+              <img key={i} src={srcPhoto(p)} alt="" loading="lazy" onError={photoIndisponible} />
+            ))}
+          </div>
+        ) : null
+      })()}
       {reel.bio && <p className="hand curateur-bio">{reel.bio}</p>}
       <span className="basculer mono curateur-basculer">
         <button

@@ -6788,3 +6788,23 @@ button:focus:not(:focus-visible) {
   right: 14px;
   bottom: calc(14px + env(safe-area-inset-bottom));
 }
+
+/* la bande de tirages du membre : ses preuves, penchées tour à tour */
+.membre-tirages {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 4px;
+  justify-content: center;
+}
+.membre-tirages img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  background: var(--nuit-2);
+  border: 4px solid var(--print-white);
+  border-bottom-width: 12px;
+  transform: rotate(-2deg);
+}
+.membre-tirages img:nth-child(even) {
+  transform: rotate(2deg);
+}

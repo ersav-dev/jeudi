@@ -192,6 +192,10 @@ const EN: Record<string, string> = {
   'les wc': 'the toilets',
   'le verre · le plat': 'the glass · the plate',
 
+  // La carte de membre
+  'partage ton carnet en story →': 'share your notebook as a story →',
+  'ton lien d’invitation est copié — colle-le en sticker sur ta story.': 'your invite link is copied — paste it as a sticker on your story.',
+
   // Le croquis plein écran
   'agrandir le croquis': 'expand the sketch',
   'réduire le croquis': 'shrink the sketch',
