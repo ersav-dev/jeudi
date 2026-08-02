@@ -192,6 +192,10 @@ const EN: Record<string, string> = {
   'les wc': 'the toilets',
   'le verre · le plat': 'the glass · the plate',
 
+  // Le croquis plein écran
+  'agrandir le croquis': 'expand the sketch',
+  'réduire le croquis': 'shrink the sketch',
+
   // L'album à trous + l'import « colle ta liste »
   'sa photo — prends-la ce soir': 'its photo — take it tonight',
   'ou colle une liste de noms →': 'or paste a list of names →',

@@ -62,13 +62,47 @@ export default function CroquisParis({
   const comptes = useMemo(() => compterSpotsZones(lieux), [lieux])
   const nbEau = useMemo(() => lieux.filter((l) => l.surLeau).length, [lieux])
 
+  // le croquis en PLEIN ÉCRAN : même dessin, mêmes zones tapables — taper
+  // un quartier filtre ET referme (on retombe sur les résultats)
+  const [plein, setPlein] = useState(false)
+  const choisirZone = (repere: string) => {
+    onChoisir(repere)
+    if (plein) setPlein(false)
+  }
+  const choisirEau = onEau
+    ? () => {
+        onEau()
+        if (plein) setPlein(false)
+      }
+    : undefined
+
   return (
     <div>
       <button type="button" className="croquis-entete" onClick={basculer} aria-expanded={ouvert}>
         <span>{t("la ville en un coup d'œil")}</span>
         <span style={{ opacity: 0.7 }}>{ouvert ? t('replier') : t('déplier')}</span>
       </button>
-      <div className={`croquis-cadre${ouvert ? '' : ' plie'}`} aria-hidden={!ouvert}>
+      <div
+        className={`croquis-cadre${ouvert || plein ? '' : ' plie'}${plein ? ' croquis-plein' : ''}`}
+        aria-hidden={!ouvert && !plein}
+      >
+        {/* la flèche plein écran (bas droite) — et la même pour ranger */}
+        <button
+          type="button"
+          className="croquis-agrandir"
+          aria-label={plein ? t('réduire le croquis') : t('agrandir le croquis')}
+          onClick={() => setPlein((v) => !v)}
+        >
+          {plein ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
+            </svg>
+          )}
+        </button>
         <svg viewBox="0 0 340 260" className="croquis-svg" role="group" aria-label="croquis de paris — tape une zone pour chercher autour">
           {/* le périph : le bord du carnet, en pointillés légers */}
           <path d={TRAIT_PERIPH} fill="none" stroke="var(--graphite)" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 7" strokeLinecap="round" />
@@ -79,14 +113,14 @@ export default function CroquisParis({
           <g
             className="croquis-zone"
             role="button"
-            tabIndex={ouvert && onEau ? 0 : -1}
+            tabIndex={(ouvert || plein) && onEau ? 0 : -1}
             aria-pressed={eauActive}
             aria-label={`la seine — sur l'eau, ${nbEau} spot${nbEau > 1 ? 's' : ''}`}
-            onClick={onEau}
+            onClick={choisirEau}
             onKeyDown={(e) => {
-              if (onEau && (e.key === 'Enter' || e.key === ' ')) {
+              if (choisirEau && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault()
-                onEau()
+                choisirEau()
               }
             }}
           >
@@ -154,14 +188,14 @@ export default function CroquisParis({
                 key={z.repere}
                 className="croquis-zone"
                 role="button"
-                tabIndex={ouvert ? 0 : -1}
+                tabIndex={ouvert || plein ? 0 : -1}
                 aria-pressed={estActif}
                 aria-label={`${z.etiquette} — ${vide ? 'aucun spot' : `${n} spot${n > 1 ? 's' : ''}`}`}
-                onClick={() => onChoisir(z.repere)}
+                onClick={() => choisirZone(z.repere)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
-                    onChoisir(z.repere)
+                    choisirZone(z.repere)
                   }
                 }}
               >
