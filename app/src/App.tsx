@@ -3222,8 +3222,16 @@ function Fiche({
       <div className="fiche-tips">
         <span className="lbl mono">{t('les tips')}</span>
         {lieu.note && (
-          <div className="tip">
-            <p className="hand">{lieu.note}</p>
+          /* une note importée de Google est un PENSE-BÊTE, pas un tip signé
+             (audit 02/08) : elle s'affiche en note d'import tant qu'elle n'a
+             pas été réécrite — la fiche tend le stylo au lieu de mentir */
+          <div className={`tip${estNoteImport(lieu) ? ' tip-import' : ''}`}>
+            <p className={estNoteImport(lieu) ? 'mono tip-import-txt' : 'hand'}>{lieu.note}</p>
+            {estNoteImport(lieu) && mien && (
+              <button className="lien tip-reecrire" onClick={() => setEdition(true)}>
+                {t('en faire un vrai tip →')}
+              </button>
+            )}
             <span className="mono tip-signature">
               {/* la note d'un spot du cercle est LA voix de son proprio, pas la mienne */}
               {chez ? (
@@ -3235,6 +3243,8 @@ function Fiche({
                 </>
               ) : editorial ? (
                 `— ${NOM_JEUDI}`
+              ) : estNoteImport(lieu) ? (
+                t('— note d’import')
               ) : (
                 '— toi'
               )}
@@ -3430,6 +3440,13 @@ function Fiche({
       </div>
     </div>
   )
+}
+
+/** une note venue de Google Maps est un pense-bête, pas un tip signé :
+ *  source 'google' + jamais retouchée (pas de tampon, pas de photo à moi).
+ *  Tant qu'elle n'est pas réécrite, la fiche l'annonce pour ce qu'elle est. */
+function estNoteImport(l: Lieu): boolean {
+  return l.source === 'google' && !l.tampon && l.photos.length === 0 && !!l.note?.trim()
 }
 
 // ── l'album à trous ────────────────────────────────────────────

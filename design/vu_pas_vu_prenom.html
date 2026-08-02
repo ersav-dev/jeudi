@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — le prénom dit s'il est lu</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--nuit:#14120e;--nuit-2:#1b1813;--encre:#efe9d8;--encre-2:rgba(239,233,216,.62);
+        --encre-3:rgba(239,233,216,.4);--cire:#a8322a;--graphite:#8a857a;--blanc:#f7f3e8}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       padding:20px 16px 60px;max-width:820px;margin:0 auto}
+  h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:26px}
+  .sous{font-size:11px;color:var(--encre-3);letter-spacing:.5px;margin:3px 0 22px}
+  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:24px 14px}
+  .carte{text-align:center}
+  .num{font-size:10px;color:var(--encre-3);letter-spacing:1px}
+  .titre{font-family:'Instrument Serif',serif;font-style:italic;font-size:17px;margin:1px 0 10px}
+  .scene{cursor:pointer;padding-bottom:6px}
+  .note{font-size:10px;color:var(--encre-2);line-height:1.5;margin-top:8px;min-height:34px}
+
+  .tas{position:relative;width:72px;margin:0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+  .tas .f{position:absolute;inset:0;width:100%;aspect-ratio:1;object-fit:cover;
+          border:3px solid var(--blanc);border-bottom-width:11px;background:var(--nuit-2);
+          box-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .tas .f.b1{transform:rotate(7deg) translate(4%,-3%)}
+  .tas .f.b2{transform:rotate(-8deg) translate(-4%,2%)}
+  .tas .haut{position:relative;display:block;transform:rotate(-2deg)}
+  .lig{margin-top:9px;font-size:11px;line-height:1.3;transition:all .4s ease}
+  .heure{color:var(--encre-3);font-size:10px}
+
+  /* 01 le prénom en cire */
+  .v1 .nom{color:var(--cire);font-weight:700}
+  .v1.vu .nom{color:var(--encre-3);font-weight:400}
+  /* 02 le trait dessous */
+  .v2 .nom{color:var(--encre);border-bottom:2px solid var(--cire);padding-bottom:2px}
+  .v2.vu .nom{border-bottom-color:transparent;color:var(--encre-3)}
+  /* 03 le point devant */
+  .v3 .nom{color:var(--encre)}
+  .v3 .nom::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;
+                   background:var(--cire);margin-right:6px;vertical-align:1px;transition:transform .35s,opacity .35s}
+  .v3.vu .nom{color:var(--encre-3)}
+  .v3.vu .nom::before{transform:scale(0);opacity:0}
+  /* 04 la main change */
+  .v4 .nom{font-family:'Caveat',cursive;font-size:20px;color:var(--cire)}
+  .v4.vu .nom{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--encre-3)}
+  /* 05 l'étiquette */
+  .v5 .nom{background:var(--cire);color:#fff;padding:2px 8px;display:inline-block;
+           transform:rotate(-1.5deg);transition:all .4s}
+  .v5.vu .nom{background:transparent;color:var(--encre-3);transform:none;padding:2px 0}
+  /* 06 le prénom + le lieu */
+  .v6 .nom{color:var(--cire);font-weight:700}
+  .v6 .lieu{color:var(--encre-2)}
+  .v6.vu .nom{color:var(--encre-2);font-weight:400}
+  /* 07 le trait qui se raye */
+  .v7 .nom{color:var(--encre);position:relative}
+  .v7 .nom::after{content:'';position:absolute;left:-2px;right:-2px;bottom:-3px;height:2px;
+                  background:var(--cire);transition:bottom .4s ease,opacity .4s}
+  .v7.vu .nom{color:var(--encre-3)}
+  .v7.vu .nom::after{bottom:45%;opacity:.55}
+  /* 08 le prénom qui pâlit */
+  .v8 .nom{color:var(--cire);font-weight:700;text-shadow:0 0 12px rgba(168,50,42,.7)}
+  .v8.vu .nom{color:rgba(168,50,42,.35);font-weight:400;text-shadow:none}
+  /* 09 la marge */
+  .v9 .lig{position:relative;display:inline-block;padding-left:12px}
+  .v9 .lig::before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:3px;
+                   background:var(--cire);transition:opacity .4s,transform .4s;transform-origin:top}
+  .v9.vu .lig::before{opacity:0;transform:scaleY(0)}
+  .v9 .nom{color:var(--encre)}
+  .v9.vu .nom{color:var(--encre-3)}
+  /* 10 le prénom seul / le lieu apparaît */
+  .v10 .nom{color:var(--cire);font-weight:700}
+  .v10 .lieu{opacity:0;transition:opacity .4s}
+  .v10.vu .nom{color:var(--encre-3);font-weight:400}
+  .v10.vu .lieu{opacity:1}
+
+  .banc{margin-top:38px;border-top:1px solid rgba(239,233,216,.14);padding-top:20px}
+  .banc h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:19px;margin-bottom:4px}
+  .banc p{font-size:10px;color:var(--encre-3);margin-bottom:16px;letter-spacing:.5px}
+  .rangee{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;
+          background:#181510;border-radius:10px;padding:22px 16px}
+  .pied{margin-top:26px;font-family:'Caveat',cursive;font-size:17px;color:var(--encre-2);text-align:center}
+</style>
+</head>
+<body>
+<h1>le prénom dit s'il est lu.</h1>
+<p class="sous">10 DÉCLINAISONS · TAPE POUR PASSER DE « PAS VU » À « LU »</p>
+
+<div class="grille" id="g"></div>
+
+<div class="banc">
+  <h2>et sur la carte, à côté les uns des autres ?</h2>
+  <p>LE VRAI TEST : TROIS PAS VUS, DEUX LUS, SUR FOND DE VILLE</p>
+  <div class="rangee" id="r"></div>
+</div>
+
+<p class="pied">le bon signe est celui qui n'ajoute rien à l'écran.</p>
+
+<script>
+  const P = (k) => `https://loremflickr.com/300/300/bar,paris,night/all?lock=${k}`
+  const V = [
+    { t:'le prénom en cire', n:'l’encre rouge du carnet. lu, il repasse au crayon.' },
+    { t:'le trait dessous', n:'le nom reste à l’encre, seul le soulignement est frais.' },
+    { t:'le point devant', n:'une puce de cire qui s’efface. discret, très lisible.' },
+    { t:'la main change', n:'écrit à la main tant que c’est frais — classé en mono une fois lu.' },
+    { t:'l’étiquette', n:'un bandeau de cire. fort… peut-être trop, à cinq d’affilée.' },
+    { t:'le prénom + le lieu', n:'qui d’abord, où ensuite. seul le qui est rouge.' },
+    { t:'le trait qui se raye', n:'le soulignement monte et raye le nom : la liste qu’on coche.' },
+    { t:'le prénom qui pâlit', n:'pas binaire : la cire s’éteint doucement au lieu de disparaître.' },
+    { t:'la marge', n:'un trait de cire dans la marge, comme une annotation de lecture.' },
+    { t:'le lieu se révèle', n:'pas vu : juste le prénom. lu : le nom du spot apparaît dessous.' },
+  ]
+  const tas = (k) => `<div class="tas">
+      <img class="f b1" src="${P(200+k)}" alt=""/><img class="f b2" src="${P(300+k)}" alt=""/>
+      <img class="f haut" src="${P(400+k)}" alt=""/></div>`
+  const ligne = (i) => i === 5 || i === 9
+    ? `<div class="lig"><span class="nom">karim</span><br/><span class="lieu">le perchoir</span></div>`
+    : `<div class="lig"><span class="nom">karim</span> <span class="heure">· 2h</span></div>`
+
+  document.getElementById('g').innerHTML = V.map((v,i)=>`
+    <div class="carte v${i+1}" >
+      <div class="num">${String(i+1).padStart(2,'0')}</div>
+      <div class="titre">${v.t}</div>
+      <div class="scene">${tas(i)}${ligne(i)}</div>
+      <div class="note">${v.n}</div>
+    </div>`).join('')
+
+  const NOMS = ['karim','marie','léa','sofiane','inès']
+  document.getElementById('r').innerHTML = NOMS.map((nm,i)=>`
+    <div class="carte v1 ${i>2?'vu':''}" style="width:82px">
+      <div class="scene">${tas(50+i)}
+        <div class="lig"><span class="nom">${nm}</span> <span class="heure">· ${2+i*7}h</span></div>
+      </div>
+    </div>`).join('')
+
+  document.querySelectorAll('.carte .scene').forEach((s)=>{
+    s.onclick = () => s.parentElement.classList.toggle('vu')
+  })
+</script>
+</body>
+</html>

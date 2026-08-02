@@ -176,6 +176,9 @@ const EN: Record<string, string> = {
 
   // La fiche lieu (audit 02/08 : le bilingue troué)
   'les tips': 'the tips',
+  'ta place vit dans cet onglet — ne le ferme pas avant le verdict.': 'your seat lives in this tab — don’t close it before the verdict.',
+  'en faire un vrai tip →': 'turn it into a real tip →',
+  '— note d’import': '— imported note',
   "c'est pour quoi ?": 'what for?',
   'modifier les infos': 'edit the details',
   'capturé le': 'captured on',

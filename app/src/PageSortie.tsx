@@ -31,6 +31,8 @@ export default function PageSortie({ token }: { token: string }) {
   const [moi, setMoi] = useState<CleSortie | null>(() => lireCleSortie(token))
   const [prenom, setPrenom] = useState('')
   const [enCours, setEnCours] = useState(false)
+  // le stockage a refusé (navigation privée) : sa place vit dans l'onglet
+  const [ephemere, setEphemere] = useState(false)
   // le compte à rebours vit sans réseau : un battement toutes les 30 s
   const [, setBattement] = useState(0)
   const vivant = useRef(true)
@@ -71,7 +73,9 @@ export default function PageSortie({ token }: { token: string }) {
     try {
       const { participantId, cle } = await rejoindreSortie(token, p)
       const c: CleSortie = { participantId, cle, prenom: p, votes: {} }
-      ecrireCleSortie(token, c)
+      // navigation privée : le stockage refuse → sa place ne vit que dans cet
+      // onglet. On le dit, au lieu de le laisser revoter en double plus tard.
+      if (!ecrireCleSortie(token, c)) setEphemere(true)
       setMoi(c)
       void charger()
     } catch (e) {
@@ -262,6 +266,11 @@ export default function PageSortie({ token }: { token: string }) {
           </div>
         )
       })}
+      {ephemere && (
+        <p className="mono sortie-hint">
+          {t('ta place vit dans cet onglet — ne le ferme pas avant le verdict.')}
+        </p>
+      )}
       <p className="mono sortie-hint">{t('ta réaction reste anonyme — le groupe ne voit que les totaux.')}</p>
       <p className="hand sortie-mot">{t('la discussion, c’est sur WhatsApp. ici, on tranche.')}</p>
       <div role="alert">{erreur && <p className="mono sortie-erreur">{t(erreur)}</p>}</div>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — les deux règles du sceau</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--nuit:#14120e;--nuit-2:#1b1813;--encre:#efe9d8;--encre-2:rgba(239,233,216,.62);
+        --encre-3:rgba(239,233,216,.4);--cire:#a8322a;--graphite:#8a857a;--blanc:#f7f3e8}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       padding:20px 16px 70px;max-width:640px;margin:0 auto}
+  h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:25px}
+  .sous{font-size:10px;color:var(--encre-3);letter-spacing:.5px;margin:3px 0 26px}
+  h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:20px;margin-bottom:2px}
+  .q{font-size:10px;color:var(--encre-3);letter-spacing:.5px;margin-bottom:14px}
+  section{border-top:1px solid rgba(239,233,216,.14);padding-top:18px;margin-bottom:30px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cas{background:#181510;border-radius:10px;padding:16px 10px 14px;text-align:center}
+  .regle{font-size:9px;letter-spacing:1px;color:var(--encre-3);margin-bottom:12px}
+  .verdict{font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);margin-top:10px;min-height:40px;line-height:1.25}
+
+  .tas{position:relative;width:76px;margin:0 auto;cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+  .tas .f{position:absolute;inset:0;width:100%;aspect-ratio:1;object-fit:cover;
+          border:3px solid var(--blanc);border-bottom-width:12px;background:var(--nuit-2);
+          box-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .tas .f.b1{transform:rotate(7deg) translate(4%,-3%)}
+  .tas .f.b2{transform:rotate(-8deg) translate(-4%,2%)}
+  .tas .haut{position:relative;display:block;transform:rotate(-2deg)}
+  .bloc{margin-top:9px;line-height:1.4}
+  .nom{background:var(--cire);color:#fff;padding:2px 8px;display:inline-block;font-size:11px;
+       transform:rotate(-1.5deg);transition:all .45s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+  .nom i{font-style:normal;position:relative;z-index:2;transition:color .3s .15s}
+  .nom::before{content:'';position:absolute;inset:0;background:var(--cire);
+               transition:transform .5s cubic-bezier(.4,0,.2,1)}
+  .lu .nom{background:transparent;transform:none;padding:2px 0}
+  .lu .nom::before{transform:translateY(105%)}
+  .lu .nom i{color:var(--encre-3)}
+  .quand{display:block;font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);margin-top:1px}
+  .reste{display:block;font-size:9px;color:var(--cire);margin-top:3px;height:12px}
+
+  .btn{font-family:inherit;font-size:10px;background:none;color:var(--encre);
+       border:1px solid var(--encre-3);border-radius:3px;padding:7px 12px;cursor:pointer;margin:14px 4px 0}
+  .barre{text-align:center}
+
+  #car{position:fixed;inset:0;background:rgba(12,10,7,.93);z-index:50;display:none;
+       flex-direction:column;align-items:center;justify-content:center;gap:12px}
+  #car.on{display:flex}
+  #fen{width:min(72vw,280px);height:calc(min(72vw,280px) + 66px);overflow:hidden;
+       touch-action:none;cursor:grab;position:relative}
+  #fen:active{cursor:grabbing}
+  #colonne{position:absolute;inset:0}
+  #colonne.souple,.rangee.souple{transition:transform .34s cubic-bezier(.22,1,.36,1)}
+  .perso{overflow:hidden;display:flex;align-items:center}
+  .rangee{display:flex;width:100%}
+  .dia{flex:0 0 100%;padding:0 5px}
+  .dia .cad{transform:rotate(-2deg)}
+  .dia:nth-child(even) .cad{transform:rotate(2deg)}
+  .dia img{width:100%;aspect-ratio:1;object-fit:cover;border:9px solid var(--blanc);
+           border-bottom-width:48px;background:var(--nuit-2);display:block}
+  .dia .leg{margin-top:-42px;position:relative;text-align:center;font-family:'Caveat',cursive;
+            font-size:18px;color:#14120e}
+  #aide{font-family:'Caveat',cursive;font-size:15px;color:var(--encre-3);text-align:center;line-height:1.3}
+  #pts{display:flex;gap:7px}
+  #pts span{width:7px;height:7px;border-radius:50%;background:rgba(239,233,216,.25)}
+  #pts span.v{background:var(--encre)}
+  #cpt{font-size:11px;color:var(--encre-2)}
+  #nav{display:flex;gap:10px}
+  #car .btn{margin-top:0}
+  .pied{margin-top:10px;font-family:'Caveat',cursive;font-size:16px;color:var(--encre-2);text-align:center}
+</style>
+</head>
+<body>
+<h1>les deux règles du sceau.</h1>
+<p class="sous">TAPE LES TAS, SENS LA DIFFÉRENCE</p>
+
+<section>
+  <h2>① le sceau se brise quand ?</h2>
+  <p class="q">MÊME SITUATION : KARIM A POSTÉ 4 PHOTOS. OUVRE, REGARDE UNE SEULE, ET FERME.</p>
+  <div class="duo">
+    <div class="cas"><div class="regle">RÈGLE A · À L'OUVERTURE</div><div id="A1"></div>
+      <div class="verdict" id="vA1">l'étiquette tombe dès que tu ouvres.</div></div>
+    <div class="cas"><div class="regle">RÈGLE B · QUAND TOUT EST VU</div><div id="A2"></div>
+      <div class="verdict" id="vA2">l'étiquette reste tant qu'il t'en manque.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>② un sceau par soirée, ou par photo ?</h2>
+  <p class="q">LIS LES DEUX, PUIS FAIS POSTER UNE PHOTO DE PLUS À KARIM.</p>
+  <div class="duo">
+    <div class="cas"><div class="regle">RÈGLE A · UN PAR SOIRÉE</div><div id="B1"></div>
+      <div class="verdict" id="vB1">une soirée = un signal.</div></div>
+    <div class="cas"><div class="regle">RÈGLE B · UN PAR PHOTO</div><div id="B2"></div>
+      <div class="verdict" id="vB2">chaque photo te rappelle.</div></div>
+  </div>
+  <div class="barre">
+    <button class="btn" onclick="poster()">karim poste une photo de plus</button>
+    <button class="btn" onclick="reset()">tout remettre à zéro</button>
+  </div>
+</section>
+
+<p class="pied">celle qui te laisse tranquille est la bonne.</p>
+
+<div id="car">
+  <div id="fen"><div id="colonne"></div></div>
+  <div id="pts"></div>
+  <div id="cpt"></div>
+  <div id="aide">← → la photo suivante<br/>↑ ↓ la personne suivante</div>
+  <button class="btn" onclick="fermer()">fermer</button>
+</div>
+
+<script>
+  const P=(k)=>`https://loremflickr.com/300/300/bar,paris,night/all?lock=${k}`
+  const TIPS=['la vue, rien à dire.','spritz du soir.','la nuit tombe.','la bande.','encore une.','la der.']
+  const neuf=(n,seed)=>Array.from({length:n},(_,i)=>({src:P(seed+i),tip:TIPS[i%TIPS.length]}))
+
+  const S={
+    A1:{n:'karim',q:'il y a 2h',ph:neuf(4,610),vues:new Set(),regle:'ouverture',lu:false},
+    A2:{n:'karim',q:'il y a 2h',ph:neuf(4,610),vues:new Set(),regle:'tout',lu:false},
+    B1:{n:'karim',q:'il y a 2h',ph:neuf(3,640),vues:new Set(),regle:'ouverture',lu:false,par:'soiree'},
+    B2:{n:'karim',q:'il y a 2h',ph:neuf(3,640),vues:new Set(),regle:'ouverture',lu:false,par:'photo'},
+  }
+
+  function html(id){
+    const s=S[id], n=s.ph.length, vus=s.vues.size
+    const reste = (s.regle==='tout' && !s.lu && vus>0) ? `${vus}/${n} vues` : ''
+    return `<div class="tas ${s.lu?'lu':''}" onclick="ouvrir('${id}')">
+      <img class="f b1" src="${s.ph[1]?.src||s.ph[0].src}" alt=""/>
+      <img class="f b2" src="${s.ph[2]?.src||s.ph[0].src}" alt=""/>
+      <img class="f haut" src="${s.ph[0].src}" alt=""/></div>
+      <div class="bloc ${s.lu?'lu':''}">
+        <span class="nom"><i>${s.n}</i></span>
+        <span class="quand">${s.q}</span>
+        <span class="reste">${reste}</span>
+      </div>`
+  }
+  function peindre(){ for(const id in S) document.getElementById(id).innerHTML=html(id) }
+
+  // le carrousel en DEUX AXES : ← → les photos d'une personne · ↑ ↓ les personnes
+  const fen=document.getElementById('fen'), col=document.getElementById('colonne')
+  let groupe=[], pi=0, cis=[], H=0
+  const cid=()=>groupe[pi]
+
+  function ouvrir(id){
+    // le groupe : les tas de la même section, pour pouvoir passer de l'un à l'autre
+    groupe = (id[0]==='A') ? ['A1','A2'] : ['B1','B2']
+    pi = groupe.indexOf(id)
+    cis = groupe.map(()=>0)
+    groupe.forEach((g)=>{ if(g===id) S[g].vues.add(0) })
+    col.innerHTML = groupe.map((g)=>`
+      <div class="perso" data-g="${g}"><div class="rangee">
+        ${S[g].ph.map((p)=>`<div class="dia"><div class="cad">
+           <img src="${p.src}" alt="${p.tip}"/><div class="leg">« ${p.tip} »</div>
+         </div></div>`).join('')}
+      </div></div>`).join('')
+    document.getElementById('car').classList.add('on')
+    requestAnimationFrame(()=>{ mesurer(); maj(true) })
+  }
+  function mesurer(){
+    H = fen.clientHeight
+    col.querySelectorAll('.perso').forEach((p)=>{ p.style.height=H+'px' })
+  }
+  function maj(sec){
+    const s=S[cid()], ci=cis[pi]
+    if(!sec){ col.classList.add('souple'); col.querySelectorAll('.rangee').forEach(r=>r.classList.add('souple')) }
+    col.style.transform=`translateY(${-pi*H}px)`
+    col.querySelectorAll('.rangee').forEach((r,k)=>{ r.style.transform=`translateX(${-cis[k]*100}%)` })
+    document.getElementById('cpt').textContent=`${s.n} · ${ci+1}/${s.ph.length}${groupe.length>1?` · ${pi+1}/${groupe.length} personnes`:''}`
+    document.getElementById('pts').innerHTML=s.ph.map((_,i)=>`<span class="${s.vues.has(i)?'v':''}"></span>`).join('')
+  }
+  // quitter une personne applique sa règle (comme si on fermait sur elle)
+  function sceller(g){
+    const s=S[g]
+    if(s.regle==='ouverture') s.lu=true
+    else if(s.vues.size>=s.ph.length) s.lu=true
+  }
+
+  let drag=null, axe=null
+  fen.addEventListener('pointerdown',(e)=>{
+    if(!groupe.length) return
+    drag={x:e.clientX,y:e.clientY,l:fen.offsetWidth}; axe=null
+    col.classList.remove('souple'); col.querySelectorAll('.rangee').forEach(r=>r.classList.remove('souple'))
+    fen.setPointerCapture(e.pointerId)
+  })
+  fen.addEventListener('pointermove',(e)=>{
+    if(!drag) return
+    let dx=e.clientX-drag.x, dy=e.clientY-drag.y
+    if(!axe && Math.hypot(dx,dy)>10) axe = Math.abs(dx)>Math.abs(dy) ? 'x' : 'y'
+    if(axe==='x'){
+      const s=S[cid()], ci=cis[pi]
+      if((ci===0&&dx>0)||(ci===s.ph.length-1&&dx<0)) dx*=0.35
+      col.querySelectorAll('.rangee')[pi].style.transform=`translateX(calc(${-ci*100}% + ${dx}px))`
+    } else if(axe==='y'){
+      if((pi===0&&dy>0)||(pi===groupe.length-1&&dy<0)) dy*=0.35
+      col.style.transform=`translateY(${-pi*H+dy}px)`
+    }
+  })
+  fen.addEventListener('pointerup',(e)=>{
+    if(!drag){ return }
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y
+    if(axe==='x' && Math.abs(dx)>drag.l*0.25){
+      const s=S[cid()]
+      cis[pi]=Math.min(Math.max(cis[pi]+(dx<0?1:-1),0),s.ph.length-1)
+      s.vues.add(cis[pi])
+    } else if(axe==='y' && Math.abs(dy)>H*0.18){
+      const suivant=Math.min(Math.max(pi+(dy<0?1:-1),0),groupe.length-1)
+      if(suivant!==pi){ sceller(cid()); pi=suivant; S[cid()].vues.add(cis[pi]) }
+    }
+    maj(); peindre(); verdicts(); drag=null; axe=null
+  })
+  fen.addEventListener('pointercancel',()=>{ if(groupe.length) maj(); drag=null; axe=null })
+  window.addEventListener('resize',()=>{ if(groupe.length){ mesurer(); maj(true) } })
+  function fermer(){
+    if(groupe.length) sceller(cid())
+    document.getElementById('car').classList.remove('on')
+    groupe=[]
+    peindre(); verdicts()
+  }
+  function poster(){
+    for(const id of ['B1','B2']){
+      const s=S[id]
+      s.ph.unshift({src:P(670+s.ph.length),tip:'là, maintenant.'})
+      s.q='à l’instant'
+      if(s.par==='photo'){ s.lu=false; s.vues=new Set() }   // le sceau se rallume
+      // 'soiree' : on a déjà lu karim ce soir → le sceau reste éteint
+    }
+    peindre(); verdicts()
+  }
+  function reset(){
+    for(const id in S){ S[id].vues=new Set(); S[id].lu=false; S[id].q='il y a 2h' }
+    S.B1.ph=neuf(3,640); S.B2.ph=neuf(3,640)
+    peindre(); verdicts()
+  }
+  function verdicts(){
+    const t=(id,txt)=>document.getElementById(id).textContent=txt
+    t('vA1', S.A1.lu ? 'lu. tu n’y penses plus — même si tu n’as vu qu’une photo.'
+                     : 'l’étiquette tombe dès que tu ouvres.')
+    t('vA2', S.A2.lu ? 'lu, pour de vrai : tu les as toutes vues.'
+                     : (S.A2.vues.size>0 ? 'ça te réclame encore. il t’en reste.'
+                                         : 'l’étiquette reste tant qu’il t’en manque.'))
+    t('vB1', S.B1.lu ? 'karim est lu ce soir. sa 4e photo ne te rappelle pas.'
+                     : 'une soirée = un signal.')
+    t('vB2', S.B2.lu ? 'lu… pour l’instant.'
+                     : (S.B2.ph.length>3 ? 'karim se rallume à chaque photo. encore.'
+                                         : 'chaque photo te rappelle.'))
+  }
+  peindre(); verdicts()
+</script>
+</body>
+</html>

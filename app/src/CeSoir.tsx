@@ -909,6 +909,18 @@ function Recap({
         <ul className="recap-liste">
           {deck.map((l) => (
             <li key={l.id} className="recap-lieu" onClick={() => onVoir?.(l)} role="button">
+              {/* la preuve d'abord : la liste montrait des noms secs (audit 02/08) */}
+              {l.photos.length > 0 ? (
+                <img
+                  className="recap-tirage"
+                  src={srcPhoto(l.photos[0])}
+                  alt=""
+                  loading="lazy"
+                  onError={photoIndisponible}
+                />
+              ) : (
+                <span className="recap-tirage recap-tirage-vide" />
+              )}
               <span className="recap-nom">{l.nom}</span>
               <span className={`recap-tampon mono ${verdicts[l.id] ?? 'passe'}`}>
                 {verdicts[l.id] === 'valide' ? 'validé' : verdicts[l.id] === 'bof' ? 'bof' : '—'}

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — l'heure toujours en dessous</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--nuit:#14120e;--nuit-2:#1b1813;--encre:#efe9d8;--encre-2:rgba(239,233,216,.62);
+        --encre-3:rgba(239,233,216,.4);--cire:#a8322a;--graphite:#8a857a;--blanc:#f7f3e8}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       padding:20px 16px 60px;max-width:820px;margin:0 auto}
+  h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:26px}
+  .sous{font-size:11px;color:var(--encre-3);letter-spacing:.5px;margin:3px 0 22px}
+  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:26px 14px}
+  .carte{text-align:center}
+  .num{font-size:10px;color:var(--encre-3);letter-spacing:1px}
+  .titre{font-family:'Instrument Serif',serif;font-style:italic;font-size:16px;margin:1px 0 12px}
+  .scene{cursor:pointer}
+  .note{font-size:10px;color:var(--encre-2);line-height:1.5;margin-top:9px;min-height:40px}
+
+  .tas{position:relative;width:72px;margin:0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6))}
+  .tas .f{position:absolute;inset:0;width:100%;aspect-ratio:1;object-fit:cover;
+          border:3px solid var(--blanc);border-bottom-width:12px;background:var(--nuit-2);
+          box-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .tas .f.b1{transform:rotate(7deg) translate(4%,-3%)}
+  .tas .f.b2{transform:rotate(-8deg) translate(-4%,2%)}
+  .tas .haut{position:relative;display:block;transform:rotate(-2deg)}
+  /* l'heure écrite DANS la marge blanche du tirage (variante 03) */
+  .marge{position:absolute;left:50%;bottom:0;transform:translateX(-50%) rotate(-2deg);z-index:6;
+         font-family:'Caveat',cursive;font-size:13px;color:#14120e;white-space:nowrap}
+
+  .bloc{margin-top:9px;line-height:1.45}
+  .nom{background:var(--cire);color:#fff;padding:2px 8px;display:inline-block;font-size:11px;
+       transform:rotate(-1.5deg);transition:all .45s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+  .nom span{position:relative;z-index:2;transition:color .3s .15s}
+  .nom::before{content:'';position:absolute;inset:0;background:var(--cire);
+               transition:transform .5s cubic-bezier(.4,0,.2,1)}
+  .vu .nom{background:transparent;transform:none;padding:2px 0}
+  .vu .nom::before{transform:translateY(105%)}
+  .vu .nom span{color:var(--encre-3)}
+  .quand{display:block;font-size:10px;color:var(--encre-3);margin-top:3px}
+  .lieu{display:block;font-size:10px;color:var(--encre-3);margin-top:2px}
+
+  /* déclinaisons de l'heure */
+  .v2 .quand{font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);margin-top:1px}
+  .v3 .quand{display:none}
+  .v4 .quand{font-size:13px;color:var(--encre-2);font-weight:700;letter-spacing:.5px}
+  .v5 .quand{font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);margin-top:1px}
+  .v6 .quand{font-size:10px}
+  .v1 .marge,.v2 .marge,.v4 .marge,.v5 .marge,.v6 .marge{display:none}
+
+  .banc{margin-top:38px;border-top:1px solid rgba(239,233,216,.14);padding-top:20px}
+  .banc h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:19px;margin-bottom:4px}
+  .banc p{font-size:10px;color:var(--encre-3);margin-bottom:16px;letter-spacing:.5px}
+  .rangee{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;
+          background:#181510;border-radius:10px;padding:24px 14px}
+  .pied{margin-top:26px;font-family:'Caveat',cursive;font-size:17px;color:var(--encre-2);text-align:center}
+</style>
+</head>
+<body>
+<h1>l'heure toujours en dessous.</h1>
+<p class="sous">LE PRÉNOM CHANGE D'ÉTAT · L'HEURE NE BOUGE JAMAIS · TAPE POUR BASCULER</p>
+
+<div class="grille" id="g"></div>
+
+<div class="banc">
+  <h2>sur la carte : deux pas vus, trois lus</h2>
+  <p>MISE EN PAGE 01 — LE PRÉNOM, PUIS L'HEURE</p>
+  <div class="rangee" id="r"></div>
+</div>
+
+<p class="pied">le prénom te réclame. l'heure, elle, ne demande rien.</p>
+
+<script>
+  const P=(k)=>`https://loremflickr.com/300/300/bar,paris,night/all?lock=${k}`
+  const V=[
+    {t:'l’heure en mono', q:'il y a 2h', n:'la lecture la plus sobre : le nom, puis le fait, au crayon fin.'},
+    {t:'l’heure à la main', q:'il y a 2h', n:'la même chose écrite au crayon. plus chaud, plus carnet.'},
+    {t:'l’heure sur le tirage', q:'', n:'l’heure appartient à la photo (dans sa marge blanche), le prénom au dessous.'},
+    {t:'l’heure en tête', q:'IL Y A 2H', n:'la fraîcheur passe devant : l’heure est plus grosse que le nom.'},
+    {t:'la date du carnet', q:'jeudi, 2h du mat', n:'la façon dont on date une page : un jour, une heure. la plus littéraire.'},
+    {t:'qui · quand · où', q:'il y a 2h', l:'le perchoir', n:'trois lignes. complet… mais ça commence à faire une fiche.'},
+  ]
+  const tas=(k,marge)=>`<div class="tas">
+      <img class="f b1" src="${P(200+k)}" alt=""/><img class="f b2" src="${P(300+k)}" alt=""/>
+      <img class="f haut" src="${P(400+k)}" alt=""/>
+      ${marge?`<span class="marge">${marge}</span>`:''}</div>`
+
+  document.getElementById('g').innerHTML=V.map((v,i)=>`
+    <div class="carte v${i+1}">
+      <div class="num">${String(i+1).padStart(2,'0')}</div>
+      <div class="titre">${v.t}</div>
+      <div class="scene">${tas(i, i===2?'il y a 2h':'')}
+        <div class="bloc">
+          <span class="nom"><span>karim</span></span>
+          <span class="quand">${v.q}</span>
+          ${v.l?`<span class="lieu">${v.l}</span>`:''}
+        </div>
+      </div>
+      <div class="note">${v.n}</div>
+    </div>`).join('')
+
+  const R=[['karim','il y a 2h',0],['marie','il y a 5h',0],['léa','il y a 14h',1],['sofiane','hier',1],['inès','il y a 2j',1]]
+  document.getElementById('r').innerHTML=R.map(([nm,q,vu],i)=>`
+    <div class="carte v1 ${vu?'vu':''}" style="width:80px">
+      <div class="scene">${tas(60+i,'')}
+        <div class="bloc"><span class="nom"><span>${nm}</span></span><span class="quand">${q}</span></div>
+      </div>
+    </div>`).join('')
+
+  document.querySelectorAll('.carte .scene').forEach((s)=>{
+    s.onclick=()=>s.parentElement.classList.toggle('vu')
+  })
+</script>
+</body>
+</html>

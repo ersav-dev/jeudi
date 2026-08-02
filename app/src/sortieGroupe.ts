@@ -458,11 +458,14 @@ export function lireCleSortie(token: string): CleSortie | null {
   }
 }
 
-export function ecrireCleSortie(token: string, v: CleSortie): void {
+/** rend false si le stockage a refusé : l'appelant doit alors prévenir
+ *  l'invité que sa place ne vit que dans cet onglet (navigation privée). */
+export function ecrireCleSortie(token: string, v: CleSortie): boolean {
   try {
     localStorage.setItem(`jeudi-sortie-${token}`, JSON.stringify(v))
+    return true
   } catch {
-    /* navigation privée : la clé vivra le temps de la page */
+    return false
   }
 }
 

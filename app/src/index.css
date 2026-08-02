@@ -6808,3 +6808,61 @@ button:focus:not(:focus-visible) {
 .membre-tirages img:nth-child(even) {
   transform: rotate(2deg);
 }
+
+/* ── les preuves dans les listes (audit du 02/08) ── */
+/* « trouver » : un tirage devant chaque résultat */
+.rech-ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rech-tirage {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  background: var(--nuit-2);
+  border: 2px solid var(--print-white);
+  border-bottom-width: 7px;
+  transform: rotate(-2deg);
+}
+.rech-tirage-vide {
+  display: grid;
+  place-items: center;
+  border-color: rgba(239, 233, 216, 0.22);
+  color: var(--encre-3);
+}
+/* le récap « ce soir », vue liste : la même preuve */
+.recap-lieu {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.recap-tirage {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  background: var(--nuit-2);
+  border: 2px solid var(--print-white);
+  border-bottom-width: 6px;
+  transform: rotate(2deg);
+}
+.recap-tirage-vide {
+  border-color: rgba(239, 233, 216, 0.2);
+}
+
+/* la note d'import : un pense-bête assumé, pas un tip manuscrit */
+.tip-import {
+  border-left: 2px solid var(--graphite);
+  padding-left: 10px;
+}
+.tip-import-txt {
+  color: var(--encre-2);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+.tip-reecrire {
+  padding: 4px 0;
+}

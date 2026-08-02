@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — la carte, tout visible dès le début</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<style>
+  :root{--nuit:#14120e;--nuit-2:#1b1813;--encre:#efe9d8;--encre-2:rgba(239,233,216,.62);
+        --encre-3:rgba(239,233,216,.45);--cire:#a8322a;--graphite:#8a857a;--blanc:#f7f3e8;--kz:1}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       overflow:hidden;height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+  header{padding:12px 16px 8px}
+  header h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:21px}
+  header p{font-size:9px;color:var(--encre-3);letter-spacing:.5px;margin-top:1px}
+
+  #carte{position:relative;flex:1}
+  #carte::after{content:'';position:absolute;inset:0;z-index:5;pointer-events:none;mix-blend-mode:overlay;opacity:.09;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E")}
+  #carte::before{content:'';position:absolute;inset:0;z-index:5;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 55%,rgba(10,8,6,.5) 100%)}
+  .maplibregl-ctrl-attrib{background:rgba(20,18,14,.6);font-size:9px}
+  .maplibregl-ctrl-attrib a{color:var(--encre-3)}
+
+  .pin{width:15px;height:15px;border-radius:50%;position:relative;transform:scale(var(--kz));
+       border:2px solid var(--graphite);
+       background:radial-gradient(circle at center,var(--graphite) 0 2.2px,transparent 2.8px)}
+  .pin::before{content:'';position:absolute;inset:-16px}
+  .pin .g{position:absolute;top:-9px;right:-9px;width:15px;height:15px;border-radius:50%;
+          background:var(--encre);border:1px solid var(--nuit);display:flex;align-items:center;justify-content:center}
+  .pin .g svg{width:10px;height:10px;stroke:#15130f;fill:none;stroke-width:2}
+
+  /* ── LE TAS ── */
+  .tas{width:calc(var(--t,60px) * var(--kz));cursor:pointer;position:relative;
+       transition:width .8s cubic-bezier(.4,0,.2,1)}
+  .tas::before{content:'';position:absolute;inset:-12px}
+  .tas .f{position:absolute;inset:0;width:100%;aspect-ratio:1;object-fit:cover;
+          border:3px solid var(--blanc);border-bottom-width:12px;background:var(--nuit-2);
+          box-shadow:0 1px 2px rgba(0,0,0,.5);transition:transform .6s cubic-bezier(.4,0,.2,1),opacity .5s,filter .9s}
+  .tas .f.p1{transform:rotate(7deg) translate(4%,-3%)}
+  .tas .f.p2{transform:rotate(-9deg) translate(-5%,2%)}
+  .tas .f.p3{transform:rotate(13deg) translate(7%,4%)}
+  .tas .f.morte{opacity:0;filter:sepia(.8);transform:rotate(24deg) translate(14%,42%)}
+  .tas .haut{position:relative;display:block;transform:rotate(-2deg)}
+  .tas .kraft{position:absolute;top:-6px;left:50%;width:42%;height:12px;z-index:5;
+              transform:translateX(-50%) rotate(-38deg);background:rgba(239,233,216,.26);
+              border:1px solid rgba(239,233,216,.12);mix-blend-mode:screen;pointer-events:none}
+  .tas.pose{animation:pose .5s cubic-bezier(.34,1.56,.64,1) backwards}
+  @keyframes pose{from{transform:translateY(-16px) scale(1.08);opacity:0}to{transform:none;opacity:1}}
+  .tas::after{content:'';position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);
+              width:5px;height:5px;border-radius:50%;background:var(--graphite)}
+
+  /* le bloc sous le tas : le prénom (état) + l'heure (fait) */
+  .bloc{position:absolute;top:calc(100% + 9px);left:50%;transform:translateX(-50%);
+        text-align:center;white-space:nowrap;line-height:1.35}
+  .nom{background:var(--cire);color:#fff;padding:2px 8px;display:inline-block;font-size:11px;
+       transform:rotate(-1.5deg);position:relative;overflow:hidden;
+       transition:background .45s,transform .45s,padding .45s}
+  .nom i{font-style:normal;position:relative;z-index:2;transition:color .3s .15s;
+         text-shadow:0 1px 0 rgba(0,0,0,.35)}
+  .nom::before{content:'';position:absolute;inset:0;background:var(--cire);
+               transition:transform .5s cubic-bezier(.4,0,.2,1)}
+  .lu .nom{background:transparent;transform:none;padding:2px 0}
+  .lu .nom::before{transform:translateY(105%)}
+  .lu .nom i{color:var(--encre-3);text-shadow:0 1px 0 #14120e,0 -1px 0 #14120e,1px 0 0 #14120e,-1px 0 0 #14120e}
+  .quand{display:block;font-family:'Caveat',cursive;font-size:15px;color:var(--encre);margin-top:1px;
+         text-shadow:0 1px 0 #14120e,0 -1px 0 #14120e,1px 0 0 #14120e,-1px 0 0 #14120e}
+  #carte.z-low .pin,#carte.z-low .bloc{display:none}
+
+  /* ── LE CARROUSEL DEUX AXES ── */
+  #car{position:fixed;inset:0;background:rgba(12,10,7,.93);z-index:60;display:none;
+       flex-direction:column;align-items:center;justify-content:center;gap:11px;opacity:0;transition:opacity .28s}
+  #car.on{display:flex}#car.vu{opacity:1}
+  #fen{width:min(74vw,300px);height:calc(min(74vw,300px) + 66px);overflow:hidden;touch-action:none;position:relative}
+  #col{position:absolute;inset:0}
+  #col.souple,.rangee.souple{transition:transform .34s cubic-bezier(.22,1,.36,1)}
+  .perso{overflow:hidden;display:flex;align-items:center}
+  .rangee{display:flex;width:100%}
+  .dia{flex:0 0 100%;padding:0 5px}
+  .dia .cad{transform:rotate(-2deg)}
+  .dia:nth-child(even) .cad{transform:rotate(2deg)}
+  .dia img{width:100%;aspect-ratio:1;object-fit:cover;border:9px solid var(--blanc);
+           border-bottom-width:52px;background:var(--nuit-2);display:block}
+  .dia .leg{margin-top:-46px;position:relative;text-align:center;font-family:'Caveat',cursive;
+            font-size:18px;line-height:1.1;color:#14120e}
+  .dia .leg em{font-style:normal;font-size:14px;opacity:.7}
+  #pts{display:flex;gap:6px}
+  #pts span{width:6px;height:6px;border-radius:50%;background:rgba(239,233,216,.28)}
+  #pts span.v{background:var(--encre)}
+  #lieu{font-family:'Instrument Serif',serif;font-style:italic;font-size:20px}
+  #meta{font-size:11px;color:var(--encre-2)}
+  #aide{font-family:'Caveat',cursive;font-size:14px;color:var(--encre-3);text-align:center;line-height:1.25}
+  .btn{font-family:inherit;font-size:10px;background:none;color:var(--encre);
+       border:1px solid var(--encre-3);border-radius:3px;padding:7px 12px;cursor:pointer}
+  footer{padding:9px 16px calc(11px + env(safe-area-inset-bottom));background:var(--nuit-2);
+         border-top:1px solid rgba(239,233,216,.1);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  footer .mot{font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>ta ville.</h1>
+  <p>TOUT EST LÀ DÈS L'OUVERTURE · TAPE UN TAS, PUIS GLISSE</p>
+</header>
+
+<div id="carte"></div>
+
+<div id="car">
+  <div id="lieu"></div>
+  <div id="fen"><div id="col"></div></div>
+  <div id="pts"></div>
+  <div id="meta"></div>
+  <div id="aide">← → les photos &nbsp;·&nbsp; ↑ ↓ la nuit entière</div>
+  <button class="btn" onclick="fermer()">revenir à la carte</button>
+</div>
+
+<footer>
+  <span class="mot" id="mot"></span>
+  <button class="btn" onclick="reset()">tout remettre en cire</button>
+</footer>
+
+<script>
+  const im=(m,k)=>`https://loremflickr.com/420/420/${m}/all?lock=${k}`
+  const SPOTS=[
+    {nom:'le perchoir',lat:48.8672,lng:2.3844,type:'bar',lu:false,ph:[
+      {src:im('rooftop,sunset',101),age:2,tip:'la vue, rien à dire.',qui:'karim'},
+      {src:im('cocktail,rooftop',102),age:3,tip:'spritz du soir.',qui:'karim'},
+      {src:im('paris,night',103),age:5,tip:'la nuit tombe.',qui:'marie'},
+      {src:im('friends,bar',104),age:26,tip:'la bande.',qui:'léa'}]},
+    {nom:'chez jeannette',lat:48.8756,lng:2.3494,type:'resto',lu:false,ph:[
+      {src:im('bistro,paris',201),age:16,tip:'la banquette du fond.',qui:'marie'},
+      {src:im('wine,table',202),age:20,tip:'le rouge de la maison.',qui:'marie'},
+      {src:im('dessert,plate',203),age:44,tip:'la crème brûlée.',qui:'sofiane'}]},
+    {nom:'le syndicat',lat:48.8721,lng:2.3547,type:'bar',lu:false,ph:[
+      {src:im('cocktail,dark',301),age:38,tip:'100% français.',qui:'karim'},
+      {src:im('bar,neon',302),age:45,tip:'la déco.',qui:'inès'}]},
+    {nom:'bambino',lat:48.8577,lng:2.3800,type:'club',lu:true,ph:[
+      {src:im('vinyl,bar',401),age:55,tip:'le son.',qui:'léa'},
+      {src:im('dj,night',402),age:60,tip:'jusqu à 2h.',qui:'clément'}]},
+    {nom:'gros bao',lat:48.8646,lng:2.3528,type:'street',lu:true,ph:[
+      {src:im('bao,food',501),age:70,tip:'les baos de minuit.',qui:'toi'}]},
+    {nom:'candelaria',lat:48.8628,lng:2.3629,type:'bar'},
+    {nom:'aki café',lat:48.8687,lng:2.3365,type:'cafe'},
+    {nom:'le baron rouge',lat:48.8497,lng:2.3735,type:'bar'},
+    {nom:'mian fan',lat:48.8716,lng:2.3412,type:'resto'},
+  ]
+  const GL={bar:'<path d="M6 5h12l-6 7z"/><path d="M12 12v6M9 20h6"/>',
+    resto:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/>',
+    club:'<circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/>',
+    cafe:'<path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/>',
+    street:'<path d="M8 4l9 3-6 13z"/>'}
+  const frais=(s)=>Math.min(...s.ph.map(p=>p.age))
+  const libAge=(h)=>h<24?`il y a ${Math.round(h)}h`:h<48?'hier':`il y a ${Math.round(h/24)}j`
+  const AVEC=SPOTS.filter(s=>s.ph).sort((a,b)=>frais(a)-frais(b))
+
+  const map=new maplibregl.Map({container:'carte',
+    style:{version:8,sources:{c:{type:'raster',
+      tiles:['https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'],tileSize:256,
+      attribution:'© OpenStreetMap · © CARTO'}},
+      layers:[{id:'f',type:'raster',source:'c',
+        paint:{'raster-saturation':-0.4,'raster-contrast':0.06,'raster-brightness-max':0.88}}]},
+    center:[2.3665,48.8648],zoom:13.05,minZoom:10.5,attributionControl:{compact:true}})
+
+  const elC=document.getElementById('carte')
+  map.on('zoom',()=>{const z=map.getZoom()
+    elC.classList.toggle('z-low',z<12.4)
+    elC.style.setProperty('--kz',z>=13.8?1:z>=12.4?.75:.5)})
+
+  map.on('load',()=>{
+    AVEC.forEach((s,i)=>{
+      const el=document.createElement('div')
+      el.className='tas pose'; el.style.animationDelay=i*90+'ms'
+      s.el=el; peindreTas(s)
+      let d0=null
+      el.addEventListener('pointerdown',(e)=>{d0={x:e.clientX,y:e.clientY,t:Date.now()}})
+      el.addEventListener('pointerup',(e)=>{
+        if(d0&&Math.hypot(e.clientX-d0.x,e.clientY-d0.y)<8&&Date.now()-d0.t<300) ouvrir(s)
+        d0=null})
+      new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([s.lng,s.lat]).addTo(map)
+    })
+    SPOTS.filter(s=>!s.ph).forEach((s)=>{
+      const el=document.createElement('div'); el.className='pin'
+      el.innerHTML=`<span class="g"><svg viewBox="0 0 24 24">${GL[s.type]}</svg></span>`
+      new maplibregl.Marker({element:el}).setLngLat([s.lng,s.lat]).addTo(map)
+    })
+    peindre()
+  })
+
+  function peindreTas(s){
+    const f=frais(s), viv=s.ph.filter(p=>p.age<=48).length
+    s.el.style.setProperty('--t',(f<=6?80:f<=24?60:f<=48?45:34)+'px')
+    s.el.innerHTML=
+      [3,2,1].map(i=>s.ph[i]?`<img class="f p${i} ${s.ph[i].age>48||i>=viv?'morte':''}" src="${s.ph[i].src}" alt=""/>`:'').join('')+
+      `<img class="f haut" src="${s.ph[0].src}" alt=""/><span class="kraft"></span>`+
+      `<div class="bloc"><span class="nom"><i>${s.ph[0].qui}</i></span><span class="quand">${libAge(f)}</span></div>`
+    s.el.classList.toggle('lu',!!s.lu)
+  }
+  function peindre(){
+    AVEC.forEach(s=>{if(s.el) s.el.classList.toggle('lu',!!s.lu)})
+    const n=AVEC.filter(s=>!s.lu).length
+    document.getElementById('mot').textContent = n===0
+      ? 'tout est lu. à toi d’écrire la suite.'
+      : n===1 ? '1 soirée que tu n’as pas encore ouverte.'
+              : `${n} soirées que tu n’as pas encore ouvertes.`
+  }
+
+  // ── le carrousel : ← → les photos · ↑ ↓ TOUTE la nuit (du plus frais au plus vieux)
+  const fen=document.getElementById('fen'), col=document.getElementById('col'), car=document.getElementById('car')
+  let ouvert=false, pi=0, cis=[], H=0
+  function ouvrir(s){
+    ouvert=true; pi=AVEC.indexOf(s); cis=AVEC.map(()=>0)
+    col.innerHTML=AVEC.map(sp=>`<div class="perso"><div class="rangee">
+      ${sp.ph.map(p=>`<div class="dia"><div class="cad"><img src="${p.src}" alt=""/>
+        <div class="leg">« ${p.tip} »<br/><em>— ${p.qui}</em></div></div></div>`).join('')}
+      </div></div>`).join('')
+    AVEC[pi].lu=true
+    car.classList.add('on'); requestAnimationFrame(()=>{car.classList.add('vu');mesurer();maj(true)})
+    peindre()
+  }
+  function mesurer(){H=fen.clientHeight;col.querySelectorAll('.perso').forEach(p=>p.style.height=H+'px')}
+  function maj(sec){
+    const s=AVEC[pi], ci=cis[pi]
+    if(!sec){col.classList.add('souple');col.querySelectorAll('.rangee').forEach(r=>r.classList.add('souple'))}
+    col.style.transform=`translateY(${-pi*H}px)`
+    col.querySelectorAll('.rangee').forEach((r,k)=>r.style.transform=`translateX(${-cis[k]*100}%)`)
+    document.getElementById('lieu').textContent=s.nom
+    document.getElementById('meta').textContent=`${libAge(s.ph[ci].age)} · ${pi+1}/${AVEC.length} soirées`
+    document.getElementById('pts').innerHTML=s.ph.map((_,i)=>`<span class="${i<=ci?'v':''}"></span>`).join('')
+  }
+  function fermer(){ouvert=false;car.classList.remove('vu');setTimeout(()=>car.classList.remove('on'),280);peindre()}
+  function reset(){AVEC.forEach(s=>s.lu=false);peindre()}
+
+  let drag=null,axe=null
+  fen.addEventListener('pointerdown',(e)=>{if(!ouvert)return
+    drag={x:e.clientX,y:e.clientY,l:fen.offsetWidth};axe=null
+    col.classList.remove('souple');col.querySelectorAll('.rangee').forEach(r=>r.classList.remove('souple'))
+    fen.setPointerCapture(e.pointerId)})
+  fen.addEventListener('pointermove',(e)=>{if(!drag)return
+    let dx=e.clientX-drag.x,dy=e.clientY-drag.y
+    if(!axe&&Math.hypot(dx,dy)>10) axe=Math.abs(dx)>Math.abs(dy)?'x':'y'
+    if(axe==='x'){const s=AVEC[pi],ci=cis[pi]
+      if((ci===0&&dx>0)||(ci===s.ph.length-1&&dx<0))dx*=.35
+      col.querySelectorAll('.rangee')[pi].style.transform=`translateX(calc(${-ci*100}% + ${dx}px))`}
+    else if(axe==='y'){if((pi===0&&dy>0)||(pi===AVEC.length-1&&dy<0))dy*=.35
+      col.style.transform=`translateY(${-pi*H+dy}px)`}})
+  fen.addEventListener('pointerup',(e)=>{if(!drag)return
+    const dx=e.clientX-drag.x,dy=e.clientY-drag.y
+    if(axe==='x'&&Math.abs(dx)>drag.l*.25){const s=AVEC[pi]
+      cis[pi]=Math.min(Math.max(cis[pi]+(dx<0?1:-1),0),s.ph.length-1)}
+    else if(axe==='y'&&Math.abs(dy)>H*.18){
+      const nx=Math.min(Math.max(pi+(dy<0?1:-1),0),AVEC.length-1)
+      if(nx!==pi){pi=nx;AVEC[pi].lu=true;map.easeTo({center:[AVEC[pi].lng,AVEC[pi].lat],duration:600})}}
+    maj();peindre();drag=null;axe=null})
+  fen.addEventListener('pointercancel',()=>{if(ouvert)maj();drag=null;axe=null})
+  window.addEventListener('resize',()=>{if(ouvert){mesurer();maj(true)}})
+</script>
+</body>
+</html>

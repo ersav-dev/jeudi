@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — 10 façons de dire « pas encore vu »</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --nuit:#14120e; --nuit-2:#1b1813; --encre:#efe9d8; --encre-2:rgba(239,233,216,.62);
+    --encre-3:rgba(239,233,216,.4); --cire:#a8322a; --graphite:#8a857a; --blanc:#f7f3e8;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       padding:20px 16px 60px;max-width:760px;margin:0 auto}
+  h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:26px}
+  .sous{font-size:11px;color:var(--encre-3);letter-spacing:.5px;margin:3px 0 22px}
+  .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:26px 16px}
+  .carte{text-align:center}
+  .num{font-size:10px;color:var(--encre-3);letter-spacing:1px}
+  .titre{font-family:'Instrument Serif',serif;font-style:italic;font-size:19px;margin:1px 0 12px}
+  .scene{height:132px;display:grid;place-items:center;cursor:pointer}
+  .note{font-size:10px;color:var(--encre-2);line-height:1.5;margin-top:10px;min-height:42px}
+  .etat{font-family:'Caveat',cursive;font-size:15px;color:var(--cire);margin-top:4px;height:20px}
+  .vu .etat{color:var(--encre-3)}
+
+  /* le tas commun */
+  .tas{position:relative;width:84px}
+  .tas .f{position:absolute;inset:0;width:100%;aspect-ratio:1;object-fit:cover;
+          border:3px solid var(--blanc);border-bottom-width:13px;background:var(--nuit-2);
+          box-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .tas .f.b1{transform:rotate(7deg) translate(4%,-3%)}
+  .tas .f.b2{transform:rotate(-8deg) translate(-4%,2%)}
+  .tas .haut{position:relative;display:block;transform:rotate(-2deg)}
+  .tas .sig{position:absolute;left:50%;bottom:-1px;transform:translateX(-50%) rotate(-2deg);
+            font-family:'Caveat',cursive;font-size:13px;color:#14120e;white-space:nowrap;z-index:6}
+  .enveloppe{filter:drop-shadow(0 4px 7px rgba(0,0,0,.6));transition:transform .45s cubic-bezier(.2,.8,.2,1),filter .45s}
+
+  /* 1 · le sceau de cire */
+  .m1{position:absolute;top:-9px;right:-10px;width:23px;height:23px;border-radius:50% 48% 52% 50%;
+      background:var(--cire);box-shadow:0 1px 4px rgba(0,0,0,.6);z-index:7;
+      transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s}
+  .vu .m1{transform:scale(.2) rotate(40deg);opacity:0}
+
+  /* 2 · la lampe de labo */
+  .m2{position:absolute;inset:-30px;border-radius:50%;z-index:0;
+      background:radial-gradient(circle,rgba(168,50,42,.85) 30%,rgba(168,50,42,.35) 55%,transparent 75%);
+      animation:pulse 2.6s ease-in-out infinite alternate;transition:opacity .7s}
+  @keyframes pulse{from{opacity:.6}to{opacity:1}}
+  .vu .m2{opacity:0;animation:none}
+
+  /* 3 · le calque */
+  .m3{position:absolute;inset:0;z-index:7;background:rgba(239,233,216,.5);
+      backdrop-filter:blur(1.5px);transform:rotate(-2deg);
+      transition:transform .55s cubic-bezier(.4,0,.2,1),opacity .55s}
+  .vu .m3{transform:rotate(-2deg) translateY(-118%);opacity:0}
+
+  /* 4 · le verso */
+  .p4{perspective:600px}
+  .p4 .flip{position:relative;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,0,.2,1);transform:rotate(-2deg) rotateY(180deg)}
+  .p4.vu .flip{transform:rotate(-2deg) rotateY(0deg)}
+  .p4 .flip>*{backface-visibility:hidden}
+  .p4 .dos{position:absolute;inset:0;transform:rotateY(180deg);background:var(--blanc);
+           display:grid;place-items:center;border:1px solid #ded7c6}
+  .p4 .dos span{font-family:'Caveat',cursive;font-size:15px;color:#14120e;transform:rotate(-4deg)}
+
+  /* 5 · le fil rouge */
+  .m5{position:absolute;left:-9px;right:-9px;top:44%;height:3px;background:var(--cire);z-index:7;
+      transform:rotate(-6deg);transition:transform .5s ease-in,opacity .5s}
+  .m5::after{content:'';position:absolute;left:50%;top:-4px;width:11px;height:11px;
+             border-radius:50%;background:var(--cire);transform:translateX(-50%)}
+  .vu .m5{transform:rotate(-6deg) translateX(115%);opacity:0}
+
+  /* 6 · la pochette */
+  .m6{position:absolute;left:-6px;right:-6px;bottom:-4px;height:64%;z-index:7;
+      background:#c9b998;border:1px solid #b3a07c;
+      clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%);
+      display:grid;align-items:end;justify-items:center;padding-bottom:7px;
+      transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .5s}
+  .m6 span{font-family:'Caveat',cursive;font-size:14px;color:#3b3123}
+  .vu .m6{transform:translateY(115%);opacity:0}
+
+  /* 7 · le tirage soulevé */
+  .p7 .enveloppe{transform:translateY(-9px) rotate(-5deg);filter:drop-shadow(0 12px 10px rgba(0,0,0,.75))}
+  .p7.vu .enveloppe{transform:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+
+  /* 8 · la pince à linge */
+  .m8{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:15px;height:26px;
+      background:linear-gradient(90deg,#c9b998 0 46%,#a8967a 46% 54%,#c9b998 54%);
+      border-radius:3px;z-index:8;box-shadow:0 1px 3px rgba(0,0,0,.6);
+      transition:transform .45s ease-in,opacity .45s}
+  .vu .m8{transform:translateX(-50%) translateY(-26px) rotate(18deg);opacity:0}
+  .p8 .fil{position:absolute;left:-24px;right:-24px;top:-12px;height:1px;background:var(--graphite);opacity:.5}
+
+  /* 9 · le coin corné */
+  .m9{position:absolute;top:0;right:0;width:0;height:0;z-index:7;
+      border-top:26px solid rgba(20,18,14,.55);border-left:26px solid transparent;
+      transition:border-width .4s ease}
+  .vu .m9{border-top-width:0;border-left-width:0}
+
+  /* 10 · le tampon */
+  .m10{position:absolute;top:26%;left:50%;transform:translateX(-50%) rotate(-9deg);z-index:7;
+       border:2px solid var(--cire);color:var(--cire);font-size:10px;letter-spacing:2px;
+       padding:3px 7px;background:rgba(20,18,14,.35);transition:opacity .45s,transform .45s}
+  .vu .m10{opacity:0;transform:translateX(-50%) rotate(-9deg) scale(1.5)}
+
+  .pied{margin-top:34px;border-top:1px solid rgba(239,233,216,.14);padding-top:14px;
+        font-family:'Caveat',cursive;font-size:17px;color:var(--encre-2);text-align:center}
+</style>
+</head>
+<body>
+<h1>« tu n'as pas encore vu ça. »</h1>
+<p class="sous">10 LANGAGES · TAPE CHAQUE TAS POUR SENTIR LE GESTE QUI L'ÉTEINT</p>
+
+<div class="grille" id="g"></div>
+
+<p class="pied">le bon signe est celui qu'on comprend sans qu'on l'explique.</p>
+
+<script>
+  const P = (k) => `https://loremflickr.com/300/300/bar,paris,night/all?lock=${k}`
+  const V = [
+    { t:'le sceau de cire', m:'<span class="m1"></span>', n:'un cachet posé sur le paquet. il se brise au tap, une fois, puis plus jamais.' },
+    { t:'la lampe de labo', m:'<span class="m2"></span>', n:'la lueur rouge de la chambre noire : ça n’est pas encore révélé. l’anneau d’insta, en langue argentique.' },
+    { t:'le calque', m:'<span class="m3"></span>', n:'la feuille de papier-calque des archives photo. elle glisse et découvre le tirage.' },
+    { t:'le verso', m:'', n:'le tirage est posé face contre table, le prénom écrit au dos. on le retourne pour voir.', flip:1 },
+    { t:'le fil rouge', m:'<span class="m5"></span>', n:'le paquet est encore ficelé, comme un courrier. on tire le fil.' },
+    { t:'la pochette', m:'<span class="m6"><span>karim</span></span>', n:'les tirages sont encore dans leur pochette du labo, le nom dessus.' },
+    { t:'le tirage soulevé', m:'', n:'pas encore rangé dans la page : il est de travers, il flotte. lu, il se pose à plat.', lift:1 },
+    { t:'la pince à linge', m:'<span class="m8"></span>', n:'ça sèche encore sur le fil du labo. lu, la pince lâche et le tirage rejoint l’album.', fil:1 },
+    { t:'le coin corné', m:'<span class="m9"></span>', n:'un coin replié cache une part de l’image — le geste de le déplier, c’est le regard.' },
+    { t:'le tampon', m:'<span class="m10">PAS LU</span>', n:'l’encre administrative du carnet. franc, lisible… mais bavard : il parle au lieu de montrer.' },
+  ]
+  document.getElementById('g').innerHTML = V.map((v, i) => `
+    <div class="carte p${i+1}" data-i="${i}">
+      <div class="num">${String(i+1).padStart(2,'0')}</div>
+      <div class="titre">${v.t}</div>
+      <div class="scene">
+        <div class="tas enveloppe">
+          ${v.fil ? '<span class="fil"></span>' : ''}
+          <img class="f b1" src="${P(700+i)}" alt=""/>
+          <img class="f b2" src="${P(800+i)}" alt=""/>
+          ${v.flip
+            ? `<div class="flip"><img class="f haut" style="position:relative" src="${P(900+i)}" alt=""/><div class="dos"><span>karim · jeudi</span></div></div>`
+            : `<img class="f haut" src="${P(900+i)}" alt=""/>`}
+          <span class="sig">karim · 2h</span>
+          ${v.m}
+        </div>
+      </div>
+      <div class="etat">pas encore vu</div>
+      <div class="note">${v.n}</div>
+    </div>`).join('')
+
+  document.querySelectorAll('.carte').forEach((c) => {
+    c.querySelector('.scene').onclick = () => {
+      c.classList.toggle('vu')
+      c.querySelector('.etat').textContent = c.classList.contains('vu') ? 'lu.' : 'pas encore vu'
+    }
+  })
+</script>
+</body>
+</html>

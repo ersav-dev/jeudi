@@ -13,6 +13,8 @@ import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
 import CroquisParis from './CroquisParis'
+import { srcPhoto, photoIndisponible } from './photos'
+import { IAppareil } from './icones'
 import { t, lireLangue, glose } from './langue'
 
 // L'onglet « trouver » (ex-labo, promu à part entière) : le moteur de
@@ -310,20 +312,38 @@ export default function Recherche({
           <div
             key={lieu.id}
             onClick={() => onOuvrir?.(lieu)}
-            className="labo-resultat"
+            className="labo-resultat rech-ligne"
             style={{ cursor: onOuvrir ? 'pointer' : 'default' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-              <span className="labo-nom">{lieu.nom}</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, whiteSpace: 'nowrap' }}>
-                {formatDistance(distanceM(lieu, point))}
+            {/* le tirage : une preuve vaut mieux qu'un nom (audit du 02/08) —
+                sans photo, le cadre vide invite au lieu de mentir */}
+            {lieu.photos.length > 0 ? (
+              <img
+                className="rech-tirage"
+                src={srcPhoto(lieu.photos[0])}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                onError={photoIndisponible}
+              />
+            ) : (
+              <span className="rech-tirage rech-tirage-vide">
+                <IAppareil taille={15} />
               </span>
-            </div>
-            {raisons.length > 0 && (
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--red)', marginTop: 4 }}>
-                {raisons.join(' · ')}
-              </div>
             )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+                <span className="labo-nom">{lieu.nom}</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.6, whiteSpace: 'nowrap' }}>
+                  {formatDistance(distanceM(lieu, point))}
+                </span>
+              </div>
+              {raisons.length > 0 && (
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--red)', marginTop: 4 }}>
+                  {raisons.join(' · ')}
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {resultats.length === 0 && (
