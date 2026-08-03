@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
 import {
@@ -13,10 +13,15 @@ import {
   lireFavoris,
   CURATEUR_JEUDI,
   NOM_JEUDI,
+  lireVuesPellicule,
+  marquerPelliculeVue,
+  chargerVuesPellicule,
   type Lieu,
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
 import { typeDeLieu, svgTypeLieu } from './typesLieu'
+import Pellicule from './Pellicule'
+import { boussole, construireTas, libelleAge, type Tas } from './pellicule'
 
 // les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
 const traitMonument = (d: string) =>
@@ -91,6 +96,26 @@ const APPUI_LONG_MS = 450
 // tolérance de mouvement avant d'annuler l'appui (c'est un pan, pas un appui)
 const TREMBLE_PX = 8
 
+// ── LA PELLICULE ────────────────────────────────────────────────────
+// un tap sur un tas, c'est court et immobile : sans ça, un pan qui démarre
+// sur un tas ouvrirait le carrousel (bug identifié au proto)
+const TAP_PELL_PX = 8
+const TAP_PELL_MS = 300
+// la fraîcheur se recalcule toute seule (la fonte n'attend pas un reload)
+const BATTEMENT_PELLICULE_MS = 5 * 60 * 1000
+// stagger de naissance des tas, dans l'ordre de fraîcheur décroissante
+const STAGGER_TAS_MS = 90
+// deux tas qui se chevauchent à l'écran fusionnent en un tas commun : au
+// bout de 300 spots, Oberkampf un samedi = 15 tirages empilés illisibles
+const FUSION_TAS_PX = 46
+// sous 45px (le souvenir), l'étiquette + l'heure seraient plus larges que la
+// photo : le tirage ancien se tait, il n'a plus rien à annoncer
+const TAILLE_MIN_BLOC = 45
+
+/** échappe une valeur destinée à un attribut HTML (les URLs signées viennent
+ *  du réseau : on ne les colle jamais crues dans un innerHTML) */
+const attr = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
 // les ~8 suggestions de marques, orientées sorties. Ces émojis sont des
 // CANDIDATS de contenu utilisateur (il en choisit un pour SON lieu), pas du
 // chrome — l'exception assumée de la DA (décision Ersan, voir marques.ts).
@@ -136,6 +161,7 @@ export default function Carte({
   mini,
   comparer = [],
   onComparer,
+  onYVais,
 }: {
   lieux: Lieu[]
   onVoir?: (l: Lieu) => void
@@ -146,6 +172,9 @@ export default function Carte({
    *  Carte ne fait que lire `comparer` et signaler les bascules / l'ouverture. */
   comparer?: string[]
   onComparer?: (id: string) => void
+  /** la sortie de la pellicule : « j'y vais. » — au carnet, au vote, à la
+   *  décision. Sans ça le carrousel serait un cul-de-sac émotionnel. */
+  onYVais?: (l: Lieu) => void
 }) {
   const conteneur = useRef<HTMLDivElement>(null)
   const carte = useRef<maplibregl.Map | null>(null)
@@ -168,6 +197,14 @@ export default function Carte({
   const pressCarte = useRef<{ timer: number; fired: boolean; x: number; y: number } | null>(null)
   // les éléments DOM des pins de LIEUX posés, par id (pour colorer/griser sans re-créer)
   const pinEls = useRef<Record<string, HTMLElement>>({})
+  // ── la pellicule : les sceaux (lieu|soirée), l'horloge de la fonte, le
+  // carrousel ouvert, et ce qui est actuellement dans le cadre (la boussole)
+  const [vuesPell, setVuesPell] = useState<Set<string>>(() => lireVuesPellicule())
+  const [horloge, setHorloge] = useState(() => Date.now())
+  const [pellOuverte, setPellOuverte] = useState<string | null>(null)
+  const [aLEcran, setALEcran] = useState<{ ids: Set<string>; centre: { lat: number; lng: number } }>(
+    () => ({ ids: new Set(), centre: { lat: maPosition.lat, lng: maPosition.lng } }),
+  )
   // cadrage initial : UNE seule fois — consulter une fiche ne recadre plus jamais
   const dejaCadre = useRef(false)
   // la barre carrousel (pour faire défiler la carte vers la carte active)
@@ -216,6 +253,23 @@ export default function Carte({
   // table côte-à-côte est ensuite accessible depuis la fiche → flux identique
   // à l'index.
   const enCompaCarte = actifAComparer && comparer.length > 1
+
+  // ── LA PELLICULE : les tas de tirages, du plus frais au plus ancien ──
+  // (mini = le récap post-deck : c'est une vignette figée, pas la nuit du
+  //  cercle — aucun tas là-dedans)
+  const tousLesTas = useMemo(
+    () => (mini ? [] : construireTas(valides, horloge, vuesPell)),
+    // `valides` est recalculé à chaque rendu : on dépend de `lieux`
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lieux, horloge, vuesPell, mini],
+  )
+  // l'axe vertical du carrousel = TOUS les tas de la carte, du plus frais au
+  // plus ancien (souvenirs compris : on doit pouvoir feuilleter ce qu'on
+  // tape). La boussole, elle, ne compte que les vivants — un souvenir n'a
+  // rien à annoncer.
+  const tasCarrousel = tousLesTas
+  const tasParId = useRef(new Map<string, Tas>())
+  const tasRecents = useRef<Tas[]>([])
 
   // ── fabrique le pin DOM d'un lieu (identité visuelle du carnet : initiale,
   // teinte du curateur, badges — inchangée). Les états volatils (actif/grisé/
@@ -333,6 +387,111 @@ export default function Carte({
     el.addEventListener('click', (ev) => ev.stopPropagation())
     return el
   }
+
+  // ── LE TAS DE POLAROIDS ────────────────────────────────────────────
+  // la photo la plus récente au-dessus (rotation −2°), jusqu'à 3 feuilles
+  // dessous en éventail, scotch kraft en travers du coin, épingle graphite à
+  // la position géographique exacte. La TAILLE dit la fraîcheur, l'ÉPAISSEUR
+  // dit combien de tirages vivent encore — jamais un badge chiffré (c'était
+  // un compteur de likes déguisé, condamné à l'unanimité par le panel).
+  const peindreTas = (el: HTMLElement, t: Tas, groupe = 1) => {
+    el.style.setProperty('--t', `${t.taille}px`)
+    el.classList.toggle('lu', t.vu)
+    el.classList.toggle('tas-souvenir', t.souvenir)
+    el.classList.toggle('tas-dev', t.enDeveloppement)
+    el.classList.toggle('tas-muet', t.taille < TAILLE_MIN_BLOC)
+    // 3 feuilles dessous au maximum : on ne charge JAMAIS 4 <img> par tas
+    // sur 300 spots (et le DOM ne garde que les tas visibles)
+    const feuilles = t.photos
+      .slice(1, 4)
+      .map((p, i) => `<img class="f p${i + 1}" src="${attr(srcPhoto(p))}" alt="" loading="lazy" decoding="async"/>`)
+      .reverse()
+      .join('')
+    // celles qui viennent de dépasser 48h tombent sous les yeux
+    const chutes = t.mortes
+      .map((p, i) => `<img class="f p${i + 1} morte" src="${attr(srcPhoto(p))}" alt="" loading="lazy" decoding="async"/>`)
+      .join('')
+    el.innerHTML =
+      chutes +
+      feuilles +
+      `<img class="f haut" src="${attr(srcPhoto(t.photos[0]))}" alt="" loading="lazy" decoding="async"/>` +
+      '<span class="kraft"></span>'
+    // le bloc sous le tas : le prénom PORTE l'état de lecture (l'étiquette de
+    // cire glisse et découvre le crayon), l'heure ne bouge JAMAIS — c'est un
+    // fait, pas un signal. Textes posés en DOM : jamais un prénom en innerHTML.
+    const bloc = document.createElement('div')
+    bloc.className = 'tas-bloc'
+    const nom = document.createElement('span')
+    nom.className = 'tas-nom'
+    const i = document.createElement('i')
+    i.textContent = t.auteur || 'quelqu’un'
+    nom.appendChild(i)
+    const quand = document.createElement('span')
+    quand.className = 'tas-quand'
+    quand.textContent = t.enDeveloppement ? 'ça se développe…' : libelleAge(t.fraicheur)
+    bloc.append(nom, quand)
+    // deux tas superposés fusionnent : le plus frais porte la mention au crayon
+    if (groupe > 1) {
+      const grappe = document.createElement('span')
+      grappe.className = 'tas-grappe'
+      grappe.textContent = `${groupe} spots ici`
+      bloc.appendChild(grappe)
+    }
+    el.appendChild(bloc)
+    el.setAttribute(
+      'aria-label',
+      `${t.lieu.nom}, ${t.photos.length} photo${t.photos.length > 1 ? 's' : ''} de ${t.auteur || 'quelqu’un'}, ${libelleAge(t.fraicheur)}${t.vu ? '' : ' — pas encore vu'}`,
+    )
+    el.dataset.sig = `${srcPhoto(t.photos[0])}|${t.taille}|${t.vu}|${t.photos.length + t.mortes.length}|${groupe}|${t.enDeveloppement}`
+  }
+
+  const creerTas = (t: Tas, groupe = 1): HTMLElement => {
+    // un <button>, pas un <div onclick> : le tas est une commande, il doit
+    // s'atteindre au clavier comme au pouce
+    const el = document.createElement('button')
+    el.type = 'button'
+    el.className = 'tas'
+    el.dataset.kind = 'tas'
+    peindreTas(el, t, groupe)
+    // tap propre : court et immobile (un pan qui démarre sur un tas ne doit
+    // JAMAIS ouvrir le carrousel)
+    let d0: { x: number; y: number; t: number } | null = null
+    el.addEventListener('pointerdown', (ev) => {
+      d0 = { x: ev.clientX, y: ev.clientY, t: Date.now() }
+    })
+    el.addEventListener('pointerup', (ev) => {
+      ev.stopPropagation()
+      const d = d0
+      d0 = null
+      if (!d) return
+      if (Math.hypot(ev.clientX - d.x, ev.clientY - d.y) > TAP_PELL_PX) return
+      if (Date.now() - d.t > TAP_PELL_MS) return
+      ouvrirPelliculeRef.current(t.lieu.id)
+    })
+    el.addEventListener('pointercancel', () => {
+      d0 = null
+    })
+    el.addEventListener('click', (ev) => {
+      ev.preventDefault()
+      ev.stopPropagation()
+    })
+    // le clavier, lui, n'a pas de pointeur : Entrée/Espace ouvrent le tas
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault()
+        ouvrirPelliculeRef.current(t.lieu.id)
+      }
+    })
+    return el
+  }
+
+  /** ouvre le carrousel sur un tas (et retient le tas d'origine pour lui
+   *  rendre le focus à la fermeture) */
+  const ouvrirPellicule = (id: string) => {
+    if (mini) return
+    setPellOuverte(id)
+  }
+  const ouvrirPelliculeRef = useRef(ouvrirPellicule)
 
   // ── ouvre le panneau de marque, ancré au lieu (appui long pin/poussière) ──
   const ouvrirPanneauMarque = (id: string) => {
@@ -481,6 +640,9 @@ export default function Carte({
 
     // le rang d'un lieu (plus haut = pin posé d'abord)
     const score = (l: Lieu): number => {
+      // un tas de tirages passe AVANT tout : c'est la nuit d'hier qui sèche,
+      // le seul contenu de la carte qui change sans qu'on fasse rien
+      if (tasParId.current.has(l.id)) return 6
       if (marquesL[l.id]) return 5 // marqué : toujours posé, dès z11
       if (estAMoi(l) || l.tampon?.v === 'valide') return 4
       if (favoris.has(l.id) || aComparer.has(l.id)) return 3
@@ -505,18 +667,68 @@ export default function Carte({
     const a = actifRef.current
     if (a && lieuxParId.current.has(a)) voulus.add(a)
 
-    // ── pose des entrants (naissance : l'encre se dépose, .pin-depose) ──
+    // ── LA FUSION DES TAS (contrainte du panel) : à 300 spots, Oberkampf un
+    // samedi, c'est 15 tirages superposés illisibles. Deux tas qui se
+    // chevauchent à l'écran n'en font qu'un — le plus FRAIS porte la mention
+    // « N spots ici » au crayon, les autres cèdent leur place (l'axe vertical
+    // du carrousel étant global, on les retrouve tous au pouce). Recalculé à
+    // chaque pose : dézoomé ça fusionne, zoomé ça se déplie tout seul.
+    const groupes = new Map<string, number>()
+    const ancres: { id: string; x: number; y: number }[] = []
+    for (const t of tasRecents.current) {
+      if (!voulus.has(t.lieu.id)) continue
+      const p = m.project([t.lieu.lng, t.lieu.lat])
+      const chef = ancres.find((o) => Math.hypot(o.x - p.x, o.y - p.y) < FUSION_TAS_PX)
+      if (chef && chef.id !== actifRef.current) {
+        groupes.set(chef.id, (groupes.get(chef.id) ?? 1) + 1)
+        voulus.delete(t.lieu.id)
+      } else {
+        ancres.push({ id: t.lieu.id, x: p.x, y: p.y })
+      }
+    }
+
+    // ── pose des entrants (naissance : l'encre se dépose, .pin-depose ; un
+    // tas, lui, se pique comme une carte à jouer, en cascade de fraîcheur) ──
+    let nes = 0
     for (const id of voulus) {
-      if (poses.current.has(id)) continue
+      const t = tasParId.current.get(id)
+      // le lieu a changé de nature (une photo est arrivée / a fondu) : le
+      // marqueur doit renaître dans la bonne forme
+      const dejaLa = poses.current.get(id)
+      if (dejaLa) {
+        const kind = pinEls.current[id]?.dataset.kind ?? 'pin'
+        const voulu = t ? 'tas' : 'pin'
+        if (kind === voulu) continue
+        poses.current.delete(id)
+        delete pinEls.current[id]
+        dejaLa.remove()
+      }
       const l = lieuxParId.current.get(id)
       if (!l) continue
-      const el = creerPinLieu(l)
+      const el = t ? creerTas(t, groupes.get(id) ?? 1) : creerPinLieu(l)
       pinEls.current[id] = el
       poses.current.set(
         id,
-        new maplibregl.Marker({ element: enrober(el) }).setLngLat([l.lng, l.lat]).addTo(m),
+        new maplibregl.Marker({ element: enrober(el), anchor: t ? 'bottom' : 'center' })
+          .setLngLat([l.lng, l.lat])
+          .addTo(m),
       )
-      if (animees) el.classList.add('pin-depose')
+      if (!animees) continue
+      if (t) {
+        // le plus chaud naît en premier (stagger 90 ms)
+        el.style.animationDelay = `${nes * STAGGER_TAS_MS}ms`
+        el.classList.add('tas-pose')
+        nes++
+      } else {
+        el.classList.add('pin-depose')
+      }
+    }
+    // les tas déjà posés dont la mention de grappe a changé se repeignent
+    for (const [id, el] of Object.entries(pinEls.current)) {
+      const t = tasParId.current.get(id)
+      if (!t || el.dataset.kind !== 'tas') continue
+      const g = groupes.get(id) ?? 1
+      if (!el.dataset.sig?.endsWith(`|${g}|${t.enDeveloppement}`)) peindreTas(el, t, g)
     }
     // ── retrait des sortants (fondu court — plus de vol vers un centroïde) ──
     for (const [id, mk] of [...poses.current]) {
@@ -532,6 +744,26 @@ export default function Carte({
     }
     appliquerEtats()
     majLabels()
+    // ce que la boussole a le droit d'ignorer : ce qui est DANS le cadre
+    // (elle ne parle que de ce qu'on ne peut pas voir)
+    if (!mini) {
+      const dansLeCadre = new Set<string>()
+      for (const t of tasRecents.current) {
+        const p = t.lieu
+        if (p.lng >= b.getWest() && p.lng <= b.getEast() && p.lat >= b.getSouth() && p.lat <= b.getNorth()) {
+          dansLeCadre.add(p.id)
+        }
+      }
+      setALEcran((prec) => {
+        const memeCadre =
+          prec.ids.size === dansLeCadre.size && [...dansLeCadre].every((id) => prec.ids.has(id))
+        const memeCentre =
+          Math.abs(prec.centre.lat - centre.lat) < 1e-4 && Math.abs(prec.centre.lng - centre.lng) < 1e-4
+        return memeCadre && memeCentre
+          ? prec
+          : { ids: dansLeCadre, centre: { lat: centre.lat, lng: centre.lng } }
+      })
+    }
   }
 
   // refs vivantes pour les listeners maplibre posés une seule fois au mount ;
@@ -544,7 +776,47 @@ export default function Carte({
     majLabelsRef.current = majLabels
     appliquerEtatsRef.current = appliquerEtats
     ouvrirPanneauRef.current = ouvrirPanneauMarque
+    ouvrirPelliculeRef.current = ouvrirPellicule
+    tasParId.current = new Map(tousLesTas.map((t) => [t.lieu.id, t] as const))
+    tasRecents.current = tousLesTas
   })
+
+  // ── l'horloge de la fonte : la fraîcheur se recalcule toute seule. Sans
+  // ça, un tas resterait « il y a 2h » toute la nuit et ne fondrait jamais
+  // sous les yeux de celui qui laisse l'app ouverte.
+  useEffect(() => {
+    if (mini) return
+    const id = window.setInterval(() => setHorloge(Date.now()), BATTEMENT_PELLICULE_MS)
+    return () => window.clearInterval(id)
+  }, [mini])
+
+  // mes sceaux vivent aussi dans le cloud (autre téléphone) : on les fusionne
+  // une fois au montage, sans jamais bloquer l'affichage
+  useEffect(() => {
+    if (mini) return
+    let vivant = true
+    void chargerVuesPellicule().then((v) => {
+      if (vivant) setVuesPell(new Set(v))
+    })
+    return () => {
+      vivant = false
+    }
+  }, [mini])
+
+  // ── les tas POSÉS suivent leurs données (la feuille qui fond, la cire qui
+  // glisse) sans jamais recréer un marker : on repeint l'élément en place.
+  useEffect(() => {
+    for (const [id, el] of Object.entries(pinEls.current)) {
+      if (el.dataset.kind !== 'tas') continue
+      const t = tasParId.current.get(id)
+      if (!t) continue
+      const groupe = Number(el.dataset.sig?.split('|')[4] ?? 1)
+      const sig = `${srcPhoto(t.photos[0])}|${t.taille}|${t.vu}|${t.photos.length + t.mortes.length}|${groupe}|${t.enDeveloppement}`
+      if (el.dataset.sig !== sig) peindreTas(el, t, groupe)
+    }
+    // un lieu qui vient de gagner (ou de perdre) son tas doit changer de forme
+    poserRef.current()
+  }, [tousLesTas])
 
   useEffect(() => {
     const cont = conteneur.current
@@ -638,6 +910,15 @@ export default function Carte({
     carte.current.on('touchcancel', finAppui)
     // la carte bouge : le panneau de marque (ancré au point écran) se ferme
     carte.current.on('movestart', () => setPanneauMarque(null))
+    // ── la politique de zoom des tas : ils rapetissent avec la ville, et
+    // très loin ils se taisent (plus de prénom ni d'heure : illisibles) ──
+    const surZoom = () => {
+      const z = carte.current?.getZoom() ?? 13
+      cont.classList.toggle('z-low', z < 12.4)
+      cont.style.setProperty('--kz', z >= 13.8 ? '1' : z >= 12.4 ? '0.75' : '0.5')
+    }
+    carte.current.on('zoom', surZoom)
+    surZoom()
     carte.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
       'bottom-left',
@@ -891,6 +1172,16 @@ export default function Carte({
     ? (valides.find((l) => l.id === panneauMarque.id) ?? null)
     : null
 
+  // le mot de la fin, en bas de la carte, et la soirée par laquelle s'ouvre
+  // le carrousel (un souvenir n'y est pas : on ouvre alors sur le plus frais)
+  const motBoussole = boussole(tousLesTas, aLEcran.ids, aLEcran.centre)
+  const departPellicule = pellOuverte
+    ? Math.max(
+        tasCarrousel.findIndex((t) => t.lieu.id === pellOuverte),
+        0,
+      )
+    : -1
+
   return (
     <>
       <div ref={conteneur} className={`carte${lieuActif ? ' carte-sel' : ''}`} />
@@ -1129,6 +1420,49 @@ export default function Carte({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── LA LIGNE-BOUSSOLE : elle ne parle que de ce qu'on NE VOIT PAS —
+          hors du cadre, ou pas encore lu — et elle NOMME une chose plutôt
+          que de compter des gens. Jamais « karim y est encore » : ça, c'est
+          de la surveillance. Tap = la carte y va. */}
+      {!lieuActif && !pellOuverte && (
+        <button
+          className="carte-boussole hand"
+          disabled={!motBoussole.cible}
+          onClick={() => {
+            const c = motBoussole.cible
+            if (!c) return
+            carte.current?.easeTo({ center: [c.lieu.lng, c.lieu.lat], duration: 700 })
+          }}
+        >
+          {motBoussole.texte}
+        </button>
+      )}
+
+      {/* ── LA PELLICULE : ← → les photos · ↑ ↓ toute la nuit du cercle.
+          La carte se déplace derrière : on referme, on est au bon endroit. */}
+      {pellOuverte && departPellicule >= 0 && tasCarrousel.length > 0 && (
+        <Pellicule
+          tas={tasCarrousel}
+          depart={departPellicule}
+          onFermer={() => {
+            setPellOuverte(null)
+            // le focus revient au tas d'origine (a11y : on ne perd pas sa place)
+            pinEls.current[pellOuverte]?.focus?.()
+          }}
+          onCentrer={(t) =>
+            carte.current?.easeTo({ center: [t.lieu.lng, t.lieu.lat], duration: 600 })
+          }
+          onVu={(t) => setVuesPell(marquerPelliculeVue(t.lieu.id, t.soiree))}
+          onYVais={
+            onYVais &&
+            ((t) => {
+              setPellOuverte(null)
+              onYVais(t.lieu)
+            })
+          }
+        />
       )}
 
       {/* #11 : le carrousel des lieux — la carte active est en couleur, le reste

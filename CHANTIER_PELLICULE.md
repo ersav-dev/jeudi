@@ -1,10 +1,15 @@
 # CHANTIER — « la pellicule fraîche »
-*Spécification complète, prête à coder · rédigée le 3 août 2026 · rien n'est encore implémenté*
+*Spécification complète · rédigée le 3 août 2026 · **implémentée le 3 août 2026** (§9)*
 
 > **À lire en premier par la session qui code.** Tout ce qui est en §1 a été
 > tranché avec Ersan après trois jours de prototypage et un panel de 10 agences
 > de design — **ne pas re-débattre**, implémenter. Les questions encore
 > ouvertes sont en §6, et elles seules.
+>
+> ⚠️ **État au 3 août (soir) : les étapes 1 à 4 sont codées** — voir §9 pour ce
+> qui est livré, ce qui a été tranché en chemin, et ce qui reste (dont la
+> migration `0010` qu'**Ersan doit appliquer** avant que quoi que ce soit
+> n'apparaisse).
 
 ---
 
@@ -364,3 +369,70 @@ au-dessus de l'annuaire (qui est aujourd'hui mort, un simple répertoire).
   agite ; les nouvelles photos se développent une à une.
 - **La bande contact** : mode une-main / batterie faible — la carte se replie,
   les tas défilent en planche contact verticale au pouce.
+
+---
+
+## 9 · CE QUI EST LIVRÉ — session du 3 août 2026 (soir)
+
+**Étapes 1 → 4 codées.** `tsc` + `eslint --max-warnings=0` + 139 tests
+(dont **30 neufs** sur la pellicule) + `npm run build` : tout vert.
+
+### Les fichiers
+| Fichier | Ce qu'il porte |
+|---|---|
+| `supabase/migrations/0010_photos_datees.sql` | `prise_le` · `visible_le` · `auteur_id` sur `photos`, table `vues_pellicule` + RLS. **⚠️ à appliquer à la main** (le n° 0009 était déjà pris par « invite sans doublon ») |
+| `app/src/pellicule.ts` | la logique PURE : `construireTas` · `taillePolaroid` · `libelleAge` / `libelleAgeFlou` · `soireeDe` · `estVu` · `boussole` · `directionCardinale` |
+| `app/src/__tests__/pellicule.test.ts` | 30 tests : les bornes 6/24/48h, le passage de minuit, la chute des feuilles, le sceau par soirée, les 4 états de la boussole |
+| `app/src/Pellicule.tsx` | le carrousel 2 axes : drag 1:1, verrouillage d'axe, butées élastiques, `easeTo` sur la carte, sortie « j'y vais. », `role="dialog"` + Échap + flèches |
+| `app/src/Carte.tsx` | `creerTas` / `peindreTas`, la fusion des tas superposés, la ligne-boussole, la politique de zoom (`--kz`, `z-low`) |
+| `app/src/db.ts` | `PhotoLieu` datée, lecture qui respecte le séchage, `photoNeuve()`, `marquerPelliculeVue` / `chargerVuesPellicule` |
+| `app/src/index.css` | les blocs `.tas*`, `.carte-boussole`, `.pell*` (transposés du proto, vérifiés au navigateur) |
+| `app/src/App.tsx` | l'app s'ouvre sur **la carte** (`vue = 'carte'`), « sortir » reste le 1er onglet ; câblage de « j'y vais. » |
+
+### Ce qui a été tranché en chemin (les questions de §6)
+1. **Taille minimale du bloc texte** → **le souvenir se tait.** Sous 45px
+   (donc à 34px), le prénom et l'heure disparaissent (`.tas-muet`) plutôt que
+   de déborder du tirage. Un souvenir n'a plus rien à annoncer — et ça évite
+   un plancher de taille qui aurait cassé l'échelle modulaire.
+2. **Ordre vertical du carrousel** → **fraîcheur pure**, comme l'instinct le
+   disait : c'est *la nuit*, pas *ton quartier*. La distance ne pondère rien.
+   Les **souvenirs sont dans l'axe vertical** (sinon taper un souvenir
+   ouvrirait la soirée de quelqu'un d'autre) mais **hors de la boussole**.
+3. (3) et (4) — le nom et le tri du « carnet du cercle » — restent ouverts :
+   c'est la partie 2 (§7), pas commencée.
+
+### Les écarts assumés à la spec, à connaître
+- **La fusion des tas** (contrainte panel n°2) est faite au niveau du *marqueur*
+  et pas de l'*éventail* : deux tas à moins de 46px à l'écran n'en font qu'un,
+  le plus frais porte « N spots ici » au crayon, les autres cèdent la place.
+  Le tap n'ouvre pas un déploiement spatial : il ouvre le carrousel, dont
+  l'axe vertical est global — on retrouve tout au pouce. Zoomer les sépare.
+- **La chute des feuilles** ne se joue que pendant **l'heure qui suit** la mort
+  d'une feuille (`Tas.mortes`), sinon la carte rejouerait le même deuil à
+  chaque repeint. Au-delà, la feuille n'est plus rendue du tout.
+- **Perfs** : 3 feuilles maximum sous le tirage du dessus, `loading="lazy"` +
+  `decoding="async"`, et seuls les tas dans le cadre existent en DOM (le
+  diffing de `poserVisibles`). L'aplatissement en **image composite offscreen**
+  (canvas) reste en réserve — à faire si ça rame sur un vrai samedi soir.
+- **Le tas n'ouvre PAS le bottom-sheet** : le tap ouvre la pellicule. Le sheet
+  « détails » reste sur les pins ordinaires.
+- **L'état vide est celui de §1.8, tel quel** : les 302 spots restent des
+  repères à l'encre, et rien n'a été antidaté pour « remplir » la carte — au
+  lancement il n'y a **aucun tas** tant que personne n'a shooté. C'est voulu :
+  on ne fabrique pas de fausses soirées (cf. « les faux profils meurent »).
+
+### CE QU'ERSAN DOIT FAIRE POUR LE VOIR
+1. **Appliquer `0010_photos_datees.sql`** (Supabase → SQL Editor → coller → Run).
+   Sans ça, `chargerPhotos` demande des colonnes qui n'existent pas → aucune
+   photo ne remonte du cloud.
+2. Se connecter sur l'app, **ajouter une preuve photo sur un spot**.
+3. **Attendre 1 h** (le séchage) pour la voir apparaître chez un pote — chez
+   soi, elle est visible tout de suite et se **développe** à l'écran.
+4. Vérifier dans Supabase → Table editor → `photos` que `prise_le`,
+   `visible_le` et `auteur_id` sont remplis.
+
+### CE QUI RESTE
+- La **partie 2** (§7) : « le carnet du cercle » dans l'onglet cercle.
+- Les idées de réserve (§8) : photo fondatrice, polaroid vierge du match,
+  éventail sous le pouce, « secoue la ville », bande contact.
+- Le **test réel sur téléphone** (une photo prise ce soir apparaît dans 1 h).

@@ -635,7 +635,13 @@ export default function App() {
   // true = le formulaire d'ajout s'ouvre panneau import Google DÉPLIÉ
   // (arrivée depuis le bandeau de rappel) — remis à false à la fermeture
   const [importDirect, setImportDirect] = useState(false)
-  const [vue, setVue] = useState<'liste' | 'carte'>('liste')
+  // ── L'ACCUEIL, c'est LA CARTE (chantier « la pellicule ») ──
+  // C'est le seul écran qui change tous les jours sans que l'utilisateur
+  // fasse quoi que ce soit : ses potes ont vécu, la nuit d'hier y sèche.
+  // « sortir » et « ma carte » sont identiques d'un jour à l'autre — ce sont
+  // des destinations, pas des accueils. « sortir » reste le PREMIER onglet :
+  // on ne déplace pas le rituel, on lui donne un vestibule.
+  const [vue, setVue] = useState<'liste' | 'carte'>('carte')
   // chantier 1 : les lieux « à comparer » + l'ouverture de la table (accès aussi
   // depuis l'index, pas seulement la carte). source de vérité = localStorage.
   const [comparer, setComparer] = useState<string[]>(() => lireComparer())
@@ -1478,6 +1484,15 @@ export default function App() {
                 onVoir={(l) => ouvrirFiche(l, lieuxFiltres)}
                 comparer={comparer}
                 onComparer={(id) => setComparer(basculerComparer(id))}
+                // « j'y vais. » — la sortie de la pellicule : le spot entre
+                // dans ton carnet, part au vote s'il y a un match ouvert, et
+                // on atterrit sur l'écran de décision. Jamais un cul-de-sac.
+                onYVais={async (l) => {
+                  const mien = estAMoi(l) || lieux.some((x) => estAMoi(x) && x.nom === l.nom)
+                  if (!mien) await adopter(l)
+                  if (lireSortieActive() ?? matchRejoint) await ajouterAuVote(l)
+                  ouvrirFiche(l, lieuxFiltres)
+                }}
               />
               {/* la note en marge de la carte — montée ICI (niveau App),
                   par-dessus l'onglet : Carte.tsx n'est pas touché */}

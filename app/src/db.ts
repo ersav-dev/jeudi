@@ -54,6 +54,30 @@ export interface PhotoLieu {
   blob?: Blob
   /** photo distante — fausses photos de test / futur cloud */
   url?: string
+  /** ── la pellicule (0010) : une preuve sait QUAND et PAR QUI ──
+   *  quand le tirage a été pris (ISO 8601). Sans date, la photo existe
+   *  toujours dans la fiche mais n'entre PAS dans la pellicule de la carte. */
+  priseLe?: string
+  /** quand la photo « a séché » : publication différée d'1h. La carte ne
+   *  montre aux autres que des tirages secs — l'app ne dit jamais où
+   *  quelqu'un se trouve MAINTENANT. */
+  visibleLe?: string
+  /** qui a shooté (id de profil) */
+  auteurId?: string
+  /** son prénom, joint à la lecture (cercle d'abord, vitrine ensuite) */
+  auteurPrenom?: string
+}
+
+/** une preuve qu'on vient de prendre : datée À LA PRISE (pas à la sync —
+ *  sinon un upload tardif ferait mentir la carte), et sèche dans 1 h. */
+export function photoNeuve(type: PhotoLieu['type'], blob: Blob): PhotoLieu {
+  const prise = new Date()
+  return {
+    type,
+    blob,
+    priseLe: prise.toISOString(),
+    visibleLe: new Date(prise.getTime() + DELAI_SECHAGE_MS).toISOString(),
+  }
 }
 
 /** l'ancien générique 'lieu' se lit « salle » partout */
@@ -342,6 +366,10 @@ function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
 // le code est compatible avant ET après la migration.
 const BUCKET_PHOTOS = 'photos'
 const TTL_SIGNATURE_S = 3600 // 1 h
+/** LE SÉCHAGE (0010) : une photo n'apparaît aux autres qu'une heure après
+ *  avoir été prise. C'est l'imagerie de la marque — et ça tue au passage
+ *  l'inférence de position en temps réel (« il est LÀ, MAINTENANT »). */
+export const DELAI_SECHAGE_MS = 60 * 60 * 1000
 
 /** retrouve le CHEMIN bucket depuis une valeur stockée (compat avant/après 0003) :
  *  - déjà un chemin (« uid/lieu/0-lieu.jpg ») → tel quel
@@ -428,7 +456,34 @@ async function nettoyerStorageLieu(lieuId: string, gardes?: Set<string>): Promis
  *  Storage qui ne sont plus référencés. */
 async function syncPhotosLieu(lieu: Lieu): Promise<void> {
   if (!monId || !estAMoi(lieu)) return
-  const lignes: { lieu_id: string; type: string; url: string; ordre: number }[] = []
+  // les dates déjà en base, par url : la réécriture des lignes (insert puis
+  // delete) ne doit JAMAIS rajeunir un vieux tirage — sinon toute la carte
+  // se rallumerait au moindre changement d'horaire sur une fiche.
+  const ancien = await supabase
+    .from('photos')
+    .select('id,url,prise_le,visible_le,auteur_id')
+    .eq('lieu_id', lieu.id)
+  if (ancien.error) {
+    console.error('[jeudi] syncPhotos lecture KO — sync photos abandonnée', ancien.error)
+    return
+  }
+  const anciennes = (ancien.data ?? []) as {
+    id: string
+    url: string
+    prise_le: string | null
+    visible_le: string | null
+    auteur_id: string | null
+  }[]
+  const datesConnues = new Map(anciennes.map((r) => [r.url, r] as const))
+  const lignes: {
+    lieu_id: string
+    type: string
+    url: string
+    ordre: number
+    prise_le: string
+    visible_le: string
+    auteur_id: string
+  }[] = []
   let i = 0
   for (const p of lieu.photos ?? []) {
     let valeur: string | undefined
@@ -439,17 +494,31 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
       // test) → stockée telle quelle (compat) ; blob:/data: → rien à stocker
       valeur = cheminDepuis(p.url) ?? (/^https?:\/\//i.test(p.url) ? p.url : undefined)
     }
-    if (valeur) lignes.push({ lieu_id: lieu.id, type: p.type, url: valeur, ordre: i })
+    if (valeur) {
+      // la date de prise : celle déjà en base pour ce fichier > celle portée
+      // par le client (relecture cloud) > maintenant (le tirage est neuf).
+      // `visible_le` = +1h : la photo sèche avant d'apparaître aux autres.
+      const connue = datesConnues.get(valeur)
+      const prise = connue?.prise_le ?? p.priseLe ?? new Date().toISOString()
+      const visible =
+        connue?.visible_le ??
+        p.visibleLe ??
+        new Date(Date.parse(prise) + DELAI_SECHAGE_MS).toISOString()
+      lignes.push({
+        lieu_id: lieu.id,
+        type: p.type,
+        url: valeur,
+        ordre: i,
+        prise_le: prise,
+        visible_le: visible,
+        auteur_id: connue?.auteur_id ?? p.auteurId ?? monId,
+      })
+    }
     i++
   }
   // pas d'unicité (lieu_id, ordre) en base → pas d'upsert possible : on relève
-  // les anciennes lignes, on insère les neuves, PUIS on efface les anciennes
-  // par id — dans cet ordre, et les deux erreurs remontent en console.
-  const anciennes = await supabase.from('photos').select('id').eq('lieu_id', lieu.id)
-  if (anciennes.error) {
-    console.error('[jeudi] syncPhotos lecture KO — sync photos abandonnée', anciennes.error)
-    return
-  }
+  // les anciennes lignes (déjà lues ci-dessus), on insère les neuves, PUIS on
+  // efface les anciennes par id — dans cet ordre, les erreurs en console.
   if (lignes.length) {
     const ins = await supabase.from('photos').insert(lignes)
     if (ins.error) {
@@ -457,7 +526,7 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
       return
     }
   }
-  const anciensIds = ((anciennes.data ?? []) as { id: string }[]).map((r) => r.id)
+  const anciensIds = anciennes.map((r) => r.id)
   if (anciensIds.length) {
     const del = await supabase.from('photos').delete().in('id', anciensIds)
     if (del.error) console.error('[jeudi] syncPhotos delete KO (doublons possibles)', del.error)
@@ -465,18 +534,53 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
   await nettoyerStorageLieu(lieu.id, new Set(lignes.map((l) => l.url)))
 }
 
+/** ligne de la table `photos` (les seules colonnes lues) */
+interface LignePhoto {
+  lieu_id: string
+  type: PhotoLieu['type']
+  url: string
+  ordre: number
+  prise_le: string | null
+  visible_le: string | null
+  auteur_id: string | null
+}
+
 /** charge les photos (table `photos`) pour une liste d'ids de lieux → map
- *  id→photos, avec des URLs SIGNÉES prêtes à afficher (un seul lot + cache). */
+ *  id→photos, avec des URLs SIGNÉES prêtes à afficher (un seul lot + cache).
+ *  ⚠️ publication différée (0010) : on ne lit que les tirages SECS
+ *  (`visible_le` passé) — sauf les miens, que je vois se développer. */
 async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
   const map = new Map<string, PhotoLieu[]>()
   if (!ids.length) return map
+  const maintenant = new Date().toISOString()
+  const secheOuMienne = monId
+    ? `visible_le.is.null,visible_le.lte.${maintenant},auteur_id.eq.${monId}`
+    : `visible_le.is.null,visible_le.lte.${maintenant}`
   const { data } = await supabase
     .from('photos')
-    .select('lieu_id,type,url,ordre')
+    .select('lieu_id,type,url,ordre,prise_le,visible_le,auteur_id')
     .in('lieu_id', ids)
+    .or(secheOuMienne)
     .order('ordre')
   // ligne de la table `photos` (les seules colonnes sélectionnées ci-dessus)
-  const lignes = (data ?? []) as { lieu_id: string; type: PhotoLieu['type']; url: string; ordre: number }[]
+  const lignes = (data ?? []) as LignePhoto[]
+  // qui a shooté ? le cercle d'abord (cache léger), la vitrine ensuite —
+  // même chaîne que les tips : un prénom, jamais un id à l'écran
+  const prenoms = new Map<string, string>()
+  const auteurs = [...new Set(lignes.map((r) => r.auteur_id).filter((a): a is string => !!a))]
+  if (auteurs.length) {
+    try {
+      for (const m of await monCercle()) prenoms.set(m.id, m.prenom)
+      const inconnus = auteurs.filter((a) => !prenoms.has(a))
+      if (inconnus.length) {
+        for (const [pid, p] of await profilsPublics(inconnus)) {
+          if (p.prenom) prenoms.set(pid, p.prenom)
+        }
+      }
+    } catch {
+      /* vitrine injoignable : le tas portera « quelqu'un » */
+    }
+  }
   // 1er passage : signer en UN lot les chemins pas (ou plus) en cache
   const aSigner: string[] = []
   for (const r of lignes) {
@@ -509,7 +613,14 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
     let url: string = r.url
     const ch = typeof r.url === 'string' ? cheminDepuis(r.url) : null
     if (ch) url = signatures.get(ch)?.url ?? url
-    arr.push({ type: r.type, url })
+    arr.push({
+      type: r.type,
+      url,
+      priseLe: r.prise_le ?? undefined,
+      visibleLe: r.visible_le ?? undefined,
+      auteurId: r.auteur_id ?? undefined,
+      auteurPrenom: r.auteur_id ? prenoms.get(r.auteur_id) : undefined,
+    })
     map.set(r.lieu_id, arr)
   }
   return map
@@ -2152,6 +2263,67 @@ export function lireVus(): string[] {
 }
 export function ecrireVus(ids: string[]): void {
   localStorage.setItem('jeudi-vus', JSON.stringify(ids))
+}
+
+// ── les sceaux de la pellicule (0010) : « j'ai ouvert ce tas, ce soir-là » ──
+// Clé locale `lieuId|soiree`, miroir optimiste de `vues_pellicule` : la cire
+// glisse AVANT que le réseau réponde (et sans réseau, elle reste glissée).
+// Ce que j'ai lu ne regarde que moi — la RLS l'interdit à tout autre compte.
+const CLE_PELLICULE = 'jeudi-pellicule'
+
+export function lireVuesPellicule(): Set<string> {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_PELLICULE) ?? '[]')
+    return new Set(Array.isArray(v) ? (v as string[]) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+/** brise le sceau d'un tas (local d'abord, cloud ensuite, best-effort) →
+ *  l'ensemble à jour, prêt à repartir en state React. */
+export function marquerPelliculeVue(lieuId: string, soiree: string): Set<string> {
+  const vues = lireVuesPellicule()
+  const cle = `${lieuId}|${soiree}`
+  if (vues.has(cle)) return vues
+  vues.add(cle)
+  // on garde les 400 derniers sceaux : au-delà, la soirée est de l'histoire
+  const liste = [...vues].slice(-400)
+  localStorage.setItem(CLE_PELLICULE, JSON.stringify(liste))
+  void (async () => {
+    await pretAuth
+    if (!monId || !estUuid(lieuId)) return
+    const { error } = await supabase
+      .from('vues_pellicule')
+      .upsert(
+        { user_id: monId, lieu_id: lieuId, soiree },
+        { onConflict: 'user_id,lieu_id,soiree', ignoreDuplicates: true },
+      )
+    if (error) console.warn('[jeudi] sceau non enregistré (il reste local)', error)
+  })()
+  return new Set(liste)
+}
+
+/** relit mes sceaux du cloud (autre téléphone) et les fusionne au local */
+export async function chargerVuesPellicule(): Promise<Set<string>> {
+  const locales = lireVuesPellicule()
+  await pretAuth
+  if (!monId) return locales
+  try {
+    const { data, error } = await supabase
+      .from('vues_pellicule')
+      .select('lieu_id,soiree')
+      .order('vu_le', { ascending: false })
+      .limit(400)
+    if (error) throw error
+    for (const r of (data ?? []) as { lieu_id: string; soiree: string }[]) {
+      locales.add(`${r.lieu_id}|${r.soiree}`)
+    }
+    localStorage.setItem(CLE_PELLICULE, JSON.stringify([...locales].slice(-400)))
+  } catch {
+    /* hors-ligne : les sceaux locaux font foi */
+  }
+  return locales
 }
 
 // l'accueil (onboarding) : fait ou pas

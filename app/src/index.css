@@ -6866,3 +6866,420 @@ button:focus:not(:focus-visible) {
 .tip-reecrire {
   padding: 4px 0;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   LA PELLICULE FRAÎCHE — la nuit d'hier sèche sur la carte
+   Un tas de tirages par spot : la TAILLE dit la fraîcheur, l'ÉPAISSEUR dit
+   combien de photos vivent encore (jamais un chiffre), l'ÉTIQUETTE DE CIRE
+   dit « il y a quelque chose ici pour toi » — l'unique rouge de cet écran.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* le facteur de zoom : les tas rapetissent avec la ville (posé par Carte.tsx) */
+.carte {
+  --kz: 1;
+}
+
+.tas {
+  width: calc(var(--t, 60px) * var(--kz));
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* zone de frappe 44px : un pouce, la nuit, dans la rue */
+.tas::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+}
+/* l'épingle graphite à la position géographique EXACTE (le tas, lui, penche) */
+.tas::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--graphite);
+}
+.tas .f {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid var(--print-white);
+  border-bottom-width: 12px;
+  background: var(--nuit-2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  /* coins massicotés : 3px de biseau, comme une photo coupée à la main */
+  clip-path: polygon(
+    3px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 3px),
+    calc(100% - 3px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 3px
+  );
+  transition:
+    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.5s,
+    filter 0.9s;
+}
+.tas .f.p1 {
+  transform: rotate(7deg) translate(4%, -3%);
+}
+.tas .f.p2 {
+  transform: rotate(-9deg) translate(-5%, 2%);
+}
+.tas .f.p3 {
+  transform: rotate(13deg) translate(7%, 4%);
+}
+.tas .f.haut {
+  position: relative;
+  display: block;
+  transform: rotate(-2deg);
+}
+/* le scotch kraft en travers du coin : de la matière, pas un cadre */
+.tas .kraft {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 42%;
+  height: 12px;
+  z-index: 5;
+  transform: translateX(-50%) rotate(-38deg);
+  background: rgba(239, 233, 216, 0.26);
+  border: 1px solid rgba(239, 233, 216, 0.12);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+/* passé 48h : le souvenir. Un seul tirage, sépia — il ne part jamais. */
+.tas-souvenir .f.haut {
+  filter: sepia(0.75) saturate(0.5) brightness(0.85);
+}
+/* ma photo sèche encore : elle se développe sous les yeux (3,2 s) */
+.tas-dev .f.haut {
+  animation: developpe 3.2s ease-out backwards;
+}
+@keyframes developpe {
+  from {
+    filter: brightness(2.1) saturate(0.05) contrast(0.55) sepia(0.3);
+  }
+  to {
+    filter: none;
+  }
+}
+/* la naissance : le tas se pique comme une carte à jouer (stagger en JS) */
+.tas-pose {
+  animation: tas-pose 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+@keyframes tas-pose {
+  from {
+    transform: translateY(-16px) scale(1.08);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+/* la fonte : la feuille pâlit, vire sépia et TOMBE (jamais un scale(.6) :
+   ça se lirait comme un delete, pas comme un souvenir qui s'efface) */
+/* la feuille morte tombe (1,5 s), puis n'est plus rendue du tout */
+.tas .f.morte {
+  animation: tas-tombe 1.5s ease-in forwards;
+}
+@keyframes tas-tombe {
+  0% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.6;
+    filter: sepia(0.6) saturate(0.4);
+  }
+  100% {
+    opacity: 0;
+    filter: sepia(0.8) blur(1px);
+    transform: rotate(24deg) translate(14%, 42%);
+  }
+}
+
+/* ── le bloc sous le tas : le prénom (l'état) + l'heure (le fait) ── */
+.tas-bloc {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.35;
+  pointer-events: none;
+}
+/* le souvenir se tait : à 34px, l'étiquette serait plus large que la photo */
+.tas-muet .tas-bloc,
+.carte.z-low .tas-bloc {
+  display: none;
+}
+/* PAS VU : le prénom est dans une étiquette de cire pleine */
+.tas-nom {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--cire);
+  color: #fff;
+  transform: rotate(-1.5deg);
+  transition:
+    background 0.45s,
+    transform 0.45s,
+    padding 0.45s;
+}
+.tas-nom i {
+  position: relative;
+  z-index: 2;
+  font-style: normal;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  transition: color 0.3s 0.15s;
+}
+/* LA TRANSITION : la cire glisse vers le bas et découvre le prénom au crayon */
+.tas-nom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cire);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tas.lu .tas-nom {
+  background: transparent;
+  transform: none;
+  padding: 2px 0;
+}
+.tas.lu .tas-nom::before {
+  transform: translateY(105%);
+}
+.tas.lu .tas-nom i {
+  color: rgba(239, 233, 216, 0.55);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* l'heure : manuscrite (un humain a noté), jamais sous 15px, halo plein */
+.tas-quand {
+  display: block;
+  margin-top: 1px;
+  font-family: 'Caveat', cursive;
+  font-size: 15px;
+  color: var(--encre);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* deux tas superposés n'en font qu'un : la mention au crayon */
+.tas-grappe {
+  display: block;
+  font-family: 'Caveat', cursive;
+  font-size: 15px;
+  color: rgba(239, 233, 216, 0.55);
+  text-shadow:
+    0 1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+
+/* ── la ligne-boussole : ce qu'on ne peut PAS voir, jamais un compteur ── */
+.carte-boussole {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  /* juste au-dessus du carrousel (64 nav + 10 + 78 de carte + 10) */
+  bottom: calc(166px + env(safe-area-inset-bottom));
+  z-index: 5;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 16px;
+  color: var(--encre-2);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+.carte-boussole:disabled {
+  color: rgba(239, 233, 216, 0.5);
+}
+
+/* ════════ LE CARROUSEL À DEUX AXES ════════ */
+.pell {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  background: rgba(12, 10, 7, 0.93);
+  animation: pell-entre 0.28s ease-out;
+}
+@keyframes pell-entre {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.pell-x {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: var(--encre-2);
+  font-size: 15px;
+}
+.pell-lieu {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+}
+.pell-fen {
+  width: min(74vw, 300px);
+  height: calc(min(74vw, 300px) + 66px);
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+}
+.pell-col {
+  position: absolute;
+  inset: 0;
+}
+.pell-col.souple,
+.pell-rangee.souple {
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pell-perso {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.pell-rangee {
+  display: flex;
+  width: 100%;
+}
+.pell-dia {
+  flex: 0 0 100%;
+  padding: 0 5px;
+}
+.pell-cadre {
+  transform: rotate(-2deg);
+}
+.pell-dia:nth-child(even) .pell-cadre {
+  transform: rotate(2deg);
+}
+.pell-cadre img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 9px solid var(--print-white);
+  border-bottom-width: 52px;
+  background: var(--nuit-2);
+}
+/* le tip et la signature sont écrits DANS le pied blanc du tirage */
+.pell-pied {
+  position: relative;
+  margin-top: -46px;
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  line-height: 1.1;
+  color: #14120e;
+  padding: 0 6px;
+}
+.pell-mot {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pell-sign {
+  font-style: normal;
+  font-size: 15px;
+  opacity: 0.7;
+}
+.pell-pts {
+  display: flex;
+  gap: 6px;
+}
+.pell-pts span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(239, 233, 216, 0.28);
+}
+.pell-pts span.v {
+  background: var(--encre);
+}
+.pell-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--encre-2);
+}
+.pell-visi {
+  display: inline-flex;
+  opacity: 0.7;
+}
+.pell-aide {
+  font-size: 15px;
+  color: rgba(239, 233, 216, 0.55);
+  text-align: center;
+  line-height: 1.25;
+  margin: 0;
+}
+/* la sortie : l'unique accent de cet écran — le carrousel n'est jamais un
+   cul-de-sac (on crée le désir, on ne rend pas l'utilisateur à sa carte) */
+.pell-yvais {
+  border: 0;
+  background: var(--cire);
+  color: var(--print-white);
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 19px;
+  padding: 9px 26px;
+  border-radius: var(--rayon);
+  transform: rotate(-1deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tas,
+  .tas .f,
+  .tas-pose,
+  .tas-dev .f.haut,
+  .pell,
+  .pell-col.souple,
+  .pell-rangee.souple {
+    animation: none !important;
+    transition: none !important;
+  }
+}

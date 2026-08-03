@@ -12,6 +12,15 @@ App PWA pour sortir (seul ou accompagné). Question d'entrée : **« ça dit quo
 - `_backups/` — sauvegardes datées
 - Plan d'audit 30 points : `C:\Users\Ersan\.claude\plans\non-je-veux-d-proud-phoenix.md` (TOUT a été appliqué)
 
+## ⭐ DERNIÈRE SESSION — 2026-08-03 : « LA PELLICULE FRAÎCHE » (étapes 1→4) ✅
+La carte est devenue **la page du carnet où la nuit d'hier sèche encore** : chaque spot où quelqu'un du cercle a shooté porte un **tas de polaroids** (taille = fraîcheur, épaisseur = tirages vivants, **jamais un chiffre**), signé du **prénom en étiquette de cire** tant que tu ne l'as pas ouvert, avec l'**heure au crayon** dessous. Tap = **carrousel 2 axes** (← → les photos · ↑ ↓ toute la nuit du cercle), la carte se déplace derrière, sortie **« j'y vais. »**. L'app **s'ouvre sur la carte** ; « sortir » reste le 1er onglet.
+- Code : `app/src/pellicule.ts` (logique pure + **30 tests**), `app/src/Pellicule.tsx` (le carrousel), `Carte.tsx` (tas, fusion des superposés, ligne-boussole, zoom `--kz`), `db.ts` (photos datées, séchage 1h, sceaux), `index.css` (blocs `.tas*` / `.pell*`), `App.tsx` (accueil + « j'y vais. »).
+- **Vie privée** : publication différée d'**1 h** (« la photo sèche ») — la carte ne dit JAMAIS où quelqu'un est *maintenant* ; heure floue en public ; mes sceaux (`vues_pellicule`) ne sont lisibles que par moi (RLS).
+- Vérifié : `tsc` · `eslint --max-warnings=0` · **139 tests** · `npm run build` verts + rendu des tas contrôlé au navigateur (cire #a8322a → crayon, Caveat 15px, souvenir muet à 34px).
+- **⚠️ ERSAN DOIT APPLIQUER `supabase/migrations/0010_photos_datees.sql`** (SQL Editor → Run) : sans ça, aucune photo ne remonte du cloud. Puis : poser une photo sur un spot → visible tout de suite chez soi (elle se **développe**), dans 1 h chez les potes.
+- Détail complet, arbitrages et écarts assumés : **`CHANTIER_PELLICULE.md` §9**.
+- **PROCHAIN** : la **partie 2** du chantier — « le carnet du cercle » (§7 du même fichier), dans l'onglet cercle. Restent ouvertes : son nom, et son tri (chronologique ou groupé par personne).
+
 ## L'app — état actuel (V1 locale COMPLÈTE, fonctionnelle)
 **Code : `app/` (Vite + React + TS, IndexedDB local, zéro backend).**
 Lancer : serveur configuré dans `.claude/launch.json` du projet ersanmusa (nom "jeudi", port 5173) — ou `npm run dev` dans `app/`.
