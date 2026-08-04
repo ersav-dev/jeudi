@@ -313,6 +313,38 @@ const EN: Record<string, string> = {
   'le match est plein — 12 spots max, on vote maintenant.': 'the match is full — 12 spots max, time to vote.',
   'le spot n’est pas parti — le vote est peut-être clos.': 'the spot didn’t go through — the vote may be closed.',
 
+  // « et le tirage ? » — le geste photo du lendemain de sortie
+  'et le tirage ?': 'and the print?',
+  't’as forcément pris une photo, hier soir.': 'you took a photo last night, admit it.',
+  'ouvrir ma pellicule': 'open my camera roll',
+  'elle s’ouvre sur hier soir — tes photos les plus récentes sont en haut.':
+    'it opens on last night — your most recent photos are up top.',
+  'je n’ai rien pris.': 'I didn’t take any.',
+  'finalement, non.': 'actually, no.',
+  'on développe…': 'developing…',
+  'n’ont pas pu être développés.': 'couldn’t be developed.',
+  'tirage': 'print',
+  'tirages': 'prints',
+  'la nuit dernière.': 'last night.',
+  'aucun n’est d’hier soir — à toi de voir.': 'none are from last night — your call.',
+  'tape un tirage : c’est lui qui ira sur la carte · reste appuyé : l’écarter.':
+    'tap a print: that’s the one going on the map · press and hold: drop it.',
+  'sur la carte': 'on the map',
+  'ne sont pas d’hier soir.': 'aren’t from last night.',
+  'n’est pas d’hier soir.': 'isn’t from last night.',
+  'jeudi les a reconnus à l’heure de prise de vue.': 'jeudi spotted them by their capture time.',
+  'les garder': 'keep them',
+  'les écarter': 'drop them',
+  'ils sèchent une heure avant d’apparaître sur la carte du cercle.':
+    'they dry for an hour before showing up on your circle’s map.',
+  'ils restent dans ton carnet, sur ce téléphone.':
+    'they stay in your notebook, on this phone.',
+  'ni le lieu ni l’heure inscrits dans le fichier ne partent — seulement l’image.':
+    'neither the location nor the time written in the file leaves — only the image.',
+  'c’est dans la boîte.': 'that’s a wrap.',
+  'aucun tirage': 'no prints',
+  'le tirage du soir': 'the print of the night',
+
   // Toasts / communs
   'nouvelle version.': 'new version.',
   'recharger': 'reload',

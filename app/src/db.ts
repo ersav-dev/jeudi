@@ -45,7 +45,10 @@ export type Meteo = (typeof METEOS)[number]
 
 // une photo DIT CE QU'ELLE PROUVE — 5 types, dans l'ordre du parcours
 // d'une soirée. 'lieu' = l'ancien générique (vieux clients), lu « salle ».
-export const TYPES_PHOTO = ['facade', 'salle', 'terrasse', 'plat', 'wc'] as const
+// 'soir' n'est pas une preuve : c'est LE TIRAGE DU SOIR, le souvenir repêché
+// dans la pellicule du téléphone au lendemain d'une sortie. Il ne remplit
+// aucun trou de l'album — il fait vivre la carte (migration 0010).
+export const TYPES_PHOTO = ['facade', 'salle', 'terrasse', 'plat', 'wc', 'soir'] as const
 export type TypePhoto = (typeof TYPES_PHOTO)[number]
 
 export interface PhotoLieu {
@@ -54,6 +57,14 @@ export interface PhotoLieu {
   blob?: Blob
   /** photo distante — fausses photos de test / futur cloud */
   url?: string
+  /** quand elle a été PRISE (ISO) — lue dans l'EXIF, jamais l'heure d'import.
+   *  C'est elle qui fera vieillir les tas sur la carte (migration 0010). */
+  priseLe?: string
+  /** quand elle a le droit d'apparaître (ISO) = prise_le + 1 h. La photo
+   *  « sèche » avant d'être publique : jamais de position en temps réel. */
+  visibleLe?: string
+  /** qui l'a prise (id profil) — posé par la base à l'écriture */
+  auteurId?: string
 }
 
 /** l'ancien générique 'lieu' se lit « salle » partout */
@@ -72,7 +83,9 @@ export function labelTypePhoto(t: PhotoLieu['type']): string {
         ? 'la terrasse'
         : n === 'plat'
           ? 'le verre · le plat'
-          : 'les wc'
+          : n === 'soir'
+            ? 'le tirage du soir'
+            : 'les wc'
 }
 
 /** un tip d'un membre du cercle sur ce lieu (l'autre voix) */
@@ -422,13 +435,54 @@ async function nettoyerStorageLieu(lieuId: string, gardes?: Set<string>): Promis
   }
 }
 
+/** une ligne de la table `photos` telle qu'on l'écrit (les trois dernières
+ *  colonnes viennent de la migration 0010) */
+interface LignePhoto {
+  lieu_id: string
+  type: string
+  url: string
+  ordre: number
+  prise_le?: string | null
+  visible_le?: string | null
+  auteur_id?: string | null
+}
+
+/** insère les lignes photo — et retombe sur le schéma d'AVANT la 0010 si la
+ *  migration n'est pas passée (colonnes de date absentes, ou type 'soir'
+ *  refusé par le check de la 0008). Le carnet continue de marcher sans dates :
+ *  elles arriveront le jour où le SQL est collé, sur les photos suivantes.
+ *  En repli, un tirage du soir est rangé en « salle » — mieux qu'une photo
+ *  perdue. */
+async function insererPhotos(lignes: LignePhoto[]): Promise<boolean> {
+  const { error } = await supabase.from('photos').insert(lignes)
+  if (!error) return true
+  const dit = `${error.message ?? ''} ${error.details ?? ''}`
+  if (!/prise_le|visible_le|auteur_id|photos_type_check/i.test(dit)) {
+    console.error('[jeudi] syncPhotos insert KO — anciennes lignes conservées', error)
+    return false
+  }
+  console.warn('[jeudi] migration 0010 pas passée — les tirages partent sans date', error.message)
+  const repli = lignes.map((l) => ({
+    lieu_id: l.lieu_id,
+    type: l.type === 'soir' ? 'salle' : l.type,
+    url: l.url,
+    ordre: l.ordre,
+  }))
+  const { error: e2 } = await supabase.from('photos').insert(repli)
+  if (e2) {
+    console.error('[jeudi] syncPhotos insert KO (repli) — anciennes lignes conservées', e2)
+    return false
+  }
+  return true
+}
+
 /** synchronise les photos d'un de MES lieux : upload des blobs neufs, réécrit
  *  la table `photos` en INSÉRANT AVANT d'effacer (un insert raté conserve les
  *  anciennes lignes — jamais d'état 0-photo), puis fait le ménage des blobs
  *  Storage qui ne sont plus référencés. */
 async function syncPhotosLieu(lieu: Lieu): Promise<void> {
   if (!monId || !estAMoi(lieu)) return
-  const lignes: { lieu_id: string; type: string; url: string; ordre: number }[] = []
+  const lignes: LignePhoto[] = []
   let i = 0
   for (const p of lieu.photos ?? []) {
     let valeur: string | undefined
@@ -439,7 +493,19 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
       // test) → stockée telle quelle (compat) ; blob:/data: → rien à stocker
       valeur = cheminDepuis(p.url) ?? (/^https?:\/\//i.test(p.url) ? p.url : undefined)
     }
-    if (valeur) lignes.push({ lieu_id: lieu.id, type: p.type, url: valeur, ordre: i })
+    if (valeur)
+      lignes.push({
+        lieu_id: lieu.id,
+        type: p.type,
+        url: valeur,
+        ordre: i,
+        // les dates font l'ALLER-RETOUR : syncPhotos réécrit TOUTES les lignes
+        // à chaque majLieu — sans ce report, la première correction de fiche
+        // effacerait la date de tous les tirages et la carte perdrait la nuit.
+        prise_le: p.priseLe ?? null,
+        visible_le: p.visibleLe ?? null,
+        auteur_id: p.auteurId ?? monId,
+      })
     i++
   }
   // pas d'unicité (lieu_id, ordre) en base → pas d'upsert possible : on relève
@@ -450,13 +516,7 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
     console.error('[jeudi] syncPhotos lecture KO — sync photos abandonnée', anciennes.error)
     return
   }
-  if (lignes.length) {
-    const ins = await supabase.from('photos').insert(lignes)
-    if (ins.error) {
-      console.error('[jeudi] syncPhotos insert KO — anciennes lignes conservées', ins.error)
-      return
-    }
-  }
+  if (lignes.length && !(await insererPhotos(lignes))) return
   const anciensIds = ((anciennes.data ?? []) as { id: string }[]).map((r) => r.id)
   if (anciensIds.length) {
     const del = await supabase.from('photos').delete().in('id', anciensIds)
@@ -470,13 +530,19 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
 async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
   const map = new Map<string, PhotoLieu[]>()
   if (!ids.length) return map
-  const { data } = await supabase
-    .from('photos')
-    .select('lieu_id,type,url,ordre')
-    .in('lieu_id', ids)
-    .order('ordre')
-  // ligne de la table `photos` (les seules colonnes sélectionnées ci-dessus)
-  const lignes = (data ?? []) as { lieu_id: string; type: PhotoLieu['type']; url: string; ordre: number }[]
+  // `*` et pas une liste de colonnes : nommer `prise_le` ferait ÉCHOUER tout
+  // le select tant que la 0010 n'est pas passée — et un carnet sans aucune
+  // photo est bien pire qu'un carnet sans dates.
+  const { data } = await supabase.from('photos').select('*').in('lieu_id', ids).order('ordre')
+  const lignes = (data ?? []) as {
+    lieu_id: string
+    type: PhotoLieu['type']
+    url: string
+    ordre: number
+    prise_le?: string | null
+    visible_le?: string | null
+    auteur_id?: string | null
+  }[]
   // 1er passage : signer en UN lot les chemins pas (ou plus) en cache
   const aSigner: string[] = []
   for (const r of lignes) {
@@ -509,7 +575,13 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
     let url: string = r.url
     const ch = typeof r.url === 'string' ? cheminDepuis(r.url) : null
     if (ch) url = signatures.get(ch)?.url ?? url
-    arr.push({ type: r.type, url })
+    arr.push({
+      type: r.type,
+      url,
+      priseLe: r.prise_le ?? undefined,
+      visibleLe: r.visible_le ?? undefined,
+      auteurId: r.auteur_id ?? undefined,
+    })
     map.set(r.lieu_id, arr)
   }
   return map

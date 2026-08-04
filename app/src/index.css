@@ -6866,3 +6866,175 @@ button:focus:not(:focus-visible) {
 .tip-reecrire {
   padding: 4px 0;
 }
+
+/* ── « et le tirage ? » — le geste photo du lendemain ──────────
+   On ouvre la PELLICULE du téléphone (pas l'appareil) et on repêche la
+   nuit. Même matière que l'album à trous : papier sombre, bord ivoire,
+   l'heure au crayon dessous. UN SEUL rouge sur l'écran : le point de
+   cire de la couverture — celle qui ira sur la carte. */
+.tirage {
+  display: flex;
+  flex-direction: column;
+}
+.tirage-sous {
+  color: var(--encre-2);
+  margin: 2px 0 0;
+}
+/* le cadre qu'on tend : un tirage vierge, scotché, posé de travers */
+.tirage-tendu {
+  position: relative;
+  display: block;
+  width: min(72%, 232px);
+  margin: 26px auto 0;
+  padding: 8px 8px 40px;
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.4);
+  border-radius: var(--rayon);
+  cursor: pointer;
+  transform: rotate(-1.6deg);
+  transition: transform 150ms var(--pose);
+}
+.tirage-tendu:hover,
+.tirage-tendu:focus-within {
+  transform: rotate(-1.6deg) translateY(-3px);
+}
+.tirage-kraft {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 44%;
+  height: 14px;
+  transform: translateX(-50%) rotate(-38deg);
+  background: rgba(239, 233, 216, 0.16);
+  border: 1px solid rgba(239, 233, 216, 0.1);
+  pointer-events: none;
+}
+.tirage-fenetre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--paper);
+  color: var(--encre-3);
+}
+.tirage-fenetre svg {
+  transform: rotate(-5deg);
+  opacity: 0.75;
+}
+.tirage-pied {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9px;
+  text-align: center;
+  font-size: 19px;
+  color: var(--encre-2);
+}
+.tirage-aide {
+  color: var(--encre-3);
+  font-size: 10.5px;
+  line-height: 1.55;
+  letter-spacing: 0.3px;
+  margin: 12px 2px 0;
+}
+.tirage-attente {
+  color: var(--encre-2);
+  font-size: 11px;
+  margin: 10px 2px 0;
+}
+.tirage-promesse {
+  border-top: 1px solid rgba(239, 233, 216, 0.13);
+  padding-top: 12px;
+  margin-top: 18px;
+}
+/* la planche contact : la soirée dans l'ordre où elle s'est passée */
+.tirage-planche {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 9px;
+  margin: 18px 2px 0;
+}
+.tirage-vue {
+  position: relative;
+  padding: 4px 4px 17px;
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.4);
+  border-radius: var(--rayon);
+  cursor: pointer;
+  transition:
+    transform 150ms var(--pose),
+    opacity 150ms var(--pose);
+}
+.tirage-vue img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--paper);
+  animation: albumDeveloppement 400ms var(--pose) both;
+}
+.tirage-heure {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  text-align: center;
+  font-size: 15px; /* Caveat : jamais moins */
+  line-height: 1;
+  color: var(--encre-2);
+}
+/* la couverture : L'UNIQUE cire de l'écran */
+.tirage-vue.couv {
+  transform: rotate(-2deg);
+  border-color: rgba(239, 233, 216, 0.7);
+}
+.tirage-vue.couv::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+/* pas de la soirée : présente, mais visiblement à part */
+.tirage-vue.hors {
+  opacity: 0.5;
+  filter: saturate(0.3);
+}
+.tirage-vue.ecartee {
+  opacity: 0.22;
+  transform: rotate(7deg) scale(0.94);
+}
+.tirage-vue.ecartee img {
+  filter: sepia(0.6);
+}
+.tirage-hors {
+  border-left: 2px solid var(--graphite);
+  padding: 8px 0 8px 11px;
+  margin-top: 20px;
+}
+.tirage-rang {
+  display: flex;
+  gap: 9px;
+  margin-top: 10px;
+}
+/* le choix garder/écarter reste à l'encre : la cire est déjà prise */
+.tirage-choix {
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.25);
+  color: var(--encre-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 9px 13px;
+  border-radius: var(--rayon);
+  cursor: pointer;
+}
+.tirage-choix.choisi {
+  background: var(--encre);
+  border-color: var(--encre);
+  color: var(--nuit);
+}

@@ -17,6 +17,8 @@ import { suivre } from './analytique'
 import { partagerEnStory, partagerMaCarte } from './partageStory'
 import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
+import TirageDuSoir from './TirageDuSoir'
+import { fusionnerPhotos } from './tirage'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
@@ -2193,7 +2195,11 @@ function Validation({
   onPlusTard: () => void
 }) {
   const lieu = lieux.find((l) => l.id === sortie.lieuId)
-  const [etape, setEtape] = useState<'verdict' | 'occasions' | 'tampon' | 'relance'>('verdict')
+  const [etape, setEtape] = useState<'verdict' | 'tirage' | 'occasions' | 'tampon' | 'relance'>(
+    'verdict',
+  )
+  // les tirages repêchés dans la pellicule (étape « et le tirage ? »)
+  const [tiragesSoir, setTiragesSoir] = useState<PhotoLieu[]>([])
   // pré-cochés avec ce que le carnet sait déjà — et tout reste modifiable
   const [tags, setTags] = useState<string[]>(() => [
     ...(lieu?.compagnies ?? []),
@@ -2280,6 +2286,10 @@ function Validation({
 
   const dateCourte = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
 
+  // la photo montrée sur les écrans qui suivent : le tirage choisi d'abord
+  // (c'est LUI qu'on vient de désigner comme couverture), sinon les preuves
+  const couverture = tiragesSoir[0] ?? photos[0] ?? lieu?.photos[0]
+
 
   // la réponse est donnée (valide OU bof) : la note en marge a fait son travail
   const repondu = () => effacerNote('valider-carnet')
@@ -2295,9 +2305,6 @@ function Validation({
       })
     onFini()
   }
-
-  // cap raisonnable de photos par lieu : au-delà, les plus ANCIENNES sortent
-  const CAP_PHOTOS_LIEU = 12
 
   // le lieu tel qu'il vient d'être enregistré (base de la relance photos)
   const enregistreRef = useRef<Lieu | null>(null)
@@ -2320,8 +2327,10 @@ function Validation({
           return
         }
       }
-      // on AJOUTE les nouvelles photos (on ne remplace jamais les anciennes du même type)
-      const photosFusion = [...lieu.photos, ...photos].slice(-CAP_PHOTOS_LIEU)
+      // on AJOUTE les nouvelles photos (on ne remplace jamais les anciennes du
+      // même type) — deux budgets séparés : les preuves de la fiche ne se font
+      // jamais chasser par les tirages du soir, qui s'empilent soirée après soirée
+      const photosFusion = fusionnerPhotos(lieu.photos, [...photos, ...tiragesSoir])
       const maj: Lieu = {
         ...lieu,
         // le champ tip reflète l'état final : vidé → le tip s'efface (note: '')
@@ -2357,10 +2366,7 @@ function Validation({
   const finirRelance = async () => {
     const base = enregistreRef.current
     if (base && photosRelance.length > 0) {
-      await majLieu({
-        ...base,
-        photos: [...base.photos, ...photosRelance].slice(-CAP_PHOTOS_LIEU),
-      })
+      await majLieu({ ...base, photos: fusionnerPhotos(base.photos, photosRelance) })
     }
     onFini()
   }
@@ -2394,7 +2400,7 @@ function Validation({
               onPointerUp={() => {
                 if (vDrag.x > 90) {
                   repondu()
-                  setEtape('occasions')
+                  setEtape('tirage')
                 } else if (vDrag.x < -90) bof()
                 setVDrag({ x: 0, actif: false })
               }}
@@ -2433,7 +2439,7 @@ function Validation({
               className="valider"
               onClick={() => {
                 repondu()
-                setEtape('occasions')
+                setEtape('tirage')
               }}
             >
               je valide
@@ -2448,26 +2454,35 @@ function Validation({
             </button>
           </div>
         </>
+      ) : etape === 'tirage' ? (
+        // « et le tirage ? » — on repêche la nuit dans la pellicule du
+        // téléphone AVANT de raconter : c'est le pic, juste après le swipe.
+        <TirageDuSoir
+          nomLieu={sortie.nom}
+          dateSortie={sortie.date}
+          mien={mien}
+          onFini={(tirages) => {
+            setTiragesSoir(tirages)
+            setEtape('occasions')
+          }}
+          onPasser={() => setEtape('occasions')}
+        />
       ) : etape === 'occasions' ? (
         <>
-          <button className="lien retour-etape" onClick={() => setEtape('verdict')}>
-            ← revenir au verdict
+          <button className="lien retour-etape" onClick={() => setEtape('tirage')}>
+            ← revenir au tirage
           </button>
           <h1 className="grande-question">validé. raconte.</h1>
 
           {lieu && (
             <div className="carte-lieu fiche-carte validation-carte">
               <div className="carte-photo">
-                {(photos[0] ?? lieu.photos[0]) ? (
-                  <img
-                    src={srcPhoto(photos[0] ?? lieu.photos[0])}
-                    alt={lieu.nom}
-                    onError={photoIndisponible}
-                  />
+                {couverture ? (
+                  <img src={srcPhoto(couverture)} alt={lieu.nom} onError={photoIndisponible} />
                 ) : (
                   <div className="tirage-vide">
                     <span className="croix">✕</span>
-                    <span className="hand sans-photo">t'as bien une photo d'hier soir…</span>
+                    <span className="hand sans-photo">{lieu.nom}</span>
                   </div>
                 )}
               </div>
@@ -2548,8 +2563,8 @@ function Validation({
               onPointerCancel={tamponUp}
             >
               <div className="carte-photo">
-                {(photos[0] ?? lieu.photos[0]) ? (
-                  <img src={srcPhoto(photos[0] ?? lieu.photos[0])} alt={lieu.nom} onError={photoIndisponible} />
+                {couverture ? (
+                  <img src={srcPhoto(couverture)} alt={lieu.nom} onError={photoIndisponible} />
                 ) : (
                   <div className="tirage-vide">
                     <span className="croix">✕</span>
