@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
+import { libelleTrajet } from './rayon'
 import {
   type Lieu,
   distanceM,
   formatDistance,
-  tempsMarche,
   etatHoraire,
   propreteWcLabel,
   spotComplet,
@@ -204,7 +204,7 @@ export default function LigneIndex({
                   {signet()}
                 </div>
                 <div className="mono idx-dist">
-                  <IPosition taille={11} /> {formatDistance(dist)} · {tempsMarche(dist)} min
+                  <IPosition taille={11} /> {formatDistance(dist)} · {libelleTrajet(dist)}
                 </div>
               </div>
               {sig ? (
@@ -310,7 +310,7 @@ export default function LigneIndex({
               {signet()}
             </span>
             <span className="mono idx-dist-inline">
-              <IPosition taille={11} /> {formatDistance(dist)} · {tempsMarche(dist)} min
+              <IPosition taille={11} /> {formatDistance(dist)} · {libelleTrajet(dist)}
             </span>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function LigneIndex({
           <div className="idx-cases">
             <div className="idx-case">
               <div className="idx-case-gros">{formatDistance(dist)}</div>
-              <div className="mono idx-case-lbl">{tempsMarche(dist)} MIN À PIED</div>
+              <div className="mono idx-case-lbl">{libelleTrajet(dist).toUpperCase()}</div>
             </div>
             <div className="idx-case">
               <div className={`idx-case-gros ${horaire?.ouvert ? 'ouvert' : ''}`}>

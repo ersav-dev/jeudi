@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
+import { libelleTrajet } from './rayon'
 import LigneIndex from './LigneIndex'
 import CeSoir from './CeSoir'
 import Onboarding from './Onboarding'
@@ -98,7 +99,6 @@ import {
   marquerRelanceImport,
   distanceM,
   formatDistance,
-  tempsMarche,
   etatHoraire,
   propreteWcLabel,
   adresseLisible,
@@ -3257,7 +3257,7 @@ function Fiche({
       <div className="fiche-infos">
         <div className="fiche-case">
           <div className="fiche-case-gros">{formatDistance(dist)}</div>
-          <div className="mono fiche-case-lbl">{tempsMarche(dist)} min à pied</div>
+          <div className="mono fiche-case-lbl">{libelleTrajet(dist)}</div>
         </div>
         <div className="fiche-case">
           <div className={`fiche-case-gros ${horaire?.ouvert ? 'ouvert' : 'ferme'}`}>

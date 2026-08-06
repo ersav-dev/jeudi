@@ -15,7 +15,6 @@ import {
   ecrireMeteo,
   distanceM,
   formatDistance,
-  tempsMarche,
   etatHoraire,
   propreteWcLabel,
   lireFavoris,
@@ -32,6 +31,7 @@ import NoteMarge from './NoteMarge'
 import { effacerNote } from './tuto'
 import { type Moment, dateDuMoment, lireMoment, ecrireMoment, libelleMoment } from './moment'
 import ChoixMoment from './ChoixMoment'
+import { retenirParRayon, plafondRayon, trajetMin, libelleTrajet } from './rayon'
 const CarteLazy = lazy(() => import('./Carte'))
 function Carte(p: ComponentProps<typeof CarteLazy>) {
   return (
@@ -129,8 +129,8 @@ export default function CeSoir({
     ecrireMeteo(m)
   }
 
-  const deck = useMemo(() => {
-    if (!compagnie || !envie) return []
+  const { deck, anneau } = useMemo(() => {
+    if (!compagnie || !envie) return { deck: [] as Lieu[], anneau: null }
     const tag = envieVersTag(envie)
     const candidats = lieux.filter((l) => {
       const okCompagnie = l.compagnies.length === 0 || l.compagnies.includes(compagnie)
@@ -138,13 +138,20 @@ export default function CeSoir({
       const okMeteo = !l.meteo || meteo === 'soleil' || l.meteo === meteo || l.meteo === 'pluie'
       return okCompagnie && okEnvie && okMeteo
     })
-    candidats.sort((a, b) => {
-      const sa = ((a.envies as string[]).includes(tag) ? 2 : 0) + (a.compagnies.includes(compagnie) ? 1 : 0)
-      const sb = ((b.envies as string[]).includes(tag) ? 2 : 0) + (b.compagnies.includes(compagnie) ? 1 : 0)
-      return sb - sa
+    // le rayon (rayon.ts) : l'anneau s'ouvre jusqu'à remplir le deck, plafonné
+    // par le moment — à Paris rien ne change (tout tient dans le 1er palier),
+    // ailleurs il attrape la ville d'à côté et on l'ANNONCE au lieu de mentir.
+    const a = retenirParRayon(candidats, (l) => distanceM(l), 8, plafondRayon(moment))
+    // retenus arrive trié par distance : le sort STABLE par pertinence de tags
+    // garde donc la proximité comme départage naturel
+    const retenus = [...a.retenus]
+    retenus.sort((x, y) => {
+      const sx = ((x.envies as string[]).includes(tag) ? 2 : 0) + (x.compagnies.includes(compagnie) ? 1 : 0)
+      const sy = ((y.envies as string[]).includes(tag) ? 2 : 0) + (y.compagnies.includes(compagnie) ? 1 : 0)
+      return sy - sx
     })
-    return candidats.slice(0, 8)
-  }, [lieux, compagnie, envie, meteo])
+    return { deck: retenus.slice(0, 8), anneau: a }
+  }, [lieux, compagnie, envie, meteo, moment])
 
   if (envie === 'dodo') {
     return (
@@ -224,6 +231,13 @@ export default function CeSoir({
             <button className="jsp-entree mono" onClick={onMatch}>
               {t('vous décidez ensemble ? on dit où. →')}
             </button>
+          )}
+          {/* l'anneau a dépassé la marche : on le dit — jamais un deck menteur */}
+          {anneau?.elargi && (
+            <p className="mono deck-rayon">
+              {t('j’ai poussé jusqu’à')} ~{trajetMin(anneau.loinM).min} min —{' '}
+              {t('c’est calme par ici.')}
+            </p>
           )}
           <Deck key={`${compagnie}-${envie}-${meteo}`} deck={deck} maintenant={dateEffective} onVoir={onVoir} onComparer={onComparer} />
         </>
@@ -707,7 +721,7 @@ function Deck({
           </div>
           <div className="carte-nom">{lieu.nom}</div>
           <div className="mono carte-meta">
-            <span>{formatDistance(distanceM(lieu))} · {tempsMarche(distanceM(lieu))} min</span>
+            <span>{formatDistance(distanceM(lieu))} · {libelleTrajet(distanceM(lieu))}</span>
             {(() => {
               const h = etatHoraire(lieu.horaires, maintenant)
               return h ? <span className={h.ouvert ? 'ouvert' : 'ferme'}>{h.texte}</span> : null
@@ -852,7 +866,7 @@ function RecapTirage({
         {lieu.description && <p className="mono recap-tirage-desc">{lieu.description}</p>}
         {lieu.note && <p className="hand recap-tirage-tip">{lieu.note}</p>}
         <div className="mono recap-tirage-infos">
-          <span>{formatDistance(dist)} · {tempsMarche(dist)} min</span>
+          <span>{formatDistance(dist)} · {libelleTrajet(dist)}</span>
           {horaire && (
             <span className={horaire.ouvert ? 'ouvert' : 'ferme'}>{horaire.texte}</span>
           )}

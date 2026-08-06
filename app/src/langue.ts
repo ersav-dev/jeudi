@@ -347,6 +347,10 @@ const EN: Record<string, string> = {
 
   'signaler cette photo': 'report this photo',
 
+  // le rayon : l'anneau élargi s'annonce
+  'j’ai poussé jusqu’à': 'I stretched to',
+  'c’est calme par ici.': 'it’s quiet around here.',
+
   // réglages — ton pas
   'ton pas': 'your pace',
   'flâneur': 'strolling',

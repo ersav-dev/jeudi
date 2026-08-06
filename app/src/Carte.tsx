@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { trajetMin, libelleTrajet } from './rayon'
 import maplibregl from 'maplibre-gl'
 import type { FeatureCollection, Point } from 'geojson'
 import {
@@ -7,7 +8,6 @@ import {
   teinteCurateur,
   distanceM,
   formatDistance,
-  tempsMarche,
   propreteWcLabel,
   estAMoi,
   lireFavoris,
@@ -1183,7 +1183,7 @@ export default function Carte({
                 <span className="carte-card-nom">{l.nom}</span>
                 <span className="mono carte-card-dist">
                   <span className="carte-card-km">{formatDistance(distanceM(l))}</span>
-                  <span className="carte-card-min">{tempsMarche(distanceM(l))} min</span>
+                  <span className="carte-card-min">{trajetMin(distanceM(l)).aPied ? `${trajetMin(distanceM(l)).min} min` : `~${trajetMin(distanceM(l)).min} min`}</span>
                 </span>
               </button>
             ),
@@ -1283,7 +1283,7 @@ export function TableComparaison({
               {d !== null ? (
                 <>
                   {formatDistance(d)}
-                  <span className="tc-sous">{tempsMarche(d)} min à pied</span>
+                  <span className="tc-sous">{libelleTrajet(d)}</span>
                 </>
               ) : (
                 <span className="tc-vide">—</span>
