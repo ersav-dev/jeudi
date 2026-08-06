@@ -20,6 +20,7 @@ import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import TirageDuSoir from './TirageDuSoir'
 import { fusionnerPhotos } from './tirage'
+import { typeDeLieu, labelTypeLieu } from './typesLieu'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
@@ -2928,6 +2929,17 @@ function Fiche({
   const [edition, setEdition] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
+  // la date gravée sur la couverture : celle de la PHOTO regardée (prise_le,
+  // migration 0010) — sinon la dernière validation du lieu, sinon rien
+  const dateGravee = (() => {
+    const iso = lieu.photos[photoIndex]?.priseLe ?? lieu.derniereValidation
+    if (!iso) return null
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${dd} ${mm} '${String(d.getFullYear() % 100).padStart(2, '0')}`
+  })()
   const itineraire = `https://www.google.com/maps/dir/?api=1&destination=${lieu.lat},${lieu.lng}`
 
   const enregistrer = async (maj: Lieu) => {
@@ -3101,15 +3113,43 @@ function Fiche({
           >
             ✕
           </button>
-          <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
-          {nbPhotos > 1 && (
-            <div className="photo-tirets photo-zoom-tirets">
-              {lieu.photos.map((_, i) => (
-                <span key={i} className={i === photoIndex ? 'on' : ''} />
-              ))}
+          {/* LA COUVERTURE (banc d'essai trait_de_cire, test 1) : le polaroid,
+              le nom à la main en travers, les infos du lieu GRAVÉES ambre
+              comme le dateur des appareils 2000s. L'émotion au centre, les
+              faits dans les coins. */}
+          <div className="affiche">
+            <span className="affiche-kraft" />
+            <div className="affiche-photo">
+              <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
+              <span className="affiche-grave ag-hg">
+                {lieu.nom}
+                <br />
+                {labelTypeLieu(typeDeLieu(lieu))}
+              </span>
+              {horaire && horaire.ouvert !== undefined && (
+                <span className="affiche-grave ag-hd">
+                  {horaire.ouvert ? 'ouvert' : 'fermé'}
+                  <br />
+                  {horaire.texte.replace(/^[^·]*· /, '')}
+                </span>
+              )}
+              <span className="affiche-grave ag-bg">{libelleTrajet(dist)}</span>
+              {dateGravee && <span className="affiche-grave ag-bd">{dateGravee}</span>}
+              <span className="affiche-nom">{lieu.nom}</span>
             </div>
-          )}
-          <span className="mono photo-zoom-lbl">{lieu.nom} · {photoIndex + 1}/{nbPhotos}</span>
+            <div className="affiche-menton">
+              {nbPhotos > 1 && (
+                <div className="photo-tirets affiche-tirets">
+                  {lieu.photos.map((_, i) => (
+                    <span key={i} className={i === photoIndex ? 'on' : ''} />
+                  ))}
+                </div>
+              )}
+              <span className="mono affiche-colophon">
+                jeudi. {nbPhotos > 1 ? `· ${photoIndex + 1}/${nbPhotos}` : ''}
+              </span>
+            </div>
+          </div>
         </div>
       )}
       <div className="fiche-haut">

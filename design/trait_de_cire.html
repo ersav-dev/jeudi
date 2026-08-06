@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — le trait de cire (banc d'essai)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Caveat+Brush&family=Permanent+Marker&family=Rock+Salt&family=Sedgwick+Ave+Display&family=Shadows+Into+Light&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&family=VT323&family=Titan+One&family=Archivo+Black&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&family=Rubik+Dirt&family=Rubik+Marker+Hatch&family=Special+Elite&family=Black+Ops+One&family=Barrio&family=Anton&family=Bungee&family=Shrikhand&family=Abril+Fatface&family=Bodoni+Moda:ital@1&family=DM+Serif+Display&family=Amatic+SC:wght@700&family=Finger+Paint&family=Silkscreen&family=Handjet:wght@600&display=swap" rel="stylesheet" />
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet" />
+<style>
+  :root{--nuit:#14120e;--nuit-2:#1b1813;--encre:#efe9d8;--encre-2:rgba(239,233,216,.62);
+        --encre-3:rgba(239,233,216,.45);--cire:#a8322a;--graphite:#8a857a;--blanc:#f7f3e8;
+        --pose:cubic-bezier(.34,1.56,.64,1)}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--nuit);color:var(--encre);font-family:'JetBrains Mono',monospace;
+       max-width:520px;margin:0 auto;padding:18px 16px 80px;font-size:12px}
+  body::after{content:'';position:fixed;inset:0;z-index:99;pointer-events:none;mix-blend-mode:overlay;opacity:.07;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.5'/%3E%3C/svg%3E")}
+  h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:29px;margin:6px 0 2px}
+  h2{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:20px;
+     margin:40px 0 4px;border-top:1px solid rgba(239,233,216,.14);padding-top:22px}
+  .note{color:var(--encre-3);font-size:10.5px;line-height:1.6;margin:6px 0 14px}
+  .hand{font-family:'Caveat',cursive;color:var(--encre-2);font-size:17px}
+
+  /* ── LE POLAROID ── */
+  .tirage{background:var(--blanc);padding:10px 10px 0;box-shadow:0 4px 18px rgba(0,0,0,.55);
+          position:relative;margin:0 auto}
+  .tirage .photo{position:relative;overflow:hidden;aspect-ratio:1;background:#221d16}
+  .tirage .photo svg{display:block;width:100%;height:100%}
+  .tirage .menton{min-height:58px;padding:7px 4px 10px;position:relative;text-align:center}
+  .kraft{position:absolute;top:-9px;left:50%;width:40%;height:15px;z-index:6;
+         transform:translateX(-50%) rotate(-38deg);background:rgba(239,233,216,.28);
+         border:1px solid rgba(0,0,0,.06);mix-blend-mode:screen;pointer-events:none}
+  .pench-a{transform:rotate(-1.8deg)}
+  .pench-b{transform:rotate(1.2deg)}
+
+  /* le trait est posé par le doigt : le visage se tape */
+  .visage-zone{cursor:pointer}
+
+  /* ── LE NOM ── */
+  /* A. en travers, écrit à la main, ÉNORME (le geste Serotoninn) */
+  .nom-travers{position:absolute;left:-4%;right:-4%;top:50%;transform:translateY(-54%) rotate(-3deg);
+               font-family:'Caveat',cursive;font-weight:700;text-align:center;color:var(--blanc);
+               font-size:clamp(44px,17vw,74px);line-height:.9;pointer-events:none;z-index:5;
+               text-shadow:0 2px 14px rgba(0,0,0,.45)}
+  .nom-travers .ombre{color:transparent;-webkit-text-stroke:1.5px rgba(247,243,232,.9)}
+  /* B. sur le menton (le polaroid classique) */
+  .nom-menton{font-family:'Caveat',cursive;font-weight:600;font-size:30px;color:#2c281f;line-height:1}
+  .sous-menton{font-family:'Caveat',cursive;font-size:16px;color:#6d6656;margin-top:2px}
+  /* C. l'imprimé (contre-essai « comme serotoninn » exact) */
+  .nom-imprime{position:absolute;left:0;right:0;top:52%;transform:translateY(-50%);
+               font-family:'Instrument Serif',serif;text-align:center;color:var(--blanc);
+               font-size:clamp(30px,11vw,48px);letter-spacing:.06em;pointer-events:none;z-index:5;
+               text-shadow:0 2px 10px rgba(0,0,0,.5)}
+
+  /* ── grilles d'essais ── */
+  .rang{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px}
+  #rangTraits{grid-template-columns:1fr 1fr}
+  .rang .tirage{padding:6px 6px 0}
+  .rang .menton{min-height:34px;padding:5px 2px 7px}
+  .rang .nom-menton{font-size:19px}
+  .essai-lbl{text-align:center;color:var(--encre-3);font-size:9.5px;margin-top:7px;line-height:1.4}
+  .grand{width:min(88%,360px);margin-top:16px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+
+  /* rangée 4 : les mains candidates */
+  .mains{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .main-carte .photo{aspect-ratio:1.25}
+  .main-nom{position:absolute;left:-4%;right:-4%;top:50%;transform:translateY(-54%) rotate(-3deg);
+            text-align:center;color:var(--blanc);line-height:.92;pointer-events:none;z-index:5;
+            font-size:clamp(30px,10vw,46px);text-shadow:0 2px 12px rgba(0,0,0,.5)}
+  .main-accents{position:absolute;right:6px;bottom:5px;z-index:5;color:var(--encre-2);
+                font-size:14px;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+  /* rangée 5 : la couverture-affiche (le cadre serotoninn en carnet) */
+  .couverture{position:relative;aspect-ratio:4/5.2;background:var(--nuit-2);
+              border:1px solid rgba(239,233,216,.12);margin-top:14px;overflow:hidden}
+  .coin{position:absolute;font-size:8.5px;letter-spacing:.6px;line-height:1.5;
+        color:var(--encre-3);z-index:6;pointer-events:none}
+  .ch-g{top:10px;left:11px}.ch-m{top:10px;left:50%;transform:translateX(-50%);text-align:center}
+  .ch-d{top:10px;right:11px;text-align:right}
+  .cm-g{top:50%;left:11px;transform:translateY(-50%)}
+  .cm-d{top:50%;right:11px;transform:translateY(-50%);text-align:right}
+  .cb-g{bottom:10px;left:11px}.cb-m2{bottom:10px;left:50%;transform:translateX(-50%);text-align:center}
+  .cb-d{bottom:10px;right:11px;text-align:right;font-family:'Instrument Serif',serif;
+        font-style:italic;font-size:13px;letter-spacing:0;color:var(--encre-2)}
+  .couv-cadre{position:absolute;inset:13% 14%;overflow:hidden}
+  .couv-photo{position:absolute;inset:0}
+  .couv-photo svg{width:100%;height:100%;display:block;transform-origin:38% 45%;
+                  transition:transform .4s}
+  .couverture.vivante .couv-photo svg{animation:travelling 8s ease-in-out infinite alternate}
+  @keyframes travelling{from{transform:scale(1.06) translate(0,0)}to{transform:scale(1.22) translate(-4%,2%)}}
+  .couv-play{position:absolute;right:12px;bottom:38px;z-index:7;background:rgba(20,18,14,.7);
+             border:1px solid rgba(239,233,216,.3);color:var(--encre);font:inherit;
+             font-size:10px;padding:6px 11px;cursor:pointer;letter-spacing:.5px}
+  .couverture.vivante .couv-play{border-color:var(--cire);color:var(--encre)}
+  @media (prefers-reduced-motion:reduce){.couverture.vivante .couv-photo svg{animation:none}}
+  /* rangée 6 : la pellicule 2000s — les infos GRAVÉES dans la photo,
+     comme le dateur quartz orange des appareils argentiques */
+  .g2000{position:absolute;z-index:5;font-family:'VT323',monospace;pointer-events:none;
+         color:#ffb03a;letter-spacing:.06em;line-height:1.15;
+         text-shadow:0 0 7px rgba(255,140,40,.85),0 0 2px rgba(255,170,60,.9);
+         opacity:.96;transform:skewX(-2deg)}
+  .g-bd{right:9px;bottom:7px;font-size:21px;text-align:right}
+  .g-bg{left:9px;bottom:7px;font-size:16px}
+  .g-hd{right:9px;top:7px;font-size:15px;text-align:right}
+  .g-hg{left:9px;top:7px;font-size:15px}
+  .p2000 .photo{aspect-ratio:1}
+  .p2000 .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .p2000 .menton{min-height:46px}
+  /* le trait posé au doigt sur une vraie photo */
+  .trait-libre{position:absolute;width:24%;height:auto;z-index:4;cursor:pointer;
+               transform:translate(-50%,-50%)}
+  /* rangée 7 : le journal découpé (la rançon) + le glow photocopie */
+  .rancon{position:absolute;left:4%;right:4%;top:50%;transform:translateY(-52%) rotate(-2deg);
+          text-align:center;z-index:5;pointer-events:none;line-height:1.05}
+  .rancon span{display:inline-block;padding:1px 5px;margin:1px;font-size:clamp(22px,7.5vw,34px);
+               box-shadow:0 2px 5px rgba(0,0,0,.45)}
+  .glow-carte{position:relative;aspect-ratio:1.35;background:#0a0908;overflow:hidden;
+              border:1px solid rgba(239,233,216,.1);margin-top:14px}
+  .glow-carte::before{content:'';position:absolute;inset:0;mix-blend-mode:screen;opacity:.5;
+    background:
+      radial-gradient(ellipse 60% 45% at 82% 12%, rgba(190,200,215,.28), transparent 60%),
+      radial-gradient(ellipse 30% 60% at 96% 55%, rgba(190,200,215,.16), transparent 65%),
+      radial-gradient(ellipse 45% 30% at 8% 88%, rgba(190,200,215,.1), transparent 60%)}
+  .glow-carte::after{content:'';position:absolute;inset:0;mix-blend-mode:overlay;opacity:.35;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E")}
+  .glow-sur{position:absolute;left:0;right:0;top:16%;text-align:center;font-size:11px;
+            letter-spacing:.18em;color:#cfd6e0;text-shadow:0 0 12px rgba(200,215,235,.5);z-index:3}
+  .glow-nom{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);text-align:center;
+            font-family:'Titan One',cursive;font-size:clamp(40px,15vw,64px);line-height:.95;z-index:3;
+            letter-spacing:.02em}
+  .glow-sous{position:absolute;left:0;right:0;bottom:15%;text-align:center;font-size:11.5px;
+             color:#cfd6e0;text-shadow:0 0 10px rgba(200,215,235,.45);z-index:3}
+  .depose{border:1px dashed rgba(239,233,216,.3);padding:11px 14px;margin-top:12px;
+          display:flex;align-items:center;gap:12px;color:var(--encre-2);font-size:11px;cursor:pointer}
+  /* les pastilles laser + le nom en mode magazine */
+  .laser-pastille{width:26px;height:26px;border-radius:50%;border:2px solid transparent;
+                  cursor:pointer;padding:0}
+  .laser-pastille.on{border-color:var(--encre)}
+  #laserLibre{width:26px;height:26px;border:1px dashed rgba(239,233,216,.4);background:none;
+              cursor:pointer;padding:1px}
+  .p2000.mag .nom-menton{font-family:'Instrument Serif',serif;font-weight:400;
+                         text-transform:uppercase;letter-spacing:.12em;font-size:19px}
+  .p2000.mag .sous-menton{font-family:'JetBrains Mono',monospace;font-size:9px;
+                          letter-spacing:.5px;text-transform:uppercase}
+  .depose input{display:none}
+  /* rangée 8 : la typothèque */
+  .typo-fam{margin-top:18px;color:var(--encre-2);font-size:10px;letter-spacing:.14em}
+  .typotiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+  .typotile{background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);cursor:pointer;
+            padding:12px 10px 8px;text-align:center;position:relative;font:inherit;color:var(--encre)}
+  .typotile:hover{border-color:rgba(239,233,216,.4)}
+  .typotile.on{border-color:var(--cire)}
+  .typotile .tt-nom{font-size:25px;line-height:1.05;display:block}
+  .typotile .tt-lbl{display:block;color:var(--encre-3);font-size:8.5px;margin-top:7px;
+                    font-family:'JetBrains Mono',monospace;letter-spacing:.4px}
+  .typotile .tt-acc{position:absolute;right:7px;top:5px;font-size:12px;color:var(--encre-3)}
+  .choix{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+  .choix button{background:none;border:1px solid rgba(239,233,216,.25);color:var(--encre-2);
+    font:inherit;font-size:10.5px;padding:7px 12px;cursor:pointer}
+  .choix button.on{background:var(--encre);color:var(--nuit);border-color:var(--encre)}
+  .astuce{color:var(--encre-3);font-size:10px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<h1>le trait de cire</h1>
+<p class="note">le banc d'essai du traitement d'établissement : le trait rouge sur les
+yeux (tape un visage pour le poser / retirer), le nom écrit à la main, le cadre
+polaroid. trois questions, trois rangées.</p>
+
+<!-- ═══ 1 · LE TRAIT ═══ -->
+<h2>1 · quel trait ?</h2>
+<p class="note">le même visage, trois outils. tape les yeux pour voir le geste.</p>
+<div class="rang" id="rangTraits"></div>
+
+<!-- ═══ 2 · LE NOM ═══ -->
+<h2>2 · le nom, où et comment ?</h2>
+<p class="note">« comme serotoninn mais à la main » — et deux contre-essais pour trancher.</p>
+<div class="rang" id="rangNoms"></div>
+
+<!-- ═══ 3 · LA CARTE D'ÉTABLISSEMENT ═══ -->
+<h2>3 · le tout assemblé</h2>
+<p class="note">la carte d'établissement complète — la photo du lieu avec ses gens,
+les traits posés, le nom en travers, le tip au menton. deux établissements.</p>
+<div class="choix" id="choixTrait"></div>
+<div class="duo" id="cartes"></div>
+<p class="astuce">tape les visages : chaque trait se pose avec le petit claquement du
+tampon. le trait est ENCRÉ dans les pixels à l'upload (comme le tampon du partage) —
+il n'existe jamais de version nue sur le serveur.</p>
+
+<!-- ═══ 4 · QUELLE MAIN ? ═══ -->
+<h2>4 · quelle main ?</h2>
+<p class="note">cinq écritures libres de droit (licence OFL — usage commercial permis),
+plus la piste « ta propre typo » (Calligraphr : tu écris au feutre, ça devient une
+police). le même nom, la même carte — seule la main change.</p>
+<label class="depose">🅰️ <b>glisse ta police</b> (.ttf / .otf — DaFont, Velvetyne, la tienne…)
+— « le bisou » s'écrit avec, sur une carte ajoutée ci-dessous
+<input type="file" accept=".ttf,.otf,.woff,.woff2" id="fonteLibre" multiple /></label>
+<div class="mains" id="rangMains"></div>
+<p class="astuce">« é è à ç » sous chaque essai : une écriture sans accents français
+est disqualifiée d'office. rappel licence : en local tout est permis — dans l'app
+déployée, seulement 100 % free / OFL / domaine public (ou licence achetée).</p>
+
+<!-- ═══ 5 · LA COUVERTURE ═══ -->
+<h2>5 · la couverture du lieu, « en grand »</h2>
+<p class="note">l'image tapée s'ouvre en AFFICHE : la photo (demain : 5-10 s de vidéo
+muette en boucle) au centre, le nom en travers, et les infos éparpillées dans les
+coins — le cadre serotoninn, traduit en carnet. le bouton ▶ simule la vie de la vidéo
+(un lent travelling).</p>
+<div class="couverture" id="couv">
+  <span class="coin ch-g">(LE 11E)<br/>BAR — LA NUIT</span>
+  <span class="coin ch-m">OUVERT<br/>JUSQU'À 2H</span>
+  <span class="coin ch-d">VALIDÉ<br/>JEU. 01/08</span>
+  <span class="coin cm-g">À 12 MIN<br/>À PIED</span>
+  <span class="coin cm-d">WC ●●○</span>
+  <span class="coin cb-g">« DEMANDE LA TABLE DU FOND »<br/>— KARIM, TON CERCLE</span>
+  <span class="coin cb-m2">PAS UN AVIS.<br/>UN TIP SIGNÉ.</span>
+  <span class="coin cb-d">jeudi.<br/>2026</span>
+  <div class="couv-cadre">
+    <div class="couv-photo" id="couvPhoto"></div>
+    <div class="nom-travers" style="font-size:clamp(50px,19vw,84px)">le bisou</div>
+  </div>
+  <button class="couv-play" id="couvPlay">▶ 8 s</button>
+</div>
+
+<!-- ═══ 6 · LA PELLICULE 2000s ═══ -->
+<h2>6 · la pellicule 2000s — les infos gravées</h2>
+<p class="note">le polaroid, et les infos du LIEU brûlées dans la photo comme le dateur
+quartz orange des appareils d'époque. pas de tip ici — juste le lieu. deux dosages :</p>
+<label class="depose">📷 <b>glisse ou choisis TA photo</b> — elle remplace la scène dans
+les deux cadres, et un tap dessus pose / retire un trait de cire
+<input type="file" accept="image/*" id="photo2000" /></label>
+<div class="choix" id="choixLaser" style="align-items:center">
+  <span class="note" style="margin:0">le laser :</span>
+</div>
+<div class="choix" id="choixTypo" style="align-items:center">
+  <span class="note" style="margin:0">le nom :</span>
+  <button class="on" data-typo="main">à la main</button>
+  <button data-typo="mag">magazine</button>
+</div>
+<div class="duo">
+  <div>
+    <div class="tirage p2000 pench-a"><span class="kraft"></span>
+      <div class="photo" data-p2000="0">
+        <span class="g2000 g-bd">06 08 '26</span>
+      </div>
+      <div class="menton"><div class="nom-menton" style="font-size:26px">le bisou</div></div>
+    </div>
+    <div class="essai-lbl">A · LA DATÉE — le dateur seul (l'époque exacte),<br/>le nom à la main sur le menton</div>
+  </div>
+  <div>
+    <div class="tirage p2000 pench-b"><span class="kraft"></span>
+      <div class="photo" data-p2000="1">
+        <span class="g2000 g-hg">LE BISOU<br/>BAR · 11E</span>
+        <span class="g2000 g-hd">OUVERT<br/>→ 2H</span>
+        <span class="g2000 g-bg">À 12 MIN</span>
+        <span class="g2000 g-bd">06 08 '26</span>
+      </div>
+      <div class="menton"><div class="sous-menton">jeudi. 2026</div></div>
+    </div>
+    <div class="essai-lbl">B · LA FICHE GRAVÉE — les infos du lieu aux quatre coins,<br/>le menton presque nu</div>
+  </div>
+</div>
+
+<!-- ═══ 7 · LE JOURNAL DÉCOUPÉ & LE GLOW ═══ -->
+<h2>7 · le journal découpé & le glow</h2>
+<p class="note">deux énergies de ta ref : la lettre de rançon (chaque lettre découpée
+dans un journal différent, recollée de travers) et le titre qui irradie sur le noir
+photocopié. le nom du spot, encore et toujours.</p>
+<div class="duo">
+  <div>
+    <div class="tirage p2000 pench-a"><span class="kraft"></span>
+      <div class="photo" data-rancon-photo>
+        <div class="rancon" id="rancon"></div>
+      </div>
+      <div class="menton"><div class="sous-menton">jeudi. 2026</div></div>
+    </div>
+    <div class="essai-lbl">A · LA RANÇON — découpé, recollé, jamais deux fois pareil</div>
+    <div class="choix" style="justify-content:center"><button id="redecouper">redécouper ↺</button></div>
+  </div>
+  <div>
+    <div class="glow-carte">
+      <div class="glow-sur mono">CE SOIR · 11E</div>
+      <div class="glow-nom" id="glowNom">LE BISOU</div>
+      <div class="glow-sous mono">« demande la table du fond »</div>
+    </div>
+    <div class="essai-lbl">B · LE GLOW — le titre qui irradie sur la photocopie</div>
+    <div class="choix" style="justify-content:center" id="choixGlow"></div>
+  </div>
+</div>
+
+<!-- ═══ 8 · LA TYPOTHÈQUE ═══ -->
+<h2>8 · la typothèque</h2>
+<p class="note">la collection, rangée par famille — toutes libres de droit (Google
+Fonts OFL · Clash Display en licence Fontshare, libre commercial). <b>tape une
+carte</b> : le nom en travers (rangée 3), le glow (rangée 7) et les cadres 2000s
+(rangée 6) s'écrivent instantanément avec.</p>
+<div id="typotheque"></div>
+
+<!-- ═══ 9 · MES DEUX TESTS ═══ -->
+<h2>9 · mes deux tests — la proposition du DA</h2>
+<p class="note">j'ai fait mon marché dans les 8 rangées. deux langages, deux usages,
+pas plus : <b>LA COUVERTURE</b> pour les lieux (le carnet qui a vécu), <b>L'AFFICHE</b>
+pour les événements (le Grand Jeudi qui crie). tout le reste à la poubelle.</p>
+
+<div class="tirage p2000 grand pench-a" style="width:min(92%,380px)"><span class="kraft"></span>
+  <div class="photo" id="testCouv">
+    <span class="g2000 g-hg">LE BISOU<br/>BAR · 11E</span>
+    <span class="g2000 g-hd">OUVERT<br/>→ 2H</span>
+    <span class="g2000 g-bg">À 12 MIN</span>
+    <span class="g2000 g-bd">06 08 '26</span>
+    <div class="nom-travers" style="font-size:clamp(46px,16vw,68px)">le bisou</div>
+  </div>
+  <div class="menton"><div class="sous-menton">jeudi. 2026</div></div>
+</div>
+<div class="essai-lbl">TEST 1 · LA COUVERTURE DE LIEU — polaroid + gribouillis cire +
+nom à la main en travers + fiche gravée ambre 2000s.<br/>l'émotion au centre, les
+faits dans les coins.</div>
+
+<div class="glow-carte" style="margin-top:26px">
+  <div class="glow-sur mono">JEU. 13 AOÛT · LA VILLE S'OUVRE</div>
+  <div class="glow-nom" id="testGlow" style="font-family:'Rubik Wet Paint',cursive;font-size:clamp(34px,12vw,54px)">GRAND<br/>JEUDI</div>
+  <div class="glow-sous mono">un soir. une ville. ton cercle. — jeudi.</div>
+</div>
+<div class="essai-lbl">TEST 2 · L'AFFICHE D'ÉVÉNEMENT — Rubik Wet Paint (la peinture
+qui coule) + glow acide sur photocopie.<br/>réservée aux Grands Jeudis : elle crie,
+donc elle crie RAREMENT.</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- le bord sec du pinceau : une turbulence qui ronge le trait -->
+    <filter id="sec" x="-30%" y="-120%" width="160%" height="360%">
+      <feTurbulence type="fractalNoise" baseFrequency=".12 .5" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+    </filter>
+    <filter id="tresec" x="-30%" y="-160%" width="160%" height="440%">
+      <feTurbulence type="fractalNoise" baseFrequency=".09 .35" numOctaves="4" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="13"/>
+    </filter>
+  </defs>
+</svg>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// les fausses photos : des scènes SVG — fond de bar, silhouettes,
+// visages tapables. Le trait se pose sur les yeux.
+// ════════════════════════════════════════════════════════════════
+const CIRE = '#a8322a'
+
+// une personne : tête + épaules, le visage un peu plus clair
+function personne(x, y, s, teinte, penche = 0) {
+  return `<g transform="translate(${x} ${y}) rotate(${penche}) scale(${s})">
+    <ellipse cx="0" cy="58" rx="34" ry="30" fill="${teinte[0]}"/>
+    <ellipse cx="0" cy="0" rx="19" ry="24" fill="${teinte[1]}"/>
+    <path d="M-21,-10 Q-24,-26 -8,-27 Q6,-33 16,-22 Q23,-16 20,-4 Q22,-20 8,-22 Q-8,-25 -14,-14 Q-18,-8 -17,0 Z" fill="${teinte[2]}"/>
+  </g>`
+}
+// le trait : une barre à hauteur d'yeux, rongée par le filtre
+function trait(x, y, s, style, visible, penche = 0) {
+  const formes = {
+    // LA REF : le gribouillage à main levée — plusieurs passages, ça dépasse,
+    // ça boucle, c'est vivant. Deux chemins superposés pour la densité.
+    gribouillis: `<g filter="url(#sec)">
+      <path d="M-28,-2 Q-16,-14 -4,-7 Q8,-1 18,-9 Q27,-14 30,-6 Q24,4 10,1 Q-4,-2 -14,6 Q-24,12 -27,4 Q-20,-4 -6,-1 Q10,3 22,-3"
+        stroke="${CIRE}" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <path d="M-24,6 Q-10,-8 4,-4 Q16,0 26,-8 M-18,-8 Q0,8 16,4"
+        stroke="${CIRE}" stroke-width="6.5" fill="none" stroke-linecap="round" opacity=".9"/>
+    </g>`,
+    marqueur: `<rect x="-30" y="-7" width="60" height="13" fill="${CIRE}" filter="url(#sec)"/>`,
+    pinceau: `<path d="M-32,-2 Q-12,-9 6,-5 Q22,-2 31,-6 L32,3 Q14,8 -6,4 Q-22,2 -31,6 Z" fill="${CIRE}" filter="url(#tresec)"/>`,
+    cire: `<rect x="-29" y="-7" width="58" height="12" rx="2" fill="${CIRE}" filter="url(#sec)"/>
+           <path d="M12,5 q2,10 -1,16 q-3,4 -4,-1 q-1,-8 1,-15 Z" fill="${CIRE}" opacity=".92"/>`,
+  }
+  return `<g class="trait" transform="translate(${x} ${y-4}) rotate(${penche-4}) scale(${s})"
+    style="transition:opacity .12s, transform .18s cubic-bezier(.34,1.56,.64,1);
+    opacity:${visible?1:0}; transform-origin:center">${formes[style]}</g>`
+}
+
+// une scène de bar la nuit
+function scene(fond, gens, style, poses, id) {
+  const defsFond = {
+    ambre: `<linearGradient id="f${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#241a10"/><stop offset=".55" stop-color="#4a3117"/>
+      <stop offset="1" stop-color="#1c130b"/></linearGradient>`,
+    vert: `<linearGradient id="f${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#131b16"/><stop offset=".5" stop-color="#2e4636"/>
+      <stop offset="1" stop-color="#0f1512"/></linearGradient>`,
+  }
+  let svg = `<svg viewBox="0 0 200 200"><defs>${defsFond[fond]}</defs>
+    <rect width="200" height="200" fill="url(#f${id})"/>
+    <ellipse cx="52" cy="34" rx="30" ry="22" fill="#f0d9a0" opacity=".13"/>
+    <ellipse cx="160" cy="26" rx="18" ry="14" fill="#f0d9a0" opacity=".09"/>
+    <rect x="0" y="150" width="200" height="50" fill="#0d0a07" opacity=".55"/>`
+  gens.forEach((g, i) => {
+    svg += `<g class="visage-zone" data-i="${i}">${personne(...g.p)}
+      ${trait(g.t[0], g.t[1], g.t[2], style, poses[i], g.p[4] ?? 0)}</g>`
+  })
+  return svg + '</svg>'
+}
+
+// deux castings
+const BISOU = [
+  { p: [66, 96, 1.15, ['#2a2320', '#8a6b52', '#241a12'], -4], t: [66, 92, 1.15] },
+  { p: [140, 108, 1.0, ['#33241e', '#a8836a', '#171009'], 5], t: [140, 104, 1.0] },
+]
+const PERCHOIR = [
+  { p: [48, 112, .95, ['#20242c', '#93705b', '#0f0c08'], -7], t: [48, 108, .95] },
+  { p: [104, 90, 1.2, ['#2c2126', '#a17c62', '#241d12'], 2], t: [104, 86, 1.2] },
+  { p: [162, 116, .9, ['#252a20', '#7d6350', '#191108'], 8], t: [162, 112, .9] },
+]
+
+// ── rangée 1 : les trois traits ─────────────────────────────────
+const TRAITS = [
+  { k: 'gribouillis', lbl: 'LE GRIBOUILLIS — la ref : rageur, à main levée' },
+  { k: 'marqueur', lbl: 'le marqueur — net, assumé' },
+  { k: 'pinceau', lbl: 'le pinceau sec — le geste' },
+  { k: 'cire', lbl: 'la cire — elle coule un peu' },
+]
+const rt = document.getElementById('rangTraits')
+TRAITS.forEach(({ k, lbl }, n) => {
+  const d = document.createElement('div')
+  d.innerHTML = `<div class="tirage ${n % 2 ? 'pench-b' : 'pench-a'}"><span class="kraft"></span>
+    <div class="photo" data-scene="solo-${k}"></div>
+    <div class="menton"><div class="nom-menton">le bisou</div></div></div>
+    <div class="essai-lbl">${lbl}</div>`
+  rt.appendChild(d)
+})
+
+// ── rangée 2 : les trois noms ───────────────────────────────────
+const rn = document.getElementById('rangNoms')
+;[
+  { html: `<div class="nom-travers">le bisou</div>`, menton: `<div class="sous-menton">tip de karim · jeu. 01/08</div>`, lbl: 'A · EN TRAVERS, à la main — le geste serotoninn, version carnet' },
+  { html: '', menton: `<div class="nom-menton">le bisou</div><div class="sous-menton">« demande la table du fond »</div>`, lbl: 'B · au menton — le polaroid classique, sage' },
+  { html: `<div class="nom-imprime">LE BISOU</div>`, menton: `<div class="sous-menton">tip de karim</div>`, lbl: 'C · l’imprimé serif — serotoninn exact, mais froid pour un carnet' },
+].forEach(({ html, menton, lbl }, n) => {
+  const d = document.createElement('div')
+  d.innerHTML = `<div class="tirage ${n % 2 ? 'pench-b' : 'pench-a'}"><span class="kraft"></span>
+    <div class="photo" data-scene="nom-${n}">${html}</div>
+    <div class="menton">${menton}</div></div>
+    <div class="essai-lbl">${lbl}</div>`
+  rn.appendChild(d)
+})
+
+// ── rangée 4 : les mains candidates ─────────────────────────────
+const MAINS = [
+  { f: "'Caveat', cursive", w: 700, lbl: 'Caveat 700 — déjà dans l’app (l’heure, les tips)', n: 'la maison' },
+  { f: "'Caveat Brush', cursive", w: 400, lbl: 'Caveat Brush — la même main, au pinceau', n: 'la cousine' },
+  { f: "'Permanent Marker', cursive", w: 400, lbl: 'Permanent Marker — le feutre épais, l’attitude', n: 'le feutre' },
+  { f: "'Sedgwick Ave Display', cursive", w: 400, lbl: 'Sedgwick Ave Display — le marqueur de rue', n: 'la rue' },
+  { f: "'Rock Salt', cursive", w: 400, lbl: 'Rock Salt — capitales griffées, brut', n: 'la griffe' },
+  { f: "'Shadows Into Light', cursive", w: 400, lbl: 'Shadows Into Light — fine, aérée', n: 'la plume' },
+]
+const rm = document.getElementById('rangMains')
+MAINS.forEach(({ f, w, lbl }, n) => {
+  const d = document.createElement('div')
+  d.className = 'main-carte'
+  d.innerHTML = `<div class="tirage ${n % 2 ? 'pench-b' : 'pench-a'}"><span class="kraft"></span>
+    <div class="photo" data-scene="main-${n}">
+      <div class="main-nom" style="font-family:${f};font-weight:${w}">le bisou</div>
+      <div class="main-accents" style="font-family:${f}">é è à ç</div>
+    </div>
+    <div class="menton"><div class="sous-menton">« demande la table du fond »</div></div></div>
+    <div class="essai-lbl">${lbl}</div>`
+  rm.appendChild(d)
+})
+
+// ── rangée 9 : mes deux tests ───────────────────────────────────
+const tc = document.getElementById('testCouv')
+if (!tc.querySelector('svg'))
+  tc.insertAdjacentHTML('afterbegin', scene('ambre', PERCHOIR, 'gribouillis', [true, true, true], 'test1'))
+const tg = document.getElementById('testGlow')
+tg.style.color = '#b8e62e'
+tg.style.textShadow = '0 0 18px #b8e62e99, 0 0 42px #b8e62e59, 0 2px 0 rgba(0,0,0,.35)'
+
+// ── rangée 8 : la typothèque ────────────────────────────────────
+const TYPOTHEQUE = [
+  ['LA MAIN', [
+    ["'Caveat',cursive", 'Caveat 700 — la maison', 700],
+    ["'Caveat Brush',cursive", 'Caveat Brush — au pinceau'],
+    ["'Permanent Marker',cursive", 'Permanent Marker — le feutre'],
+    ["'Rock Salt',cursive", 'Rock Salt — la griffe'],
+    ["'Amatic SC',cursive", 'Amatic SC — haute et fine', 700],
+    ["'Finger Paint',cursive", 'Finger Paint — au doigt'],
+  ]],
+  ['LE GRUNGE · LA RUE', [
+    ["'Rubik Wet Paint',cursive", 'Rubik Wet Paint — la peinture qui coule'],
+    ["'Rubik Dirt',cursive", 'Rubik Dirt — l’imprimé rongé'],
+    ["'Rubik Marker Hatch',cursive", 'Rubik Marker Hatch — hachuré au feutre'],
+    ["'Special Elite',cursive", 'Special Elite — la machine à écrire'],
+    ["'Black Ops One',cursive", 'Black Ops One — le pochoir'],
+    ["'Barrio',cursive", 'Barrio — le découpage naïf'],
+    ["'Sedgwick Ave Display',cursive", 'Sedgwick Ave — le marqueur de rue'],
+  ]],
+  ['LA GRASSE · L’AFFICHE', [
+    ["'Titan One',cursive", 'Titan One — la pouf (ta ref SPEED)'],
+    ["'Anton',sans-serif", 'Anton — la condensée d’affiche'],
+    ["'Bungee',cursive", 'Bungee — l’enseigne urbaine'],
+    ["'Shrikhand',cursive", 'Shrikhand — la funk'],
+    ["'Archivo Black',sans-serif", 'Archivo Black — la brute'],
+  ]],
+  ['LE MAGAZINE', [
+    ["'Abril Fatface',serif", 'Abril Fatface — la mode'],
+    ["'Bodoni Moda',serif", 'Bodoni Moda italique — la Vogue', 400, 'italic'],
+    ["'DM Serif Display',serif", 'DM Serif Display — l’édito'],
+    ["'Clash Display',sans-serif", 'Clash Display — le mag moderne', 600],
+    ["'Instrument Serif',serif", 'Instrument Serif — la maison (titres)'],
+  ]],
+  ['LE 2000s · PIXEL', [
+    ["'VT323',monospace", 'VT323 — le dateur quartz'],
+    ["'Silkscreen',cursive", 'Silkscreen — le pixel propre'],
+    ["'Handjet',cursive", 'Handjet — le pixel élastique', 600],
+  ]],
+]
+const tq = document.getElementById('typotheque')
+TYPOTHEQUE.forEach(([fam, typos]) => {
+  tq.insertAdjacentHTML('beforeend', `<div class="typo-fam">— ${fam}</div>`)
+  const g = document.createElement('div')
+  g.className = 'typotiles'
+  typos.forEach(([f, lbl, poids, ital]) => {
+    const b = document.createElement('button')
+    b.className = 'typotile'
+    b.innerHTML = `<span class="tt-nom" style="font-family:${f};font-weight:${poids ?? 400};font-style:${ital ?? 'normal'}">le bisou</span>
+      <span class="tt-acc" style="font-family:${f}">é è à ç</span>
+      <span class="tt-lbl">${lbl}</span>`
+    b.onclick = () => {
+      document.querySelectorAll('.typotile').forEach((x) => x.classList.toggle('on', x === b))
+      // s'essaie partout : le travers (r.3), le glow (r.7), le menton 2000s (r.6)
+      document.querySelectorAll('.nom-travers').forEach((n) => {
+        n.style.fontFamily = f; n.style.fontWeight = poids ?? 400; n.style.fontStyle = ital ?? 'normal'
+      })
+      const gn = document.getElementById('glowNom')
+      gn.style.fontFamily = f; gn.style.fontWeight = poids ?? 400; gn.style.fontStyle = ital ?? 'normal'
+      document.querySelectorAll('.p2000 .nom-menton').forEach((n) => {
+        n.style.fontFamily = f; n.style.fontWeight = poids ?? 400; n.style.fontStyle = ital ?? 'normal'
+      })
+    }
+    g.appendChild(b)
+  })
+  tq.appendChild(g)
+})
+
+// ── ta police à toi (DaFont & co) : chargée à la volée ──────────
+let nFontes = 0
+document.getElementById('fonteLibre').addEventListener('change', async (e) => {
+  const fichiers = [...(e.target.files ?? [])]
+  e.target.value = ''
+  for (const f of fichiers) {
+    try {
+      const nom = 'TaTypo' + ++nFontes
+      const face = new FontFace(nom, await f.arrayBuffer())
+      await face.load()
+      document.fonts.add(face)
+      const d = document.createElement('div')
+      d.className = 'main-carte'
+      d.innerHTML = `<div class="tirage ${nFontes % 2 ? 'pench-a' : 'pench-b'}"><span class="kraft"></span>
+        <div class="photo">
+          <div class="main-nom" style="font-family:'${nom}'">le bisou</div>
+          <div class="main-accents" style="font-family:'${nom}'">é è à ç</div>
+        </div>
+        <div class="menton"><div class="sous-menton">« demande la table du fond »</div></div></div>
+        <div class="essai-lbl">TA POLICE — ${f.name.replace(/</g, '')}</div>`
+      d.querySelector('.photo').insertAdjacentHTML('afterbegin',
+        scene('vert', BISOU, 'gribouillis', [true, true], 'tf' + nFontes))
+      document.getElementById('rangMains').prepend(d)
+    } catch {
+      alert(`« ${f.name} » n'a pas pu être lue — fichier de police valide ?`)
+    }
+  }
+})
+
+// ── rangée 3 : les cartes complètes ─────────────────────────────
+let styleCourant = 'gribouillis'
+const posesBisou = [true, true]
+const posesPerchoir = [true, false, true]
+
+const ch = document.getElementById('choixTrait')
+TRAITS.forEach(({ k }) => {
+  const b = document.createElement('button')
+  b.textContent = k
+  b.className = k === styleCourant ? 'on' : ''
+  b.onclick = () => { styleCourant = k; [...ch.children].forEach(x => x.className = x.textContent === k ? 'on' : ''); rendre() }
+  ch.appendChild(b)
+})
+
+function rendre() {
+  // rangée 1 : un seul visage, trait toujours posé
+  TRAITS.forEach(({ k }) => {
+    document.querySelector(`[data-scene="solo-${k}"]`).innerHTML =
+      scene('ambre', [BISOU[0]], k, [true], 's' + k)
+  })
+  // rangée 2 : deux visages, traits posés, pinceau
+  document.querySelectorAll('[data-scene^="nom-"]').forEach((el, n) => {
+    el.insertAdjacentHTML('afterbegin', '')
+    const deja = el.querySelector('svg'); if (deja) deja.remove()
+    el.insertAdjacentHTML('afterbegin', scene('ambre', BISOU, 'gribouillis', [true, true], 'n' + n))
+  })
+  // rangée 4 : la même scène derrière chaque main
+  MAINS.forEach((_, n) => {
+    const el = document.querySelector(`[data-scene="main-${n}"]`)
+    const deja = el.querySelector('svg'); if (deja) deja.remove()
+    el.insertAdjacentHTML('afterbegin', scene(n % 2 ? 'vert' : 'ambre', BISOU, styleCourant, [true, true], 'm' + n))
+  })
+  // rangée 5 : la couverture (mêmes gens, plein cadre)
+  const cp = document.getElementById('couvPhoto')
+  const svgCouv = cp.querySelector('svg'); if (svgCouv) svgCouv.remove()
+  cp.insertAdjacentHTML('afterbegin', scene('ambre', BISOU, styleCourant, [true, true], 'couv'))
+  // rangée 3
+  document.getElementById('cartes').innerHTML = `
+    <div>
+      <div class="tirage grand pench-a" style="width:100%"><span class="kraft"></span>
+        <div class="photo" data-carte="bisou">
+          ${scene('ambre', BISOU, styleCourant, posesBisou, 'cb')}
+          <div class="nom-travers">le bisou</div>
+        </div>
+        <div class="menton"><div class="sous-menton" style="font-size:18px">« demande la table du fond » — karim · jeu. 01/08</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="tirage grand pench-b" style="width:100%"><span class="kraft"></span>
+        <div class="photo" data-carte="perchoir">
+          ${scene('vert', PERCHOIR, styleCourant, posesPerchoir, 'cp')}
+          <div class="nom-travers" style="font-size:clamp(38px,14vw,60px)">le perchoir</div>
+        </div>
+        <div class="menton"><div class="sous-menton" style="font-size:18px">« monte direct au 2e » — léa · sam. 02/08</div></div>
+      </div>
+    </div>`
+}
+rendre()
+
+// ── rangée 7 : la rançon + le glow ──────────────────────────────
+const COUPES = [
+  { f: "'Archivo Black',sans-serif", up: true },
+  { f: "'Instrument Serif',serif", up: false },
+  { f: "'JetBrains Mono',monospace", up: true },
+  { f: "'Permanent Marker',cursive", up: false },
+  { f: "'Caveat',cursive", up: false, gras: 700 },
+  { f: "'Titan One',cursive", up: true },
+  { f: "'Rock Salt',cursive", up: false },
+]
+const PAPIERS = [
+  ['#f7f3e8', '#17130c'], ['#efe6d1', '#a8322a'], ['#17130c', '#f7f3e8'],
+  ['#a8322a', '#f7f3e8'], ['#e8e2d3', '#2c2820'], ['#f7f3e8', '#17130c'],
+]
+function decouper(nom) {
+  const r = document.getElementById('rancon')
+  r.innerHTML = ''
+  ;[...nom].forEach((ch) => {
+    if (ch === ' ') { r.insertAdjacentHTML('beforeend', '<span style="background:none;box-shadow:none;padding:0 4px"></span>'); return }
+    const c = COUPES[Math.floor(Math.random() * COUPES.length)]
+    const [fond, encre] = PAPIERS[Math.floor(Math.random() * PAPIERS.length)]
+    const rot = (Math.random() * 10 - 5).toFixed(1)
+    const taille = (0.85 + Math.random() * 0.4).toFixed(2)
+    r.insertAdjacentHTML('beforeend',
+      `<span style="font-family:${c.f};font-weight:${c.gras ?? 400};background:${fond};color:${encre};
+        transform:rotate(${rot}deg) scale(${taille})">${c.up ? ch.toUpperCase() : ch}</span>`)
+  })
+}
+decouper('le bisou')
+document.getElementById('redecouper').onclick = () => decouper('le bisou')
+// la photo derrière la rançon
+const rp = document.querySelector('[data-rancon-photo]')
+if (!rp.querySelector('svg')) rp.insertAdjacentHTML('afterbegin', scene('vert', PERCHOIR, 'gribouillis', [true, true, true], 'ran'))
+
+// le glow : la couleur s'essaie (acide de la ref, cire, ambre, cyan)
+const GLOWS = [['#b8e62e','l’acide de ta ref'],['#a8322a','la cire'],['#ffb03a','l’ambre'],['#5ad9ff','le cyan']]
+function poserGlow(c) {
+  const n = document.getElementById('glowNom')
+  n.style.color = c
+  n.style.textShadow = `0 0 18px ${c}99, 0 0 42px ${c}59, 0 2px 0 rgba(0,0,0,.35)`
+  document.querySelectorAll('#choixGlow .laser-pastille').forEach((b) =>
+    b.classList.toggle('on', b.dataset.c === c))
+}
+const cg = document.getElementById('choixGlow')
+GLOWS.forEach(([c, titre]) => {
+  const b = document.createElement('button')
+  b.className = 'laser-pastille'; b.dataset.c = c; b.title = titre; b.style.background = c
+  b.onclick = () => poserGlow(c)
+  cg.appendChild(b)
+})
+poserGlow('#b8e62e')
+
+// ── rangée 6 : le laser réglable + la typo du nom ───────────────
+const LASERS = [
+  ['#ffb03a', 'ambre 2000s'],
+  ['#ff4b3a', 'rouge laser'],
+  ['#a8322a', 'la cire de jeudi'],
+  ['#9dff5a', 'vert quartz'],
+  ['#5ad9ff', 'cyan VFD'],
+  ['#ffe9c4', 'blanc chaud'],
+]
+function poserLaser(c) {
+  document.querySelectorAll('.g2000').forEach((e) => {
+    e.style.color = c
+    e.style.textShadow = `0 0 7px ${c}d9, 0 0 2px ${c}f0`
+  })
+  document.querySelectorAll('.laser-pastille').forEach((b) =>
+    b.classList.toggle('on', b.dataset.c === c))
+}
+const cl = document.getElementById('choixLaser')
+LASERS.forEach(([c, titre]) => {
+  const b = document.createElement('button')
+  b.className = 'laser-pastille' + (c === '#ffb03a' ? ' on' : '')
+  b.dataset.c = c
+  b.title = titre
+  b.style.background = c
+  b.onclick = () => poserLaser(c)
+  cl.appendChild(b)
+})
+const libre = document.createElement('input')
+libre.type = 'color'; libre.id = 'laserLibre'; libre.value = '#ffb03a'
+libre.title = 'ta couleur'
+libre.addEventListener('input', () => poserLaser(libre.value))
+cl.appendChild(libre)
+
+document.querySelectorAll('#choixTypo [data-typo]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('#choixTypo [data-typo]').forEach((x) =>
+      x.classList.toggle('on', x === b))
+    document.querySelectorAll('.p2000').forEach((t) =>
+      t.classList.toggle('mag', b.dataset.typo === 'mag'))
+  }
+})
+
+// ── rangée 6 : la scène par défaut, puis TA photo ───────────────
+function initP2000() {
+  document.querySelectorAll('[data-p2000]').forEach((el, n) => {
+    if (!el.querySelector('svg') && !el.querySelector('img'))
+      el.insertAdjacentHTML('afterbegin', scene('ambre', BISOU, 'gribouillis', [true, true], 'p2k' + n))
+  })
+}
+initP2000()
+
+document.getElementById('photo2000').addEventListener('change', (e) => {
+  const f = e.target.files?.[0]
+  if (!f) return
+  const url = URL.createObjectURL(f)
+  document.querySelectorAll('[data-p2000]').forEach((el) => {
+    el.querySelector('svg')?.remove()
+    el.querySelector('img')?.remove()
+    el.querySelectorAll('.trait-libre').forEach((t) => t.remove())
+    el.insertAdjacentHTML('afterbegin', `<img src="${url}" alt="" />`)
+  })
+})
+
+// sur TA photo : un tap pose un trait de cire à l'endroit du doigt
+document.querySelectorAll('[data-p2000]').forEach((el) => {
+  el.addEventListener('click', (e) => {
+    if (e.target.classList.contains('trait-libre')) { e.target.remove(); return }
+    if (!el.querySelector('img')) return // la scène SVG a déjà ses visages tapables
+    const r = el.getBoundingClientRect()
+    const x = ((e.clientX - r.left) / r.width) * 100
+    const y = ((e.clientY - r.top) / r.height) * 100
+    const rot = -9 + Math.random() * 12
+    el.insertAdjacentHTML('beforeend',
+      `<svg class="trait-libre" viewBox="-33 -18 66 36"
+         style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">
+         <g filter="url(#sec)">
+           <path d="M-28,-2 Q-16,-14 -4,-7 Q8,-1 18,-9 Q27,-14 30,-6 Q24,4 10,1 Q-4,-2 -14,6 Q-24,12 -27,4 Q-20,-4 -6,-1 Q10,3 22,-3" stroke="#a8322a" stroke-width="8" fill="none" stroke-linecap="round"/>
+           <path d="M-24,6 Q-10,-8 4,-4 Q16,0 26,-8 M-18,-8 Q0,8 16,4" stroke="#a8322a" stroke-width="6.5" fill="none" stroke-linecap="round" opacity=".9"/>
+         </g>
+       </svg>`)
+    navigator.vibrate?.(15)
+  })
+})
+
+// ▶ : la « vidéo » — un lent travelling sur la photo (l'effet ken burns)
+document.getElementById('couvPlay').addEventListener('click', () => {
+  const c = document.getElementById('couv')
+  c.classList.toggle('vivante')
+  document.getElementById('couvPlay').textContent = c.classList.contains('vivante') ? '❚❚' : '▶ 8 s'
+})
+
+// le geste : taper un visage pose / retire le trait (avec le claquement)
+document.addEventListener('click', (e) => {
+  const z = e.target.closest('.visage-zone')
+  if (!z) return
+  const carte = z.closest('[data-carte]')
+  const i = +z.dataset.i
+  const poses = carte?.dataset.carte === 'perchoir' ? posesPerchoir
+              : carte?.dataset.carte === 'bisou' ? posesBisou : null
+  if (!poses) return
+  poses[i] = !poses[i]
+  navigator.vibrate?.(15)
+  rendre()
+})
+</script>
+</body>
+</html>
