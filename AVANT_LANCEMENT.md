@@ -45,6 +45,7 @@
 
 - [ ] L'état vide hors Paris EST l'expérience réelle d'une nouvelle ville — le
   soigner d'abord (spécifié dans CHANTIER_PELLICULE.md §1.8).
-- [ ] Le rayon adaptatif (principe validé le 06/08 : « le rayon est du temps,
-  adaptatif, jamais un mur » — paliers qui s'élargissent jusqu'à remplir le deck,
-  plafond selon le moment choisi). Chantier `src/rayon.ts` à faire.
+- [x] Le rayon adaptatif — FAIT le 06/08 (`src/rayon.ts`, commit 9296509) :
+  paliers 1,2→30 km qui s'élargissent jusqu'à remplir le deck, plafond selon
+  le moment, annonce honnête « j'ai poussé jusqu'à ~X min », temps de trajet
+  à pied/roulé selon la distance, au pas réglable (« ton pas »).
