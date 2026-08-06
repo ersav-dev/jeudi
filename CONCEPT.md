@@ -138,7 +138,7 @@ C'est ce qui rend l'anneau intérieur précieux : pas « leurs adresses », mais
 
 ### Les règles de la maison
 - **Aucun lieu ne peut payer pour apparaître. Jamais.** Pas de pub, pas de sponsoring, pas de vente de données.
-- **Les visages des inconnus sont automatiquement masqués** sur les photos (un petit sticker à l'encre, dans le style du carnet) — on montre les lieux, on protège les gens.
+- **On photographie les lieux, pas les gens** — mais des visages finiront sur les tirages, comme sur n'importe quel réseau. jeudi **ne les masque pas automatiquement** : promettre un floutage qu'on n'implémente pas protège moins que de dire la vérité. Ce qu'on garantit à la place : **toute photo signalée par quelqu'un qui s'y reconnaît est retirée sous 24 h**, sans discuter, sans compte à créer — un mail suffit. Et **les métadonnées des fichiers (date, GPS) sont effacées avant l'envoi** : jeudi ne stocke jamais la position inscrite par ton appareil photo.
 - **Charte photo WC** : on documente l'état des lieux, cadrage propre. Le premier écart : *« on a dit les toilettes, pas TES toilettes. dernier avertissement. »* Le deuxième : **banni.**
 - Sortir un lieu de sa carte est un acte visible. Être dans la carte EST la validation.
 

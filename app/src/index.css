@@ -7038,3 +7038,39 @@ button:focus:not(:focus-visible) {
   border-color: var(--encre);
   color: var(--nuit);
 }
+
+/* le retrait d'une photo : discret mais jamais caché — jeudi ne masque pas
+   les visages, donc cette porte doit rester trouvable (politique : 24 h) */
+.fiche-signaler {
+  margin: 6px 2px 0;
+  text-align: right;
+}
+.fiche-signaler a {
+  color: var(--encre-3);
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 6px 0;
+}
+.fiche-signaler a:hover {
+  color: var(--encre-2);
+}
+
+/* « ton pas » : les trois allures + le champ précis */
+.reglages-pas {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.reglages-pas-libre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.reglages-pas-note {
+  width: 100%;
+  color: var(--encre-3);
+  font-size: 10.5px;
+  margin: 4px 0 0;
+}

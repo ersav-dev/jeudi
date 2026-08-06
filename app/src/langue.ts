@@ -345,6 +345,17 @@ const EN: Record<string, string> = {
   'aucun tirage': 'no prints',
   'le tirage du soir': 'the print of the night',
 
+  'signaler cette photo': 'report this photo',
+
+  // réglages — ton pas
+  'ton pas': 'your pace',
+  'flâneur': 'strolling',
+  'normal': 'normal',
+  'pressé': 'in a hurry',
+  'ou précis :': 'or exactly:',
+  'c’est le pas derrière tous les « min à pied » de l’app.':
+    'this is the pace behind every “min walk” in the app.',
+
   // Toasts / communs
   'nouvelle version.': 'new version.',
   'recharger': 'reload',

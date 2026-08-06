@@ -15,7 +15,7 @@ import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
 import { suivre } from './analytique'
 import { partagerEnStory, partagerMaCarte } from './partageStory'
-import { srcPhoto, photoIndisponible } from './photos'
+import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import TirageDuSoir from './TirageDuSoir'
 import { fusionnerPhotos } from './tirage'
@@ -79,6 +79,8 @@ import {
   ecrireCouleur,
   lireSeuils,
   ecrireSeuils,
+  lireVitesse,
+  ecrireVitesse,
   villeDeCoords,
   lireVus,
   ecrireVus,
@@ -365,9 +367,16 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
   const [confirmCompte, setConfirmCompte] = useState(false)
   const [compteEnCours, setCompteEnCours] = useState(false)
   const [erreurCompte, setErreurCompte] = useState<string | null>(null)
-  const [ouvert, setOuvert] = useState<'ville' | 'couleur' | 'argent' | 'donnees' | 'bientot' | null>(
-    null,
-  )
+  const [ouvert, setOuvert] = useState<
+    'ville' | 'couleur' | 'argent' | 'marche' | 'donnees' | 'bientot' | null
+  >(null)
+  // ton pas : la vitesse derrière tous les « X min à pied » de l'app
+  const [vitesse, setVitesse] = useState(() => lireVitesse())
+  const choisirVitesse = (v: number) => {
+    setVitesse(v)
+    ecrireVitesse(v)
+    flash()
+  }
   const bascule = (s: typeof ouvert) => setOuvert((o) => (o === s ? null : s))
   const flash = () => {
     setSauve(true)
@@ -529,6 +538,57 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
             />
             €
           </label>
+        </div>
+      )}
+
+      {/* TON PAS — la vitesse derrière tous les « X min à pied » */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'marche'}
+        onClick={() => bascule('marche')}
+      >
+        {t('ton pas')}
+        <span className="reglages-chevron">{ouvert === 'marche' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'marche' && (
+        <div className="reglages-seuils reglages-pas mono">
+          {(
+            [
+              { v: 60, mot: 'flâneur' },
+              { v: 80, mot: 'normal' },
+              { v: 100, mot: 'pressé' },
+            ] as const
+          ).map(({ v, mot }) => (
+            <button
+              key={v}
+              className={`visi-choix ${vitesse === v ? 'choisi' : ''}`}
+              aria-pressed={vitesse === v}
+              onClick={() => choisirVitesse(v)}
+            >
+              {t(mot)}
+            </button>
+          ))}
+          <label className="reglages-pas-libre">
+            {t('ou précis :')}
+            <input
+              className="onboard-euro"
+              type="number"
+              inputMode="numeric"
+              min={40}
+              max={140}
+              value={vitesse}
+              onChange={(e) => {
+                const v = Number(e.target.value)
+                setVitesse(v)
+                if (v >= 40 && v <= 140) ecrireVitesse(v)
+              }}
+            />
+            m/min
+          </label>
+          <p className="reglages-pas-note">
+            {t('c’est le pas derrière tous les « min à pied » de l’app.')}{' '}
+            {(lireVitesse() * 0.06).toFixed(1).replace('.', ',')} km/h
+          </p>
         </div>
       )}
 
@@ -3158,6 +3218,16 @@ function Fiche({
           </span>
         )}
       </div>
+
+      {/* le retrait : on ne masque pas les visages, donc la porte de sortie
+          doit être visible et sans compte (la politique l'engage à 24 h) */}
+      {nbPhotos > 0 && (
+        <p className="mono fiche-signaler">
+          <a href={lienSignalement(lieu.nom, photoIndex + 1, nbPhotos)}>
+            {t('signaler cette photo')}
+          </a>
+        </p>
+      )}
 
       {/* l'album à trous : sur MES spots, chaque photo manquante démange */}
       {mien && (

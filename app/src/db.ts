@@ -1191,9 +1191,37 @@ export function formatDistance(m: number): string {
   return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace('.', ',')} km`
 }
 
-/** minutes de marche (~80 m/min) */
+// ── ton pas : la vitesse de marche est un réglage (comme la météo) ──
+// 80 m/min (~4,8 km/h) par défaut ; modifiable dans réglages → « ton pas ».
+// Bornes larges mais saines : 40 (flânerie assumée) à 140 (course).
+export const VITESSE_DEFAUT = 80
+const VITESSE_CLE = 'jeudi-vitesse'
+let vitesseCache: number | null = null
+
+export function lireVitesse(): number {
+  if (vitesseCache != null) return vitesseCache
+  try {
+    const v = Number(localStorage.getItem(VITESSE_CLE))
+    vitesseCache = v >= 40 && v <= 140 ? v : VITESSE_DEFAUT
+  } catch {
+    vitesseCache = VITESSE_DEFAUT
+  }
+  return vitesseCache
+}
+
+export function ecrireVitesse(v: number): void {
+  if (!(v >= 40 && v <= 140)) return
+  vitesseCache = v
+  try {
+    localStorage.setItem(VITESSE_CLE, String(v))
+  } catch {
+    /* navigation privée : le pas vivra le temps de la session */
+  }
+}
+
+/** minutes de marche, au pas réglé (défaut ~80 m/min) */
 export function tempsMarche(m: number): number {
-  return Math.max(1, Math.round(m / 80))
+  return Math.max(1, Math.round(m / lireVitesse()))
 }
 
 // ── état d'ouverture à l'instant (lexique nocturne) ────────────
