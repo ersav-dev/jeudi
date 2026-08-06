@@ -347,6 +347,10 @@ const EN: Record<string, string> = {
 
   'signaler cette photo': 'report this photo',
 
+  // la visionneuse : le switch couverture / photo entière
+  'la couverture': 'the cover',
+  'la photo entière': 'the full photo',
+
   // le rayon : le temps de trajet dit son mode
   'min à pied': 'min walk',
   'min à vélo': 'min by bike',

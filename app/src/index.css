@@ -7187,3 +7187,24 @@ button:focus:not(:focus-visible) {
   color: #6d6656;
   letter-spacing: 0;
 }
+
+/* le switch de la visionneuse : couverture <-> photo entière */
+.photo-zoom-switch {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 8;
+  background: rgba(20, 18, 14, 0.7);
+  border: 1px solid rgba(239, 233, 216, 0.3);
+  color: var(--encre-2);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  padding: 8px 12px;
+  border-radius: var(--rayon);
+  cursor: pointer;
+}
+.photo-zoom-nue {
+  max-width: 96vw;
+  max-height: 88vh;
+  object-fit: contain;
+}

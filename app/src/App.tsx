@@ -2891,6 +2891,9 @@ function Fiche({
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
   const [agrandi, setAgrandi] = useState(false) // visionneuse photo plein écran
+  // le switch de la visionneuse : la COUVERTURE (polaroid + gravure) par
+  // défaut, la photo ENTIÈRE sur demande (les verticales que le carré coupe)
+  const [vueNue, setVueNue] = useState(false)
   const zoomDepart = useRef({ x: 0, y: 0 })
   // le doigt a bougé (> 8px) entre down et up → c'est un feuilletage, pas un clic de fermeture
   const zoomBouge = useRef(false)
@@ -3113,10 +3116,29 @@ function Fiche({
           >
             ✕
           </button>
+          {/* le switch : couverture ↔ photo entière (les verticales) */}
+          <button
+            className="mono photo-zoom-switch"
+            onClick={(e) => {
+              e.stopPropagation()
+              setVueNue((v) => !v)
+            }}
+          >
+            {vueNue ? t('la couverture') : t('la photo entière')}
+          </button>
+          {vueNue && (
+            <img
+              className="photo-zoom-nue"
+              src={srcPhoto(lieu.photos[photoIndex])}
+              alt={lieu.nom}
+              onError={photoIndisponible}
+            />
+          )}
           {/* LA COUVERTURE (banc d'essai trait_de_cire, test 1) : le polaroid,
               le nom à la main en travers, les infos du lieu GRAVÉES ambre
               comme le dateur des appareils 2000s. L'émotion au centre, les
               faits dans les coins. */}
+          {!vueNue && (
           <div className="affiche">
             <span className="affiche-kraft" />
             <div className="affiche-photo">
@@ -3150,6 +3172,7 @@ function Fiche({
               </span>
             </div>
           </div>
+          )}
         </div>
       )}
       <div className="fiche-haut">
