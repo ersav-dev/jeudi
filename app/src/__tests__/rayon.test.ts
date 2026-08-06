@@ -81,20 +81,28 @@ describe('plafondRayon — la limite vient du moment, pas des km', () => {
   })
 })
 
-describe('trajetMin / libelleTrajet — fini le « 312 min à pied »', () => {
+describe('trajetMin / libelleTrajet — le temps dit toujours SON MODE', () => {
   it('marchable : des minutes à pied, au pas par défaut', () => {
     expect(libelleTrajet(800)).toBe('10 min à pied')
-    expect(trajetMin(2500).aPied).toBe(true)
+    expect(trajetMin(2500).mode).toBe('pied')
   })
-  it('au-delà de la marche : des minutes roulées, annoncées comme telles', () => {
+  it('la ville moyenne : le vélo (le cas « 4,5 km · ~11 min » qui mentait)', () => {
+    const t = trajetMin(4500)
+    expect(t.mode).toBe('velo')
+    expect(t.min).toBe(19) // ~14 km/h, feux compris
+    expect(libelleTrajet(4500)).toBe('~19 min à vélo')
+  })
+  it('au-delà de 8 km : la voiture, annoncée comme telle', () => {
     const t = trajetMin(25000)
-    expect(t.aPied).toBe(false)
+    expect(t.mode).toBe('voiture')
     expect(t.min).toBe(60) // ~25 km/h
-    expect(libelleTrajet(25000)).toBe('~60 min')
+    expect(libelleTrajet(25000)).toBe('~60 min en voiture')
   })
-  it('la frontière est le seuil de marche, pas un chiffre magique', () => {
-    expect(trajetMin(MARCHE_MAX_M).aPied).toBe(true)
-    expect(trajetMin(MARCHE_MAX_M + 1).aPied).toBe(false)
+  it('les frontières sont les seuils de marche et de vélo, pas des chiffres magiques', () => {
+    expect(trajetMin(MARCHE_MAX_M).mode).toBe('pied')
+    expect(trajetMin(MARCHE_MAX_M + 1).mode).toBe('velo')
+    expect(trajetMin(8000).mode).toBe('velo')
+    expect(trajetMin(8001).mode).toBe('voiture')
   })
   it('les paliers commencent à la marche et finissent ouverts', () => {
     expect(PALIERS_M[0]).toBeLessThanOrEqual(MARCHE_MAX_M)

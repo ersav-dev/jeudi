@@ -14,6 +14,7 @@
 import type { Moment } from './moment'
 import { dateDuMoment } from './moment'
 import { lireVitesse } from './db'
+import { t } from './langue'
 
 /** les cercles concentriques, en mètres — pensés en minutes de trajet :
  *  ~15 min à pied · ~30 min à pied · vélo court · ~30 min roulés · ~1 h */
@@ -22,7 +23,11 @@ export const PALIERS_M = [1200, 2500, 5000, 12000, 30000, Infinity] as const
 /** au-delà : on ne parle plus « à pied » (2,5 km ≈ 30 min de marche) */
 export const MARCHE_MAX_M = 2500
 
-/** l'allure quand ça roule (~25 km/h, mélange transport/voiture assumé) */
+/** jusqu'où le vélo reste la réponse honnête (Paris = vélib d'abord) */
+export const VELO_MAX_M = 8000
+/** l'allure à vélo en ville, feux compris (~14 km/h) */
+const VITESSE_VELO = 240 // m/min
+/** l'allure quand ça roule vraiment (~25 km/h, voiture/transport) */
 const VITESSE_ROULE = 417 // m/min
 
 export interface Anneau<T> {
@@ -81,15 +86,21 @@ export function plafondRayon(m: Moment, ref = new Date()): number {
   return memeJour ? 30000 : Infinity
 }
 
-/** le temps de trajet honnête : à pied tant que c'est marchable (au pas
- *  réglé — réglages → « ton pas »), roulé au-delà. */
-export function trajetMin(m: number): { min: number; aPied: boolean } {
-  if (m <= MARCHE_MAX_M) return { min: Math.max(1, Math.round(m / lireVitesse())), aPied: true }
-  return { min: Math.max(5, Math.round(m / VITESSE_ROULE)), aPied: false }
+/** le temps de trajet honnête, ET SON MODE — un chiffre sans mode ment
+ *  (« 4,5 km · ~11 min » se lisait comme 11 min à pied) : à pied tant que
+ *  c'est marchable (au pas réglé — « ton pas »), à vélo jusqu'à 8 km
+ *  (la vérité parisienne), en voiture au-delà. */
+export function trajetMin(m: number): { min: number; mode: 'pied' | 'velo' | 'voiture' } {
+  if (m <= MARCHE_MAX_M)
+    return { min: Math.max(1, Math.round(m / lireVitesse())), mode: 'pied' }
+  if (m <= VELO_MAX_M) return { min: Math.max(3, Math.round(m / VITESSE_VELO)), mode: 'velo' }
+  return { min: Math.max(5, Math.round(m / VITESSE_ROULE)), mode: 'voiture' }
 }
 
-/** « 12 min à pied » · « ~25 min » — fini le « 312 min à pied » */
+/** « 12 min à pied » · « ~19 min à vélo » · « ~40 min en voiture » */
 export function libelleTrajet(m: number): string {
-  const t = trajetMin(m)
-  return t.aPied ? `${t.min} min à pied` : `~${t.min} min`
+  const tr = trajetMin(m)
+  if (tr.mode === 'pied') return `${tr.min} ${t('min à pied')}`
+  if (tr.mode === 'velo') return `~${tr.min} ${t('min à vélo')}`
+  return `~${tr.min} ${t('min en voiture')}`
 }

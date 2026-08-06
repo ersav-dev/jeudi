@@ -347,6 +347,11 @@ const EN: Record<string, string> = {
 
   'signaler cette photo': 'report this photo',
 
+  // le rayon : le temps de trajet dit son mode
+  'min à pied': 'min walk',
+  'min à vélo': 'min by bike',
+  'min en voiture': 'min by car',
+
   // le rayon : l'anneau élargi s'annonce
   'j’ai poussé jusqu’à': 'I stretched to',
   'c’est calme par ici.': 'it’s quiet around here.',

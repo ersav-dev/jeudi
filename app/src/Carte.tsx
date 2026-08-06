@@ -1183,7 +1183,7 @@ export default function Carte({
                 <span className="carte-card-nom">{l.nom}</span>
                 <span className="mono carte-card-dist">
                   <span className="carte-card-km">{formatDistance(distanceM(l))}</span>
-                  <span className="carte-card-min">{trajetMin(distanceM(l)).aPied ? `${trajetMin(distanceM(l)).min} min` : `~${trajetMin(distanceM(l)).min} min`}</span>
+                  <span className="carte-card-min">{trajetMin(distanceM(l)).mode === 'pied' ? `${trajetMin(distanceM(l)).min} min` : `~${trajetMin(distanceM(l)).min} min`}</span>
                 </span>
               </button>
             ),
