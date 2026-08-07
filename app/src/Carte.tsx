@@ -17,6 +17,7 @@ import {
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
 import { typeDeLieu, svgTypeLieu } from './typesLieu'
+import { donneesTransport } from './transport'
 
 // les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
 const traitMonument = (d: string) =>
@@ -153,6 +154,11 @@ export default function Carte({
   // clé = id de lieu — plus de préfixes l:/c: depuis la mort des grappes)
   const lieuxParId = useRef<Map<string, Lieu>>(new Map())
   const poses = useRef<Map<string, maplibregl.Marker>>(new Map())
+  // les étiquettes de transport (RER/métro/tram/batobus) — cap 24,
+  // remises à zéro à chaque moveend
+  const etiquettesTransport = useRef<maplibregl.Marker[]>([])
+  // on ne veut fetcher transport.json qu'UNE SEULE fois par montage
+  const transportDejaCharge = useRef(false)
   // #11 : le lieu sélectionné — pilote le bottom-sheet, le carrousel et le grisé
   const [actif, setActif] = useState<string | null>(null)
   // ── les marques émoji (chantier 2) : Record<lieuId, émoji>, source
@@ -584,6 +590,91 @@ export default function Carte({
           },
         })
       }
+      // ── les repères de transport : nom de station en Caveat, teinté par
+      // mode (RER bleu pâle, métro encre, tram vert doux, batobus cyan doux),
+      // opacité très basse (0.25–0.40) — un cran en dessous du reste. PAS de
+      // cercle (confusion visuelle avec les spots). Cap 24 étiquettes dans le
+      // viewport, collision 82 px, priorité RER > métro > tram > batobus.
+      // Bus/Vélib' PAS étiquetés (trop denses). Jamais tapables. Data OSM
+      // figée le 2026-08-07 (5 205 points dans /transport.json, fetchée à la
+      // demande — ~150 ko gzip, hors bundle initial).
+      if (!transportDejaCharge.current) {
+        transportDejaCharge.current = true
+        donneesTransport()
+          .then((geo) => {
+            const nommables = geo.features.filter((f) =>
+              f.properties.type === 'rer' ||
+              f.properties.type === 'metro' ||
+              f.properties.type === 'tram' ||
+              f.properties.type === 'batobus',
+            )
+            const CONFIG: Record<string, { prio: number; zMin: number }> = {
+              rer: { prio: 4, zMin: 12.5 },
+              metro: { prio: 3, zMin: 13 },
+              tram: { prio: 2, zMin: 14 },
+              batobus: { prio: 1, zMin: 14 },
+            }
+            const majEtiquettes = () => {
+              if (!carte.current) return
+              const z = carte.current.getZoom()
+              if (z < 12.5) {
+                for (const mk of etiquettesTransport.current) mk.remove()
+                etiquettesTransport.current = []
+                return
+              }
+              const b = carte.current.getBounds()
+              const candidats: {
+                nom: string; type: string; lng: number; lat: number; x: number; y: number; prio: number
+              }[] = []
+              for (const f of nommables) {
+                const cfg = CONFIG[f.properties.type]
+                if (!cfg || z < cfg.zMin) continue
+                const [lng, lat] = f.geometry.coordinates
+                if (lng < b.getWest() || lng > b.getEast()) continue
+                if (lat < b.getSouth() || lat > b.getNorth()) continue
+                const p = carte.current.project([lng, lat])
+                candidats.push({
+                  nom: f.properties.nom, type: f.properties.type,
+                  lng, lat, x: p.x, y: p.y, prio: cfg.prio,
+                })
+              }
+              const cx = (carte.current.getContainer().clientWidth || 0) / 2
+              const cy = (carte.current.getContainer().clientHeight || 0) / 2
+              candidats.sort((a, c) => {
+                if (a.prio !== c.prio) return c.prio - a.prio
+                const da = (a.x - cx) ** 2 + (a.y - cy) ** 2
+                const dc = (c.x - cx) ** 2 + (c.y - cy) ** 2
+                return da - dc
+              })
+              const CAP = 24
+              const MIN = 82
+              const poses: { x: number; y: number }[] = []
+              const retenus: typeof candidats = []
+              for (const c of candidats) {
+                if (retenus.length >= CAP) break
+                let libre = true
+                for (const p of poses) {
+                  if (Math.abs(p.x - c.x) < MIN && Math.abs(p.y - c.y) < MIN) { libre = false; break }
+                }
+                if (libre) { poses.push({ x: c.x, y: c.y }); retenus.push(c) }
+              }
+              for (const mk of etiquettesTransport.current) mk.remove()
+              etiquettesTransport.current = retenus.map((c) => {
+                const el = document.createElement('div')
+                el.className = 'repere-transport'
+                el.dataset.mode = c.type
+                el.textContent = c.nom
+                return new maplibregl.Marker({ element: el, anchor: 'center' })
+                  .setLngLat([c.lng, c.lat])
+                  .addTo(carte.current!)
+              })
+            }
+            majEtiquettes()
+            carte.current?.on('moveend', majEtiquettes)
+            carte.current?.on('zoomend', majEtiquettes)
+          })
+          .catch((err) => console.warn('[carte] transport.json:', err))
+      }
       poserRef.current()
     })
     // ── la poussière se touche comme un pin : tap (hitbox ~12 px) =
@@ -735,6 +826,8 @@ export default function Carte({
       if (pressCarte.current) window.clearTimeout(pressCarte.current.timer)
       window.clearInterval(suiviMoi)
       posesCourantes.forEach((mk) => mk.remove())
+      etiquettesTransport.current.forEach((mk) => mk.remove())
+      etiquettesTransport.current = []
       posesCourantes.clear()
       for (const id of Object.keys(pins)) delete pins[id]
       dejaCadre.current = false

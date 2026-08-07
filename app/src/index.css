@@ -6700,6 +6700,44 @@ button {
   white-space: nowrap;
 }
 
+/* les repères de transport (RER/métro/tram/batobus) : JUSTE le nom en
+ * Caveat, teinté par mode (très désaturé) — le rond a été jugé trop proche
+ * des spots. Opacité TRÈS BASSE (0.25–0.4) : lisible en le cherchant, jamais
+ * dominant. Jamais tapable. */
+.repere-transport {
+  font-family: 'Caveat', cursive;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--encre);
+  opacity: 0.28;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.6);
+}
+/* RER : hub structurant, un peu plus présent, légère teinte bleu RER */
+.repere-transport[data-mode='rer'] {
+  opacity: 0.4;
+  color: #a8c4ff;
+  font-size: 14px;
+}
+/* métro : encre pure — la référence par défaut de la ville */
+.repere-transport[data-mode='metro'] {
+  opacity: 0.32;
+}
+/* tram : teinte vert doux, presque effacé */
+.repere-transport[data-mode='tram'] {
+  opacity: 0.25;
+  color: #b4d69c;
+  font-size: 12px;
+}
+/* batobus : teinte cyan doux, presque effacé */
+.repere-transport[data-mode='batobus'] {
+  opacity: 0.25;
+  color: #9cd5df;
+  font-size: 12px;
+}
+
 /* le focus au trait d'encre — jamais l'anneau bleu du navigateur */
 button:focus-visible,
 a:focus-visible,
