@@ -67,7 +67,7 @@ Vérifs vertes (tsc/eslint/test/build), diffs ciblés, français.
 
 ## 🔵 OPUS — exécution solide contre spec écrite
 
-### P3 · Les finitions de la carte-pellicule
+### ✅ P3 · Les finitions de la carte-pellicule — FAIT (07-08/08)
 
 ```
 Lis d'abord F:\ErsanMusa-com\Jeudi_App\CHANTIER_PELLICULE.md EN ENTIER —
@@ -96,7 +96,7 @@ Conventions : français, diffs ciblés, tsc/eslint/test/build verts à la
 fin. Propose le déploiement, ne le lance pas sans mon go.
 ```
 
-### P4 · Le carnet du cercle (§7)
+### ✅ P4 · Le carnet du cercle (§7) — FAIT (07-08/08)
 
 ```
 Lis F:\ErsanMusa-com\Jeudi_App\CHANTIER_PELLICULE.md §7 (« le carnet du
@@ -139,7 +139,7 @@ planche design/glyphes_carte.html pour refléter le réel.
 Français, diffs ciblés, vérifs vertes, déploiement sur mon go.
 ```
 
-### P6 · La fusion d'enrichissement (avec la clé Google)
+### ✅ P6 · La fusion d'enrichissement — FAIT SANS GOOGLE (08/08, agent) ; relancer avec la clé pour affiner
 
 ```
 Lis F:\ErsanMusa-com\Jeudi_App\_enrichissement\rapport.md et regarde les
@@ -162,7 +162,7 @@ sur toute la carte. Français, vérifs, rien d'appliqué sans moi.
 
 ## 🟢 SONNET — mécanique, volumineux, motif établi
 
-### P7 · Finir l'anglais (LE chantier Sonnet parfait)
+### ✅ P7 · Finir l'anglais — FAIT (08/08, agent : ~185 entrées, tout couvert)
 
 ```
 App jeudi : F:\ErsanMusa-com\Jeudi_App\app. Le système i18n est
@@ -191,7 +191,7 @@ Rends-moi la liste des écrans couverts + le nombre de chaînes ajoutées.
 Ne déploie pas — je le ferai.
 ```
 
-### P8 · Les petites dettes (une session balai)
+### ✅ P8 · Les petites dettes — FAIT (08/08, agents : bundle 714→597 ko, overlap corrigé)
 
 ```
 App jeudi : F:\ErsanMusa-com\Jeudi_App\app. Quatre petites dettes listées
