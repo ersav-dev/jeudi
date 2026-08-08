@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { t } from './langue'
 import { libelleTrajet } from './rayon'
 import {
   type Lieu,
@@ -257,7 +258,7 @@ export default function LigneIndex({
             {(() => {
               const p = propreteWcLabel(lieu.propreteWc)
               return p ? (
-                <span className="mono idx-wc" title={`propreté des wc : ${p.mot}`}>
+                <span className="mono idx-wc" title={`propreté des wc : ${t(p.mot)}`}>
                   wc <span className="idx-wc-pts">{p.points}</span>
                 </span>
               ) : null

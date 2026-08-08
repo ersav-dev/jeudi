@@ -2940,12 +2940,12 @@ function Validation({
   return (
     <div className="fiche validation">
       <p className="mono">
-        l'autre soir · {new Date(sortie.date).toLocaleDateString('fr-FR')}
+        {t("l'autre soir")} · {new Date(sortie.date).toLocaleDateString('fr-FR')}
         {total > 1 && ` · ${pos}/${total}`}
       </p>
       {etape === 'verdict' ? (
         <>
-          <h1 className="grande-question">alors, {sortie.nom} ?</h1>
+          <h1 className="grande-question">{t('alors,')} {sortie.nom} ?</h1>
           {/* la note en marge : c'est ici que le carnet change de main */}
           <NoteMarge id="valider-carnet" className="note-marge-validation" />
           {lieu && (
@@ -2971,8 +2971,8 @@ function Validation({
                 setVDrag({ x: 0, actif: false })
               }}
             >
-              {vDrag.x > 60 && <span className="tampon valide">VALIDÉ</span>}
-              {vDrag.x < -60 && <span className="tampon bof">bof</span>}
+              {vDrag.x > 60 && <span className="tampon valide">{t('VALIDÉ')}</span>}
+              {vDrag.x < -60 && <span className="tampon bof">{t('bof')}</span>}
               <div className="carte-photo">
                 {lieu.photos[0] ? (
                   <img src={srcPhoto(lieu.photos[0])} alt={lieu.nom} onError={photoIndisponible} />
@@ -2986,7 +2986,7 @@ function Validation({
               {lieu.note && <p className="hand carte-tip">{lieu.note}</p>}
             </div>
           )}
-          <p className="mono validation-aide">← bof · je valide →  (ou les boutons)</p>
+          <p className="mono validation-aide">{t('← bof · je valide →  (ou les boutons)')}</p>
           <div className="validation-actions">
             <button
               className={`visi-choix ${bofSur ? 'choisi' : ''}`}
@@ -2999,7 +2999,7 @@ function Validation({
                 }
               }}
             >
-              {bofSur ? 'sûr ? re-tape.' : 'bof'}
+              {bofSur ? t('sûr ? re-tape.') : t('bof')}
             </button>
             <button
               className="valider"
@@ -3008,15 +3008,15 @@ function Validation({
                 setEtape('tirage')
               }}
             >
-              je valide
+              {t('je valide')}
             </button>
           </div>
           <div className="validation-secondaires">
             <button className="lien" onClick={onFini}>
-              j'y suis pas allé — oublie
+              {t("j'y suis pas allé — oublie")}
             </button>
             <button className="lien" onClick={onPlusTard}>
-              redemande-moi plus tard
+              {t('redemande-moi plus tard')}
             </button>
           </div>
         </>
@@ -3036,9 +3036,9 @@ function Validation({
       ) : etape === 'occasions' ? (
         <>
           <button className="lien retour-etape" onClick={() => setEtape('tirage')}>
-            ← revenir au tirage
+            {t('← revenir au tirage')}
           </button>
-          <h1 className="grande-question">validé. raconte.</h1>
+          <h1 className="grande-question">{t('validé. raconte.')}</h1>
 
           {lieu && (
             <div className="carte-lieu fiche-carte validation-carte">
@@ -3056,7 +3056,7 @@ function Validation({
               {/* le tip s'écrit directement sous la photo, comme une légende */}
               <textarea
                 className="validation-tip legende"
-                placeholder="ton tip pour réussir ce lieu — table du fond, demande Momo…"
+                placeholder={t('ton tip pour réussir ce lieu — table du fond, demande Momo…')}
                 value={tip}
                 onChange={(e) => setTip(e.target.value)}
                 rows={2}
@@ -3070,10 +3070,11 @@ function Validation({
             setPropreteWc={setPropreteWc}
           />
 
-          <p className="hand onboard-sous">tu l'as fait comment ?</p>
+          <p className="hand onboard-sous">{t("tu l'as fait comment ?")}</p>
           <p className="mono validation-aide">
-            tape : je l'ai fait comme ça (rouge) · reste appuyé : les conditions optimales, je
-            recommande (orange).
+            {t(
+              "tape : je l'ai fait comme ça (rouge) · reste appuyé : les conditions optimales, je recommande (orange).",
+            )}
           </p>
           <div className="rangée">
             <span className="lbl mono">{t('avec qui ?')}</span>
@@ -3093,7 +3094,7 @@ function Validation({
             ))}
           </div>
           <div className="rangée">
-            <span className="lbl mono">pour quoi ?</span>
+            <span className="lbl mono">{t('pour quoi ?')}</span>
             {ENVIES.map((t) => (
               <button
                 key={t}
@@ -3110,15 +3111,15 @@ function Validation({
             ))}
           </div>
           <button className="valider" onClick={() => setEtape('tampon')}>
-            c'est dit.
+            {t("c'est dit.")}
           </button>
         </>
       ) : etape === 'tampon' ? (
         <>
           <button className="lien retour-etape" onClick={() => setEtape('occasions')}>
-            ← corriger le récit
+            {t('← corriger le récit')}
           </button>
-          <h1 className="grande-question">à toi de tamponner.</h1>
+          <h1 className="grande-question">{t('à toi de tamponner.')}</h1>
 
           {lieu && (
             <div
@@ -3152,28 +3153,28 @@ function Validation({
             </div>
           )}
           <p className="mono validation-aide">
-            tape où tu veux — même sur le blanc. chaque tape, un coup de tampon.
+            {t('tape où tu veux — même sur le blanc. chaque tape, un coup de tampon.')}
           </p>
           {erreurTip && <p className="mono validation-erreur">{erreurTip}</p>}
           <button className="valider" onClick={terminer}>
-            tamponné.
+            {t('tamponné.')}
           </button>
         </>
       ) : (
         <>
           {/* la relance douce (machine à photos) : glissée UNE fois, après un
               tampon sans cliché — le ton du carnet, zéro culpabilisation */}
-          <h1 className="grande-question">3 clichés, 30 secondes —</h1>
-          <p className="hand relance-sous">et le spot a un visage.</p>
+          <h1 className="grande-question">{t('3 clichés, 30 secondes —')}</h1>
+          <p className="hand relance-sous">{t('et le spot a un visage.')}</p>
           <KitPhotos photos={photosRelance} setPhotos={setPhotosRelance} />
           <div className="validation-secondaires">
             {photosRelance.length > 0 ? (
               <button className="valider" onClick={finirRelance}>
-                c'est dans la boîte.
+                {t("c'est dans la boîte.")}
               </button>
             ) : (
               <button className="lien" onClick={onFini}>
-                plus tard
+                {t('plus tard')}
               </button>
             )}
           </div>
@@ -3939,7 +3940,7 @@ function Fiche({
         <div className="fiche-wc mono">
           <span className="fiche-wc-lbl">{t('propreté des wc')}</span>
           <span className="fiche-wc-pts">{propreteWcLabel(lieu.propreteWc)!.points}</span>
-          <span className="fiche-wc-mot">{propreteWcLabel(lieu.propreteWc)!.mot}</span>
+          <span className="fiche-wc-mot">{t(propreteWcLabel(lieu.propreteWc)!.mot)}</span>
         </div>
       )}
 
@@ -4059,7 +4060,7 @@ function Fiche({
           </div>
           {lieu.meteo && (
             <span className="mono meteo-sens">
-              {METEO_INFOS[lieu.meteo].mot} · {prixMeteo(lieu.meteo)} {t('/ pers.')}
+              {t(METEO_INFOS[lieu.meteo].mot)} · {prixMeteo(lieu.meteo)} {t('/ pers.')}
               <span className="glose"> ≈ {uniteParPersonne(lieu.envies)}</span>
             </span>
           )}
@@ -4147,7 +4148,7 @@ function Fiche({
                 className={`meteo-choix ${lieu.meteo === m ? 'on' : ''}`}
                 aria-pressed={lieu.meteo === m}
                 onClick={() => changerMeteo(m)}
-                title={`${METEO_INFOS[m].mot} · ${prixMeteo(m)}`}
+                title={`${t(METEO_INFOS[m].mot)} · ${prixMeteo(m)}`}
               >
                 {m === 'soleil' ? <ISoleil taille={16} /> : m === 'pluie' ? <IPluie taille={16} /> : <INuage taille={16} />}
                 <span className="meteo-prix mono">{prixMeteo(m)}</span>
@@ -4649,7 +4650,7 @@ function FormAjout({
             className={`meteo-choix ${meteo === m ? 'on' : ''}`}
             aria-pressed={meteo === m}
             onClick={() => setMeteo((cur) => (cur === m ? undefined : m))}
-            title={`${METEO_INFOS[m].mot} · ${prixMeteo(m)}`}
+            title={`${t(METEO_INFOS[m].mot)} · ${prixMeteo(m)}`}
           >
             {m === 'soleil' ? <ISoleil taille={16} /> : m === 'pluie' ? <IPluie taille={16} /> : <INuage taille={16} />}
             <span className="meteo-prix mono">{prixMeteo(m)}</span>
@@ -4658,7 +4659,7 @@ function FormAjout({
       </div>
       {meteo && (
         <span className="mono meteo-sens">
-          {METEO_INFOS[meteo].mot} · {prixMeteo(meteo)} / pers.
+          {t(METEO_INFOS[meteo].mot)} · {prixMeteo(meteo)} / pers.
           <span className="glose"> ≈ {uniteParPersonne(envies)}</span>
         </span>
       )}

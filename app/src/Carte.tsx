@@ -1759,7 +1759,7 @@ export default function Carte({
                 {(() => {
                   const w = propreteWcLabel(lieuActif.propreteWc)
                   return w ? (
-                    <span className="carte-sheet-wc">wc {w.points} {w.mot}</span>
+                    <span className="carte-sheet-wc">wc {w.points} {t(w.mot)}</span>
                   ) : null
                 })()}
                 {lieuActif.match === 'diffuse' && (
@@ -1981,7 +1981,7 @@ export function TableComparaison({
             <div key={l.id} className={`tc-cell mono${best(!!l.propreteWc && l.propreteWc === wcMax && wcMax > 0)}`}>
               {w ? (
                 <>
-                  <span className="tc-wc-pts">{w.points}</span> {w.mot}
+                  <span className="tc-wc-pts">{w.points}</span> {t(w.mot)}
                 </>
               ) : (
                 <span className="tc-vide">—</span>

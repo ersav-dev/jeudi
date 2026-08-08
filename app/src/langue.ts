@@ -688,6 +688,44 @@ const EN: Record<string, string> = {
   'une fois cette semaine.': 'once this week.',
   'fois cette semaine.': 'times this week.',
   '— à toi d’écrire la suite.': '— your turn to write what’s next.',
+
+  // l'écran validation (le post-deck, on valide/bof une sortie) — 08/08
+  "l'autre soir": 'the other night',
+  'alors,': 'so,',
+  '← bof · je valide →  (ou les boutons)': '← meh · I approve →  (or the buttons)',
+  'sûr ? re-tape.': 'sure? tap again.',
+  'je valide': 'I approve',
+  "j'y suis pas allé — oublie": "I didn't go — forget it",
+  'redemande-moi plus tard': 'ask me again later',
+  '← revenir au tirage': '← back to the print',
+  'validé. raconte.': 'approved. tell me.',
+  'ton tip pour réussir ce lieu — table du fond, demande Momo…':
+    'your tip for nailing this place — back table, ask for Momo…',
+  "tu l'as fait comment ?": 'how did you do it?',
+  "tape : je l'ai fait comme ça (rouge) · reste appuyé : les conditions optimales, je recommande (orange).":
+    'tap: I did it like this (red) · press and hold: the optimal conditions, I recommend (orange).',
+  'pour quoi ?': 'what for?',
+  // doublons d'apostrophe droite : mêmes mots que des clés déjà au
+  // dictionnaire (apostrophe courbe), mais tels qu'écrits dans l'écran
+  // validation — le fr ne bouge pas d'un caractère, donc deux clés.
+  "c'est dit.": 'said and done.',
+  '← corriger le récit': '← fix the story',
+  'à toi de tamponner.': 'your turn to stamp it.',
+  'tape où tu veux — même sur le blanc. chaque tape, un coup de tampon.':
+    'tap anywhere — even on the blank. each tap, one stamp.',
+  'tamponné.': 'stamped.',
+  '3 clichés, 30 secondes —': '3 shots, 30 seconds —',
+  'et le spot a un visage.': 'and the spot has a face.',
+  "c'est dans la boîte.": 'that’s a wrap.',
+
+  // les libellés dérivés de données, traduits AU SITE D'AFFICHAGE (les
+  // données de db.ts ne bougent pas) : propreteWcLabel().mot, METEO_INFOS[].mot
+  'à fuir': 'avoid',
+  'correct': 'decent',
+  'nickel': 'spotless',
+  'on flambe': 'we splurge',
+  'ça va': 'we’re fine',
+  'ça coûte rien': 'costs nothing',
 }
 
 /** traduit une chaîne de la voix de jeudi. fr = la clé, en = le dictionnaire,
