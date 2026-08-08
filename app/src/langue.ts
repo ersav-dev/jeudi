@@ -328,6 +328,19 @@ const EN: Record<string, string> = {
   'partage ton carnet en story →': 'share your notebook as a story →',
   'ton lien d’invitation est copié — colle-le en sticker sur ta story.': 'your invite link is copied — paste it as a sticker on your story.',
 
+  // La carte — le bottom-sheet, le panneau de marque, les tas (08/08)
+  'marquer': 'mark',
+  'ton émoji': 'your emoji',
+  'retirer la marque': 'remove the mark',
+  'ne plus comparer': 'stop comparing',
+  'à comparer': 'to compare',
+  'pas encore de mot sur ce lieu.': 'no word on this place yet.',
+  'recommandé par': 'recommended by',
+  'personne encore — à toi de jouer.': 'no one yet — your move.',
+  'comparer': 'compare',
+  'la plus récente se développe encore': 'the newest one is still developing',
+  'la plus récente': 'the newest one',
+
   // Le croquis plein écran
   'agrandir le croquis': 'expand the sketch',
   'réduire le croquis': 'shrink the sketch',

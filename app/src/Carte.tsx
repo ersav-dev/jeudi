@@ -328,7 +328,9 @@ export default function Carte({
     el.setAttribute(
       'aria-label',
       `${l.nom}, ${tasA.srcs.length} photo${tasA.srcs.length > 1 ? 's' : ''}, ${
-        tasA.developpe ? 'la plus récente se développe encore' : `la plus récente ${tasA.age}`
+        tasA.developpe
+          ? t('la plus récente se développe encore')
+          : `${t('la plus récente')} ${tasA.age}`
       }`,
     )
     // §5.3 — l'aplatissement : l'éventail devient UNE image peinte offscreen
@@ -438,7 +440,7 @@ export default function Carte({
       if (l.match === 'diffuse') {
         const ballon = document.createElement('span')
         ballon.className = 'pin-ballon'
-        ballon.title = 'on y voit les matchs'
+        ballon.title = t('on y voit les matchs')
         ballon.innerHTML =
           '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
         el.appendChild(ballon)
@@ -1289,7 +1291,7 @@ export default function Carte({
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)
     const elMoi = document.createElement('div')
     elMoi.className = 'pin-moi'
-    elMoi.title = 'moi'
+    elMoi.title = t('moi')
     let posMoi = moi()
     const mkMoi = new maplibregl.Marker({ element: elMoi }).setLngLat(posMoi).addTo(carte.current)
     // la géoloc répond souvent APRÈS le mount : un petit suivi compare la
@@ -1558,7 +1560,7 @@ export default function Carte({
           <div
             className={`marque-panneau${panneauMarque.y < 230 ? ' dessous' : ''}`}
             role="dialog"
-            aria-label={`marquer ${lieuPanneau.nom}`}
+            aria-label={`${t('marquer')} ${lieuPanneau.nom}`}
             style={{
               left: Math.min(Math.max(panneauMarque.x, 132), window.innerWidth - 132),
               top: panneauMarque.y,
@@ -1586,7 +1588,7 @@ export default function Carte({
               ref={marqueInput}
               className="marque-input mono"
               type="text"
-              placeholder="ton émoji"
+              placeholder={t('ton émoji')}
               autoComplete="off"
               enterKeyHint="done"
               onChange={(ev) => {
@@ -1609,7 +1611,7 @@ export default function Carte({
                   setPanneauMarque(null)
                 }}
               >
-                retirer la marque
+                {t('retirer la marque')}
               </button>
             )}
             {/* l'ex-appui long « à comparer » vit ICI désormais (arbitrage :
@@ -1623,7 +1625,7 @@ export default function Carte({
                 }}
               >
                 <IAnneau taille={13} />
-                {comparer.includes(panneauMarque.id) ? 'ne plus comparer' : 'à comparer'}
+                {comparer.includes(panneauMarque.id) ? t('ne plus comparer') : t('à comparer')}
               </button>
             )}
           </div>
@@ -1669,7 +1671,7 @@ export default function Carte({
 
           <button
             className="carte-sheet-x mono"
-            aria-label="fermer"
+            aria-label={t('fermer')}
             onPointerDown={(e) => e.stopPropagation()}
             onPointerUp={(e) => {
               e.stopPropagation()
@@ -1707,27 +1709,27 @@ export default function Carte({
               <p className="hand carte-sheet-desc">
                 {lieuActif.note ||
                   lieuActif.tipsCercle?.[0]?.note ||
-                  "pas encore de mot sur ce lieu."}
+                  t('pas encore de mot sur ce lieu.')}
               </p>
             )}
 
             {/* PAGE 2 — recommandé par */}
             {sheetPage === 2 && (
               <div className="carte-sheet-recos mono">
-                <span className="carte-sheet-lbl">recommandé par</span>
+                <span className="carte-sheet-lbl">{t('recommandé par')}</span>
                 <span className="carte-sheet-reco-liste">
                   {[
                     ...(lieuActif.note
                       ? [
                           !estAMoi(lieuActif) && lieuActif.proprietaire === CURATEUR_JEUDI
                             ? NOM_JEUDI
-                            : 'toi',
+                            : t('toi'),
                         ]
                       : []),
                     ...(lieuActif.tipsCercle ?? []).map(
-                      (t) => `@${t.auteur.toLowerCase()}`,
+                      (tip) => `@${tip.auteur.toLowerCase()}`,
                     ),
-                  ].join('  ·  ') || 'personne encore — à toi de jouer.'}
+                  ].join('  ·  ') || t('personne encore — à toi de jouer.')}
                 </span>
               </div>
             )}
@@ -1740,7 +1742,7 @@ export default function Carte({
                   return h ? (
                     <span className={h.ouvert ? 'ouvert' : 'ferme'}>{h.texte}</span>
                   ) : (
-                    <span>horaires inconnus</span>
+                    <span>{t('horaires inconnus')}</span>
                   )
                 })()}
                 {(() => {
@@ -1751,10 +1753,10 @@ export default function Carte({
                 })()}
                 {lieuActif.match === 'diffuse' && (
                   <span className="carte-sheet-wc">
-                    <IBallon taille={12} /> on y voit les matchs
+                    <IBallon taille={12} /> {t('on y voit les matchs')}
                   </span>
                 )}
-                {lieuActif.match === 'refuge' && <span>refuge anti-foot</span>}
+                {lieuActif.match === 'refuge' && <span>{t('refuge anti-foot')}</span>}
                 {lieuActif.envies.length > 0 && <span>{lieuActif.envies.join(' · ')}</span>}
               </div>
             )}
@@ -1773,7 +1775,7 @@ export default function Carte({
                   className={`carte-sheet-fiche ${enCompaCarte ? 'comparer' : ''}`}
                   onClick={() => onVoir?.(lieuActif)}
                 >
-                  {enCompaCarte ? 'comparer →' : 'la fiche →'}
+                  {enCompaCarte ? `${t('comparer')} →` : `${t('la fiche')} →`}
                 </button>
               )}
             </div>
@@ -1829,7 +1831,7 @@ export default function Carte({
                 {l.photos.length > 0 && (
                   <img className="carte-card-bg" src={srcPhoto(l.photos[0])} alt="" loading="lazy" onError={photoIndisponible} />
                 )}
-                {comparer.includes(l.id) && <span className="carte-card-vs mono">à comparer</span>}
+                {comparer.includes(l.id) && <span className="carte-card-vs mono">{t('à comparer')}</span>}
                 <span className="carte-card-nom">{l.nom}</span>
                 <span className="mono carte-card-dist">
                   <span className="carte-card-km">{formatDistance(distanceM(l))}</span>
