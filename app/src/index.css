@@ -1795,6 +1795,8 @@ button {
   -webkit-touch-callout: none;
   /* PAS de position ici : maplibre applique position:absolute + transform
      sur le pin pour l'ancrer à la carte. L'écraser le fait "flotter". */
+  /* toujours au-dessus des vignettes et des étiquettes (pile : .monument-repere) */
+  z-index: 2;
 }
 /* zone de tap invisible de 44px+ : on vise un pin avec le pouce, de nuit */
 .pin::after {
@@ -2556,6 +2558,9 @@ button {
   aspect-ratio: 1;
   cursor: pointer;
   position: relative;
+  /* le sommet de la pile (voir .monument-repere) : un tas de polaroids ne
+     se fait jamais couvrir, pas même par le pin sélectionné */
+  z-index: 6;
   transition:
     width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
@@ -7749,7 +7754,25 @@ button {
 
 /* ── les monuments-repères : le croquis s'oriente ──
    silhouettes graphite, jamais tapables, sous les pins — des repères
-   de carnet, pas des POI. */
+   de carnet, pas des POI.
+
+   LA PILE DE LA CARTE (08/08) — les markers maplibre sont tous en
+   position:absolute dans le même conteneur : sans z-index explicite, c'est
+   l'ordre du DOM qui tranche, et les pins sont retirés/reposés à chaque
+   moveend (diffing) — ils remontent donc en fin de DOM au hasard des
+   gestes. On fige l'ordre :
+
+     0  .monument-repere   vignettes + cartouches — le fond du carnet
+     1  .repere-transport  étiquettes de station · .bouche-metro
+     2  .pin               les épingles de spots
+     4  .pin-allume        (existant) le plan choisi
+     5  .pin-actif         (existant) le spot sélectionné
+     6  .tas               les tas de la pellicule, jamais couverts
+
+   .pin-grise garde son 1 !important : un pin effacé passe sous ses voisins
+   pleins, mais reste au-dessus des vignettes — ce qui est bien le but.
+   Pas de valeur négative : les markers vivent dans le conteneur du canvas,
+   un z-index < 0 les ferait passer DERRIÈRE les tuiles. */
 .monument-repere {
   display: flex;
   flex-direction: column;
@@ -7779,6 +7802,9 @@ button {
   opacity: 0.92;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   pointer-events: none;
+  transition:
+    height 240ms ease,
+    opacity 240ms ease;
 }
 .monument-vignette.petite {
   height: 42px;
@@ -7790,6 +7816,24 @@ button {
 .repere-vignette.cachee {
   opacity: 0;
 }
+/* ── LE RELAIS (08/08) : la vignette rend la voix aux épingles ──
+ * De loin elle EST le repère ; de près on ne cherche plus la ville, on
+ * cherche un spot. Trois paliers posés en classes sur zoomend (Carte.tsx),
+ * la transition ci-dessus fait le glissé. */
+.vg-retrait .monument-vignette {
+  height: 40px;
+  opacity: 0.7;
+}
+.vg-retrait .monument-vignette.petite {
+  height: 34px;
+}
+.vg-timbre .monument-vignette {
+  height: 34px;
+  opacity: 0.5;
+}
+.vg-timbre .monument-vignette.petite {
+  height: 28px;
+}
 /* le cartouche : l'étiquette parchemin au texte rouge, sous la vignette —
  * c'est LUI qui nomme (le Caveat se retire quand la vignette est là) */
 .monument-etq {
@@ -7799,9 +7843,35 @@ button {
   opacity: 0.92;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   pointer-events: none;
+  transition:
+    height 240ms ease,
+    opacity 240ms ease;
 }
 .repere-vignette .monument-etq {
   height: 11px;
+}
+/* le cartouche suit sa vignette dans le relais — un nom en pleine encre
+ * sous un timbre effacé se lirait comme une étiquette orpheline */
+.vg-retrait .monument-etq {
+  height: 11px;
+  opacity: 0.7;
+}
+.vg-timbre .monument-etq {
+  height: 10px;
+  opacity: 0.5;
+}
+.vg-retrait.repere-vignette .monument-etq,
+.vg-timbre.repere-vignette .monument-etq {
+  height: 9px;
+}
+/* §6 — rien ne glisse chez qui a demandé le calme : le relais reste, la
+ * transition saute */
+@media (prefers-reduced-motion: reduce) {
+  .monument-vignette,
+  .monument-etq,
+  .repere-vignette {
+    transition: none;
+  }
 }
 
 /* les repères de transport (RER/métro/tram/batobus) : la PLAQUE — le sigle
@@ -7821,7 +7891,8 @@ button {
   opacity: 0.48;
   white-space: nowrap;
   pointer-events: none;
-  z-index: 0;
+  /* au-dessus des vignettes de monuments (pile : .monument-repere) */
+  z-index: 1;
 }
 /* la plaque : sigle droit sur fond plein, filet clair autour pour décoller
  * du fond de carte quelle que soit la tuile dessous */
@@ -7915,7 +7986,8 @@ button {
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--encre);
   pointer-events: none;
-  z-index: 0;
+  /* même étage que les étiquettes de station (pile : .monument-repere) */
+  z-index: 1;
   text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.55);
 }
 .bouche-metro-tete {

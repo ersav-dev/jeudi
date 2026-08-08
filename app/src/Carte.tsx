@@ -1358,12 +1358,16 @@ export default function Carte({
     const htmlVignette = (img: string, etq: string | undefined, petite: boolean) =>
       `<img class="monument-vignette${petite ? ' petite' : ''}" src="${img}" alt="" loading="lazy">` +
       (etq ? `<img class="monument-etq" src="${etq}" alt="" loading="lazy">` : '')
+    // toutes les vignettes, monuments et points de rdv confondus : c'est sur
+    // elles que joue le relais de zoom (voir relaisVignettes plus bas)
+    const vignettes: HTMLElement[] = []
     for (const mo of MONUMENTS) {
       const el = document.createElement('div')
       el.className = 'monument-repere'
       el.innerHTML = mo.img
         ? htmlVignette(mo.img, mo.etq, false)
         : `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
+      if (mo.img) vignettes.push(el)
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
     // …et les points de rendez-vous qui ont leur vignette (République, la
@@ -1376,16 +1380,30 @@ export default function Carte({
       const el = document.createElement('div')
       el.className = 'monument-repere repere-vignette'
       el.innerHTML = htmlVignette(r.img, r.etq, true)
+      vignettes.push(el)
       vignettesRdv.push(
         new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(carte.current),
       )
     }
-    const voileVignettes = () => {
-      const cache = (carte.current?.getZoom() ?? 0) < 12.5
-      for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', cache)
+    // ── LE RELAIS (08/08) : les vignettes se passent la main aux épingles ──
+    // De loin, la vignette EST le repère : c'est elle qui dit « voilà la
+    // butte, voilà l'étoile ». En approchant, on ne cherche plus la ville,
+    // on cherche un spot — la vignette doit alors se faire timbre et rendre
+    // la voix aux épingles. Trois paliers plutôt qu'un fondu continu : le
+    // zoom se lit par crans, et la transition CSS fait le glissé.
+    const relaisVignettes = () => {
+      const z = carte.current?.getZoom() ?? 0
+      // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
+      // plus à z11 et la ville disparaîtrait sous les stickers
+      for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', z < 12.5)
+      for (const el of vignettes) {
+        // z ≤ 13 pleines · 13→15 en retrait · z ≥ 15 timbres
+        el.classList.toggle('vg-retrait', z > 13 && z < 15)
+        el.classList.toggle('vg-timbre', z >= 15)
+      }
     }
-    voileVignettes()
-    carte.current.on('zoomend', voileVignettes)
+    relaisVignettes()
+    carte.current.on('zoomend', relaisVignettes)
 
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)
     const elMoi = document.createElement('div')
