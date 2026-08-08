@@ -489,7 +489,7 @@ function Reglages({
       await supprimerMonCompte()
       window.location.reload()
     } catch {
-      setErreurCompte('le cloud a refusé. rien n’a bougé — réessaie dans un instant.')
+      setErreurCompte(t('le cloud a refusé. rien n’a bougé — réessaie dans un instant.'))
       setConfirmCompte(false)
       setCompteEnCours(false)
     }
@@ -504,8 +504,8 @@ function Reglages({
   return (
     <div className="reglages">
       <div className="reglages-tete">
-        <span className="lbl mono">tes réglages</span>
-        <span className={`mono reglages-sauve ${sauve ? 'on' : ''}`}>enregistré ✓</span>
+        <span className="lbl mono">{t('tes réglages')}</span>
+        <span className={`mono reglages-sauve ${sauve ? 'on' : ''}`}>{t('enregistré ✓')}</span>
       </div>
 
       {/* la note en marge de « j. » : les réglages différés se découvrent ici */}
@@ -519,7 +519,7 @@ function Reglages({
         rel="noreferrer"
         style={{ textDecoration: 'none', display: 'flex' }}
       >
-        confidentialité &amp; conditions
+        {t('confidentialité & conditions')}
         <span className="reglages-chevron">↗</span>
       </a>
 
@@ -535,7 +535,7 @@ function Reglages({
         aria-expanded={ouvert === 'ville'}
         onClick={() => bascule('ville')}
       >
-        où tu es · {ouTu || '…'}
+        {t('où tu es')} · {ouTu || '…'}
         <span className="reglages-chevron">{ouvert === 'ville' ? '–' : '+'}</span>
       </button>
       {ouvert === 'ville' && (
@@ -543,15 +543,16 @@ function Reglages({
           <p className="reglages-ville-actuelle">
             {ouTu ? (
               <>
-                tu es à <strong>{ouTu}</strong>.
+                {t('tu es à')} <strong>{ouTu}</strong>.
               </>
             ) : (
-              <>on cherche où tu es…</>
+              <>{t('on cherche où tu es…')}</>
             )}
           </p>
           <p className="reglages-ville-bientot">
-            jeudi te suit partout — les distances se calculent depuis ta position. autorise le
-            GPS pour qu'elles soient justes (sinon : Place Vendôme).
+            {t(
+              "jeudi te suit partout — les distances se calculent depuis ta position. autorise le GPS pour qu'elles soient justes (sinon : Place Vendôme).",
+            )}
           </p>
         </div>
       )}
@@ -562,7 +563,7 @@ function Reglages({
         aria-expanded={ouvert === 'couleur'}
         onClick={() => bascule('couleur')}
       >
-        ta couleur de Jeudi
+        {t('ta couleur de Jeudi')}
         <span className="reglages-chevron">{ouvert === 'couleur' ? '–' : '+'}</span>
       </button>
       {ouvert === 'couleur' && <PickerCouleur valeur={couleur} onChange={choisirCouleur} />}
@@ -573,13 +574,13 @@ function Reglages({
         aria-expanded={ouvert === 'argent'}
         onClick={() => bascule('argent')}
       >
-        ton porte-monnaie (€ / pers.)
+        {t('ton porte-monnaie (€ / pers.)')}
         <span className="reglages-chevron">{ouvert === 'argent' ? '–' : '+'}</span>
       </button>
       {ouvert === 'argent' && (
         <div className="reglages-seuils mono">
           <label>
-            ça coûte rien &lt;
+            {t('ça coûte rien <')}
             <input
               className="onboard-euro"
               type="number"
@@ -590,7 +591,7 @@ function Reglages({
             €
           </label>
           <label>
-            on flambe &gt;
+            {t('on flambe >')}
             <input
               className="onboard-euro"
               type="number"
@@ -660,22 +661,22 @@ function Reglages({
         aria-expanded={ouvert === 'donnees'}
         onClick={() => bascule('donnees')}
       >
-        mes données
+        {t('mes données')}
         <span className="reglages-chevron">{ouvert === 'donnees' ? '–' : '+'}</span>
       </button>
       {ouvert === 'donnees' && (
         <div className="reglages-donnees mono">
           <button className="reglages-action" onClick={exporter}>
-            exporter mes spots (.json)
+            {t('exporter mes spots (.json)')}
           </button>
           <button className="reglages-action" onClick={exporterDonnees}>
-            exporter mes données (.json)
+            {t('exporter mes données (.json)')}
           </button>
           <button
             className={`reglages-action danger ${confirmEffacer ? 'confirm' : ''}`}
             onClick={() => (confirmEffacer ? effacer() : setConfirmEffacer(true))}
           >
-            {confirmEffacer ? 'sûr ? tout effacer pour de bon' : 'effacer mes données locales'}
+            {confirmEffacer ? t('sûr ? tout effacer pour de bon') : t('effacer mes données locales')}
           </button>
           <button
             className={`reglages-action danger ${confirmCompte ? 'confirm' : ''}`}
@@ -683,10 +684,10 @@ function Reglages({
             onClick={() => (confirmCompte ? supprimerCompte() : setConfirmCompte(true))}
           >
             {compteEnCours
-              ? 'suppression…'
+              ? t('suppression…')
               : confirmCompte
-                ? 'sûr ? tout part : le cloud aussi.'
-                : 'supprimer mon compte'}
+                ? t('sûr ? tout part : le cloud aussi.')
+                : t('supprimer mon compte')}
           </button>
           {erreurCompte && <p className="reglages-erreur mono">{erreurCompte}</p>}
         </div>
@@ -838,14 +839,14 @@ function Reglages({
         aria-expanded={ouvert === 'bientot'}
         onClick={() => bascule('bientot')}
       >
-        bientôt
+        {t('bientôt')}
         <span className="reglages-chevron">{ouvert === 'bientot' ? '–' : '+'}</span>
       </button>
       {ouvert === 'bientot' && (
         <div className="reglages-bientot mono">
-          {['notifications push'].map((t) => (
-            <span key={t} className="reglages-bientot-item">
-              {t} <span className="reglages-bientot-tag">bientôt</span>
+          {['notifications push'].map((libelle) => (
+            <span key={libelle} className="reglages-bientot-item">
+              {t(libelle)} <span className="reglages-bientot-tag">{t('bientôt')}</span>
             </span>
           ))}
         </div>
@@ -859,13 +860,13 @@ function Reglages({
           flash()
         }}
       >
-        relire les notes en marge
+        {t('relire les notes en marge')}
       </button>
 
       {/* le grand jeudi arrive tout seul (1ᵉʳ jeudi du mois) — cette ligne de
           colophon sert juste à jeter un œil sans attendre le jour J */}
       <button className="lien reglages-relire" onClick={onGrandJeudi}>
-        aperçu du grand jeudi
+        {t('aperçu du grand jeudi')}
       </button>
     </div>
   )
@@ -2075,7 +2076,7 @@ export default function App() {
 
           {/* ① la page de garde : « ce carnet appartient à — », le prénom
               par-dessus une ligne pointillée, les stats en mono sur UNE ligne */}
-          <p className="profil-garde-phrase">ce carnet appartient à —</p>
+          <p className="profil-garde-phrase">{t('ce carnet appartient à —')}</p>
           <div className="profil-garde">
             <label className="profil-id">
               <svg className="profil-trombone" viewBox="0 0 28 72" aria-hidden="true">
@@ -2087,10 +2088,10 @@ export default function App() {
                   strokeLinecap="round"
                 />
               </svg>
-              <img className="profil-id-photo" src={photoUrl ?? portraitDefaut} alt="ton portrait" />
+              <img className="profil-id-photo" src={photoUrl ?? portraitDefaut} alt={t('ton portrait')} />
               <span className="profil-id-tampon">{prenom}</span>
               <span className="mono profil-id-changer">
-                <IAppareil taille={11} /> changer
+                <IAppareil taille={11} /> {t('changer')}
               </span>
               <input type="file" accept="image/*" capture="user" hidden onChange={changerPhotoProfil} />
             </label>
@@ -2099,36 +2100,36 @@ export default function App() {
               {/* le prénom : la main (Caveat), posée sur la ligne pointillée */}
               <div className="hand profil-garde-nom">{prenom}</div>
               <div className="mono profil-garde-meta">
-                {ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ans · ` : ''}
-                depuis {formatDepuis(depuis)}
+                {ageDepuis(naissance) != null ? `${ageDepuis(naissance)} ${t('ans')} · ` : ''}
+                {t('depuis')} {formatDepuis(depuis)}
               </div>
               <div className="profil-stats">
                 {/* mes spots à MOI (pas ceux du cercle) */}
-                <StatProfil n={mesSpots.length} l="spots" />
-                <StatProfil n={mesSpots.filter((x) => x.tampon?.v === 'valide').length} l="validés" />
+                <StatProfil n={mesSpots.length} l={t('spots')} />
+                <StatProfil n={mesSpots.filter((x) => x.tampon?.v === 'valide').length} l={t('validés')} />
                 {/* MÊME source que le toggle : lesProches() (état) — bouge en direct */}
                 <StatProfil
                   n={`${proches.length}/${CAP_PROCHES}`}
-                  l="super potes"
+                  l={t('super potes')}
                   onClick={allerAuCercle}
                 />
               </div>
               {/* machine à photos : la ligne sobre — jamais de pourcentage */}
               <div className="mono profil-visages">
-                {mesSpots.length} spots ·{' '}
-                {mesSpots.filter((x) => x.photos.length > 0).length} ont un visage
+                {mesSpots.length} {t('spots')} ·{' '}
+                {mesSpots.filter((x) => x.photos.length > 0).length} {t('ont un visage')}
               </div>
             </div>
           </div>
 
           {/* ② mes critères : des lignes du registre, plus de boîte */}
-          <TitreSection>mes critères</TitreSection>
+          <TitreSection>{t('mes critères')}</TitreSection>
           <div className="profil-criteres">
             <div className="profil-critere-ligne">
               <span className="profil-critere-nom">
                 {critere.replace(/^(le |la |les |l')/, '')}
               </span>
-              <span className="mono profil-critere-apercu">ton critère</span>
+              <span className="mono profil-critere-apercu">{t('ton critère')}</span>
             </div>
             {criteres.map((c) => (
               <div key={c.id} className="profil-critere-ligne">
@@ -2141,7 +2142,7 @@ export default function App() {
                   <button
                     className="profil-critere-suppr"
                     onClick={() => setCriteres(supprimerCritere(c.id))}
-                    aria-label="supprimer"
+                    aria-label={t('supprimer')}
                   >
                     ✕
                   </button>
@@ -2155,24 +2156,24 @@ export default function App() {
                 value={nouvCrit}
                 onChange={(e) => setNouvCrit(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && ajoutCritere()}
-                placeholder="un critère… (le bruit, les cocktails)"
+                placeholder={t('un critère… (le bruit, les cocktails)')}
               />
               <button
                 className="mono profil-critere-btn"
                 onClick={() => setNouvType((t) => (t === 'gradue' ? 'binaire' : 'gradue'))}
-                title="bascule le type"
+                title={t('bascule le type')}
               >
-                {nouvType === 'gradue' ? '●●○ gradué' : 'oui/non'}
+                {nouvType === 'gradue' ? t('●●○ gradué') : t('oui/non')}
               </button>
               <button className="mono profil-critere-btn" onClick={ajoutCritere}>
-                + ajouter
+                {t('+ ajouter')}
               </button>
             </div>
           </div>
 
           {/* ③ mes super potes : des ex-libris (initiale au tampon graphite) */}
           <TitreSection>
-            mes super potes · {proches.length}/{CAP_PROCHES}
+            {t('mes super potes')} · {proches.length}/{CAP_PROCHES}
           </TitreSection>
           <div className="profil-potes">
             {membresCercle.filter((m) => proches.includes(m.id)).map((m) => (
@@ -2188,15 +2189,15 @@ export default function App() {
             <button className="profil-pote" onClick={allerAuCercle}>
               {/* la place vide : un ex-libris pas encore frappé */}
               <span className="exlibris-initiale vide">+</span>
-              <span className="mono profil-pote-nom">ajouter</span>
+              <span className="mono profil-pote-nom">{t('ajouter')}</span>
             </button>
           </div>
 
-          <TitreSection>ta vitrine</TitreSection>
+          <TitreSection>{t('ta vitrine')}</TitreSection>
           <label className="profil-tagline-edit">
             <input
               className="profil-tagline"
-              placeholder="ex. « le roi du dernier verre »"
+              placeholder={t('ex. « le roi du dernier verre »')}
               value={tagline}
               maxLength={TAGLINE_MAX}
               onChange={(e) => setTagline(e.target.value)}
@@ -2210,7 +2211,7 @@ export default function App() {
           <div className="profil-bio">
             <textarea
               className="profil-bio-texte"
-              placeholder="ta bio — qui tu es, ce que tu cherches le soir…"
+              placeholder={t('ta bio — qui tu es, ce que tu cherches le soir…')}
               value={bio}
               maxLength={160}
               rows={2}
@@ -2220,7 +2221,7 @@ export default function App() {
             <label className="profil-insta mono">
               @
               <input
-                placeholder="ton insta"
+                placeholder={t('ton insta')}
                 value={insta}
                 onChange={(e) => setInsta(e.target.value)}
                 onBlur={() => sauverBioInsta()}
@@ -2265,7 +2266,7 @@ export default function App() {
             {t('partage ton carnet en story →')}
           </button>
 
-          <TitreSection>réglages</TitreSection>
+          <TitreSection>{t('réglages')}</TitreSection>
           <Reglages
             lieux={lieux}
             cercle={cercleReel}
@@ -2275,7 +2276,7 @@ export default function App() {
             onBasculerAmi={(id) => setAmisArchives(basculerAmiArchive(id))}
             onRestaurer={(l) => {
               void majLieu({ ...l, statut: 'actif' }).then(recharger)
-              setFlash(`${l.nom} revient sur ta carte.`)
+              setFlash(`${l.nom} ${t('revient sur ta carte.')}`)
             }}
             onVoir={(l) => ouvrirFiche(l, lieux)}
             onGrandJeudi={() => setGjOuvert(true)}
@@ -2288,7 +2289,7 @@ export default function App() {
               window.location.reload()
             }}
           >
-            refaire l'accueil (le swipe, c'est ta langue ?)
+            {t("refaire l'accueil (le swipe, c'est ta langue ?)")}
           </button>
         </div>
       )}
