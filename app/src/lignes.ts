@@ -11,7 +11,7 @@
 // #6e6e00 au lieu du #9F9825 olive).
 //
 // Données OSM figées le 2026-08-08.
-import type { FeatureCollection, MultiLineString } from 'geojson'
+import type { FeatureCollection, MultiLineString, Point } from 'geojson'
 
 export type Ligne = {
   id: string
@@ -67,6 +67,8 @@ export const elaguer = (nom: string | null): string | null => {
 export const SOURCE_LIGNES = 'lignes-tracees'
 export const LAYER_LIGNES = 'lignes-tracees-trait'
 export const LAYER_LIGNES_HALO = 'lignes-tracees-halo'
+export const SOURCE_ARRETS = 'lignes-arrets'
+export const LAYER_ARRETS = 'lignes-arrets-pastilles'
 
 let cacheL: Map<string, Ligne> | null = null
 let promL: Promise<Map<string, Ligne>> | null = null
@@ -119,6 +121,118 @@ export const tracesPour = (
     })
   }
   return { type: 'FeatureCollection', features }
+}
+
+// ── LES POINTS DE QUAI (08/08) ────────────────────────────────────────────
+// Un trait sans arrêts n'est qu'un fil : il dit par où ça passe, jamais où ça
+// s'arrête. On repose donc sur le tracé la grammaire du plan de métro — une
+// pastille d'encre cerclée de la couleur de la ligne à chaque station.
+//
+// Le hic : Ligne.stations ne porte que des NOMS. Les coordonnées vivent dans
+// transport.json, indexé par nom lui aussi. Il faut donc marier deux
+// référentiels OSM qui n'écrivent pas pareil (« Gare du Nord » d'un côté,
+// « Gare du Nord (Métro) » de l'autre).
+
+export type PropsArret = {
+  couleur: string
+  /** 1 = un arrêt de la ligne · 1,6 = LA station qu'on vient de toucher */
+  ech: number
+}
+
+export const AUCUN_ARRET: FeatureCollection<Point, PropsArret> = {
+  type: 'FeatureCollection',
+  features: [],
+}
+
+// la clé du repli : on efface tout ce qui distingue deux graphies d'un même
+// quai — la parenthèse de désambiguïsation (« (Métro) », « (RER) »), les
+// accents, la casse, les tirets et les espaces. « Saint-Denis - Université »
+// et « Saint-Denis-Université » tombent alors sur la même clé.
+export const clefStation = (nom: string): string =>
+  nom
+    .replace(/\([^)]*\)/g, ' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+
+export type IndexStations = {
+  exact: Map<string, [number, number]>
+  souple: Map<string, [number, number]>
+}
+
+// premier arrivé, premier servi : transport.json est déjà dédupliqué par nom,
+// et quand deux graphies se rabattent sur la même clé souple (rare), on garde
+// la première — mieux vaut un quai approché que pas de quai.
+export const indexerStations = (
+  stations: { nom: string; p: [number, number] }[],
+): IndexStations => {
+  const exact = new Map<string, [number, number]>()
+  const souple = new Map<string, [number, number]>()
+  for (const s of stations) {
+    if (!exact.has(s.nom)) exact.set(s.nom, s.p)
+    const k = clefStation(s.nom)
+    if (k && !souple.has(k)) souple.set(k, s.p)
+  }
+  return { exact, souple }
+}
+
+// le nom exact d'abord — c'est le cas des neuf dixièmes du métro — puis la
+// clé souple. null quand on ne sait pas situer : on n'invente pas un quai.
+export const situerStation = (
+  nom: string,
+  index: IndexStations,
+): [number, number] | null => index.exact.get(nom) ?? index.souple.get(clefStation(nom)) ?? null
+
+// les pastilles à poser pour les lignes allumées. Une station desservie par
+// DEUX lignes allumées n'est dessinée qu'une fois (la première couleur
+// gagne) : sur le terrain c'est un seul quai, deux pastilles superposées ne
+// feraient qu'une bouillie de contours.
+export const arretsPour = (
+  ids: string[] | undefined,
+  toutes: Map<string, Ligne> | null,
+  index: IndexStations | null,
+  touchee: string | null,
+): FeatureCollection<Point, PropsArret> => {
+  if (!ids?.length || !toutes || !index) return AUCUN_ARRET
+  const cleTouchee = touchee ? clefStation(touchee) : null
+  const vues = new Set<string>()
+  const features = []
+  for (const id of ids) {
+    const l = toutes.get(id)
+    if (!l) continue
+    for (const nom of l.stations) {
+      const k = clefStation(nom)
+      if (!k || vues.has(k)) continue
+      const p = situerStation(nom, index)
+      if (!p) continue
+      vues.add(k)
+      features.push({
+        type: 'Feature' as const,
+        properties: { couleur: l.couleur, ech: k === cleTouchee ? 1.6 : 1 },
+        geometry: { type: 'Point' as const, coordinates: p },
+      })
+    }
+  }
+  return { type: 'FeatureCollection', features }
+}
+
+// l'audit des trous, tiré UNE FOIS en console au chargement. Ce n'est pas de
+// la mise au point : c'est la mesure d'une limite connue. transport.json
+// s'arrête à la petite couronne, alors que les branches de RER listent leurs
+// stations jusqu'à Dourdan et Melun — ces quais-là sont hors carte, et donc
+// hors pastilles. Le métro, lui, doit rester près de zéro.
+export const stationsIntrouvables = (
+  toutes: Map<string, Ligne>,
+  index: IndexStations,
+): { ref: string; mode: Ligne['mode']; total: number; perdues: number }[] => {
+  const bilan: { ref: string; mode: Ligne['mode']; total: number; perdues: number }[] = []
+  for (const l of toutes.values()) {
+    let perdues = 0
+    for (const nom of l.stations) if (!situerStation(nom, index)) perdues++
+    if (perdues) bilan.push({ ref: l.ref, mode: l.mode, total: l.stations.length, perdues })
+  }
+  return bilan.sort((a, b) => b.perdues / b.total - a.perdues / a.total)
 }
 
 // combien de SORTIES on accepte d'afficher d'un coup : Châtelet en a dix,

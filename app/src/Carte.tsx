@@ -39,8 +39,15 @@ import {
   SOURCE_LIGNES,
   LAYER_LIGNES,
   LAYER_LIGNES_HALO,
+  arretsPour,
+  indexerStations,
+  stationsIntrouvables,
+  AUCUN_ARRET,
+  SOURCE_ARRETS,
+  LAYER_ARRETS,
   type Ligne,
   type Bouche,
+  type IndexStations,
 } from './lignes'
 
 // les monuments du croquis : partagés avec la recherche (monuments.ts)
@@ -192,6 +199,10 @@ export default function Carte({
   const lignesConnues = useRef<Map<string, Ligne> | null>(null)
   const bouchesConnues = useRef<Record<string, Bouche[]> | null>(null)
   const stationTracee = useRef<string | null>(null)
+  // les quais situés : nom de station → coordonnée, bâti une fois depuis
+  // transport.json. C'est ce qui permet de poser les pastilles d'arrêt sur
+  // le tracé — Ligne.stations ne porte que des noms.
+  const indexStations = useRef<IndexStations | null>(null)
   // les bouches posées : marqueurs DOM (glyphe + numéro + rue), re-posés à
   // chaque zoom puisque le nom n'apparaît qu'au-delà de z17
   const marqueursBouches = useRef<maplibregl.Marker[]>([])
@@ -969,6 +980,33 @@ export default function Carte({
           },
         })
       }
+      // ── LES POINTS DE QUAI (08/08) : le trait dit par où ça passe, les
+      // pastilles disent où ça s'arrête. Grammaire du plan de métro — un
+      // rond d'encre cerclé de la couleur de la ligne — posé AU-DESSUS du
+      // trait (donc ajouté après lui). La station touchée porte la sienne en
+      // plus gros : on retrouve d'un coup d'œil d'où on est parti.
+      if (!m.getSource(SOURCE_ARRETS)) {
+        m.addSource(SOURCE_ARRETS, { type: 'geojson', data: AUCUN_ARRET })
+        m.addLayer({
+          id: LAYER_ARRETS,
+          type: 'circle',
+          source: SOURCE_ARRETS,
+          paint: {
+            'circle-color': '#EFE9D8',
+            'circle-stroke-color': ['get', 'couleur'],
+            'circle-radius': [
+              'interpolate', ['linear'], ['zoom'],
+              12, ['*', 3, ['get', 'ech']],
+              16, ['*', 5, ['get', 'ech']],
+            ],
+            'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, 1.2, 16, 2],
+          },
+          // la grande pastille passe devant ses voisines quand deux quais
+          // se serrent (Opéra, Châtelet) — sinon la station touchée se
+          // ferait mordre par la suivante
+          layout: { 'circle-sort-key': ['get', 'ech'] },
+        })
+      }
       // toucher la station allume ses lignes ; la retoucher (ou toucher la
       // carte nue) les éteint. Une seule station tracée à la fois.
       // ── la bouche de métro : une flèche qui descend dans un U, le numéro de
@@ -1025,8 +1063,12 @@ export default function Carte({
 
       const peindre = (nom: string | null, ids?: string[]) => {
         const sl = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
+        const sa = m.getSource(SOURCE_ARRETS) as maplibregl.GeoJSONSource | undefined
         const table = lignesConnues.current
         sl?.setData(!ids || !table ? AUCUNE_LIGNE : tracesPour(ids, table))
+        // les arrêts vivent le même cycle que le trait : posés au même
+        // moment, effacés au même peindre(null)
+        sa?.setData(arretsPour(ids, table, indexStations.current, nom))
         poserBouches(nom)
       }
       const basculerLignes = (nom: string, ids?: string[]) => {
@@ -1066,6 +1108,40 @@ export default function Carte({
               f.properties.type === 'tram' ||
               f.properties.type === 'batobus',
             )
+            // les quais situés : métro, RER, tram — les trois modes qui se
+            // tracent. Le batobus n'a pas de ligne à allumer.
+            indexStations.current = indexerStations(
+              geo.features
+                .filter((f) =>
+                  f.properties.type === 'metro' ||
+                  f.properties.type === 'rer' ||
+                  f.properties.type === 'tram',
+                )
+                .map((f) => ({
+                  nom: f.properties.nom,
+                  p: f.geometry.coordinates as [number, number],
+                })),
+            )
+            // l'audit des trous, UNE fois : transport.json s'arrête à la
+            // petite couronne quand les branches de RER listent leurs quais
+            // jusqu'à Dourdan. Ces stations-là sont hors carte, donc sans
+            // pastille — c'est su, pas subi. Le métro doit rester près de zéro.
+            chargerLignes()
+              .then((table) => {
+                const idx = indexStations.current
+                if (!idx) return
+                const trous = stationsIntrouvables(table, idx)
+                if (!trous.length) return
+                const perdues = trous.reduce((n, l) => n + l.perdues, 0)
+                console.warn(
+                  `[carte] arrêts sans coordonnée : ${perdues} sur ${trous.length} ligne(s) — ` +
+                    trous
+                      .slice(0, 5)
+                      .map((l) => `${l.mode} ${l.ref} ${l.perdues}/${l.total}`)
+                      .join(' · '),
+                )
+              })
+              .catch(() => {})
             // priorité (RER majeur → batobus mineur) + seuil de zoom + code mode
             const CONFIG: Record<string, { prio: number; zMin: number; code: string }> = {
               rer: { prio: 4, zMin: 12.5, code: 'RER' },

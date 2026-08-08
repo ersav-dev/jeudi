@@ -3,7 +3,13 @@ import {
   tracesPour,
   bouchesPour,
   elaguer,
+  arretsPour,
+  clefStation,
+  indexerStations,
+  situerStation,
+  stationsIntrouvables,
   AUCUNE_LIGNE,
+  AUCUN_ARRET,
   PLAFOND_BOUCHES,
   type Ligne,
   type Bouche,
@@ -62,6 +68,111 @@ describe('tracesPour', () => {
     const [f] = tracesPour(['1'], table).features
     expect(f.geometry.coordinates[0]).toHaveLength(4)
     expect(f.geometry.coordinates[0][0][0]).toBeLessThan(f.geometry.coordinates[0][3][0])
+  })
+})
+
+// ── les points de quai ──────────────────────────────────────────────────
+// deux référentiels OSM qui n'écrivent pas pareil : les lignes disent
+// « Gare du Nord », transport.json dit « Gare du Nord (Métro) ».
+const quais = indexerStations([
+  { nom: 'Abbesses', p: [2.3383, 48.8844] },
+  { nom: 'Gare du Nord (Métro)', p: [2.3553, 48.8809] },
+  { nom: 'Saint-Denis - Université', p: [2.3639, 48.9463] },
+  { nom: 'Château de Vincennes', p: [2.4405, 48.8443] },
+])
+
+const desservie = (id: string, couleur: string, stations: string[]): Ligne => ({
+  id, ref: id, mode: 'metro', couleur, stations, brins: [brin(3)],
+})
+
+const reseau = new Map<string, Ligne>([
+  ['a', desservie('a', '#FFCE00', ['Abbesses', 'Gare du Nord', 'Nulle Part'])],
+  ['b', desservie('b', '#C04191', ['Gare du Nord', 'Château de Vincennes'])],
+])
+
+describe('clefStation', () => {
+  it('efface la parenthèse de désambiguïsation', () => {
+    expect(clefStation('Gare du Nord (Métro)')).toBe(clefStation('Gare du Nord'))
+  })
+
+  it('efface accents, casse et ponctuation', () => {
+    expect(clefStation('Saint-Denis - Université')).toBe(clefStation('saint denis universite'))
+  })
+
+  it('ne rapproche pas deux stations qui ne sont pas la même', () => {
+    expect(clefStation('Saint-Michel')).not.toBe(clefStation('Saint-Michel Notre-Dame'))
+  })
+})
+
+describe('situerStation', () => {
+  it('trouve par le nom exact d\'abord', () => {
+    expect(situerStation('Abbesses', quais)).toEqual([2.3383, 48.8844])
+  })
+
+  it('retombe sur la clé souple quand la graphie diffère', () => {
+    expect(situerStation('Gare du Nord', quais)).toEqual([2.3553, 48.8809])
+    expect(situerStation('Saint-Denis-Université', quais)).toEqual([2.3639, 48.9463])
+  })
+
+  it('rend null plutôt qu\'un quai inventé', () => {
+    expect(situerStation('Nulle Part', quais)).toBeNull()
+  })
+})
+
+describe('arretsPour', () => {
+  it('ne pose rien tant qu\'aucune ligne n\'est allumée', () => {
+    expect(arretsPour(undefined, reseau, quais, null)).toBe(AUCUN_ARRET)
+    expect(arretsPour([], reseau, quais, null)).toBe(AUCUN_ARRET)
+  })
+
+  it('ne pose rien tant que les quais ne sont pas situés', () => {
+    expect(arretsPour(['a'], reseau, null, null)).toBe(AUCUN_ARRET)
+  })
+
+  it('pose une pastille par station située, et tait celles qu\'on ne sait pas placer', () => {
+    const fc = arretsPour(['a'], reseau, quais, null)
+    expect(fc.features).toHaveLength(2)
+    expect(fc.features.map((f) => f.geometry.coordinates)).toEqual([
+      [2.3383, 48.8844],
+      [2.3553, 48.8809],
+    ])
+  })
+
+  it('porte la couleur de la ligne — la grammaire du plan de métro', () => {
+    const fc = arretsPour(['b'], reseau, quais, null)
+    expect(fc.features.map((f) => f.properties.couleur)).toEqual(['#C04191', '#C04191'])
+  })
+
+  it('ne dessine qu\'une pastille sur un quai partagé par deux lignes allumées', () => {
+    const fc = arretsPour(['a', 'b'], reseau, quais, null)
+    // Abbesses + Gare du Nord (ligne a) + Château de Vincennes (ligne b)
+    expect(fc.features).toHaveLength(3)
+    expect(fc.features.filter((f) => f.properties.couleur === '#FFCE00')).toHaveLength(2)
+  })
+
+  it('grossit la station touchée, quelle que soit sa graphie', () => {
+    const fc = arretsPour(['a'], reseau, quais, 'Gare du Nord (Métro)')
+    expect(fc.features.map((f) => f.properties.ech)).toEqual([1, 1.6])
+  })
+
+  it('traite le tram et le RER comme le métro', () => {
+    const mixte = new Map<string, Ligne>([
+      ['t', { ...desservie('t', '#66a933', ['Abbesses']), mode: 'tram' }],
+      ['r', { ...desservie('r', '#0055c8', ['Château de Vincennes']), mode: 'rer' }],
+    ])
+    expect(arretsPour(['t', 'r'], mixte, quais, null).features).toHaveLength(2)
+  })
+})
+
+describe('stationsIntrouvables', () => {
+  it('compte les trous par ligne, les pires en tête', () => {
+    const bilan = stationsIntrouvables(reseau, quais)
+    expect(bilan).toEqual([{ ref: 'a', mode: 'metro', total: 3, perdues: 1 }])
+  })
+
+  it('ne signale rien quand tout est situé', () => {
+    const propre = new Map<string, Ligne>([['b', reseau.get('b')!]])
+    expect(stationsIntrouvables(propre, quais)).toEqual([])
   })
 })
 
