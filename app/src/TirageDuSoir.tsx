@@ -21,7 +21,11 @@ import {
   preparerTirage,
   type FenetreSoiree,
 } from './tirage'
-import { type BobinePrete } from './ImportBobine'
+// `import type` (et pas `import { type … }`) : avec verbatimModuleSyntax, la
+// seconde forme laisse un `import './ImportBobine'` nu dans le JS émis — une
+// arête STATIQUE qui coexiste avec le lazy ci-dessous, et le bundler recolle
+// alors la chambre noire dans le chunk principal. Le type, lui, s'efface.
+import type { BobinePrete } from './ImportBobine'
 import { libelleDuree } from './super8'
 
 // la chambre noire du super 8 ne sert qu'à la bobine qui vient d'arriver — chargée à la demande
