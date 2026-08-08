@@ -2950,6 +2950,31 @@ button {
     1px 0 0 #14120e,
     -1px 0 0 #14120e;
   pointer-events: none;
+  /* elle paraît, elle reste le temps d'être lue, puis elle s'efface —
+     l'animation dure exactement DUREE_INVITE_MS (pellicule.ts) */
+  animation: invite-pellicule 6000ms ease-out forwards;
+}
+@keyframes invite-pellicule {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* si l'utilisateur ne veut pas d'animation : elle paraît et part net */
+@media (prefers-reduced-motion: reduce) {
+  .carte-pellicule-vide {
+    animation: none;
+  }
 }
 .reglages-bientot-item {
   display: flex;

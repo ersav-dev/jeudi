@@ -529,3 +529,48 @@ export function couchesComposite(srcs: readonly string[], vivantes: number): Cou
   if (srcs[0]) couches.push({ src: srcs[0], rot: -2, tx: 0, ty: 0 })
   return couches
 }
+
+// ── l'invitation de la pellicule vide (§1.8) ──────────────────────────────
+// « la ville se recharge — ce soir, c'est toi qui shootes. »
+//
+// Une invitation garde sa force si elle ne se répète pas. Elle ne paraît donc
+// qu'UNE FOIS PAR JOUR, et s'efface d'elle-même après quelques secondes : elle
+// a dit ce qu'elle avait à dire, et la carte est devenue trop dense (lignes de
+// métro, bouches) pour porter une phrase en permanence.
+//
+// Elle disparaîtra pour de bon au premier tas — c'est le but.
+const CLE_INVITE = 'jeudi-pellicule-invite'
+/** combien de temps la phrase reste avant de s'effacer */
+export const DUREE_INVITE_MS = 6000
+
+/** le jour civil d'un instant, en AAAA-MM-JJ local (pas UTC : à 1 h du matin
+ *  on est encore « hier soir » pour l'utilisateur, mais déjà demain en UTC) */
+export function jourCivil(t: number = Date.now()): string {
+  const d = new Date(t)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+/** l'invitation doit-elle paraître ? Non si la pellicule est pleine, non si
+ *  elle a déjà été vue aujourd'hui. */
+export function inviteAMontrer(pelliculeVide: boolean, dernierJour: string | null,
+                               maintenant: number = Date.now()): boolean {
+  if (!pelliculeVide) return false
+  return dernierJour !== jourCivil(maintenant)
+}
+
+export function lireJourInvite(): string | null {
+  try {
+    return localStorage.getItem(CLE_INVITE)
+  } catch {
+    return null
+  }
+}
+
+export function noterInviteVue(maintenant: number = Date.now()): void {
+  try {
+    localStorage.setItem(CLE_INVITE, jourCivil(maintenant))
+  } catch {
+    /* navigation privée : tant pis, elle reparaîtra */
+  }
+}

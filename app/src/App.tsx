@@ -149,6 +149,10 @@ import {
   construireCarnet,
   parNuits,
   tipDeLaSoiree,
+  inviteAMontrer,
+  lireJourInvite,
+  noterInviteVue,
+  DUREE_INVITE_MS,
   type TasAffiche,
   type SoireePellicule,
   type NuitAffichee,
@@ -1458,6 +1462,19 @@ export default function App() {
     return { parLieu, soirees }
   }, [lieux, cercleReel, vuesPel])
 
+  // ── l'invitation de la pellicule vide (§1.8) : une fois par jour, puis
+  // elle s'efface. Une invitation permanente au-dessus d'une carte devenue
+  // dense se lit comme un bandeau, plus comme une main tendue.
+  const [invite, setInvite] = useState(false)
+  useEffect(() => {
+    if (vue !== 'carte') return
+    if (!inviteAMontrer(pelliculeDonnees.soirees.length === 0, lireJourInvite())) return
+    setInvite(true)
+    noterInviteVue()
+    const t = window.setTimeout(() => setInvite(false), DUREE_INVITE_MS)
+    return () => window.clearTimeout(t)
+  }, [vue, pelliculeDonnees.soirees.length])
+
   // ── les soirs du cercle (§7) : la MÊME pellicule, lue humainement.
   // Une entrée = le résultat d'une soirée. 7 jours, chronologique, coupé
   // par nuit — rien ne classe, rien ne compte, et ça finit.
@@ -1864,9 +1881,10 @@ export default function App() {
                 }}
               />
               {/* l'état vide de la pellicule (§1.8) : une INVITATION,
-                  jamais un constat — et les souvenirs, eux, restent */}
-              {pelliculeDonnees.soirees.length === 0 && (
-                <p className="hand carte-pellicule-vide">
+                  jamais un constat — et les souvenirs, eux, restent.
+                  Une fois par jour, puis elle s'efface (cf. invite). */}
+              {invite && (
+                <p className="hand carte-pellicule-vide" aria-live="polite">
                   {t('la ville se recharge — ce soir, c’est toi qui shootes.')}
                 </p>
               )}
