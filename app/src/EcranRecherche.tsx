@@ -236,7 +236,7 @@ export default function Recherche({
               className="labo-molette"
               value={persoJour}
               onChange={(e) => setPersoJour(Number(e.target.value))}
-              aria-label="quel jour ?"
+              aria-label={t('quel jour ?')}
             >
               {Array.from({ length: 7 }, (_, i) => {
                 const d = new Date()
@@ -258,7 +258,7 @@ export default function Recherche({
               className="labo-molette"
               value={persoDemiHeure}
               onChange={(e) => setPersoDemiHeure(Number(e.target.value))}
-              aria-label="à quelle heure ?"
+              aria-label={t('à quelle heure ?')}
             >
               {Array.from({ length: 48 }, (_, i) => (
                 <option key={i} value={i}>
@@ -345,17 +345,17 @@ export default function Recherche({
           }}
         >
           {etatAdr === 'cherche'
-            ? 'je cherche…'
+            ? t('je cherche…')
             : etatAdr === 'introuvable'
-              ? 'introuvable par ici. essaie plus précis.'
-              : 'pas de réseau on dirait. réessaie dans un instant.'}
+              ? t('introuvable par ici. essaie plus précis.')
+              : t('pas de réseau on dirait. réessaie dans un instant.')}
         </div>
       )}
 
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 8 }}>
         {aIntention
-          ? `${resultats.length} réponse${resultats.length > 1 ? 's' : ''}`
-          : 'pour toi · tape ou choisis une envie pour chercher'}
+          ? `${resultats.length} ${t(resultats.length > 1 ? 'réponses' : 'réponse')}`
+          : t('pour toi · tape ou choisis une envie pour chercher')}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -398,14 +398,14 @@ export default function Recherche({
           </div>
         ))}
         {resultats.length === 0 && (
-          <p style={{ opacity: 0.5, fontStyle: 'italic' }}>rien sous la main. essaie une autre envie.</p>
+          <p style={{ opacity: 0.5, fontStyle: 'italic' }}>{t('rien sous la main. essaie une autre envie.')}</p>
         )}
       </div>
 
       {/* le grand jeudi : pas un bouton, une promesse (le 1ᵉʳ jeudi du mois) */}
       {!estCeLeGrandJeudi(new Date()) && (
         <p className="mono gj-promesse">
-          le grand jeudi · dans {joursGJ} jour{joursGJ > 1 ? 's' : ''}
+          {t('le grand jeudi')} · {t('dans')} {joursGJ} {t(joursGJ > 1 ? 'jours' : 'jour')}
         </p>
       )}
     </div>
