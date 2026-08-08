@@ -7770,6 +7770,26 @@ button {
   line-height: 1;
   white-space: nowrap;
 }
+/* TEST (08/08) — les vignettes carnet des planches GPT : le monument en
+ * gravure vieillie à la place du trait monoline. Une ombre douce pour
+ * décoller du fond nuit ; l'opacité reste sous les pins de spots. */
+.monument-vignette {
+  height: 52px;
+  width: auto;
+  opacity: 0.92;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+.monument-vignette.petite {
+  height: 42px;
+}
+/* les vignettes de points de rdv se voilent sous z12.5 (Carte.tsx) */
+.repere-vignette {
+  transition: opacity 240ms ease;
+}
+.repere-vignette.cachee {
+  opacity: 0;
+}
 
 /* les repères de transport (RER/métro/tram/batobus) : la PLAQUE — le sigle
  * en lettres claires sur un rectangle plein aux couleurs RATP, puis le nom

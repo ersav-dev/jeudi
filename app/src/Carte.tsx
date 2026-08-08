@@ -45,6 +45,7 @@ import {
 
 // les monuments du croquis : partagés avec la recherche (monuments.ts)
 import { MONUMENTS } from './monuments'
+import { REPERES } from './reperes'
 import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
 
@@ -1273,12 +1274,39 @@ export default function Carte({
     // ── les MONUMENTS-REPÈRES : le croquis s'oriente comme un vrai carnet ──
     // des silhouettes à l'encre graphite, discrètes, jamais tapables — elles
     // situent (la tour, la butte, l'étoile) sans jamais concurrencer les spots.
+    // TEST (08/08) : les vignettes carnet des planches GPT remplacent le
+    // trait monoline quand elles existent — Ersan juge sur pièce.
     for (const mo of MONUMENTS) {
       const el = document.createElement('div')
       el.className = 'monument-repere'
-      el.innerHTML = `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
+      el.innerHTML = mo.img
+        ? `<img class="monument-vignette" src="${mo.img}" alt="" loading="lazy">` +
+          `<span class="monument-nom">${mo.nom}</span>`
+        : `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
+    // …et les points de rendez-vous qui ont leur vignette (République, la
+    // colonne de Juillet, le pont Alexandre III…) : posés plus petits, et
+    // seulement à partir de z12.5 — douze images de plus à z11, la ville
+    // disparaîtrait sous les stickers.
+    const vignettesRdv: maplibregl.Marker[] = []
+    for (const r of REPERES) {
+      if (!r.img) continue
+      const el = document.createElement('div')
+      el.className = 'monument-repere repere-vignette'
+      el.innerHTML =
+        `<img class="monument-vignette petite" src="${r.img}" alt="" loading="lazy">` +
+        `<span class="monument-nom">${r.nom}</span>`
+      vignettesRdv.push(
+        new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(carte.current),
+      )
+    }
+    const voileVignettes = () => {
+      const cache = (carte.current?.getZoom() ?? 0) < 12.5
+      for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', cache)
+    }
+    voileVignettes()
+    carte.current.on('zoomend', voileVignettes)
 
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)
     const elMoi = document.createElement('div')
