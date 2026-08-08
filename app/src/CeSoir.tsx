@@ -102,6 +102,28 @@ export default function CeSoir({
   const [compagnie, setCompagnie] = useState<Compagnie | null>(null)
   const [envie, setEnvie] = useState<string | null>(null)
   const [meteo, setMeteo] = useState<Meteo>(() => lireMeteo())
+  // « la situation du portefeuille » : les prix restent cachés par défaut —
+  // un double-tap sur l'icône météo les révèle ~18 s (TRANCHÉ Ersan, 08/08).
+  // Pas de dblclick fiable sur mobile : on détecte nous-mêmes deux taps à
+  // moins de 300 ms d'écart.
+  const [prixReveles, setPrixReveles] = useState(false)
+  const dernierTapMeteoRef = useRef(0)
+  const minuteurPrixRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(minuteurPrixRef.current), [])
+  const tapIconeMeteo = (e: React.MouseEvent) => {
+    const maintenant = Date.now()
+    const delta = maintenant - dernierTapMeteoRef.current
+    dernierTapMeteoRef.current = maintenant
+    if (delta > 0 && delta < 300) {
+      // le double-tap ne doit RIEN déclencher d'autre (surtout pas re-choisir
+      // cette météo une 2e fois)
+      e.stopPropagation()
+      navigator.vibrate?.(10)
+      setPrixReveles(true)
+      clearTimeout(minuteurPrixRef.current)
+      minuteurPrixRef.current = setTimeout(() => setPrixReveles(false), 18_000)
+    }
+  }
   // bloc B : la porte « je sais pas » — pas un 6e onglet, un mode DANS ce soir
   const [surprise, setSurprise] = useState(false)
   // « quand ? » — le MOMENT unifié (moment.ts, audit du cœur 01/08) : les
@@ -290,8 +312,10 @@ export default function CeSoir({
             onClick={() => choisirMeteo(m)}
             title={label}
           >
-            {icone}
-            <span className="meteo-prix mono">{prixMeteo(m)}</span>
+            <span className="meteo-icone" onClick={tapIconeMeteo}>
+              {icone}
+            </span>
+            <span className={`meteo-prix mono${prixReveles ? ' revele' : ''}`}>{prixMeteo(m)}</span>
           </button>
         ))}
         {meteo === 'pluie' && <span className="mono pluie-mot">{t('il pleut sur ton porte-monnaie.')}</span>}

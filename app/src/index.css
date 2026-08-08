@@ -4122,6 +4122,29 @@ button {
      rouges en permanence → budget --cire explosé. L'actif s'encre, c'est tout. */
   color: var(--encre);
 }
+/* les prix restent cachés par défaut — un double-tap sur l'icône météo les
+   révèle ~18 s (CeSoir.tsx tapIconeMeteo, 08/08). Scopé à .meteo-bas : la
+   classe .meteo-prix est réutilisée ailleurs (chips compagnie de « je sais
+   pas ») pour du texte toujours visible, jamais un prix à cacher. */
+.meteo-bas .meteo-prix {
+  opacity: 0;
+  transition: opacity 1000ms ease;
+}
+.meteo-bas .meteo-prix.revele {
+  opacity: 1;
+  transition: opacity 120ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meteo-bas .meteo-prix {
+    transition: none; /* apparition/disparition nettes, pas de fondu */
+  }
+}
+/* la zone tapable du double-tap : juste l'icône, jamais tout le chip — et
+   jamais le zoom natif du navigateur sur un double-tap mobile */
+.meteo-icone {
+  display: inline-flex;
+  touch-action: manipulation;
+}
 .meteo-sens {
   display: block;
   margin-top: 4px;
