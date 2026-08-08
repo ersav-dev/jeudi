@@ -20,14 +20,14 @@ export const TEINTES: Record<TypeTransport, string> = {
   velib: '#e05a3a',
 }
 
-let cache: FeatureCollection<Point, { type: TypeTransport; nom: string }> | null = null
-let promesse: Promise<FeatureCollection<Point, { type: TypeTransport; nom: string }>> | null = null
+let cache: FeatureCollection<Point, { type: TypeTransport; nom: string; lignes?: string[] }> | null = null
+let promesse: Promise<FeatureCollection<Point, { type: TypeTransport; nom: string; lignes?: string[] }>> | null = null
 
 export const donneesTransport = () => {
   if (cache) return Promise.resolve(cache)
   if (promesse) return promesse
   promesse = fetch('/transport.json')
-    .then((r) => r.json() as Promise<FeatureCollection<Point, { type: TypeTransport; nom: string }>>)
+    .then((r) => r.json() as Promise<FeatureCollection<Point, { type: TypeTransport; nom: string; lignes?: string[] }>>)
     .then((geo) => {
       cache = geo
       return geo

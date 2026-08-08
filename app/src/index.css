@@ -7672,6 +7672,31 @@ button {
 .repere-transport[data-mode='batobus'] .repere-transport-mode {
   background: #00a4c4;
 }
+/* ── toucher une station trace ses lignes (08/08) ──
+ * Seules les stations qu'on sait relier à une ligne deviennent tapables :
+ * un tap qui ne fait rien est pire que pas de tap du tout. C'est la seule
+ * entorse au « jamais tapable » des repères — assumée, parce qu'une
+ * étiquette de texte ne se confond pas avec une épingle ronde. */
+.repere-transport--tapable {
+  pointer-events: auto;
+  cursor: pointer;
+  /* la cible tactile : ~44 px de haut sans bouger le dessin d'un pixel */
+  padding: 15px 10px;
+  margin: -15px -10px;
+  -webkit-tap-highlight-color: transparent;
+}
+/* la station dont les lignes sont allumées : elle sort du filigrane */
+.repere-transport--trace {
+  opacity: 0.95;
+}
+.repere-transport--trace .repere-transport-mode {
+  box-shadow: 0 0 0 1px rgba(239, 233, 216, 0.85);
+}
+@media (hover: hover) {
+  .repere-transport--tapable:hover {
+    opacity: 0.8;
+  }
+}
 
 /* le focus au trait d'encre — jamais l'anneau bleu du navigateur */
 button:focus-visible,

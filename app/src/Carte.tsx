@@ -30,6 +30,15 @@ import {
 import { composerTas } from './pelliculeComposite'
 import { t } from './langue'
 import { donneesTransport } from './transport'
+import {
+  chargerLignes,
+  tracesPour,
+  AUCUNE_LIGNE,
+  SOURCE_LIGNES,
+  LAYER_LIGNES,
+  LAYER_LIGNES_HALO,
+  type Ligne,
+} from './lignes'
 
 // les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
 const traitMonument = (d: string) =>
@@ -191,6 +200,16 @@ export default function Carte({
   const etiquettesTransport = useRef<maplibregl.Marker[]>([])
   // on ne veut fetcher transport.json qu'UNE SEULE fois par montage
   const transportDejaCharge = useRef(false)
+  // les tracés de lignes : la table des lignes une fois chargée, et le nom de
+  // la station dont les lignes sont actuellement dessinées (null = aucune)
+  const lignesConnues = useRef<Map<string, Ligne> | null>(null)
+  const stationTracee = useRef<string | null>(null)
+  // re-poser les étiquettes après un tracé, pour que la station active
+  // porte sa marque (elle est repeinte, pas juste re-stylée)
+  const majEtiquettesRef = useRef<() => void>(() => {})
+  // effacer le tracé depuis l'extérieur du handler de chargement (tap sur la
+  // carte nue, sélection d'un spot) — posé une fois la carte prête
+  const effacerLignesRef = useRef<() => void>(() => {})
   // #11 : le lieu sélectionné — pilote le bottom-sheet, le carrousel et le grisé
   const [actif, setActif] = useState<string | null>(null)
   // ── les marques émoji (chantier 2) : Record<lieuId, émoji>, source
@@ -919,9 +938,66 @@ export default function Carte({
       // cocarde ; B d'abord retenue puis remplacée par C le 08/08).
       // Opacité très basse : c'est un filigrane, un cran sous tout le reste.
       // Bus/Vélib' non étiquetés (trop denses, ~4500 points). Cap 24,
-      // collision 82 px, seuils zoom par mode. Rien de tapable.
+      // collision 82 px, seuils zoom par mode.
+      //
+      // ── TOUCHER une station trace ses lignes (08/08) : c'est la seule
+      // chose tapable du transport. Une station qui sert 5 lignes les allume
+      // TOUTES — pas de menu au milieu de la carte pour choisir. Le tracé est
+      // éphémère : il s'efface au tap suivant ou en touchant la carte nue.
+      // Les traits vivent SOUS la poussière et les épingles (ajoutés avant).
+      if (!m.getSource(SOURCE_LIGNES)) {
+        m.addSource(SOURCE_LIGNES, { type: 'geojson', data: AUCUNE_LIGNE })
+        // le halo sombre : décolle le trait des rues du fond, sinon la ligne
+        // se confond avec le dessin de la ville sur les tuiles claires
+        m.addLayer({
+          id: LAYER_LIGNES_HALO,
+          type: 'line',
+          source: SOURCE_LIGNES,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#0b1a3a',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 9],
+            'line-opacity': 0.55,
+          },
+        })
+        // le trait : la vraie couleur RATP, portée par la donnée
+        m.addLayer({
+          id: LAYER_LIGNES,
+          type: 'line',
+          source: SOURCE_LIGNES,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': ['get', 'couleur'],
+            'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2.5, 15, 5],
+            'line-opacity': 0.9,
+          },
+        })
+      }
+      // toucher la station allume ses lignes ; la retoucher (ou toucher la
+      // carte nue) les éteint. Une seule station tracée à la fois.
+      const peindreLignes = (ids?: string[]) => {
+        const src = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
+        const table = lignesConnues.current
+        src?.setData(!ids || !table ? AUCUNE_LIGNE : tracesPour(ids, table))
+      }
+      const basculerLignes = (nom: string, ids?: string[]) => {
+        const memeStation = stationTracee.current === nom
+        stationTracee.current = memeStation ? null : nom
+        peindreLignes(memeStation ? undefined : ids)
+        majEtiquettesRef.current()
+      }
+      effacerLignesRef.current = () => {
+        if (!stationTracee.current) return
+        stationTracee.current = null
+        peindreLignes(undefined)
+        majEtiquettesRef.current()
+      }
+
       if (!transportDejaCharge.current) {
         transportDejaCharge.current = true
+        chargerLignes()
+          .then((t) => { lignesConnues.current = t })
+          .catch((err) => console.warn('[carte] lignes.json:', err))
         donneesTransport()
           .then((geo) => {
             const nommables = geo.features.filter((f) =>
@@ -947,7 +1023,8 @@ export default function Carte({
               }
               const b = carte.current.getBounds()
               const candidats: {
-                nom: string; type: string; lng: number; lat: number; x: number; y: number; prio: number
+                nom: string; type: string; lng: number; lat: number; x: number; y: number
+                prio: number; lignes?: string[]
               }[] = []
               for (const f of nommables) {
                 const cfg = CONFIG[f.properties.type]
@@ -959,6 +1036,7 @@ export default function Carte({
                 candidats.push({
                   nom: f.properties.nom, type: f.properties.type,
                   lng, lat, x: p.x, y: p.y, prio: cfg.prio,
+                  lignes: f.properties.lignes,
                 })
               }
               const cx = (carte.current.getContainer().clientWidth || 0) / 2
@@ -995,11 +1073,23 @@ export default function Carte({
                 nom.className = 'repere-transport-nom'
                 nom.textContent = c.nom
                 el.append(code, nom)
+                // une station desservie est tapable : elle trace ses lignes.
+                // Sans ligne connue (batobus, gares de grande couronne) on
+                // laisse l'étiquette inerte plutôt que d'offrir un tap mort.
+                if (c.lignes?.length) {
+                  el.classList.add('repere-transport--tapable')
+                  if (stationTracee.current === c.nom) el.classList.add('repere-transport--trace')
+                  el.addEventListener('click', (ev) => {
+                    ev.stopPropagation()
+                    basculerLignes(c.nom, c.lignes)
+                  })
+                }
                 return new maplibregl.Marker({ element: el, anchor: 'center' })
                   .setLngLat([c.lng, c.lat])
                   .addTo(carte.current!)
               })
             }
+            majEtiquettesRef.current = majEtiquettes
             majEtiquettes()
             carte.current?.on('moveend', majEtiquettes)
             carte.current?.on('zoomend', majEtiquettes)
@@ -1039,6 +1129,9 @@ export default function Carte({
         grappeOuverte.current = null
         majGrappesRef.current()
       }
+      // ...et éteint la ligne de métro tracée : le tracé est un coup d'œil,
+      // pas un mode dans lequel on reste
+      effacerLignesRef.current()
       const id = lieuSousPoint(e.point)
       if (id) setActifRef.current(id)
     })
