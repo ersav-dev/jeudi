@@ -6700,42 +6700,74 @@ button {
   white-space: nowrap;
 }
 
-/* les repères de transport (RER/métro/tram/batobus) : JUSTE le nom en
- * Caveat, teinté par mode (très désaturé) — le rond a été jugé trop proche
- * des spots. Opacité TRÈS BASSE (0.25–0.4) : lisible en le cherchant, jamais
- * dominant. Jamais tapable. */
+/* les repères de transport (RER/métro/tram/batobus) : la PLAQUE — le sigle
+ * en lettres claires sur un rectangle plein aux couleurs RATP, puis le nom
+ * de la station en Caveat encre. Variante « C » de
+ * design/etiquettes_transport.html (retenue le 08/08 après B).
+ * Le rectangle a été choisi CONTRE le rond : un cercle se confondait avec
+ * les épingles de spot. Opacité 0.42–0.58 : présent, mais toujours sous les
+ * épingles (opaques). Jamais tapable. */
 .repere-transport {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: 'Caveat', cursive;
   font-size: 13px;
   line-height: 1;
   color: var(--encre);
-  opacity: 0.28;
+  opacity: 0.48;
   white-space: nowrap;
   pointer-events: none;
   z-index: 0;
-  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.6);
 }
-/* RER : hub structurant, un peu plus présent, légère teinte bleu RER */
+/* la plaque : sigle droit sur fond plein, filet clair autour pour décoller
+ * du fond de carte quelle que soit la tuile dessous */
+.repere-transport-mode {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: #EFE9D8;
+  padding: 2px 4px 1px;
+  border-radius: 3px;
+  line-height: 1;
+  min-width: 12px;
+  text-align: center;
+  box-shadow: 0 0 0 0.5px rgba(239, 233, 216, 0.35);
+}
+/* le nom : Caveat hérité du parent + un halo, sinon il se perd sur les
+ * tuiles claires (la plaque, elle, tient toute seule grâce à son fond) */
+.repere-transport-nom {
+  font: inherit;
+  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.55);
+}
+/* RER : hub structurant, le plus présent */
 .repere-transport[data-mode='rer'] {
-  opacity: 0.4;
-  color: #a8c4ff;
+  opacity: 0.58;
   font-size: 14px;
 }
-/* métro : encre pure — la référence par défaut de la ville */
-.repere-transport[data-mode='metro'] {
-  opacity: 0.32;
+.repere-transport[data-mode='rer'] .repere-transport-mode {
+  background: #0055c8;
 }
-/* tram : teinte vert doux, presque effacé */
+/* métro : la référence par défaut de la ville */
+.repere-transport[data-mode='metro'] .repere-transport-mode {
+  background: #0b1a3a;
+}
+/* tram : repère secondaire, un cran en retrait */
 .repere-transport[data-mode='tram'] {
-  opacity: 0.25;
-  color: #b4d69c;
+  opacity: 0.42;
   font-size: 12px;
 }
-/* batobus : teinte cyan doux, presque effacé */
+.repere-transport[data-mode='tram'] .repere-transport-mode {
+  background: #66a933;
+}
+/* batobus : repère secondaire, un cran en retrait */
 .repere-transport[data-mode='batobus'] {
-  opacity: 0.25;
-  color: #9cd5df;
+  opacity: 0.42;
   font-size: 12px;
+}
+.repere-transport[data-mode='batobus'] .repere-transport-mode {
+  background: #00a4c4;
 }
 
 /* le focus au trait d'encre — jamais l'anneau bleu du navigateur */

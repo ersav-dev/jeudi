@@ -590,14 +590,16 @@ export default function Carte({
           },
         })
       }
-      // ── les repères de transport : nom de station en Caveat, teinté par
-      // mode (RER bleu pâle, métro encre, tram vert doux, batobus cyan doux),
-      // opacité très basse (0.25–0.40) — un cran en dessous du reste. PAS de
-      // cercle (confusion visuelle avec les spots). Cap 24 étiquettes dans le
-      // viewport, collision 82 px, priorité RER > métro > tram > batobus.
-      // Bus/Vélib' PAS étiquetés (trop denses). Jamais tapables. Data OSM
-      // figée le 2026-08-07 (5 205 points dans /transport.json, fetchée à la
-      // demande — ~150 ko gzip, hors bundle initial).
+      // ── les repères de transport : le NOM de la station en Caveat, précédé
+      // du mode en PLAQUE pleine aux couleurs RATP (M / RER / T / BAT).
+      // Variante « C » de design/etiquettes_transport.html (6 pistes comparées
+      // le 07/08 : nom seul, sigle+nom, plaque, M° manuscrit, souligné,
+      // cocarde ; B d'abord retenue puis remplacée par C le 08/08).
+      // PAS de cercle : il se confondait avec les spots. Cap 24 étiquettes
+      // dans le viewport, collision 82 px, priorité RER > métro > tram >
+      // batobus. Bus/Vélib' PAS étiquetés (trop denses). Jamais tapables.
+      // Data OSM figée le 2026-08-07 (5 205 points dans /transport.json,
+      // fetchée à la demande — ~150 ko gzip, hors bundle initial).
       if (!transportDejaCharge.current) {
         transportDejaCharge.current = true
         donneesTransport()
@@ -608,11 +610,12 @@ export default function Carte({
               f.properties.type === 'tram' ||
               f.properties.type === 'batobus',
             )
-            const CONFIG: Record<string, { prio: number; zMin: number }> = {
-              rer: { prio: 4, zMin: 12.5 },
-              metro: { prio: 3, zMin: 13 },
-              tram: { prio: 2, zMin: 14 },
-              batobus: { prio: 1, zMin: 14 },
+            // priorité (RER majeur → batobus mineur) + seuil de zoom + code mode
+            const CONFIG: Record<string, { prio: number; zMin: number; code: string }> = {
+              rer: { prio: 4, zMin: 12.5, code: 'RER' },
+              metro: { prio: 3, zMin: 13, code: 'M' },
+              tram: { prio: 2, zMin: 14, code: 'T' },
+              batobus: { prio: 1, zMin: 14, code: 'BAT' },
             }
             const majEtiquettes = () => {
               if (!carte.current) return
@@ -663,7 +666,15 @@ export default function Carte({
                 const el = document.createElement('div')
                 el.className = 'repere-transport'
                 el.dataset.mode = c.type
-                el.textContent = c.nom
+                // la plaque puis le nom — textContent sur des spans séparés :
+                // rien à échapper, aucune injection possible depuis la donnée
+                const code = document.createElement('span')
+                code.className = 'repere-transport-mode'
+                code.textContent = CONFIG[c.type].code
+                const nom = document.createElement('span')
+                nom.className = 'repere-transport-nom'
+                nom.textContent = c.nom
+                el.append(code, nom)
                 return new maplibregl.Marker({ element: el, anchor: 'center' })
                   .setLngLat([c.lng, c.lat])
                   .addTo(carte.current!)

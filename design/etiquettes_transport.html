@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — étiquettes transport (variantes)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --encre: #EFE9D8;
+    --nuit: #0b1a3a;
+    --rer: #a8c4ff;
+    --metro: #c9d4ef;
+    --tram: #b4d69c;
+    --bato: #9cd5df;
+    --rer-vif: #0055c8;
+    --metro-vif: #0b1a3a;
+    --tram-vif: #66a933;
+    --bato-vif: #00a4c4;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: #1a1d24;
+    color: var(--encre);
+    font-family: system-ui, sans-serif;
+    padding: 24px 16px 60px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  h1 { font-family: 'Caveat', cursive; font-size: 30px; font-weight: 600; margin-bottom: 4px; }
+  .sous { opacity: .55; font-size: 13px; margin-bottom: 24px; }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .12em;
+    opacity: .5; margin: 30px 0 8px; font-weight: 600;
+  }
+  .note { font-size: 12px; opacity: .5; margin: 6px 2px 0; line-height: 1.45; }
+
+  /* le faux bout de carte : fond sombre carto + poussière + un pin spot pour comparer */
+  .carte {
+    position: relative;
+    height: 190px;
+    border-radius: 10px;
+    background:
+      radial-gradient(ellipse at 70% 30%, #232838 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 80%, #20242f 0%, transparent 50%),
+      #191c25;
+    overflow: hidden;
+    border: 1px solid rgba(239,233,216,.08);
+  }
+  /* rues suggérées */
+  .carte::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(115deg, transparent 48%, rgba(239,233,216,.05) 48.5%, rgba(239,233,216,.05) 49%, transparent 49.5%),
+      linear-gradient(35deg, transparent 30%, rgba(239,233,216,.04) 30.5%, rgba(239,233,216,.04) 31%, transparent 31.5%),
+      linear-gradient(0deg, transparent 63%, rgba(239,233,216,.05) 63.5%, rgba(239,233,216,.05) 64.2%, transparent 64.7%);
+  }
+  /* la poussière : ronds encre 55 % — la référence de densité visuelle */
+  .p { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(239,233,216,.55); box-shadow: 0 0 0 2px rgba(239,233,216,.12); }
+  /* un pin spot (tampon) pour comparer la hiérarchie */
+  .spot {
+    position: absolute; width: 30px; height: 30px; border-radius: 50%;
+    background: #5d8dff; border: 2px solid var(--encre);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Caveat', cursive; font-size: 15px; color: #fff;
+  }
+  .monument {
+    position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    color: #9a958a; opacity: .55; font-family: 'Caveat', cursive; font-size: 13px;
+  }
+  .monument svg { width: 22px; height: 22px; }
+
+  /* ─── les étiquettes candidates ─── */
+  .et { position: absolute; white-space: nowrap; pointer-events: none; }
+
+  /* A — nom seul (Caveat, filigrane) */
+  .vA { font-family: 'Caveat', cursive; font-size: 13px; color: var(--encre); opacity: .32;
+        text-shadow: 0 0 3px rgba(11,26,58,.9); }
+  .vA.rer { opacity: .4; color: var(--rer); font-size: 14px; }
+
+  /* B — sigle texte + nom (actuel en working tree) */
+  .vB { display: inline-flex; align-items: baseline; gap: 3px; font-family: 'Caveat', cursive;
+        font-size: 13px; color: var(--encre); opacity: .32; text-shadow: 0 0 3px rgba(11,26,58,.9); }
+  .vB .m { font-family: system-ui, sans-serif; font-weight: 700; font-size: 8px; letter-spacing: .04em; color: var(--metro); }
+  .vB.rer { opacity: .4; font-size: 14px; }
+  .vB.rer .m { color: var(--rer); font-size: 9px; }
+
+  /* C — plaque badge plein + nom */
+  .vC { display: inline-flex; align-items: center; gap: 4px; font-family: 'Caveat', cursive;
+        font-size: 13px; color: var(--encre); opacity: .48; }
+  .vC .m { font-family: system-ui, sans-serif; font-weight: 700; font-size: 9px; color: var(--encre);
+           padding: 2px 4px 1px; border-radius: 3px; line-height: 1; min-width: 12px; text-align: center;
+           box-shadow: 0 0 0 .5px rgba(239,233,216,.35); }
+  .vC.metro .m { background: var(--metro-vif); }
+  .vC.rer .m { background: var(--rer-vif); }
+  .vC.rer { opacity: .58; font-size: 14px; }
+  .vC.tram .m { background: var(--tram-vif); }
+
+  /* D — M° façon écriture manuscrite (le sigle DANS le Caveat, pas droit) */
+  .vD { font-family: 'Caveat', cursive; font-size: 13px; color: var(--encre); opacity: .34;
+        text-shadow: 0 0 3px rgba(11,26,58,.9); }
+  .vD .m { color: var(--metro); font-weight: 600; }
+  .vD.rer { opacity: .42; font-size: 14px; }
+  .vD.rer .m { color: var(--rer); }
+
+  /* E — nom souligné d'un trait de couleur mode (pas de sigle) */
+  .vE { font-family: 'Caveat', cursive; font-size: 13px; color: var(--encre); opacity: .34;
+        text-shadow: 0 0 3px rgba(11,26,58,.9);
+        border-bottom: 1.5px solid var(--metro); padding-bottom: 1px; }
+  .vE.rer { opacity: .42; font-size: 14px; border-bottom-color: var(--rer); border-bottom-width: 2px; }
+  .vE.tram { border-bottom-color: var(--tram); opacity: .28; font-size: 12px; }
+
+  /* F — cocarde outline : le M dans un rond au TRAIT (pas plein → pas un spot) */
+  .vF { display: inline-flex; align-items: center; gap: 4px; font-family: 'Caveat', cursive;
+        font-size: 13px; color: var(--encre); opacity: .38; text-shadow: 0 0 3px rgba(11,26,58,.9); }
+  .vF .m { width: 13px; height: 13px; border-radius: 50%; border: 1.2px solid var(--metro);
+           color: var(--metro); font-family: system-ui, sans-serif; font-weight: 700; font-size: 8px;
+           display: inline-flex; align-items: center; justify-content: center; background: transparent; }
+  .vF.rer { opacity: .46; font-size: 14px; }
+  .vF.rer .m { border-color: var(--rer); color: var(--rer); width: 15px; border-radius: 4px; font-size: 7px; }
+</style>
+</head>
+<body>
+  <h1>étiquettes transport</h1>
+  <p class="sous">6 variantes, à taille réelle, sur un faux bout de carte sombre.
+  Chaque scène a : la poussière (ronds encre), un pin spot bleu, un monument — pour juger la hiérarchie.</p>
+
+  <h2>A · nom seul, filigrane</h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vA" style="left:120px;top:40px">Abbesses</div>
+    <div class="et vA rer" style="left:290px;top:150px">Châtelet–Les Halles</div>
+    <div class="et vA" style="left:30px;top:165px">Edgar Quinet</div>
+  </div>
+  <p class="note">Le plus discret. Mais on ne sait pas si c'est un métro, un RER, un lieu-dit.</p>
+
+  <h2>B · sigle texte + nom <span style="opacity:.6">(actuel)</span></h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vB" style="left:120px;top:40px"><span class="m">M</span>Abbesses</div>
+    <div class="et vB rer" style="left:280px;top:150px"><span class="m">RER</span>Châtelet–Les Halles</div>
+    <div class="et vB" style="left:30px;top:165px"><span class="m">M</span>Edgar Quinet</div>
+  </div>
+  <p class="note">Le sigle dit le mode sans dessin. À 8 px, il faut zoomer pour le lire sur téléphone.</p>
+
+  <h2>C · plaque badge plein</h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vC metro" style="left:120px;top:40px"><span class="m">M</span>Abbesses</div>
+    <div class="et vC rer" style="left:280px;top:150px"><span class="m">RER</span>Châtelet–Les Halles</div>
+    <div class="et vC tram" style="left:30px;top:165px"><span class="m">T</span>Porte de Versailles</div>
+  </div>
+  <p class="note">Lisible immédiatement, code couleur RATP. Mais le plus « app de transport » des six.</p>
+
+  <h2>D · sigle manuscrit « M° » dans le Caveat</h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vD" style="left:120px;top:40px"><span class="m">M°</span> Abbesses</div>
+    <div class="et vD rer" style="left:280px;top:150px"><span class="m">RER</span> Châtelet–Les Halles</div>
+    <div class="et vD" style="left:30px;top:165px"><span class="m">M°</span> Edgar Quinet</div>
+  </div>
+  <p class="note">Comme écrit au stylo dans un carnet : « M° Abbesses ». Le plus DA carnet — le mode est dit, mais à la main.</p>
+
+  <h2>E · nom souligné couleur mode</h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vE" style="left:120px;top:40px">Abbesses</div>
+    <div class="et vE rer" style="left:280px;top:150px">Châtelet–Les Halles</div>
+    <div class="et vE tram" style="left:30px;top:165px">Porte de Versailles</div>
+  </div>
+  <p class="note">Épuré : le trait dit le mode par la couleur. Mais il faut CONNAÎTRE le code couleur — pas explicite.</p>
+
+  <h2>F · cocarde au trait (rond outline, pas plein)</h2>
+  <div class="carte">
+    <div class="p" style="left:40px;top:60px"></div><div class="p" style="left:200px;top:130px"></div><div class="p" style="left:330px;top:40px"></div>
+    <div class="spot" style="left:250px;top:70px">O</div>
+    <div class="monument" style="left:60px;top:110px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21c2-7 2-12 3-17 1 5 1 10 3 17"/><path d="M7 21h4a3 3 0 0 1 2 0h4"/></svg>tour eiffel</div>
+    <div class="et vF" style="left:120px;top:40px"><span class="m">M</span>Abbesses</div>
+    <div class="et vF rer" style="left:280px;top:150px"><span class="m">RER</span>Châtelet–Les Halles</div>
+    <div class="et vF" style="left:30px;top:165px"><span class="m">M</span>Edgar Quinet</div>
+  </div>
+  <p class="note">Le rond au trait fin ne ressemble PAS aux spots (qui sont pleins) ni à la poussière. Référence directe au logo métro, mais dessiné.</p>
+</body>
+</html>
