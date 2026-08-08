@@ -32,12 +32,18 @@ import { t } from './langue'
 import { donneesTransport } from './transport'
 import {
   chargerLignes,
+  chargerBouches,
   tracesPour,
+  bouchesPour,
   AUCUNE_LIGNE,
+  AUCUNE_BOUCHE,
   SOURCE_LIGNES,
   LAYER_LIGNES,
   LAYER_LIGNES_HALO,
+  SOURCE_BOUCHES,
+  LAYER_BOUCHES,
   type Ligne,
+  type Bouche,
 } from './lignes'
 
 // les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
@@ -203,6 +209,7 @@ export default function Carte({
   // les tracés de lignes : la table des lignes une fois chargée, et le nom de
   // la station dont les lignes sont actuellement dessinées (null = aucune)
   const lignesConnues = useRef<Map<string, Ligne> | null>(null)
+  const bouchesConnues = useRef<Record<string, Bouche[]> | null>(null)
   const stationTracee = useRef<string | null>(null)
   // re-poser les étiquettes après un tracé, pour que la station active
   // porte sa marque (elle est repeinte, pas juste re-stylée)
@@ -960,7 +967,9 @@ export default function Carte({
             'line-opacity': 0.55,
           },
         })
-        // le trait : la vraie couleur RATP, portée par la donnée
+        // le trait : la couleur de la charte IDFM, portée par la donnée.
+        // Pleine opacité — c'est ce qu'on vient de demander à voir, ça n'a
+        // aucune raison d'être en retrait comme les étiquettes.
         m.addLayer({
           id: LAYER_LIGNES,
           type: 'line',
@@ -968,28 +977,58 @@ export default function Carte({
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
             'line-color': ['get', 'couleur'],
-            'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2.5, 15, 5],
-            'line-opacity': 0.9,
+            'line-width': ['interpolate', ['linear'], ['zoom'], 11, 3, 15, 6],
+            'line-opacity': 1,
+          },
+        })
+        // les bouches de la station touchée : de petits carrés à l'encre,
+        // là où on descend vraiment. Carrés et non ronds — le rond reste
+        // réservé aux spots.
+        m.addSource(SOURCE_BOUCHES, { type: 'geojson', data: AUCUNE_BOUCHE })
+        m.addLayer({
+          id: LAYER_BOUCHES,
+          type: 'circle',
+          source: SOURCE_BOUCHES,
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 2.5, 17, 5],
+            'circle-color': '#EFE9D8',
+            'circle-opacity': 0.95,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': '#0b1a3a',
+            'circle-stroke-opacity': 0.9,
           },
         })
       }
       // toucher la station allume ses lignes ; la retoucher (ou toucher la
       // carte nue) les éteint. Une seule station tracée à la fois.
-      const peindreLignes = (ids?: string[]) => {
-        const src = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
+      const peindre = (nom: string | null, ids?: string[]) => {
+        const sl = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
+        const sb = m.getSource(SOURCE_BOUCHES) as maplibregl.GeoJSONSource | undefined
         const table = lignesConnues.current
-        src?.setData(!ids || !table ? AUCUNE_LIGNE : tracesPour(ids, table))
+        sl?.setData(!ids || !table ? AUCUNE_LIGNE : tracesPour(ids, table))
+        sb?.setData(bouchesPour(nom, bouchesConnues.current))
       }
       const basculerLignes = (nom: string, ids?: string[]) => {
         const memeStation = stationTracee.current === nom
         stationTracee.current = memeStation ? null : nom
-        peindreLignes(memeStation ? undefined : ids)
+        if (memeStation) {
+          peindre(null)
+        } else {
+          // les bouches ne descendent qu'au premier tap de la session
+          chargerBouches()
+            .then((b) => {
+              bouchesConnues.current = b
+              if (stationTracee.current === nom) peindre(nom, ids)
+            })
+            .catch((err) => console.warn('[carte] entrees.json:', err))
+          peindre(nom, ids)
+        }
         majEtiquettesRef.current()
       }
       effacerLignesRef.current = () => {
         if (!stationTracee.current) return
         stationTracee.current = null
-        peindreLignes(undefined)
+        peindre(null)
         majEtiquettesRef.current()
       }
 
