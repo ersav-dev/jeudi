@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — 15 résultats ou 3 réponses ?</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --encre:#EFE9D8; --nuit:#0b1a3a; --bleu:#5d8dff; --rouge:#e05a3a;
+         --papier:#14120e; --papier2:#1c1915; }
+  *{ margin:0; box-sizing:border-box; }
+  body{ background:var(--papier); color:var(--encre); font-family:system-ui,sans-serif;
+        padding:26px 16px 70px; max-width:430px; margin:0 auto; }
+  h1{ font-family:'Caveat',cursive; font-size:30px; font-weight:600; margin-bottom:4px; }
+  .sous{ opacity:.55; font-size:13px; line-height:1.5; margin-bottom:6px; }
+  .scenario{ font-family:'Caveat',cursive; font-size:18px; margin:10px 0 24px; opacity:.9; }
+  h2{ font-size:12px; text-transform:uppercase; letter-spacing:.12em; opacity:.5; margin:34px 0 10px; }
+  .cadre{ border:1px solid rgba(239,233,216,.09); border-radius:12px; padding:14px; background:#171411; }
+  .compteur{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.5; margin-bottom:8px; }
+
+  /* ══ AVANT : la liste actuelle ══ */
+  .ligne{ display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:10px;
+          background:var(--papier2); border:1px solid rgba(239,233,216,.07); margin-bottom:8px; }
+  .vign{ width:40px; height:40px; border-radius:7px; flex:0 0 auto;
+         background:linear-gradient(135deg,#26221c,#1a1713);
+         display:flex; align-items:center; justify-content:center; opacity:.8; }
+  .vign svg{ width:15px; height:15px; opacity:.35; }
+  .ligne .nom{ font-size:14px; }
+  .ligne .dist{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.55; margin-left:auto; white-space:nowrap; }
+  .ligne .raison{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--rouge); opacity:.8; margin-top:3px; }
+  .fondu{ position:relative; }
+  .fondu::after{ content:''; position:absolute; left:-14px; right:-14px; bottom:-14px; height:130px;
+                 background:linear-gradient(transparent,#171411 78%); border-radius:0 0 12px 12px; }
+  .encore{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.4; padding-top:4px; }
+
+  /* ══ APRÈS : trois réponses ══ */
+  .rep{ background:var(--papier2); border:1px solid rgba(239,233,216,.1); border-radius:12px;
+        overflow:hidden; margin-bottom:14px; }
+  .rep .photo{ height:86px; display:flex; align-items:flex-end; padding:10px 12px;
+               background:
+                 radial-gradient(ellipse at 30% 20%, rgba(93,141,255,.13), transparent 60%),
+                 linear-gradient(160deg,#242019 0%, #191612 70%); }
+  .rep .photo .badge{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em;
+                      background:rgba(11,26,58,.75); border:1px solid rgba(239,233,216,.25);
+                      padding:3px 7px; border-radius:99px; opacity:.9; }
+  .rep .corps{ padding:12px 14px 13px; }
+  .rep .haut{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .rep .nom{ font-size:17px; letter-spacing:.01em; }
+  .rep .dist{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.6; white-space:nowrap; }
+  /* LA raison : écrite à la main, comme une note en marge — c'est elle la star */
+  .rep .pourquoi{ font-family:'Caveat',cursive; font-size:17px; color:var(--encre);
+                  margin-top:7px; line-height:1.25; }
+  .rep .pourquoi .qui{ color:var(--bleu); }
+  .rep .actions{ display:flex; gap:8px; margin-top:11px; }
+  .rep .go{ font-family:'Caveat',cursive; font-size:16px; color:var(--papier);
+            background:var(--encre); border:none; border-radius:9px; padding:6px 16px 7px; }
+  .rep .voir{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--encre);
+              background:none; border:1px solid rgba(239,233,216,.25); border-radius:9px; padding:7px 12px; opacity:.75; }
+  .autres{ text-align:center; font-family:'Caveat',cursive; font-size:16px; opacity:.55; padding:2px 0 4px; }
+  .note{ font-size:12px; opacity:.5; margin:10px 2px 0; line-height:1.5; }
+</style>
+</head>
+<body>
+  <h1>15 résultats, ou 3 réponses ?</h1>
+  <p class="sous">Même recherche, mêmes lieux. Seule change la façon de répondre.</p>
+  <p class="scenario">« je cherche un bar autour de M Edgar Quinet, ce soir. »</p>
+
+  <h2>aujourd'hui — l'écran liste</h2>
+  <div class="cadre fondu">
+    <div class="compteur">15 réponses</div>
+
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">le comptoir d'edgar</div><div class="raison">rooftop · le cercle</div></div><span class="dist">240 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">la lanterne</div><div class="raison">ouvert tard</div></div><span class="dist">310 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">chez marcelle</div><div class="raison">terrasse</div></div><span class="dist">450 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">le vestiaire</div><div class="raison">vibre</div></div><span class="dist">480 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">bar à jeanne</div><div class="raison">calme</div></div><span class="dist">520 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">l'heure bleue</div><div class="raison">vibre</div></div><span class="dist">560 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">le télégraphe</div><div class="raison">ouvert tard</div></div><span class="dist">590 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">chai d'oscar</div><div class="raison">cave à vin</div></div><span class="dist">640 m</span></div>
+    <div class="encore">… et 7 autres en dessous</div>
+  </div>
+  <p class="note">Tout est là, rien ne se détache : c'est TOI qui fais le tri. Quinze fois.</p>
+
+  <h2>demain — l'écran répond</h2>
+  <div class="cadre">
+    <div class="compteur">jeudi te répond :</div>
+
+    <div class="rep">
+      <div class="photo"><span class="badge">M EDGAR QUINET · 3 MIN</span></div>
+      <div class="corps">
+        <div class="haut"><span class="nom">le comptoir d'edgar</span><span class="dist">240 m</span></div>
+        <div class="pourquoi">parce que <span class="qui">léo</span> y était mardi — et qu'il a validé.</div>
+        <div class="actions"><button class="go">j'y vais.</button><button class="voir">voir la fiche</button></div>
+      </div>
+    </div>
+
+    <div class="rep">
+      <div class="photo"><span class="badge">M EDGAR QUINET · 4 MIN</span></div>
+      <div class="corps">
+        <div class="haut"><span class="nom">la lanterne</span><span class="dist">310 m</span></div>
+        <div class="pourquoi">parce qu'il est ouvert jusqu'à 2 h — et que vous finissez toujours tard.</div>
+        <div class="actions"><button class="go">j'y vais.</button><button class="voir">voir la fiche</button></div>
+      </div>
+    </div>
+
+    <div class="rep">
+      <div class="photo"><span class="badge">M EDGAR QUINET · 6 MIN</span></div>
+      <div class="corps">
+        <div class="haut"><span class="nom">chez marcelle</span><span class="dist">450 m</span></div>
+        <div class="pourquoi">parce que terrasse — et que tu valides les terrasses une fois sur deux.</div>
+        <div class="actions"><button class="go">j'y vais.</button><button class="voir">voir la fiche</button></div>
+      </div>
+    </div>
+
+    <div class="autres">pas convaincu ? montre-m'en trois autres →</div>
+  </div>
+  <p class="note">Trois choix, chacun avec sa raison écrite à la main. Le tri est déjà fait —
+  il ne reste qu'à décider. Les autres existent toujours, mais il faut les demander.</p>
+</body>
+</html>

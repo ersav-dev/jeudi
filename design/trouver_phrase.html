@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — trouver, la phrase à trous (écran assemblé)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --encre:#EFE9D8; --nuit:#0b1a3a; --bleu:#5d8dff; --rouge:#e05a3a;
+         --papier:#14120e; --papier2:#1c1915; }
+  *{ margin:0; box-sizing:border-box; }
+  body{ background:var(--papier); color:var(--encre); font-family:system-ui,sans-serif;
+        padding:26px 16px 70px; max-width:430px; margin:0 auto; }
+  .intro{ opacity:.55; font-size:13px; line-height:1.5; margin-bottom:22px; }
+  .ecran{ border:1px solid rgba(239,233,216,.12); border-radius:18px; padding:18px 14px 20px;
+          background:#161310; }
+
+  h2.titre{ font-family:'Caveat',cursive; font-size:28px; font-weight:600; margin-bottom:2px; }
+  .glose{ font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.55; margin-bottom:16px; }
+
+  /* ══ LA PHRASE ══ */
+  .phrase{ font-family:'Caveat',cursive; font-size:22px; line-height:2.05; margin-bottom:14px; }
+  .trou{ display:inline-block; padding:0 8px 1px; border-radius:8px; white-space:nowrap; }
+  .trou.saisie{ border-bottom:2px solid rgba(239,233,216,.55); border-radius:0; padding:0 4px 0;
+                min-width:150px; }
+  .caret{ display:inline-block; width:1.5px; height:19px; background:var(--encre);
+          vertical-align:-3px; margin-left:2px; animation:cl 1.1s steps(1) infinite; }
+  @keyframes cl{ 50%{ opacity:0 } }
+  .trou.jeton{ background:rgba(239,233,216,.07); border:1px dashed rgba(239,233,216,.35); }
+  .trou.jeton .m{ font-family:system-ui,sans-serif; font-weight:700; font-size:10px; color:var(--encre);
+                  background:var(--nuit); padding:2px 4px 1px; border-radius:3px;
+                  box-shadow:0 0 0 1px rgba(239,233,216,.7); vertical-align:2px; margin-right:4px; }
+  .trou.jeton .x{ opacity:.45; margin-left:6px; font-size:16px; }
+
+  /* ══ LA CAMÉRA ══ */
+  .camera{ position:relative; width:100%; height:230px; border-radius:12px; overflow:hidden;
+           border:1px solid rgba(239,233,216,.09); background:#191c25; margin-bottom:6px; }
+  .tuiles{ position:absolute; inset:0; filter:brightness(.38) saturate(.25); opacity:.55; }
+  .tuiles img{ position:absolute; width:256px; height:256px; }
+  .cadre-note{ position:absolute; top:7px; right:9px; font-family:'JetBrains Mono',monospace;
+               font-size:8.5px; opacity:.45; z-index:9; }
+  svg.calque{ position:absolute; inset:0; z-index:2; }
+  .el{ position:absolute; z-index:4; }
+  .plaque{ display:inline-flex; align-items:center; gap:4px; font-family:'Caveat',cursive; font-size:14px; }
+  .plaque .m{ font-family:system-ui,sans-serif; font-weight:700; font-size:9px;
+              background:var(--nuit); padding:2px 4px 1px; border-radius:3px; line-height:1;
+              box-shadow:0 0 0 1px rgba(239,233,216,.85); }
+  .plaque .nom{ text-shadow:0 0 3px rgba(11,26,58,.95), 0 0 7px rgba(11,26,58,.7); }
+  .mfaible{ font-family:system-ui,sans-serif; font-weight:700; font-size:8px; opacity:.28; }
+  .pin{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .pin .rond{ width:24px; height:24px; border-radius:50%; background:var(--bleu);
+              border:2px solid var(--encre); display:flex; align-items:center; justify-content:center; }
+  .pin .rond svg{ width:13px; height:13px; }
+  .pin .n{ font-family:'Caveat',cursive; font-size:13px; line-height:1;
+           text-shadow:0 0 3px rgba(11,26,58,.95); white-space:nowrap; }
+  .moi .pt{ width:10px; height:10px; border-radius:50%; background:var(--rouge);
+            border:2px solid var(--encre); box-shadow:0 0 0 4px rgba(224,90,58,.18); }
+  .moi .l{ font-family:'Caveat',cursive; font-size:12px; opacity:.85; text-shadow:0 0 3px rgba(11,26,58,.95); }
+  .cam-legende{ font-family:'JetBrains Mono',monospace; font-size:9px; opacity:.4; margin-bottom:16px; }
+
+  /* ══ LA LISTE — inchangée, longue ══ */
+  .compteur{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.5; margin-bottom:8px; }
+  .ligne{ display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:10px;
+          background:var(--papier2); border:1px solid rgba(239,233,216,.07); margin-bottom:8px; }
+  .vign{ width:40px; height:40px; border-radius:7px; flex:0 0 auto;
+         background:linear-gradient(135deg,#26221c,#1a1713);
+         display:flex; align-items:center; justify-content:center; }
+  .vign svg{ width:15px; height:15px; opacity:.35; }
+  .ligne .nom{ font-size:14px; }
+  .ligne .dist{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.55; margin-left:auto; white-space:nowrap; }
+  .ligne .raison{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--rouge); opacity:.8; margin-top:3px; }
+  .suite{ text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.4; padding:6px 0 2px; }
+  .note{ font-size:12px; opacity:.5; margin:14px 2px 0; line-height:1.55; }
+</style>
+</head>
+<body>
+  <p class="intro">L'écran trouver assemblé : la phrase à trous en haut (validée), la caméra
+  quand un « où » est choisi (fond A, validé), et la liste longue en dessous — inchangée.
+  Ici : « M Edgar Quinet » vient d'être posé dans le trou.</p>
+
+  <div class="ecran">
+    <h2 class="titre">trouver.</h2>
+    <div class="glose">dis ce que tu cherches, jeudi répond</div>
+
+    <div class="phrase">
+      je cherche <span class="trou saisie">un bar qui vibre<span class="caret"></span></span><br>
+      autour de <span class="trou jeton"><span class="m">M</span>Edgar Quinet<span class="x">×</span></span>,
+      <span class="trou jeton">ce soir<span class="x">×</span></span>.
+    </div>
+
+    <div class="camera" id="cam">
+      <div class="tuiles"></div>
+      <div class="cadre-note">edgar quinet · ~800 m</div>
+    </div>
+    <div class="cam-legende">la caméra cadre le « où » toute seule — elle ne se conduit pas</div>
+
+    <div class="compteur">15 réponses</div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">le comptoir d'edgar</div><div class="raison">vibre · le cercle</div></div><span class="dist">240 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">la lanterne</div><div class="raison">vibre · ouvert tard</div></div><span class="dist">310 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">chez marcelle</div><div class="raison">terrasse</div></div><span class="dist">450 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">le vestiaire</div><div class="raison">vibre</div></div><span class="dist">480 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">bar à jeanne</div><div class="raison">calme</div></div><span class="dist">520 m</span></div>
+    <div class="ligne"><span class="vign"><svg viewBox="0 0 24 24" fill="none" stroke="#EFE9D8" stroke-width="2"><path d="M4 8h16v11H4z"/><circle cx="12" cy="13" r="3"/><path d="M9 8l1.5-3h3L15 8"/></svg></span>
+      <div><div class="nom">l'heure bleue</div><div class="raison">vibre</div></div><span class="dist">560 m</span></div>
+    <div class="suite">… la liste continue, comme aujourd'hui (15 réponses, rien de caché)</div>
+  </div>
+
+  <p class="note">Ce qui a changé par rapport à l'écran actuel : plus de second champ
+  « adresse / métro » (le trou [où] le remplace), plus de rangée « quand » séparée
+  (le trou [ce soir] la remplace), le croquis devient la caméra. Ce qui n'a PAS changé :
+  la liste, les distances, les raisons en rouge.<br><br>
+  Les pins sur la caméra = les premières réponses de la liste, aux vraies positions.
+  Toucher un pin = ouvrir la fiche, comme sur la grande carte.</p>
+
+<script>
+const X0 = 2.317, Y0 = 48.8475, KX = 23301, KY = 35450;
+const px = (lng) => (lng - X0) * KX;
+const py = (lat) => (Y0 - lat) * KY;
+
+(() => {
+  const cont = document.querySelector('#cam .tuiles');
+  // centre écran (186.5, 115) sur (2.3251, 48.8443-ish) — cadre légèrement remonté
+  const offX = 186.5 - (16595.60 - 16594) * 256;
+  const offY = 115 - (11278.47 - 11277) * 256 + 55;
+  for (let tx = 16594; tx <= 16597; tx++)
+    for (let ty = 11277; ty <= 11280; ty++) {
+      const im = document.createElement('img');
+      im.src = `https://a.basemaps.cartocdn.com/dark_all/15/${tx}/${ty}.png`;
+      im.style.left = (offX + (tx - 16594) * 256) + 'px';
+      im.style.top  = (offY + (ty - 11277) * 256) + 'px';
+      cont.appendChild(im);
+    }
+})();
+
+const VERRE = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l-.9 5a3.1 3.1 0 0 1-6.2 0z"/><path d="M12 11v6"/><path d="M9 20h6"/></svg>';
+const s = document.getElementById('cam');
+
+const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+svg.setAttribute('class','calque'); svg.setAttribute('viewBox','0 0 373 230');
+svg.innerHTML = `
+  <path d="M52,66 C96,38 180,32 246,46 C300,58 330,94 322,148
+           C314,196 268,226 196,232 C120,238 62,208 46,158 C36,124 30,88 52,66 Z"
+        fill="rgba(239,233,216,0.055)" stroke="rgba(239,233,216,0.30)"
+        stroke-width="1.6" stroke-dasharray="7 5" stroke-linecap="round"/>
+  <text x="84" y="88" font-family="Caveat" font-size="19" fill="rgba(239,233,216,0.5)"
+        transform="rotate(-4 84 88)">montparnasse</text>`;
+s.appendChild(svg);
+
+const pose = (lng, lat, html, dx=0, dy=0, z) => {
+  const d = document.createElement('div');
+  d.className='el'; d.innerHTML=html;
+  d.style.left=(px(lng)+dx)+'px'; d.style.top=(py(lat)+dy)+'px';
+  if(z) d.style.zIndex=z;
+  s.appendChild(d);
+};
+
+pose(2.32507,48.84111,`<span class="plaque"><span class="m">M</span><span class="nom">Edgar Quinet</span></span>`,-14,-28,6);
+pose(2.32507,48.84111,`<div style="width:7px;height:7px;border-radius:2px;background:var(--nuit);box-shadow:0 0 0 1.5px rgba(239,233,216,.8)"></div>`,-3,-3,5);
+pose(2.3244,48.8438,`<span class="mfaible">M montparnasse</span>`,-14,-4);
+pose(2.3289,48.8422,`<span class="mfaible">M vavin</span>`,-8,-4);
+pose(2.3222,48.8385,`<span class="mfaible">M gaîté</span>`,-8,-4);
+pose(2.3235,48.8402,`<div class="pin"><div class="rond">${VERRE}</div><span class="n">le comptoir d'edgar</span></div>`,-12,-12,7);
+pose(2.3272,48.8408,`<div class="pin"><div class="rond">${VERRE}</div><span class="n">la lanterne</span></div>`,-12,-12,7);
+pose(2.3268,48.8422,`<div class="pin"><div class="rond">${VERRE}</div><span class="n">chez marcelle</span></div>`,-12,-12,7);
+pose(2.3300,48.8430,`<div class="moi el"><div class="pt"></div><span class="l">toi</span></div>`,-5,-5,7);
+</script>
+</body>
+</html>
