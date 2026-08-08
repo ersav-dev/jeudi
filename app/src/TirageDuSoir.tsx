@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
 // ════════════════════════════════════════════════════════════════
 // jeudi. — « et le tirage ? »
 // L'étape qui suit le verdict : on ouvre la pellicule du téléphone et on
@@ -21,8 +21,18 @@ import {
   preparerTirage,
   type FenetreSoiree,
 } from './tirage'
-import ImportBobine, { type BobinePrete } from './ImportBobine'
+import { type BobinePrete } from './ImportBobine'
 import { libelleDuree } from './super8'
+
+// la chambre noire du super 8 ne sert qu'à la bobine qui vient d'arriver — chargée à la demande
+const ImportBobineLazy = lazy(() => import('./ImportBobine'))
+function ImportBobine(p: ComponentProps<typeof ImportBobineLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ImportBobineLazy {...p} />
+    </Suspense>
+  )
+}
 
 /** une heure de séchage : la photo devient publique après (voir 0010) */
 const SECHAGE_MS = 3600_000

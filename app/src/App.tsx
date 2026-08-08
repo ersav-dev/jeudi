@@ -7,11 +7,8 @@ import Splash from './Splash'
 import Auth from './Auth'
 import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
-import PickerCouleur from './PickerCouleur'
 import { importerSeed } from './seed'
 import { jalonner, jalonnerVue } from './jalon'
-import ImportGoogle from './ImportGoogle'
-import ImportListe from './ImportListe'
 import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
 import { suivre } from './analytique'
@@ -157,9 +154,7 @@ import {
   type SoireePellicule,
   type NuitAffichee,
 } from './pellicule'
-import Pellicule from './CarrouselPellicule'
 import CarnetCercle from './CarnetCercle'
-import Projecteur from './Projecteur'
 
 // A4 : MapLibre (~1 Mo) sort du bundle principal — chargé à la demande
 const CarteLazy = lazy(() => import('./Carte'))
@@ -178,6 +173,50 @@ function TableComparaison(p: ComponentProps<typeof TableComparaisonLazy>) {
   return (
     <Suspense fallback={null}>
       <TableComparaisonLazy {...p} />
+    </Suspense>
+  )
+}
+// le carrousel de la pellicule ne s'ouvre qu'au tap sur un tas — chargé à la demande
+const PelliculeLazy = lazy(() => import('./CarrouselPellicule'))
+function Pellicule(p: ComponentProps<typeof PelliculeLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <PelliculeLazy {...p} />
+    </Suspense>
+  )
+}
+// le projecteur super 8 ne s'ouvre qu'au tap sur un clip — chargé à la demande
+const ProjecteurLazy = lazy(() => import('./Projecteur'))
+function Projecteur(p: ComponentProps<typeof ProjecteurLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ProjecteurLazy {...p} />
+    </Suspense>
+  )
+}
+// le picker de couleur ne s'ouvre qu'au dépli du réglage — chargé à la demande
+const PickerCouleurLazy = lazy(() => import('./PickerCouleur'))
+function PickerCouleur(p: ComponentProps<typeof PickerCouleurLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <PickerCouleurLazy {...p} />
+    </Suspense>
+  )
+}
+// l'import Google/liste ne sert qu'à l'onboarding et aux réglages — chargé à la demande
+const ImportGoogleLazy = lazy(() => import('./ImportGoogle'))
+function ImportGoogle(p: ComponentProps<typeof ImportGoogleLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ImportGoogleLazy {...p} />
+    </Suspense>
+  )
+}
+const ImportListeLazy = lazy(() => import('./ImportListe'))
+function ImportListe(p: ComponentProps<typeof ImportListeLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ImportListeLazy {...p} />
     </Suspense>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, lazy, Suspense, type ComponentProps } from 'react'
 import {
   sauverProfil,
   ecrireSeuils,
@@ -11,9 +11,18 @@ import {
   type Lieu,
 } from './db'
 import { importerSeed } from './seed'
-import ImportGoogle from './ImportGoogle'
 import { t } from './langue'
 import { suivre } from './analytique'
+
+// l'import Google ne sert qu'à l'étape « import » de l'onboarding — chargé à la demande
+const ImportGoogleLazy = lazy(() => import('./ImportGoogle'))
+function ImportGoogle(p: ComponentProps<typeof ImportGoogleLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ImportGoogleLazy {...p} />
+    </Suspense>
+  )
+}
 
 // ════════════════════════════════════════════════════════════════
 // jeudi. — L'ONBOARDING « payoff d'abord, réglages après »
