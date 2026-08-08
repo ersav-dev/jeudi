@@ -12,6 +12,12 @@ import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { chargerStations, chercherStations, stationsChargees, type Station } from './stations'
+
+// le glyphe du point de rendez-vous : un rond visé au trait, dans le
+// graphite des monuments — jamais un pin plein (réservé aux spots)
+const RDV_GLYPHE =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">' +
+  '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
 import CroquisParis from './CroquisParis'
 import { srcPhoto, photoIndisponible } from './photos'
@@ -329,12 +335,17 @@ export default function Recherche({
               {s.type === 'monument' && s.trait ? (
                 // le monument porte sa silhouette monoline, pas une plaque
                 <span className="rech-monument" dangerouslySetInnerHTML={{ __html: s.trait }} />
+              ) : s.type === 'repere' ? (
+                // le point de rendez-vous : un rond visé, dessiné au trait
+                <span className="rech-monument" dangerouslySetInnerHTML={{ __html: RDV_GLYPHE }} />
               ) : (
                 <span className="rech-station-mode">
                   {s.type === 'rer' ? 'RER' : s.type === 'tram' ? 'T' : 'M'}
                 </span>
               )}
               {s.nom}
+              {/* le point précis : la phrase qui évite le « t'es où ? » */}
+              {s.rdv && <span className="rech-rdv">{s.rdv}</span>}
             </button>
           ))}
         </div>

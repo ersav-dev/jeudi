@@ -109,3 +109,24 @@ describe('les monuments dans la recherche', () => {
     expect(chercherStations('tour eiffel', avecMonument)[0].trait).toBeTruthy()
   })
 })
+
+describe('les points de rendez-vous', () => {
+  const avecRdv: Station[] = [
+    ...table,
+    { nom: 'pont des arts', type: 'repere', lat: 48.85841, lng: 2.33755, rdv: 'côté institut de france' },
+    { nom: 'république', type: 'repere', lat: 48.86754, lng: 2.36396, rdv: 'au pied de la statue' },
+  ]
+
+  it('« rdv au pont des arts » se comprend comme une station', () => {
+    const [r] = chercherStations('pont des arts', avecRdv)
+    expect(r).toMatchObject({ type: 'repere', lat: 48.85841 })
+  })
+
+  it('porte son point précis — la phrase qui évite le « t\'es où ? »', () => {
+    expect(chercherStations('république', avecRdv)[0].rdv).toBe('au pied de la statue')
+  })
+
+  it('se trouve par un bout du nom', () => {
+    expect(chercherStations('arts', avecRdv)[0].nom).toBe('pont des arts')
+  })
+})

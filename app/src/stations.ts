@@ -11,17 +11,20 @@
 // ════════════════════════════════════════════════════════════════
 import { donneesTransport, type TypeTransport } from './transport'
 import { MONUMENTS } from './monuments'
+import { REPERES } from './reperes'
 
-// un repère cherchable : une station de transport… ou un monument du croquis.
-// « rdv à la tour eiffel » vaut « rdv à Edgar Quinet » — les monuments sont
-// déjà la langue des repères sur la carte, la recherche la parle aussi (09/08).
+// un repère cherchable : une station de transport, un monument du croquis…
+// ou un point de rendez-vous (place, pont, fontaine — reperes.ts). « Rdv au
+// pont des arts » vaut « rdv à Edgar Quinet » : trois familles, une recherche.
 export type Station = {
   nom: string
-  type: TypeTransport | 'monument'
+  type: TypeTransport | 'monument' | 'repere'
   lat: number
   lng: number
   /** la silhouette monoline (monuments seulement) — pour la suggestion */
   trait?: string
+  /** le point précis du rendez-vous (repères seulement) — « au pied de la statue » */
+  rdv?: string
 }
 
 /** la forme comparable d'un nom : sans accent, sans ponctuation, sans casse.
@@ -98,34 +101,38 @@ let promesse: Promise<Station[]> | null = null
 
 const NOMMABLES: TypeTransport[] = ['metro', 'rer', 'tram']
 
+// monuments + points de rdv : les entrées qui vivent dans le bundle, posées
+// en tête de table — à rang et longueur égaux (« bastille » repère vs station),
+// l'ordre de table départage, et le point de rdv passe devant : il est plus
+// précis que le barycentre des quais.
+const horsTransport = (): Station[] => [
+  ...MONUMENTS.map((m) => ({
+    nom: m.nom, type: 'monument' as const, lat: m.lat, lng: m.lng, trait: m.trait,
+  })),
+  ...REPERES.map((r) => ({
+    nom: r.nom, type: 'repere' as const, lat: r.lat, lng: r.lng, rdv: r.rdv,
+  })),
+]
+
 export const chargerStations = (): Promise<Station[]> => {
   if (cache) return Promise.resolve(cache)
   if (promesse) return promesse
   promesse = donneesTransport()
     .then((geo) => {
-      cache = [
-        // les monuments d'abord : à égalité de rang, ils gagnent par nom court
-        // (« opéra » = le monument avant la station homonyme, même position)
-        ...MONUMENTS.map((m) => ({
-          nom: m.nom, type: 'monument' as const, lat: m.lat, lng: m.lng, trait: m.trait,
-        })),
-        ...geo.features
-          .filter((f) => NOMMABLES.includes(f.properties.type))
-          .map((f) => ({
-            nom: f.properties.nom,
-            type: f.properties.type,
-            lat: f.geometry.coordinates[1],
-            lng: f.geometry.coordinates[0],
-          })),
-      ]
+      cache = [...horsTransport(), ...geo.features
+        .filter((f) => NOMMABLES.includes(f.properties.type))
+        .map((f) => ({
+          nom: f.properties.nom,
+          type: f.properties.type,
+          lat: f.geometry.coordinates[1],
+          lng: f.geometry.coordinates[0],
+        }))]
       return cache
     })
     .catch(() => {
-      // pas de table : l'appelant retombera sur Nominatim, comme avant.
-      // (même sans transport.json, les monuments, eux, sont dans le bundle)
-      cache = MONUMENTS.map((m) => ({
-        nom: m.nom, type: 'monument' as const, lat: m.lat, lng: m.lng, trait: m.trait,
-      }))
+      // pas de transport.json : l'appelant retombera sur Nominatim pour les
+      // stations — mais monuments et points de rdv, eux, sont dans le bundle
+      cache = horsTransport()
       promesse = null
       return cache
     })

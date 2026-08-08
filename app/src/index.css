@@ -6655,7 +6655,8 @@ button {
   background: #66a933;
 }
 /* le monument : sa silhouette monoline graphite, comme sur le croquis —
- * pas de plaque, un monument n'est pas une ligne de transport */
+ * pas de plaque, un monument n'est pas une ligne de transport.
+ * (même habit pour le rond visé des points de rendez-vous) */
 .rech-monument {
   display: inline-flex;
   width: 16px;
@@ -6666,6 +6667,15 @@ button {
 .rech-monument svg {
   width: 16px;
   height: 16px;
+}
+/* le point précis du rendez-vous : une note au crayon après le nom —
+ * « au pied de la statue », ce qui évite le « t'es où ? » */
+.rech-rdv {
+  font-family: 'Caveat', cursive;
+  font-size: 12px;
+  opacity: 0.6;
+  margin-left: 2px;
+  white-space: nowrap;
 }
 .labo-resultat {
   padding: 11px 14px;
