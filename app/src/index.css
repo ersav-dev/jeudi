@@ -8925,3 +8925,24 @@ button:focus:not(:focus-visible) {
   margin: 6px 0 0;
   color: var(--encre-3);
 }
+/* arracher la page : tout en bas, un filet et un lien à la cire.
+   L'UNIQUE cire du panneau — la seule action sans retour. */
+.corriger-arracher {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+}
+.corriger-effacer {
+  color: var(--cire-claire);
+  text-decoration-color: var(--cire-claire);
+}
+.corriger-effacer:disabled {
+  opacity: 0.5;
+}
+.corriger-avertissement {
+  margin: 0;
+  color: var(--encre-2);
+}
+.corriger-arracher .corriger-actions {
+  margin-top: 8px;
+}

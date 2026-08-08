@@ -33,6 +33,7 @@ export default function CorrigerLieu({
   onATester,
   archive,
   onArchive,
+  onSupprimer,
 }: {
   lieu: Lieu
   /** le lieu corrigé, déjà écrit (majLieu) — la fiche n'a qu'à se remettre à jour */
@@ -46,6 +47,8 @@ export default function CorrigerLieu({
   onATester: () => void
   archive: boolean
   onArchive: () => void
+  /** arracher la page — l'écran s'occupe d'effacer et de refermer la fiche */
+  onSupprimer: () => Promise<void>
 }) {
   const [nom, setNom] = useState(lieu.nom)
   const [adresse, setAdresse] = useState(lieu.adresse ?? '')
@@ -53,6 +56,8 @@ export default function CorrigerLieu({
   const [type, setType] = useState<TypeLieu>(() => typeDeLieu(lieu))
   const [code, setCode] = useState<string | null>(() => cuisineDeLieu(lieu)?.code ?? null)
   const [enCours, setEnCours] = useState(false)
+  // arracher la page se demande deux fois — jamais d'un doigt qui glisse
+  const [confirme, setConfirme] = useState(false)
 
   // la phrase que le carnet relira — recalculée à chaque geste, montrée telle quelle
   const description = decrireLieu(lieu.description, type, code)
@@ -71,6 +76,16 @@ export default function CorrigerLieu({
       await majLieu(maj)
       onEnregistre(maj)
       onFerme()
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  const effacer = async () => {
+    if (enCours) return
+    setEnCours(true)
+    try {
+      await onSupprimer()
     } finally {
       setEnCours(false)
     }
@@ -182,6 +197,36 @@ export default function CorrigerLieu({
         <button className="valider" disabled={!nom.trim() || enCours} onClick={() => void enregistrer()}>
           {enCours ? t('on corrige…') : t("c'est corrigé.")}
         </button>
+      </div>
+
+      {/* ARRACHER LA PAGE. Tout en bas, sobre, jamais un bouton rouge posé
+          là comme un piège : un filet, un lien, et une phrase qui dit ce
+          qui part vraiment. Deux temps — on ne déchire pas d'un doigt qui
+          glisse. « archivé » est juste au-dessus pour ceux qui hésitent. */}
+      <div className="corriger-arracher">
+        {!confirme ? (
+          <button className="lien corriger-effacer" onClick={() => setConfirme(true)}>
+            {t('arracher la page')}
+          </button>
+        ) : (
+          <>
+            <p className="mono corriger-avertissement">
+              {t('ses photos partent aussi — et ses clips. définitif, sans retour.')}
+            </p>
+            <div className="corriger-actions">
+              <button className="lien" onClick={() => setConfirme(false)}>
+                {t('non, je la garde')}
+              </button>
+              <button
+                className="lien corriger-effacer"
+                disabled={enCours}
+                onClick={() => void effacer()}
+              >
+                {enCours ? t('on arrache…') : t('oui, arrache')}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

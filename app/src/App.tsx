@@ -1356,9 +1356,22 @@ export default function App() {
   }
 
   const supprimer = async (l: Lieu) => {
-    await supprimerLieu(l.id)
+    const verdict = await supprimerLieu(l.id)
+    setFavoris(lireFavoris()) // le signet d'un spot effacé n'a plus d'objet
+    setRatures(lireATester())
     recharger()
-    setFlash('effacé.')
+    // on ne dit pas « effacé » quand le cloud n'a pas encore répondu
+    // (les flashs s'écrivent en clair dans cet écran : la nouvelle phrase
+    //  passe donc par t() ici, à l'appel — le rendu, lui, ne traduit pas)
+    setFlash(
+      verdict === 'efface' ? 'effacé.' : t('effacé ici — on finit le ménage au retour du réseau.'),
+    )
+  }
+
+  // arracher la page depuis la fiche : on efface, puis on referme derrière
+  const supprimerDepuisFiche = async (l: Lieu) => {
+    await supprimer(l)
+    setFiche(null)
   }
 
   // cycle la visibilité : privé → cercle → public → privé
@@ -2579,6 +2592,7 @@ export default function App() {
           onFavori={() => basculerFav(fiche)}
           aTester={estATester(fiche, ratures)}
           onATester={() => basculerPile(fiche)}
+          onSupprimer={supprimerDepuisFiche}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -3357,6 +3371,7 @@ function Fiche({
   onFavori,
   aTester,
   onATester,
+  onSupprimer,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -3379,6 +3394,8 @@ function Fiche({
   onFavori: () => void
   aTester: boolean
   onATester: () => void
+  /** arracher la page : l'écran efface, refait l'index et referme la fiche */
+  onSupprimer: (l: Lieu) => Promise<void>
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -3884,6 +3901,7 @@ function Fiche({
           onATester={onATester}
           archive={lieu.statut === 'archive'}
           onArchive={() => void basculerArchive()}
+          onSupprimer={() => onSupprimer(lieu)}
         />
       )}
 

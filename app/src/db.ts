@@ -1319,19 +1319,58 @@ export async function desarchiverLieu(id: string): Promise<void> {
   }
 }
 
-/** suppression définitive — pas de retour en arrière */
-export async function supprimerLieu(id: string): Promise<void> {
+/** efface un id de lieu des petites listes/tables localStorage — l'inverse
+ *  de remplacerIdLocal : le lieu n'existe plus, ses traces non plus.
+ *  (08/08 — sans ça, effacer un spot laissait un signet sur un fantôme.) */
+function effacerIdLocal(id: string): void {
+  for (const cle of ['jeudi-favoris', 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
+    try {
+      const v = JSON.parse(localStorage.getItem(cle) ?? '[]')
+      if (Array.isArray(v) && v.includes(id)) {
+        localStorage.setItem(cle, JSON.stringify(v.filter((x) => x !== id)))
+      }
+    } catch {
+      /* liste illisible : tant pis */
+    }
+  }
+  for (const cle of ['jeudi-marques', CLE_A_TESTER]) {
+    try {
+      const v = JSON.parse(localStorage.getItem(cle) ?? '{}')
+      if (v && typeof v === 'object' && !Array.isArray(v) && id in v) {
+        delete v[id]
+        localStorage.setItem(cle, JSON.stringify(v))
+      }
+    } catch {
+      /* table illisible : tant pis */
+    }
+  }
+  localStorage.removeItem(`jeudi-adr-${id}`)
+}
+
+/** ce que la suppression a vraiment réussi à faire — l'UI le dit tel quel :
+ *  · 'efface'  : parti d'ici ET de là-haut (ou jamais monté là-haut)
+ *  · 'differe' : parti d'ici, le cloud n'a pas répondu — resync planifiée */
+export type VerdictSuppression = 'efface' | 'differe'
+
+/** suppression définitive — pas de retour en arrière. Le local part TOUJOURS
+ *  (on ne rend pas un spot que l'utilisateur vient d'effacer) ; le cloud suit,
+ *  et à défaut la file d'attente le rattrapera. RLS : `lieux` se supprime sur
+ *  `owner_id = auth.uid()` et les deux buckets sur le dossier `<uid>/<lieu>` —
+ *  mes spots partent entièrement, ceux des autres ne sont pas les miens à
+ *  effacer (le local suffit : ils reviendront du cloud, et c'est normal). */
+export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
   await pretAuth
   const db = await getDB()
   const lieu = await db.get('lieux', id)
   const mien = lieu ? estAMoi(lieu) : true
   await db.delete('lieux', id) // le local part dans tous les cas
-  if (!monId || !mien) return
+  effacerIdLocal(id)
+  if (!monId || !mien) return 'efface'
   if (!estUuid(id)) {
     // id legacy : jamais poussé au cloud. On retire juste une éventuelle
     // resync en attente pour cet id, et c'est réglé.
     ecrireAttente(lireAttente().filter((t) => t.id !== id))
-    return
+    return 'efface'
   }
   const { data, error } = await supabase
     .from('lieux')
@@ -1346,7 +1385,7 @@ export async function supprimerLieu(id: string): Promise<void> {
       error,
     )
     enfiler('lieu-suppr', id)
-    return
+    return 'differe'
   }
   if (!Array.isArray(data) || data.length === 0) {
     // rien côté cloud (jamais poussé, ou déjà supprimé ailleurs) : acceptable
@@ -1355,8 +1394,13 @@ export async function supprimerLieu(id: string): Promise<void> {
   }
   // une resync en attente pour ce lieu n'a plus d'objet
   ecrireAttente(lireAttente().filter((t) => t.id !== id))
-  // le dossier Storage du lieu part aussi (best-effort, warn si KO)
+  // les tirages partent avec le spot — les DEUX dossiers Storage. Les lignes
+  // de la table `photos` tombent d'elles-mêmes (on delete cascade, 0001), mais
+  // les fichiers, eux, n'ont pas de cascade : sans ce ménage, les clips super 8
+  // restaient seuls dans le bucket après la suppression du lieu.
   await nettoyerStorageLieu(id)
+  await nettoyerStorageLieu(id, undefined, BUCKET_CLIPS)
+  return 'efface'
 }
 
 // ── distance depuis "moi" (Place Vendôme par défaut) ───────────

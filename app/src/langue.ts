@@ -356,6 +356,14 @@ const EN: Record<string, string> = {
   'laisse tomber': 'never mind',
   'on corrige…': 'fixing…',
   "c'est corrigé.": 'fixed.',
+  'arracher la page': 'tear out this page',
+  'ses photos partent aussi — et ses clips. définitif, sans retour.':
+    'its photos go too — and its clips. final, no way back.',
+  'non, je la garde': 'no, I’m keeping it',
+  'on arrache…': 'tearing…',
+  'oui, arrache': 'yes, tear it out',
+  'effacé ici — on finit le ménage au retour du réseau.':
+    'gone from here — we’ll finish tidying when you’re back online.',
 
   // La carte de membre
   'partage ton carnet en story →': 'share your notebook as a story →',
