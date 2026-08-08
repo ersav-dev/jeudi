@@ -190,7 +190,7 @@ export default function CeSoir({
         const fete = feteDuJour(dateEffective)
         return fete ? (
           <p className="hand cesoir-fete">
-            {t('c’est')} {fete.nom} — {fete.mot}
+            {t('c’est')} {t(fete.nom)} — {t(fete.mot)}
           </p>
         ) : null
       })()}
@@ -362,8 +362,8 @@ function JeSaisPas({
 
   return (
     <div className="jsp">
-      <h1 className="grande-question qs-titre">je sais pas.</h1>
-      <span className="lbl mono qs-sous">trois plans tirés du carnet</span>
+      <h1 className="grande-question qs-titre">{t('je sais pas.')}</h1>
+      <span className="lbl mono qs-sous">{t('trois plans tirés du carnet')}</span>
 
       {/* le langage de chips existant : solo · duo · potos */}
       <div className="jsp-compagnies">
@@ -383,7 +383,9 @@ function JeSaisPas({
       </div>
 
       {plans.length === 0 && (
-        <p className="hand jsp-vide">pas deux spots ouverts assez proches pour un plan. capture, ou reviens plus tard.</p>
+        <p className="hand jsp-vide">
+          {t('pas deux spots ouverts assez proches pour un plan. capture, ou reviens plus tard.')}
+        </p>
       )}
 
       {/* LA VRAIE CARTE (MapLibre, même code que « ma carte ») : les spots
@@ -423,7 +425,7 @@ function JeSaisPas({
             <span className="mono jsp-jeton">{i + 1}</span>
             <span className="jsp-zone">{p.zone}</span>
             <span className="mono jsp-tete-carte">
-              {planAllume === i ? 'sur la carte ●' : 'sur la carte ○'}
+              {t('sur la carte')} {planAllume === i ? '●' : '○'}
             </span>
           </button>
           <span className="mono jsp-accroche">
@@ -443,16 +445,16 @@ function JeSaisPas({
             ))}
           </div>
           <button className="jsp-va mono" onClick={() => celuiLa(p)}>
-            celui-là. →
+            {t('celui-là. →')}
           </button>
         </div>
       ))}
 
       <button className="jsp-retire mono" onClick={retirer}>
-        re-tire
+        {t('re-tire')}
       </button>
       <button className="lien" onClick={onFermer}>
-        en vrai, je choisis moi-même
+        {t('en vrai, je choisis moi-même')}
       </button>
     </div>
   )
@@ -497,11 +499,11 @@ function QuestionsSwipe({
   const titre =
     etape === 0
       ? nuit
-        ? 'encore debout ?'
+        ? t('encore debout ?')
         : t('avec qui ?')
       : compagnie === 'potos'
-        ? 'et ça dit quoi, les potos ?'
-        : 'pour quoi faire ?'
+        ? t('et ça dit quoi, les potos ?')
+        : t('pour quoi faire ?')
   const sousTitre = etape === 0 ? '' : t("l'envie du moment")
   const glose = etape === 0 ? COMPAGNIE_GLOSE[choix as Compagnie] : gloseEnvie(choix)
 
@@ -553,7 +555,7 @@ function QuestionsSwipe({
         onPointerUp={onUp}
         onPointerCancel={onCancel}
       >
-        <button className="qs-fleche gauche" onClick={() => defiler(-1)} aria-label="précédent">
+        <button className="qs-fleche gauche" onClick={() => defiler(-1)} aria-label={t('précédent')}>
           ‹
         </button>
         <div
@@ -579,7 +581,7 @@ function QuestionsSwipe({
           </div>
           <span className="hand qs-glose">{glose}</span>
         </div>
-        <button className="qs-fleche droite" onClick={() => defiler(1)} aria-label="suivant">
+        <button className="qs-fleche droite" onClick={() => defiler(1)} aria-label={t('suivant')}>
           ›
         </button>
       </div>
@@ -591,10 +593,11 @@ function QuestionsSwipe({
       </div>
 
       <button className={`qs-valider mono ${drag.y < -20 && drag.actif ? 'pret' : ''}`} onClick={valider}>
-        c'est ça ↑
+        {t("c'est ça ↑")}
       </button>
       <p className="mono qs-aide">
-        ← → changer · ↑ valider{etape === 1 ? ' · ↓ revenir' : ''}
+        {t('← → changer · ↑ valider')}
+        {etape === 1 ? t(' · ↓ revenir') : ''}
       </p>
     </div>
   )
@@ -796,8 +799,8 @@ function Deck({
           onPointerUp={onUp}
           onPointerCancel={onCancel}
         >
-          {verdict === 'valide' && <span className="tampon valide">VALIDÉ</span>}
-          {verdict === 'bof' && <span className="tampon bof">bof</span>}
+          {verdict === 'valide' && <span className="tampon valide">{t('VALIDÉ')}</span>}
+          {verdict === 'bof' && <span className="tampon bof">{t('bof')}</span>}
           <div className="carte-photo">
             {nbPhotos > 1 && (
               <div className="photo-tirets">
@@ -844,10 +847,10 @@ function Deck({
       {/* a11y (panel WCAG) : le swipe reste la langue, mais plus la SEULE —
           deux vrais boutons équivalents, focusables, 44px min */}
       <div className="deck-boutons">
-        <button className="deck-btn deck-btn-bof" onClick={() => jeter('bof')} aria-label={`bof — écarter ${lieu.nom}`}>
+        <button className="deck-btn deck-btn-bof" onClick={() => jeter('bof')} aria-label={`${t('bof — écarter')} ${lieu.nom}`}>
           {t('bof')}
         </button>
-        <button className="deck-btn deck-btn-valide" onClick={() => jeter('valide')} aria-label={`validé — garder ${lieu.nom}`}>
+        <button className="deck-btn deck-btn-valide" onClick={() => jeter('valide')} aria-label={`${t('validé — garder')} ${lieu.nom}`}>
           {t('validé')}
         </button>
       </div>
@@ -949,9 +952,9 @@ function RecapTirage({
         {nbPhotos > 0 ? (
           <img src={srcPhoto(lieu.photos[photoIndex])} alt={lieu.nom} onError={photoIndisponible} />
         ) : (
-          <span className="hand sans-photo">pas de photo.</span>
+          <span className="hand sans-photo">{t('pas de photo.')}</span>
         )}
-        {valide && <span className="recap-stamp mono">validé</span>}
+        {valide && <span className="recap-stamp mono">{t('validé')}</span>}
         {nbPhotos > 0 && (
           <span className="mono recap-tirage-cat">{t(labelCatPhoto(lieu.photos[photoIndex]?.type))}</span>
         )}
@@ -968,7 +971,7 @@ function RecapTirage({
           )}
           {wc && <span className="recap-tirage-wc">wc {wc.points}</span>}
         </div>
-        <span className="mono recap-tirage-plus">la fiche →</span>
+        <span className="mono recap-tirage-plus">{t('la fiche')} →</span>
       </button>
     </div>
   )
@@ -998,7 +1001,9 @@ function Recap({
     <div className="recap">
       <p className="hand recap-titre">{t(PIQUES_FIN[1])}</p>
       <p className="mono recap-bilan">
-        {validés > 0 ? `${validés} validé${validés > 1 ? 's' : ''} ce soir` : 'rien validé — t\'es dur'}
+        {validés > 0
+          ? `${validés} ${t(validés > 1 ? 'validés ce soir' : 'validé ce soir')}`
+          : t("rien validé — t'es dur")}
       </p>
 
       <div className="recap-vues" role="tablist">
@@ -1010,7 +1015,7 @@ function Recap({
             className={`recap-vue ${vue === v ? 'on' : ''}`}
             onClick={() => setVue(v)}
           >
-            {v === 'liste' ? 'la liste' : v === 'grand' ? 'en grand' : 'sur la carte'}
+            {v === 'liste' ? t('la liste') : v === 'grand' ? t('en grand') : t('sur la carte')}
           </button>
         ))}
       </div>
@@ -1033,7 +1038,7 @@ function Recap({
               )}
               <span className="recap-nom">{l.nom}</span>
               <span className={`recap-tampon mono ${verdicts[l.id] ?? 'passe'}`}>
-                {verdicts[l.id] === 'valide' ? 'validé' : verdicts[l.id] === 'bof' ? 'bof' : '—'}
+                {verdicts[l.id] === 'valide' ? t('validé') : verdicts[l.id] === 'bof' ? t('bof') : '—'}
               </span>
             </li>
           ))}
@@ -1056,12 +1061,12 @@ function Recap({
 
       {deck.length > 1 && onComparer && (
         <button className="recap-comparer-go mono" onClick={() => onComparer(deck.map((l) => l.id))}>
-          comparer les {deck.length} →
+          {t('comparer les')} {deck.length} →
         </button>
       )}
 
       <button className="lien" onClick={onRefaire}>
-        refais-moi le deck
+        {t('refais-moi le deck')}
       </button>
     </div>
   )
