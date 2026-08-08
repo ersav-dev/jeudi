@@ -10,7 +10,8 @@ import { jalonner, jalonnerVue } from './jalon'
 import { t, lireLangue, basculerLangue } from './langue'
 import { lireATester, basculerATester, estATester, type MarqueATester } from './aTester'
 import { suivre } from './analytique'
-import { partagerEnStory, partagerMaCarte } from './partageStory'
+// le générateur de cartes 1080×1920 ne sert qu'au moment du partage : on va
+// le chercher sur le clic, pas au démarrage (voir les deux appels plus bas)
 import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau, ICrayon } from './icones'
 import { fusionnerPhotos } from './tirage'
@@ -2406,6 +2407,7 @@ export default function App() {
                 } catch {
                   /* presse-papier indisponible : la carte part quand même */
                 }
+                const { partagerMaCarte } = await import('./partageStory')
                 const ok = await partagerMaCarte({
                   prenom: p?.prenom?.trim() || 'moi',
                   tagline: tagline.trim() || undefined,
@@ -4292,7 +4294,7 @@ function Fiche({
       <button
         className="lien fiche-story"
         onClick={() => {
-          void partagerEnStory(lieu)
+          void import('./partageStory').then((m) => m.partagerEnStory(lieu))
           suivre('story_partagee', { lieu: lieu.nom })
         }}
       >

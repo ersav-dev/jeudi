@@ -5,7 +5,10 @@ import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
 import { lireATester, CLE_A_TESTER } from './aTester'
 import { extensionClip, normaliserReglages, type ReglagesRendu } from './super8'
-import { parserGeoJson, type EntreeImport } from './takeout'
+// `import type` seulement : takeout.ts traîne fflate (5,5 ko de dézippage)
+// derrière lui, et db.ts est au boot. Le parseur, on va le chercher au
+// moment où on dépose vraiment un fichier (voir importerTakeout).
+import type { EntreeImport } from './takeout'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -1871,6 +1874,7 @@ export async function importerEntrees(
 
 /** compat : l'ancien chemin « un Saved Places.json déposé » */
 export async function importerTakeout(json: unknown): Promise<number> {
+  const { parserGeoJson } = await import('./takeout')
   const entrees = parserGeoJson(json)
   if (!entrees) {
     throw new Error('fichier non reconnu (attendu : Saved Places.json de Google Takeout)')
