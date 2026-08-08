@@ -23,11 +23,11 @@ export function PickerType({
           key={ty}
           className={`corriger-type ${ty === valeur ? 'choisi' : ''}`}
           aria-pressed={ty === valeur}
-          title={labelTypeLieu(ty)}
+          title={t(labelTypeLieu(ty))}
           onClick={() => onChoisir(ty)}
         >
           <span className="corriger-glyphe" dangerouslySetInnerHTML={{ __html: svgTypeLieu(ty) }} />
-          <span className="mono corriger-type-mot">{labelTypeLieu(ty)}</span>
+          <span className="mono corriger-type-mot">{t(labelTypeLieu(ty))}</span>
         </button>
       ))}
     </div>
@@ -57,7 +57,7 @@ export function PickerTampon({
           key={c.code}
           className={`mot mono ${valeur === c.code ? 'entouré' : ''}`}
           aria-pressed={valeur === c.code}
-          title={c.mot}
+          title={t(c.mot)}
           onClick={() => onChoisir(valeur === c.code ? null : c.code)}
         >
           {c.code}

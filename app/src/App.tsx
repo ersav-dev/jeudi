@@ -3700,9 +3700,9 @@ function Fiche({
               <span className="affiche-grave ag-hg">
                 {lieu.nom}
                 <br />
-                {labelTypeLieu(typeDeLieu(lieu))}
+                {t(labelTypeLieu(typeDeLieu(lieu)))}
                 {/* le tampon de douane, en toutes lettres sur la couverture */}
-                {cuisineDeLieu(lieu) ? ` · ${cuisineDeLieu(lieu)!.mot}` : ''}
+                {cuisineDeLieu(lieu) ? ` · ${t(cuisineDeLieu(lieu)!.mot)}` : ''}
               </span>
               {horaire && horaire.ouvert !== undefined && (
                 <span className="affiche-grave ag-hd">

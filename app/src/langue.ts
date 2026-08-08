@@ -729,6 +729,41 @@ const EN: Record<string, string> = {
 
   // la bannière du grand jeudi (le 1ᵉʳ jeudi du mois)
   'ce soir, le voile tombe. toute la ville.': 'tonight, the veil falls. the whole city.',
+
+  // le tampon de douane (typesLieu.ts, cuisineDeLieu().mot) — jamais un
+  // drapeau émoji, un mot au crayon, traduit AU SITE D'AFFICHAGE (fiche,
+  // carte, pickers) ; typesLieu.ts lui-même ne bouge pas.
+  'italien': 'italian',
+  'japonais': 'japanese',
+  'chinois': 'chinese',
+  'coréen': 'korean',
+  'thaï': 'thai',
+  'vietnamien': 'vietnamese',
+  'indien': 'indian',
+  'libanais': 'lebanese',
+  'israélien': 'israeli',
+  'turc': 'turkish',
+  'grec': 'greek',
+  'marocain': 'moroccan',
+  'tunisien': 'tunisian',
+  'africain': 'african',
+  'éthiopien': 'ethiopian',
+  'mexicain': 'mexican',
+  'péruvien': 'peruvian',
+  'brésilien': 'brazilian',
+  'espagnol': 'spanish',
+  'portugais': 'portuguese',
+  'américain': 'american',
+
+  // idem pour le type du lieu (labelTypeLieu), affiché en toutes lettres
+  // sur la fiche et les pickers — « resto » et « rapido » sont du LEXIQUE
+  // (jamais traduits : pas d'entrée, repli fr automatique).
+  'cave à vin': 'wine bar',
+  'café': 'coffee shop',
+  'salon de thé': 'tea room',
+  'glacier': 'ice cream shop',
+  'pâtisserie': 'pastry shop',
+  'grande table': 'fine dining',
 }
 
 /** traduit une chaîne de la voix de jeudi. fr = la clé, en = le dictionnaire,

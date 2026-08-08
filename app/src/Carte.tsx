@@ -432,7 +432,7 @@ export default function Carte({
           const douane = document.createElement('span')
           douane.className = 'pin-douane mono'
           douane.textContent = cuisine.code
-          douane.title = cuisine.mot
+          douane.title = t(cuisine.mot)
           el.appendChild(douane)
         }
       }
