@@ -108,8 +108,9 @@ export const tracesPour = (
   return { type: 'FeatureCollection', features }
 }
 
-// combien de bouches on accepte d'afficher d'un coup : Châtelet en a dix,
-// au-delà de huit la carte devient une grille de flèches
+// combien de SORTIES on accepte d'afficher d'un coup : Châtelet en a dix,
+// au-delà de huit la carte devient une grille de flèches. On plafonne les
+// sorties, pas les escaliers — une sortie à deux escaliers reste entière.
 export const PLAFOND_BOUCHES = 8
 // le numéro apparaît dès qu'on est sur un quartier, le nom seulement quand
 // on marche vraiment vers la sortie
@@ -122,9 +123,17 @@ export type BoucheAffichee = {
   nom: string | null
 }
 
-// les bouches à poser pour la station touchée : plafonnées aux plus proches
-// (la donnée est déjà triée par distance), nom élagué et rendu seulement
-// au-delà de Z_NOM_BOUCHE.
+// Une même sortie a souvent DEUX escaliers : OSM les cartographie séparément
+// (215 cas dans Paris, écartés de 1 à 60 m). On garde les deux — savoir qu'il
+// y a deux accès compte quand on donne rendez-vous « à la sortie 1 ». Mais on
+// n'écrit le numéro et la rue QU'UNE FOIS par sortie : deux flèches, une
+// étiquette. Le dessin dit alors ce qu'il faut — une sortie, deux façons d'y
+// descendre — au lieu de bégayer.
+const cleSortie = (b: Bouche) => `${b.r ?? '?'}|${b.n ?? ''}`
+
+// les bouches à poser pour la station touchée. Le plafond compte les SORTIES
+// (la donnée est déjà triée par distance à la station) ; tous les escaliers
+// des sorties retenues sont posés. Le nom n'apparaît qu'au-delà de Z_NOM_BOUCHE.
 export const bouchesPour = (
   station: string | null,
   toutes: Record<string, Bouche[]> | null,
@@ -134,9 +143,21 @@ export const bouchesPour = (
   const l = station && toutes ? toutes[station] : null
   if (!l?.length) return []
   const avecNom = zoom >= Z_NOM_BOUCHE
-  return l.slice(0, PLAFOND_BOUCHES).map((b) => ({
-    p: b.p,
-    num: b.r,
-    nom: avecNom ? elaguer(b.n) : null,
-  }))
+  const rang = new Map<string, number>()
+  const sorties: BoucheAffichee[] = []
+  for (const b of l) {
+    const cle = cleSortie(b)
+    const vu = rang.has(cle)
+    if (!vu) {
+      if (rang.size >= PLAFOND_BOUCHES) continue
+      rang.set(cle, sorties.length)
+    }
+    sorties.push({
+      p: b.p,
+      // le premier escalier de la sortie porte l'étiquette, les suivants non
+      num: vu ? null : b.r,
+      nom: vu || !avecNom ? null : elaguer(b.n),
+    })
+  }
+  return sorties
 }

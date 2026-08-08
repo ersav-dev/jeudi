@@ -93,9 +93,15 @@ const bouches: Record<string, Bouche[]> = {
   'Châtelet': Array.from({ length: 10 }, (_, i) => ({
     p: [2.347 + i * 0.001, 48.858] as [number, number],
     r: String(10 + i),
-    n: 'Rue de Rivoli',
+    n: 'Rue de Rivoli ' + i,
     d: 40 + i * 20,
   })),
+  // deux escaliers pour la même sortie 1, comme Notre-Dame de Lorette
+  Lorette: [
+    { p: [2.3386, 48.87619], r: '1', n: 'Rue Bourdaloue (Église)', d: 88 },
+    { p: [2.33862, 48.87624], r: '1', n: 'Rue Bourdaloue (Église)', d: 90 },
+    { p: [2.33664, 48.87617], r: '2', n: 'Rue de Châteaudun', d: 59 },
+  ],
 }
 
 describe('bouchesPour', () => {
@@ -125,7 +131,7 @@ describe('bouchesPour', () => {
 
   it('sort le nom élagué à partir de z17', () => {
     const [b] = bouchesPour('Châtelet', bouches, 17)
-    expect(b.nom).toBe('R. de Rivoli')
+    expect(b.nom).toBe('R. de Rivoli 0')
   })
 
   it('accepte une bouche sans nom — 127 n\'en ont pas', () => {
