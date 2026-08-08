@@ -726,6 +726,9 @@ const EN: Record<string, string> = {
   'on flambe': 'we splurge',
   'ça va': 'we’re fine',
   'ça coûte rien': 'costs nothing',
+
+  // la bannière du grand jeudi (le 1ᵉʳ jeudi du mois)
+  'ce soir, le voile tombe. toute la ville.': 'tonight, the veil falls. the whole city.',
 }
 
 /** traduit une chaîne de la voix de jeudi. fr = la clé, en = le dictionnaire,

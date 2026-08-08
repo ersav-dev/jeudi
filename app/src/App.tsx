@@ -937,8 +937,8 @@ function Reglages({
 function BanniereGrandJeudi({ onOuvrir }: { onOuvrir: () => void }) {
   return (
     <button className="gj-banniere" onClick={onOuvrir}>
-      <span className="mono gj-banniere-cap">le grand jeudi</span>
-      <span className="gj-banniere-mot">ce soir, le voile tombe. toute la ville.</span>
+      <span className="mono gj-banniere-cap">{t('le grand jeudi')}</span>
+      <span className="gj-banniere-mot">{t('ce soir, le voile tombe. toute la ville.')}</span>
     </button>
   )
 }
