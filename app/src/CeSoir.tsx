@@ -324,10 +324,17 @@ function JeSaisPas({
   const favoris = useMemo(() => lireFavoris(), [])
   // arrondi à la minute : le tirage ne bouge pas sous les yeux à chaque re-rendu
   const minute = Math.floor(maintenant.getTime() / 60000)
-  const plans = useMemo(
-    () => tirerPlans(lieux, compagnie, graine, { favoris, maintenant: new Date(minute * 60000) }),
-    [lieux, compagnie, graine, favoris, minute],
-  )
+  // TRI PAR DISTANCE (Ersan, 08/08) : les plans se classent TOUJOURS du plus
+  // proche au plus loin. Mesure retenue = la distance du spot A (le pivot) —
+  // c'est CETTE distance qui s'affiche déjà dans l'accroche (« à X min de
+  // toi »), le tri reste donc honnête : l'ordre affiché correspond au chiffre
+  // affiché, sans recalcul caché. Le spot B, lui, n'est mesuré que depuis le
+  // pivot (jamais depuis « toi ») — sa distance n'est pas comparable entre
+  // plans sans la recalculer nous-mêmes, donc pas retenue pour le tri.
+  const plans = useMemo(() => {
+    const tires = tirerPlans(lieux, compagnie, graine, { favoris, maintenant: new Date(minute * 60000) })
+    return [...tires].sort((a, b) => distanceM(a.spots[0].lieu) - distanceM(b.spots[0].lieu))
+  }, [lieux, compagnie, graine, favoris, minute])
 
   const retirer = () => {
     navigator.vibrate?.(15) // la frappe légère
