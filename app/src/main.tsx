@@ -1,10 +1,9 @@
-import { Component, StrictMode, type ReactNode } from 'react'
+import { Component, StrictMode, Suspense, lazy, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 // maplibre AVANT notre CSS : nos règles gagnent sans !important
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './index.css'
 import App from './App.tsx'
-import PageSortie from './PageSortie.tsx'
 import { extraireTokenSortie } from './sortieGroupe'
 import { registerSW } from 'virtual:pwa-register'
 import { releverCrash, jalonner, lireCrash, effacerCrash } from './jalon'
@@ -89,10 +88,22 @@ class GardeFou extends Component<{ children: ReactNode }, { erreur: Error | null
 
 // /sortie/<token> : la page PUBLIQUE du match de groupe — rendue AVANT
 // l'app (et donc avant le mur de connexion) : l'invité vote sans compte.
+// Une visite sur mille : elle descend à la demande, pas dans le bundle que
+// tout le monde porte.
+const PageSortie = lazy(() => import('./PageSortie.tsx'))
+
 const tokenSortie = extraireTokenSortie(window.location.pathname)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GardeFou>{tokenSortie ? <PageSortie token={tokenSortie} /> : <App />}</GardeFou>
+    <GardeFou>
+      {tokenSortie ? (
+        <Suspense fallback={null}>
+          <PageSortie token={tokenSortie} />
+        </Suspense>
+      ) : (
+        <App />
+      )}
+    </GardeFou>
   </StrictMode>,
 )

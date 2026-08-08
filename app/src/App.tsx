@@ -1,29 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense, type ComponentProps } from 'react'
 import { libelleTrajet } from './rayon'
 import LigneIndex from './LigneIndex'
-import CeSoir from './CeSoir'
-import Onboarding from './Onboarding'
 import Splash from './Splash'
 import Auth from './Auth'
 import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
 import { importerSeed } from './seed'
 import { jalonner, jalonnerVue } from './jalon'
-import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
 import { lireATester, basculerATester, estATester, type MarqueATester } from './aTester'
 import { suivre } from './analytique'
 import { partagerEnStory, partagerMaCarte } from './partageStory'
 import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau, ICrayon } from './icones'
-import TirageDuSoir from './TirageDuSoir'
 import { fusionnerPhotos } from './tirage'
 import { typeDeLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
-import Recherche from './EcranRecherche'
-import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
 import { lireSortieActive, ajouterCandidat, type MatchOuvert } from './sortieGroupe'
-import GrandJeudi from './EcranGrandJeudi'
 // le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
 import { estCeLeGrandJeudi } from './grandJeudi'
 import {
@@ -156,7 +149,13 @@ import {
   type SoireePellicule,
   type NuitAffichee,
 } from './pellicule'
-import CarnetCercle from './CarnetCercle'
+
+// ── CE QUI N'EST PAS LE PREMIER ÉCRAN ATTEND SON TOUR ────────────
+// Le boot ne montre que trois choses : le splash, le mur d'auth, et l'onglet
+// « ma carte ». Tout le reste — les autres onglets, l'onboarding du premier
+// jour, les feuillets qu'on ouvre d'un geste — descend à la demande. Le
+// service worker les précache dans la foulée : au deuxième lancement, ils
+// sont déjà là.
 
 // A4 : MapLibre (~1 Mo) sort du bundle principal — chargé à la demande
 const CarteLazy = lazy(() => import('./Carte'))
@@ -237,6 +236,87 @@ function CorrigerLieu(p: ComponentProps<typeof CorrigerLieuLazy>) {
   return (
     <Suspense fallback={null}>
       <CorrigerLieuLazy {...p} />
+    </Suspense>
+  )
+}
+// « ce soir » — le rituel du soir, mais PAS l'onglet d'accueil (c'est « ma
+// carte » qui ouvre le carnet). On l'appelle au premier tap sur l'onglet.
+const CeSoirLazy = lazy(() => import('./CeSoir'))
+function CeSoir(p: ComponentProps<typeof CeSoirLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <CeSoirLazy {...p} />
+    </Suspense>
+  )
+}
+// « trouver » : l'écran de recherche, un autre onglet — chargé à la demande
+const RechercheLazy = lazy(() => import('./EcranRecherche'))
+function Recherche(p: ComponentProps<typeof RechercheLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <RechercheLazy {...p} />
+    </Suspense>
+  )
+}
+// le match de groupe : ouvert depuis « on dit où. » ou depuis le cercle
+const GroupeLazy = lazy(() => import('./EcranGroupe'))
+function Groupe(p: ComponentProps<typeof GroupeLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <GroupeLazy {...p} />
+    </Suspense>
+  )
+}
+// le grand jeudi : un rendez-vous par mois — inutile de le porter les 30 autres jours
+const GrandJeudiLazy = lazy(() => import('./EcranGrandJeudi'))
+function GrandJeudi(p: ComponentProps<typeof GrandJeudiLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <GrandJeudiLazy {...p} />
+    </Suspense>
+  )
+}
+// le carnet du cercle : l'onglet « cercle », jamais le premier écran
+const CarnetCercleLazy = lazy(() => import('./CarnetCercle'))
+function CarnetCercle(p: ComponentProps<typeof CarnetCercleLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <CarnetCercleLazy {...p} />
+    </Suspense>
+  )
+}
+// chercher des amis : un geste volontaire, dans le cercle
+const ChercherAmisLazy = lazy(() => import('./ChercherAmis'))
+function ChercherAmis(p: ComponentProps<typeof ChercherAmisLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <ChercherAmisLazy {...p} />
+    </Suspense>
+  )
+}
+// « et le tirage ? » — le feuillet qui suit le verdict, ouvert d'un geste
+const TirageDuSoirLazy = lazy(() => import('./TirageDuSoir'))
+function TirageDuSoir(p: ComponentProps<typeof TirageDuSoirLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <TirageDuSoirLazy {...p} />
+    </Suspense>
+  )
+}
+// l'onboarding ne se joue qu'au tout premier lancement. Le repli reprend le
+// tampon qui respire de l'attente d'auth : la même page continue de tourner,
+// on ne troue pas l'écran entre le splash et la première question.
+const OnboardingLazy = lazy(() => import('./Onboarding'))
+function Onboarding(p: ComponentProps<typeof OnboardingLazy>) {
+  return (
+    <Suspense
+      fallback={
+        <div className="attente-auth" aria-busy="true" aria-label="chargement">
+          <div className="tampon-logo attente-auth-logo">Jeudi.</div>
+        </div>
+      }
+    >
+      <OnboardingLazy {...p} />
     </Suspense>
   )
 }
