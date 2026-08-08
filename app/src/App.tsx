@@ -11,6 +11,7 @@ import { importerSeed } from './seed'
 import { jalonner, jalonnerVue } from './jalon'
 import ChercherAmis from './ChercherAmis'
 import { t, lireLangue, basculerLangue } from './langue'
+import { lireATester, basculerATester, estATester, type MarqueATester } from './aTester'
 import { suivre } from './analytique'
 import { partagerEnStory, partagerMaCarte } from './partageStory'
 import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
@@ -61,6 +62,7 @@ import {
   chargerMonId,
   ajouterLieu,
   archiverLieu,
+  desarchiverLieu,
   supprimerLieu,
   majLieu,
   estAMoi,
@@ -1202,6 +1204,8 @@ export default function App() {
   // les favoris (signets) : ids gardés sous la main + filtre dédié
   const [favoris, setFavoris] = useState<string[]>(() => lireFavoris())
   const [favOn, setFavOn] = useState(false)
+  // la pile « à tester » : la règle (pas de tampon) + mes ratures (aTester.ts)
+  const [ratures, setRatures] = useState<Record<string, MarqueATester>>(() => lireATester())
   // #22 : le tri — au plus proche (défaut) ou par propreté des WC (seul score permis)
   const [tri, setTri] = useState<'proche' | 'wc' | 'pop' | 'pertinence' | 'oublies'>('proche')
   // quelle collection on regarde sur "ma carte" : 'moi', un prénom de curateur, ou 'public'
@@ -1386,6 +1390,11 @@ export default function App() {
     setFavoris(basculerFavori(l.id))
   }
 
+  // poser/retirer le spot de la pile « à tester » (rature de la règle)
+  const basculerPile = (l: Lieu) => {
+    setRatures(basculerATester(l))
+  }
+
   const signaler = async (l: Lieu) => {
     signalerLieu(l.id)
     setFlash('signalé. merci, on vérifie.')
@@ -1427,7 +1436,11 @@ export default function App() {
   // l'index filtré : les 3 axes se COMBINENT (tous doivent passer)
   const lieuxFiltres = useMemo(() => {
     const liste = baseCarte.filter((l) => {
-      const okStatut = filtre === 'faits' ? !!l.tampon : filtre === 'decouvrir' ? !l.tampon : true
+      // « à tester » et « faits » restent les deux moitiés du carnet : ce qui
+      // sort de la pile tombe dans l'autre. La règle par défaut n'a pas
+      // bougé (pas de tampon = à tester) — elle se rature juste, spot par spot.
+      const dansLaPile = estATester(l, ratures)
+      const okStatut = filtre === 'faits' ? !dansLaPile : filtre === 'decouvrir' ? dansLaPile : true
       const okOuvert = !ouvertOn || etatHoraire(l.horaires)?.ouvert === true
       const okMatch =
         matchF === 'diffuse'
@@ -1467,7 +1480,7 @@ export default function App() {
       )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
-  }, [baseCarte, filtre, ouvertOn, matchF, envieF, etiquetteF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cerclePourTri])
+  }, [baseCarte, filtre, ouvertOn, matchF, envieF, etiquetteF, favOn, favoris, ratures, rooftopOn, surLeauOn, tri, vus, cerclePourTri])
 
   // ── la pellicule, prête à peindre : les tas (carte) + les soirées
   // (carrousel), prénoms et sources résolus — le moteur pur fait le reste
@@ -2562,6 +2575,10 @@ export default function App() {
           dejaAdopte={!estAMoi(fiche) && lieux.some((x) => estAMoi(x) && x.nom === fiche.nom)}
           reels={cercleReel}
           onAuVote={lireSortieActive() || matchRejoint ? (l) => void ajouterAuVote(l) : undefined}
+          favori={favoris.includes(fiche.id)}
+          onFavori={() => basculerFav(fiche)}
+          aTester={estATester(fiche, ratures)}
+          onATester={() => basculerPile(fiche)}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -3336,6 +3353,10 @@ function Fiche({
   dejaAdopte,
   reels,
   onAuVote,
+  favori,
+  onFavori,
+  aTester,
+  onATester,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -3352,6 +3373,12 @@ function Fiche({
   reels: MembreCercle[]
   /** un match est ouvert → la fiche sait mettre ce spot au vote */
   onAuVote?: (l: Lieu) => void
+  /** les états tenus par l'écran (signet, pile « à tester ») — la fiche les
+   *  montre et les bascule, l'index les relit aussitôt */
+  favori: boolean
+  onFavori: () => void
+  aTester: boolean
+  onATester: () => void
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -3417,6 +3444,16 @@ function Fiche({
   const enregistrer = async (maj: Lieu) => {
     setLieu(maj)
     await majLieu(maj)
+  }
+
+  // le tiroir : ranger / ressortir. On ne ferme pas la fiche — tant qu'elle
+  // est ouverte, on peut se dédire ; l'index se refait à la fermeture.
+  const basculerArchive = async () => {
+    if (!mien) return
+    const range = lieu.statut === 'archive'
+    if (range) await desarchiverLieu(lieu.id)
+    else await archiverLieu(lieu.id)
+    setLieu({ ...lieu, statut: range ? 'actif' : 'archive' })
   }
 
   const basculerEnvie = async (e: (typeof ENVIES)[number]) => {
@@ -3841,6 +3878,12 @@ function Fiche({
           lieu={lieu}
           onEnregistre={(maj) => setLieu(maj)}
           onFerme={() => setCorrection(false)}
+          favori={favori}
+          onFavori={onFavori}
+          aTester={aTester}
+          onATester={onATester}
+          archive={lieu.statut === 'archive'}
+          onArchive={() => void basculerArchive()}
         />
       )}
 

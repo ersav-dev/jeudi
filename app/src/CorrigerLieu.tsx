@@ -27,11 +27,25 @@ export default function CorrigerLieu({
   lieu,
   onEnregistre,
   onFerme,
+  favori,
+  onFavori,
+  aTester,
+  onATester,
+  archive,
+  onArchive,
 }: {
   lieu: Lieu
   /** le lieu corrigé, déjà écrit (majLieu) — la fiche n'a qu'à se remettre à jour */
   onEnregistre: (l: Lieu) => void
   onFerme: () => void
+  /** les trois états, posés/retirés d'un tap — ce sont des gestes, pas un
+   *  formulaire : ils prennent effet tout de suite, sans « enregistrer ». */
+  favori: boolean
+  onFavori: () => void
+  aTester: boolean
+  onATester: () => void
+  archive: boolean
+  onArchive: () => void
 }) {
   const [nom, setNom] = useState(lieu.nom)
   const [adresse, setAdresse] = useState(lieu.adresse ?? '')
@@ -121,6 +135,40 @@ export default function CorrigerLieu({
           </button>
         ))}
       </div>
+
+      {/* LES ÉTATS, au même endroit que le reste — posés d'un tap, pris tout
+          de suite. Favori : le signet. À tester : ma pile (par défaut, tout
+          ce qui n'a pas de tampon). Archivé : le tiroir — le spot quitte le
+          carnet à la fermeture de la fiche, et sait revenir. */}
+      <span className="lbl mono">{t('où il en est')}</span>
+      <div className="rangée corriger-etats">
+        <button
+          className={`mot ${favori ? 'entouré' : ''}`}
+          aria-pressed={favori}
+          onClick={onFavori}
+        >
+          {t('favori')}
+        </button>
+        <button
+          className={`mot ${aTester ? 'entouré' : ''}`}
+          aria-pressed={aTester}
+          onClick={onATester}
+        >
+          {t('à tester')}
+        </button>
+        <button
+          className={`mot ${archive ? 'entouré' : ''}`}
+          aria-pressed={archive}
+          onClick={onArchive}
+        >
+          {t('archivé')}
+        </button>
+      </div>
+      {archive && (
+        <p className="mono corriger-note">
+          {t('rangé — il quitte le carnet dès que tu refermes la fiche.')}
+        </p>
+      )}
 
       {/* ce que le carnet relira : montré, jamais deviné */}
       <p className="mono corriger-relecture">

@@ -8916,3 +8916,12 @@ button:focus:not(:focus-visible) {
   gap: 12px;
   margin-top: 12px;
 }
+/* les trois états, en ligne : signet · pile · tiroir. Des mots entourés,
+   comme partout — un état n'a pas besoin d'un interrupteur. */
+.corriger-etats {
+  margin-top: 2px;
+}
+.corriger-note {
+  margin: 6px 0 0;
+  color: var(--encre-3);
+}

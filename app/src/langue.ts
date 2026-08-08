@@ -346,6 +346,12 @@ const EN: Record<string, string> = {
   "c'est quoi, au juste ?": 'what is it, exactly?',
   'le tampon de douane': 'the customs stamp',
   'aucun': 'none',
+  'où il en est': 'where it stands',
+  'favori': 'favorite',
+  'à tester': 'to try',
+  'archivé': 'filed away',
+  'rangé — il quitte le carnet dès que tu refermes la fiche.':
+    'filed away — it leaves the notebook as soon as you close this page.',
   'le carnet lira :': 'the notebook will read:',
   'laisse tomber': 'never mind',
   'on corrige…': 'fixing…',

@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { adresseDepuis } from './nominatim'
 import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
+import { lireATester, CLE_A_TESTER } from './aTester'
 import { extensionClip, normaliserReglages, type ReglagesRendu } from './super8'
 import { parserGeoJson, type EntreeImport } from './takeout'
 
@@ -1146,6 +1147,20 @@ function remplacerIdLocal(ancien: string, neuf: string): void {
       /* idem */
     }
   }
+  // les tables indexées PAR id de lieu (émoji posé, rature « à tester ») :
+  // même sort que les listes ci-dessus — l'id change, la marque suit.
+  for (const cle of ['jeudi-marques', CLE_A_TESTER]) {
+    try {
+      const v = JSON.parse(localStorage.getItem(cle) ?? '{}')
+      if (v && typeof v === 'object' && !Array.isArray(v) && ancien in v) {
+        v[neuf] = v[ancien]
+        delete v[ancien]
+        localStorage.setItem(cle, JSON.stringify(v))
+      }
+    } catch {
+      /* table illisible : tant pis */
+    }
+  }
   // le cache d'adresse (+ son index de purge) suit le lieu
   const adr = localStorage.getItem(`jeudi-adr-${ancien}`)
   if (adr !== null) {
@@ -1275,6 +1290,32 @@ export async function archiverLieu(id: string): Promise<void> {
       error ?? '0 ligne',
     )
     enfiler('lieu-archive', id)
+  }
+}
+
+/** le contraire : le spot ressort du tiroir et reprend sa place au carnet.
+ *  (08/08 — archiver depuis la fiche n'a de sens que si on peut se dédire.) */
+export async function desarchiverLieu(id: string): Promise<void> {
+  await pretAuth
+  const db = await getDB()
+  const lieu = await db.get('lieux', id)
+  if (lieu) await db.put('lieux', { ...lieu, statut: 'actif' })
+  const mien = lieu ? estAMoi(lieu) : true
+  if (!monId || !mien) return
+  if (!estUuid(id)) return // jamais poussé au cloud : le local suffit
+  const { data, error } = await supabase
+    .from('lieux')
+    .update({ statut: 'actif' })
+    .eq('id', id)
+    .eq('owner_id', monId)
+    .select('id')
+  if (error || !Array.isArray(data) || data.length === 0) {
+    console.warn(
+      '[jeudi] desarchiverLieu cloud KO — ressorti en local, resync planifiée',
+      id,
+      error ?? '0 ligne',
+    )
+    enfiler('lieu-upsert', id)
   }
 }
 
@@ -2693,6 +2734,7 @@ export async function exporterMesDonnees(): Promise<Record<string, unknown>> {
     signales: lireSignales(),
     comparer: lireComparer(),
     marques: lireMarques(), // les émojis posés sur les lieux (jeudi-marques)
+    aTester: lireATester(), // les ratures de la pile « à tester » (jeudi-a-tester)
     tagline: lireTagline(),
     couleur: lireCouleur(),
     seuils: lireSeuils(),
