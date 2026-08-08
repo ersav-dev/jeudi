@@ -22,9 +22,22 @@ export type Ligne = {
   brins: [number, number][][]
 }
 
-// une bouche : sa position, son numéro de sortie (celui écrit sur les
-// panneaux, en bas), son nom de rue brut, sa distance à la station
-export type Bouche = { p: [number, number]; r: string | null; n: string | null; d: number }
+// le sens de passage d'un accès : 's' on ne peut que sortir · 'e' on ne peut
+// qu'entrer · absent = les deux, le cas courant.
+//
+// Ce champ vient du référentiel IDFM, pas d'OSM. La différence est décisive :
+// dans OSM l'absence de tag est muette (« les deux » ou « personne n'a
+// renseigné » ?), alors qu'IDFM remplit accisentry ET accisexit sur les 2 522
+// accès. « Les deux » y est une affirmation. C'est ce qui permet de dessiner
+// une flèche sans mentir. 129 accès ne sont que des sorties, 11 que des entrées.
+export type SensAcces = 's' | 'e'
+export type Bouche = {
+  p: [number, number]
+  r: string | null
+  n: string | null
+  d: number
+  s?: SensAcces
+}
 
 // « Place de l'Opéra (théâtre national de l'Opéra) » → « Pl. de l'Opéra ».
 // Les noms bruts montent à 89 caractères ; sur la carte il en faut ~15.
@@ -121,6 +134,7 @@ export type BoucheAffichee = {
   p: [number, number]
   num: string | null
   nom: string | null
+  sens?: SensAcces
 }
 
 // Une même sortie a souvent DEUX escaliers : OSM les cartographie séparément
@@ -157,6 +171,9 @@ export const bouchesPour = (
       // le premier escalier de la sortie porte l'étiquette, les suivants non
       num: vu ? null : b.r,
       nom: vu || !avecNom ? null : elaguer(b.n),
+      // le sens reste sur CHAQUE escalier : deux accès d'une même sortie
+      // peuvent très bien ne pas se franchir dans le même sens
+      ...(b.s ? { sens: b.s } : {}),
     })
   }
   return sorties

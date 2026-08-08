@@ -80,7 +80,9 @@ const STYLE: maplibregl.StyleSpecification = {
         'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
       ],
       tileSize: 256,
-      attribution: '© OpenStreetMap, © CARTO',
+      // OSM pour le fond, les lignes et une partie des accès · Île-de-France
+      // Mobilités (Licence Ouverte v2.0) pour les accès et leur sens de passage
+      attribution: '© OpenStreetMap, © CARTO, © Île-de-France Mobilités',
     },
   },
   layers: [{ id: 'carto', type: 'raster', source: 'carto' }],
@@ -990,10 +992,17 @@ export default function Carte({
       // d'ancrage — la flèche tombe sur la vraie bouche, le texte déborde —
       // parce qu'une bouche, sa précision est justement ce qu'on vient
       // chercher. Numéro dès z15, nom élagué à partir de z17, 8 au maximum.
-      const FLECHE_U =
+      // le U est l'ouverture, la flèche dit le sens. Elle descend dedans quand
+      // on peut entrer, elle en ressort quand l'accès ne fait que sortir.
+      // Le sens vient d'IDFM (voir lignes.ts) : sans lui on ne dessinerait que
+      // des flèches descendantes, ce qui affirmerait à tort que tout se
+      // franchit dans les deux sens.
+      const svgU = (d: string) =>
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
-        'stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M12 3v8"/><path d="M8 7.5l4 4 4-4"/><path d="M6 14v6h12v-6"/></svg>'
+        'stroke-linecap="round" stroke-linejoin="round">' + d +
+        '<path d="M6 14v6h12v-6"/></svg>'
+      const FLECHE_DESCEND = svgU('<path d="M12 3v8"/><path d="M8 7.5l4 4 4-4"/>')
+      const FLECHE_REMONTE = svgU('<path d="M12 11V3"/><path d="M8 6.5l4-4 4 4"/>')
       const poserBouches = (nom: string | null) => {
         for (const mk of marqueursBouches.current) mk.remove()
         marqueursBouches.current = []
@@ -1006,7 +1015,9 @@ export default function Carte({
           tete.className = 'bouche-metro-tete'
           const g = document.createElement('span')
           g.className = 'bouche-metro-glyphe'
-          g.innerHTML = FLECHE_U
+          g.innerHTML = b.sens === 's' ? FLECHE_REMONTE : FLECHE_DESCEND
+          if (b.sens) el.dataset.sens = b.sens
+          el.title = b.sens === 's' ? 'sortie seulement' : b.sens === 'e' ? 'entrée seulement' : ''
           tete.append(g)
           if (b.num) {
             const n = document.createElement('b')

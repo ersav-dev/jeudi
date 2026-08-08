@@ -138,3 +138,35 @@ describe('bouchesPour', () => {
     expect(bouchesPour('Abbesses', bouches, 18)[0].nom).toBeNull()
   })
 })
+
+describe('le sens de passage', () => {
+  const sens: Record<string, Bouche[]> = {
+    Gare: [
+      { p: [2.3, 48.8], r: '1', n: 'Rue A', d: 10 },
+      { p: [2.31, 48.8], r: '2', n: 'Rue B', d: 20, s: 's' },
+      { p: [2.32, 48.8], r: '3', n: 'Rue C', d: 30, s: 'e' },
+    ],
+  }
+
+  it('laisse le sens absent quand on passe dans les deux — le cas courant', () => {
+    expect(bouchesPour('Gare', sens, 17)[0].sens).toBeUndefined()
+  })
+
+  it('marque la sortie seule et l\'entrée seule', () => {
+    const l = bouchesPour('Gare', sens, 17)
+    expect(l[1].sens).toBe('s')
+    expect(l[2].sens).toBe('e')
+  })
+
+  it('garde le sens sur CHAQUE escalier, même quand l\'étiquette est tue', () => {
+    const paire: Record<string, Bouche[]> = {
+      X: [
+        { p: [2.3, 48.8], r: '1', n: 'Rue A', d: 10 },
+        { p: [2.3001, 48.8], r: '1', n: 'Rue A', d: 12, s: 's' },
+      ],
+    }
+    const l = bouchesPour('X', paire, 17)
+    expect(l[1].num).toBeNull()
+    expect(l[1].sens).toBe('s')
+  })
+})
