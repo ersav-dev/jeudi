@@ -1755,6 +1755,12 @@ button {
 .maplibregl-user-location-dot::before {
   background-color: var(--moi);
 }
+/* le cercle de précision restait au bleu Twitter de maplibre (#1da1f2) —
+   point or, halo bleu, ça jurait. Il se teinte maintenant comme « moi »,
+   quelle que soit la couleur de marque choisie (audit du 08/08). */
+.maplibregl-user-location-accuracy-circle {
+  background-color: color-mix(in srgb, var(--moi) 16%, transparent);
+}
 /* ── L'ÉPINGLE NÉON — réglée par Ersan dans design/atelier_pins.html
       (07/08, « copier mes réglages ») : pastille quasi transparente,
       contour bleu, glow, glyphe de type CENTRÉ et lumineux. Les valeurs
@@ -4772,9 +4778,11 @@ button {
   border-color: var(--ivory);
   box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ivory);
 }
-/* le bleu de jeudi : LA pastille de la maison, un cran plus grande */
+/* le bleu de jeudi : LA pastille de la maison — franchement plus grande
+   que les autres, pas juste « un cran » (Ersan, 08/08 : 1.28 ne se voyait
+   pas assez, c'est le défaut de l'app, il doit se lire comme tel) */
 .palette-swatch.jeudi {
-  transform: scale(1.28);
+  transform: scale(1.5);
   z-index: 1;
 }
 
