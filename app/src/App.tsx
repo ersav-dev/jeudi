@@ -3405,7 +3405,7 @@ function Fiche({
 
   // le partage : si photo + tampon, le tampon s'IMPRIME dans l'image envoyée
   const partager = async () => {
-    const texte = `${lieu.nom} — ${lieu.note || "regarde où je t'emmène."}\n${lieu.adresse ?? ''}\nhttps://maps.google.com/?q=${lieu.lat},${lieu.lng}\n— dit sur Jeudi.`
+    const texte = `${lieu.nom} — ${lieu.note || t("regarde où je t'emmène.")}\n${lieu.adresse ?? ''}\nhttps://maps.google.com/?q=${lieu.lat},${lieu.lng}\n${t('— dit sur Jeudi.')}`
     const photo = lieu.photos[0]?.blob
     if (photo && lieu.tampon && navigator.canShare) {
       try {
@@ -3548,7 +3548,7 @@ function Fiche({
         >
           <button
             className="photo-zoom-x mono"
-            aria-label="fermer"
+            aria-label={t('fermer')}
             onClick={(e) => {
               e.stopPropagation()
               setAgrandi(false)
@@ -3592,7 +3592,7 @@ function Fiche({
               </span>
               {horaire && horaire.ouvert !== undefined && (
                 <span className="affiche-grave ag-hd">
-                  {horaire.ouvert ? 'ouvert' : 'fermé'}
+                  {horaire.ouvert ? t('ouvert') : t('fermé')}
                   <br />
                   {horaire.texte.replace(/^[^·]*· /, '')}
                 </span>
@@ -3619,13 +3619,13 @@ function Fiche({
       )}
       <div className="fiche-haut">
         <button className="lien fiche-retour" onClick={onFermer}>
-          ← retour
+          {t('← retour')}
         </button>
         {liste.length > 1 && idx >= 0 && (
           <div className="fiche-nav">
             <button
               className="fiche-nav-btn"
-              aria-label="lieu précédent"
+              aria-label={t('lieu précédent')}
               disabled={!precedent}
               onClick={() => precedent && onNaviguer(precedent)}
             >
@@ -3636,7 +3636,7 @@ function Fiche({
             </span>
             <button
               className="fiche-nav-btn"
-              aria-label="lieu suivant"
+              aria-label={t('lieu suivant')}
               disabled={!suivant}
               onClick={() => suivant && onNaviguer(suivant)}
             >
@@ -3646,7 +3646,7 @@ function Fiche({
         )}
         {enCompa && (
           <button className="fiche-compa-go mono" onClick={onComparer}>
-            le tableau →
+            {t('le tableau →')}
           </button>
         )}
       </div>
@@ -3671,7 +3671,7 @@ function Fiche({
             ) : (
               <div className="tirage-vide">
                 <span className="croix">✕</span>
-                <span className="hand sans-photo">pas encore de photo.</span>
+                <span className="hand sans-photo">{t('pas encore de photo.')}</span>
               </div>
             )}
             {/* le photogramme d'un clip : la perforation + le déclic qui
@@ -3703,7 +3703,7 @@ function Fiche({
               budget cire de la fiche : le tampon « validé » + ce sceau, rien
               d'autre n'y parle en --cire (arbitrage §4). */}
           {mien && spotComplet(lieu) && (
-            <span className="sceau-complet sceau-cire" title="spot complet — une photo et un mot">
+            <span className="sceau-complet sceau-cire" title={t('spot complet — une photo et un mot')}>
               <ISceau taille={14} />
             </span>
           )}
@@ -3715,7 +3715,7 @@ function Fiche({
               e.stopPropagation()
               setAgrandi(true)
             }}
-            aria-label="agrandir la photo"
+            aria-label={t('agrandir la photo')}
           >
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
@@ -3730,11 +3730,11 @@ function Fiche({
           >
             {lieu.tampon.v === 'valide' ? (
               <>
-                <span className="tampon-qui">{lieu.tampon.qui ?? 'toi'}</span>
+                <span className="tampon-qui">{lieu.tampon.qui ?? t('toi')}</span>
                 {lieu.tampon.date && <span className="tampon-date">{lieu.tampon.date}</span>}
               </>
             ) : (
-              `${lieu.tampon.qui ?? 'toi'} — passé à côté`
+              `${lieu.tampon.qui ?? t('toi')} — ${t('passé à côté')}`
             )}
           </span>
         )}
@@ -3762,12 +3762,16 @@ function Fiche({
       {/* spot du cercle sans photo : pas de cadre (RLS Storage), juste le constat */}
       {!mien && chez && nbPhotos === 0 && (
         <p className="mono album-sans-visage">
-          pas encore de visage — c'est le spot de {chez.toLowerCase()}.
+          {t("pas encore de visage — c'est le spot de")} {chez.toLowerCase()}.
         </p>
       )}
 
       {/* la provenance : un spot du cercle réel s'annonce « chez untel » */}
-      {chez && <p className="mono fiche-adresse fiche-chez">chez {chez.toLowerCase()} · un spot de ton cercle</p>}
+      {chez && (
+        <p className="mono fiche-adresse fiche-chez">
+          {t('chez')} {chez.toLowerCase()} · {t('un spot de ton cercle')}
+        </p>
+      )}
 
       {(adrComplete || lieu.adresse) && (
         <p className="mono fiche-adresse">
@@ -3784,21 +3788,21 @@ function Fiche({
           <div className={`fiche-case-gros ${horaire?.ouvert ? 'ouvert' : 'ferme'}`}>
             {horaire
               ? horaire.ouvert === true
-                ? 'ouvert'
+                ? t('ouvert')
                 : horaire.ouvert === false
-                  ? 'fermé'
-                  : 'horaires'
+                  ? t('fermé')
+                  : t('horaires')
               : '—'}
           </div>
           <div className="mono fiche-case-lbl">
-            {horaire ? horaire.texte.replace(/^[^·]*· /, '') : 'horaires inconnus'}
+            {horaire ? horaire.texte.replace(/^[^·]*· /, '') : t('horaires inconnus')}
           </div>
         </div>
       </div>
 
       {propreteWcLabel(lieu.propreteWc) && (
         <div className="fiche-wc mono">
-          <span className="fiche-wc-lbl">propreté des wc</span>
+          <span className="fiche-wc-lbl">{t('propreté des wc')}</span>
           <span className="fiche-wc-pts">{propreteWcLabel(lieu.propreteWc)!.points}</span>
           <span className="fiche-wc-mot">{propreteWcLabel(lieu.propreteWc)!.mot}</span>
         </div>
@@ -3808,16 +3812,16 @@ function Fiche({
         (lieu.note ? 1 : 0) + (lieu.tipsCercle?.length ?? 0) >= 2) && (
         <div className="fiche-signaux">
           {(lieu.note ? 1 : 0) + (lieu.tipsCercle?.length ?? 0) >= 2 && (
-            <span className="fiche-signal ref">référence — recommandé par plusieurs</span>
+            <span className="fiche-signal ref">{t('référence — recommandé par plusieurs')}</span>
           )}
           {lieu.match === 'diffuse' && (
             <span className="fiche-signal match">
-              <IBallon taille={14} /> on y voit les matchs
+              <IBallon taille={14} /> {t('on y voit les matchs')}
             </span>
           )}
           {lieu.match === 'refuge' && (
             <span className="fiche-signal refuge">
-              <IRefuge taille={14} /> refuge anti-foot
+              <IRefuge taille={14} /> {t('refuge anti-foot')}
             </span>
           )}
         </div>
@@ -3852,39 +3856,39 @@ function Fiche({
               ) : estNoteImport(lieu) ? (
                 t('— note d’import')
               ) : (
-                '— toi'
+                t('— toi')
               )}
             </span>
           </div>
         )}
-        {(lieu.tipsCercle ?? []).map((t, i) => {
+        {(lieu.tipsCercle ?? []).map((tip, i) => {
           // #22 : le critère perso du curateur (sa signature de goût) —
           // seulement pour un VRAI membre du cercle (auteurId)
-          const crit = t.auteurId ? reels.find((m) => m.id === t.auteurId)?.critere : undefined
+          const crit = tip.auteurId ? reels.find((m) => m.id === tip.auteurId)?.critere : undefined
           return (
             <div className="tip" key={i}>
-              <p className="hand">{t.note}</p>
+              <p className="hand">{tip.note}</p>
               <span className="mono tip-signature">
                 —{' '}
-                {t.auteurId ? (
+                {tip.auteurId ? (
                   // un vrai pote : sa signature ouvre son carnet
-                  <button className="tip-auteur-lien" onClick={() => onCurateur(t.auteur)}>
-                    @{t.auteur.toLowerCase()}
+                  <button className="tip-auteur-lien" onClick={() => onCurateur(tip.auteur)}>
+                    @{tip.auteur.toLowerCase()}
                   </button>
                 ) : (
                   // voix du décor (contenu éditorial) : signature TEXTE simple —
                   // aucun faux profil curateur derrière (bloc D)
-                  <span>@{t.auteur.toLowerCase()}</span>
+                  <span>@{tip.auteur.toLowerCase()}</span>
                 )}
-                {crit && <span className="tip-critere"> · juge {crit}</span>}
+                {crit && <span className="tip-critere"> · {t('juge')} {crit}</span>}
                 {/* seul le décor porte le tampon d'honnêteté */}
-                {!t.auteurId && <span className="tampon-demo">démo</span>}
+                {!tip.auteurId && <span className="tampon-demo">{t('démo')}</span>}
               </span>
             </div>
           )
         })}
         {!lieu.note && (lieu.tipsCercle ?? []).length === 0 && (
-          <p className="hand tip-vide">t'as rien dit sur ce spot. encore.</p>
+          <p className="hand tip-vide">{t("t'as rien dit sur ce spot. encore.")}</p>
         )}
         {/* la note en marge : le 1ᵉʳ tip d'un pote qu'on croise — lue puis
             effacée au prochain scroll/tap. Un VRAI pote (auteurId) seulement :
@@ -3907,7 +3911,7 @@ function Fiche({
               </span>
             ))}
             {lieu.envies.length === 0 && (
-              <span className="mono fiche-lecture-seule">pas encore renseigné</span>
+              <span className="mono fiche-lecture-seule">{t('pas encore renseigné')}</span>
             )}
           </div>
           <span className="lbl mono">{t('avec qui ?')}</span>
@@ -3920,7 +3924,7 @@ function Fiche({
           </div>
           {lieu.meteo && (
             <span className="mono meteo-sens">
-              {METEO_INFOS[lieu.meteo].mot} · {prixMeteo(lieu.meteo)} / pers.
+              {METEO_INFOS[lieu.meteo].mot} · {prixMeteo(lieu.meteo)} {t('/ pers.')}
               <span className="glose"> ≈ {uniteParPersonne(lieu.envies)}</span>
             </span>
           )}
@@ -4000,7 +4004,7 @@ function Fiche({
               }}
             />
           </div>
-          <span className="lbl mono">situation du portefeuille ?</span>
+          <span className="lbl mono">{t('situation du portefeuille ?')}</span>
           <div className="form-meteo">
             {METEOS.map((m) => (
               <button
@@ -4016,7 +4020,7 @@ function Fiche({
             ))}
           </div>
           <button className="valider fiche-modifier-ok" onClick={() => setEdition(false)}>
-            terminé
+            {t('terminé')}
           </button>
         </div>
       ) : (
@@ -4170,7 +4174,7 @@ function AlbumATrous({
                 </span>
               </span>
             ) : (
-              <label className="album-cadre album-vide" aria-label={`prendre la photo : ${etiquette}`}>
+              <label className="album-cadre album-vide" aria-label={`${t('prendre la photo :')} ${t(etiquette)}`}>
                 <span className="album-fenetre">
                   <IAppareil taille={17} />
                 </span>
@@ -4246,13 +4250,13 @@ function KitPhotos({
             </span>
             {type === 'wc' && setPropreteWc && (
               <div className="photo-wc-note mono">
-                propreté&nbsp;:
+                {t('propreté')}&nbsp;:
                 {([1, 2, 3] as const).map((n) => (
                   <button
                     type="button"
                     key={n}
                     className={`photo-wc-dot ${propreteWc && propreteWc >= n ? 'on' : ''}`}
-                    aria-label={`propreté ${n}/3`}
+                    aria-label={`${t('propreté')} ${n}/3`}
                     aria-pressed={propreteWc === n}
                     onClick={() => setPropreteWc(n)}
                   >
@@ -4268,7 +4272,7 @@ function KitPhotos({
                   key={i}
                   className="photo-vignette"
                   onClick={() => retirer(p)}
-                  title="retirer"
+                  title={t('retirer')}
                 >
                   <img src={srcPhoto(p)} alt={label} onError={photoIndisponible} />
                   <span className="photo-vignette-x">✕</span>
@@ -4290,7 +4294,7 @@ function KitPhotos({
           </div>
         )
       })}
-      <p className="mono photo-wc-pousse">les wc, c'est la vérité. mets-en 2-3.</p>
+      <p className="mono photo-wc-pousse">{t("les wc, c'est la vérité. mets-en 2-3.")}</p>
     </div>
   )
 }

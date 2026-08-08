@@ -833,7 +833,7 @@ function Deck({
               <span className="mono tip-signature">
                 — {laVoix.signature}
                 {voix.length > 1 && ` · ${(voixIndex % voix.length) + 1}/${voix.length}`}
-                {laVoix.demo && <span className="tampon-demo">démo</span>}
+                {laVoix.demo && <span className="tampon-demo">{t('démo')}</span>}
               </span>
             </div>
           )}
