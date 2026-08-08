@@ -8946,3 +8946,30 @@ button:focus:not(:focus-visible) {
 .corriger-arracher .corriger-actions {
   margin-top: 8px;
 }
+/* « à la main » : la troisième voie, sous les deux imports. Même page que
+   le reste du formulaire d'ajout — pas un encart, une suite. */
+.ajout-main {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+}
+.ajout-main-ou {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ajout-main-ou input {
+  flex: 1;
+  min-width: 0;
+}
+.ajout-main-ou .lien {
+  flex: none;
+}
+.ajout-main-place {
+  margin: 0;
+  color: var(--encre-2);
+}
+.ajout-main-place .lien {
+  margin-left: 6px;
+}

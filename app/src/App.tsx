@@ -222,6 +222,15 @@ function ImportListe(p: ComponentProps<typeof ImportListeLazy>) {
     </Suspense>
   )
 }
+// la troisième voie de l'écran d'ajout : une entrée écrite à la main
+const AjoutMainLazy = lazy(() => import('./AjoutMain'))
+function AjoutMain(p: ComponentProps<typeof AjoutMainLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <AjoutMainLazy {...p} />
+    </Suspense>
+  )
+}
 // corriger une entrée : un geste rare, sur un spot à moi — chargé à la demande
 const CorrigerLieuLazy = lazy(() => import('./CorrigerLieu'))
 function CorrigerLieu(p: ComponentProps<typeof CorrigerLieuLazy>) {
@@ -4668,6 +4677,8 @@ function FormAjout({
       <ImportGoogle ouvertParDefaut={importOuvert} onImporte={() => setTimeout(onFini, 1100)} />
       {/* l'import universel : des noms collés depuis n'importe où */}
       <ImportListe onImporte={() => setTimeout(onFini, 300)} />
+      {/* et la troisième voie : une entrée écrite à la main, sans import */}
+      <AjoutMain onAjoute={() => setTimeout(onFini, 700)} />
       <div className="form-actions">
         <button className="lien" onClick={onAnnule}>
           laisse tomber

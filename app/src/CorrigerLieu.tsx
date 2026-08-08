@@ -12,16 +12,8 @@ import { useState } from 'react'
 // ════════════════════════════════════════════════════════════════
 import { t } from './langue'
 import { majLieu, type Lieu } from './db'
-import {
-  TYPES_LIEU,
-  TAMPONS_CUISINE,
-  cuisineDeLieu,
-  decrireLieu,
-  labelTypeLieu,
-  svgTypeLieu,
-  typeDeLieu,
-  type TypeLieu,
-} from './typesLieu'
+import { cuisineDeLieu, decrireLieu, typeDeLieu, type TypeLieu } from './typesLieu'
+import { PickerType, PickerTampon } from './PickersLieu'
 
 export default function CorrigerLieu({
   lieu,
@@ -109,47 +101,11 @@ export default function CorrigerLieu({
 
       {/* LE TYPE : les 10 glyphes, ceux-là mêmes qui marquent la carte */}
       <span className="lbl mono">{t("c'est quoi, au juste ?")}</span>
-      <div className="corriger-types">
-        {TYPES_LIEU.map((ty) => (
-          <button
-            key={ty}
-            className={`corriger-type ${ty === type ? 'choisi' : ''}`}
-            aria-pressed={ty === type}
-            title={labelTypeLieu(ty)}
-            onClick={() => setType(ty)}
-          >
-            <span
-              className="corriger-glyphe"
-              dangerouslySetInnerHTML={{ __html: svgTypeLieu(ty) }}
-            />
-            <span className="mono corriger-type-mot">{labelTypeLieu(ty)}</span>
-          </button>
-        ))}
-      </div>
+      <PickerType valeur={type} onChoisir={setType} />
 
-      {/* LE TAMPON : la nationalité de la cuisine, en 3 lettres au crayon.
-          la maison n'a pas de tampon — « aucun » est un choix, pas un trou. */}
+      {/* LE TAMPON : la nationalité de la cuisine, en 3 lettres au crayon */}
       <span className="lbl mono">{t('le tampon de douane')}</span>
-      <div className="rangée corriger-tampons">
-        <button
-          className={`mot ${code === null ? 'entouré' : ''}`}
-          aria-pressed={code === null}
-          onClick={() => setCode(null)}
-        >
-          {t('aucun')}
-        </button>
-        {TAMPONS_CUISINE.map((c) => (
-          <button
-            key={c.code}
-            className={`mot mono ${code === c.code ? 'entouré' : ''}`}
-            aria-pressed={code === c.code}
-            title={c.mot}
-            onClick={() => setCode(code === c.code ? null : c.code)}
-          >
-            {c.code}
-          </button>
-        ))}
-      </div>
+      <PickerTampon valeur={code} onChoisir={setCode} />
 
       {/* LES ÉTATS, au même endroit que le reste — posés d'un tap, pris tout
           de suite. Favori : le signet. À tester : ma pile (par défaut, tout

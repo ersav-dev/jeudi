@@ -356,6 +356,21 @@ const EN: Record<string, string> = {
   'laisse tomber': 'never mind',
   'on corrige…': 'fixing…',
   "c'est corrigé.": 'fixed.',
+  // « à la main » : la troisième voie de l'écran d'ajout (08/08)
+  'ou écris-en un à la main →': 'or write one by hand →',
+  'un spot, écrit à la main — le nom, où c’est, et ce que c’est.':
+    'one spot, written by hand — the name, where it is, what it is.',
+  'le nom du spot': 'the name of the spot',
+  'l’adresse, ou la station la plus proche': 'the address, or the nearest station',
+  'placer': 'place it',
+  'rien trouvé par là. essaie l’adresse, ou la station la plus proche.':
+    'nothing found there. try the address, or the nearest station.',
+  'placé :': 'placed:',
+  'on le note…': 'noting it down…',
+  'dans mon carnet →': 'into my notebook →',
+  'noté. il est privé — à toi de le publier.':
+    'noted. it’s private — publishing it is up to you.',
+
   'arracher la page': 'tear out this page',
   'ses photos partent aussi — et ses clips. définitif, sans retour.':
     'its photos go too — and its clips. final, no way back.',
