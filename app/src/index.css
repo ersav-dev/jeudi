@@ -7790,6 +7790,19 @@ button {
 .repere-vignette.cachee {
   opacity: 0;
 }
+/* le cartouche : l'étiquette parchemin au texte rouge, sous la vignette —
+ * c'est LUI qui nomme (le Caveat se retire quand la vignette est là) */
+.monument-etq {
+  height: 13px;
+  width: auto;
+  margin-top: 2px;
+  opacity: 0.92;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+.repere-vignette .monument-etq {
+  height: 11px;
+}
 
 /* les repères de transport (RER/métro/tram/batobus) : la PLAQUE — le sigle
  * en lettres claires sur un rectangle plein aux couleurs RATP, puis le nom

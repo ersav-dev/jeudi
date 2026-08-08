@@ -1276,12 +1276,17 @@ export default function Carte({
     // situent (la tour, la butte, l'étoile) sans jamais concurrencer les spots.
     // TEST (08/08) : les vignettes carnet des planches GPT remplacent le
     // trait monoline quand elles existent — Ersan juge sur pièce.
+    // le nom vit dans le CARTOUCHE de la planche (étiquette parchemin au
+    // texte rouge) : séparé quand on l'a découpé, sinon déjà incorporé à la
+    // vignette — dans les deux cas, plus de doublon Caveat.
+    const htmlVignette = (img: string, etq: string | undefined, petite: boolean) =>
+      `<img class="monument-vignette${petite ? ' petite' : ''}" src="${img}" alt="" loading="lazy">` +
+      (etq ? `<img class="monument-etq" src="${etq}" alt="" loading="lazy">` : '')
     for (const mo of MONUMENTS) {
       const el = document.createElement('div')
       el.className = 'monument-repere'
       el.innerHTML = mo.img
-        ? `<img class="monument-vignette" src="${mo.img}" alt="" loading="lazy">` +
-          `<span class="monument-nom">${mo.nom}</span>`
+        ? htmlVignette(mo.img, mo.etq, false)
         : `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
@@ -1294,9 +1299,7 @@ export default function Carte({
       if (!r.img) continue
       const el = document.createElement('div')
       el.className = 'monument-repere repere-vignette'
-      el.innerHTML =
-        `<img class="monument-vignette petite" src="${r.img}" alt="" loading="lazy">` +
-        `<span class="monument-nom">${r.nom}</span>`
+      el.innerHTML = htmlVignette(r.img, r.etq, true)
       vignettesRdv.push(
         new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(carte.current),
       )
