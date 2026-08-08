@@ -80,15 +80,18 @@
      exact du bleu jeudi (hsl 42° 85% 58%), même valeur que la dérivation
      db.ts/couleurMoi. Une couleur perso le recalcule toujours en face. */
 
-  /* « je sais pas » : l'encre de chaque proposition (1/2/3) — des encres
-     d'état EXISTANTES (cire / reco / sauge), jamais une couleur inventée.
+  /* « je sais pas » : l'encre de chaque proposition (1/2/3) — palette B
+     « triade adoucie » de la planche design/jsp_palette_nuit.html (08/08) :
+     222°/342°/102° depuis la graine bleue, saturation/clarté abaissées pour
+     rester nocturnes. Remplace cire/reco/sauge, UNIQUEMENT pour ces 3 jetons
+     (--plan-1/2/3 ne sont utilisées que par .jsp-plan et pin-p1/2/3).
      Le B du plan = la même encre, passée au graphite (désaturée). */
-  --plan-1: var(--cire);
-  --plan-2: var(--reco);
-  --plan-3: var(--sauge);
-  --plan-1-b: color-mix(in srgb, var(--cire) 52%, var(--graphite));
-  --plan-2-b: color-mix(in srgb, var(--reco) 52%, var(--graphite));
-  --plan-3-b: color-mix(in srgb, var(--sauge) 52%, var(--graphite));
+  --plan-1: #597ccf;
+  --plan-2: #cf597c;
+  --plan-3: #7ccf59;
+  --plan-1-b: color-mix(in srgb, var(--plan-1) 52%, var(--graphite));
+  --plan-2-b: color-mix(in srgb, var(--plan-2) 52%, var(--graphite));
+  --plan-3-b: color-mix(in srgb, var(--plan-3) 52%, var(--graphite));
 
   /* anciens noms V4 → alias vers la matière V5 (ne pas casser l'existant) */
   --paper: var(--nuit);
@@ -1907,19 +1910,24 @@ button {
   line-height: 1;
   transform: rotate(-4deg);
 }
-/* le plan choisi S'ÉCLAIRE : le corps du pin prend l'encre de son plan
-   (A pleine, B désaturée) avec un petit sursaut à l'allumage — l'ajout de
-   .pin-allume rejoue l'animation. Bat le grisé, sous l'actif. */
+/* le plan choisi S'ÉCLAIRE : PROPOSÉ (planche jsp_palette_nuit, 08/08) — le
+   corps du pin garde son fond neutre habituel, c'est le CONTOUR (+ le glow)
+   qui prend l'encre du plan. Jamais le fond — un sursaut à l'allumage —
+   l'ajout de .pin-allume rejoue l'animation. Bat le grisé, sous l'actif. */
 .carte .pin-allume:not(.pin-actif) {
-  background: var(--encre-plan, var(--encre)) !important;
-  color: var(--print-white);
+  border-color: var(--encre-plan, var(--pin-contour));
   opacity: 1 !important;
   filter: none !important;
   z-index: 4 !important;
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--encre-plan, var(--encre)) 30%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--encre-plan, var(--pin-contour)) 22%, transparent),
+    0 0 var(--pin-glow-blur) color-mix(in srgb, var(--encre-plan, var(--pin-contour)) 60%, transparent),
     0 1px 0 rgba(0, 0, 0, 0.5);
   animation: pin-eclaire 320ms var(--frappe);
+}
+/* le glyphe de type suit la même encre — le symbole reste lisible, teinté */
+.carte .pin-allume:not(.pin-actif) .pin-type svg {
+  stroke: var(--encre-plan, var(--pin-glyphe));
 }
 @keyframes pin-eclaire {
   0% { transform: scale(1); }
@@ -6822,7 +6830,8 @@ button {
 /* le jeton du plan : sa place dans la liste, posé de travers */
 .jsp-tete {
   display: flex;
-  align-items: baseline;
+  align-items: center; /* CORRIGÉ (planche jsp_palette_nuit, 08/08) : le ①
+    retombe au milieu du nom de zone, plus flotter au-dessus (baseline) */
   gap: 10px;
   /* l'en-tête est un BOUTON depuis « le plan qui s'allume » : reset sobre */
   width: 100%;
@@ -6846,15 +6855,11 @@ button {
 .jsp-plan.p1 { --encre-plan: var(--plan-1); --encre-plan-b: var(--plan-1-b); }
 .jsp-plan.p2 { --encre-plan: var(--plan-2); --encre-plan-b: var(--plan-2-b); }
 .jsp-plan.p3 { --encre-plan: var(--plan-3); --encre-plan-b: var(--plan-3-b); }
+/* le ① : NU — plus aucun cadre rond (planche jsp_palette_nuit, 08/08). Le
+   cadre rond ne vit plus QUE sur les lettres A/B (.jsp-ab, inchangées) ;
+   ici, seule l'encre du plan tient le numéro, allumé ou pas. */
 .jsp-plan .jsp-jeton {
-  border-color: var(--encre-plan, var(--encre-2));
   color: var(--encre-plan, var(--encre-2));
-}
-/* le plan allumé : le jeton s'encre plein, la carte-plan se démarque */
-.jsp-plan.allume .jsp-jeton {
-  background: var(--encre-plan, var(--encre));
-  color: var(--print-white);
-  border-color: var(--encre-plan, var(--encre));
 }
 .jsp-plan.allume {
   border-color: color-mix(in srgb, var(--encre-plan, var(--encre)) 55%, transparent);
@@ -6887,14 +6892,10 @@ button {
 }
 .jsp-jeton {
   flex: none;
-  width: 21px;
-  height: 21px;
-  display: grid;
-  place-items: center;
-  border: 1.4px solid var(--encre-2);
-  border-radius: 50%;
+  line-height: 1;
   color: var(--encre-2);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
   transform: rotate(-4deg);
 }
 .jsp-plan {
