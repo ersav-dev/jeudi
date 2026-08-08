@@ -8,13 +8,17 @@ import { useEffect, useRef, useState } from 'react'
 
 // les suggestions : Pantone récents (peach fuzz 24, viva magenta 23,
 // very peri 22, classic blue 20…) + des teintes qui tiennent sur le
-// papier charbon. la 1re reste le rouge cire d'origine.
-// eslint-disable-next-line react-refresh/only-export-components -- palette intimement liée au picker ; seul coût : fast refresh recharge ce fichier en entier
+// papier charbon. LE BLEU DE JEUDI trône au milieu, un cran plus grand
+// (c'est la couleur d'identité par défaut — db.ts COULEUR_DEFAUT).
+/* eslint-disable react-refresh/only-export-components -- palette intimement
+   liée au picker ; seul coût : fast refresh recharge ce fichier en entier */
+export const BLEU_JEUDI = '#5d8dff'
 export const SUGGESTIONS: { hex: string; nom: string }[] = [
   { hex: '#a8322a', nom: 'rouge cire' },
   { hex: '#ffbe98', nom: 'peach fuzz' }, // Pantone 2024
   { hex: '#bb2649', nom: 'viva magenta' }, // Pantone 2023
   { hex: '#6667ab', nom: 'very peri' }, // Pantone 2022
+  { hex: BLEU_JEUDI, nom: 'bleu jeudi' }, // LA couleur de jeudi — au centre
   { hex: '#34568b', nom: 'classic blue' }, // Pantone 2020
   { hex: '#e0996f', nom: 'terre cuite' },
   { hex: '#3e8e6e', nom: 'sapin' },
@@ -125,7 +129,7 @@ export default function PickerCouleur({
         {SUGGESTIONS.map((c) => (
           <button
             key={c.hex}
-            className={`palette-swatch ${valeur.toLowerCase() === c.hex ? 'on' : ''}`}
+            className={`palette-swatch ${c.hex === BLEU_JEUDI ? 'jeudi ' : ''}${valeur.toLowerCase() === c.hex ? 'on' : ''}`}
             style={{ background: c.hex }}
             aria-label={c.nom}
             title={c.nom}

@@ -1,5 +1,28 @@
 # CHANTIER — « la pellicule fraîche »
-*Spécification complète, prête à coder · rédigée le 3 août 2026 · rien n'est encore implémenté*
+*Spécification complète, prête à coder · rédigée le 3 août 2026*
+
+> **✅ CŒUR CODÉ le 7 août 2026** (tsc, eslint, 224 tests, build verts,
+> déployé) : `pellicule.ts` (moteur pur testé) · tas de polaroids sur la
+> carte (`creerTas` dans Carte.tsx, ancre bottom, étiquette de cire,
+> heure au crayon, fonte, souvenir sépia) · carrousel 2 axes
+> (`CarrouselPellicule.tsx` : ←→ photos, ↑↓ soirées, carte qui suit via
+> `jeudi:easeto`, sceau brisé à ~1 s, sortie « j'y vais. » → la fiche) ·
+> accueil = la carte (vue 'carte' par défaut) · état vide-invitation ·
+> vu/pas vu local+cloud. **À LA MAIN : coller `0014_pellicule_vues.sql`**
+> (sans elle, le vu/pas vu reste local au téléphone — repli propre).
+> **✅ RESTES CODÉS le 7 août 2026** (tsc, eslint, tests, build verts) :
+> la **ligne-boussole** §1.9 (`ligneBoussole`/`texteBoussole` dans
+> pellicule.ts, rendue par Carte.tsx — hors-champ d'abord, puis « karim a
+> laissé quelque chose au perchoir », puis « tout est lu » ; tap → easeTo)
+> · le **clustering** §5.2 (`grouperTas` union-find sur les boîtes bloc
+> compris, `eventailGrappe` ; meneuse = la plus fraîche, « n spots ici »
+> au crayon, tap → déploiement, repli au moindre pan · z-order = fraîcheur
+> décroissante) · le **développement** §1.7 (`enDeveloppement`,
+> `libelleAge` → « ça se développe… », keyframes `tas-developpe` 3,2 s)
+> · la **perf** §5.3 (`pelliculeComposite.ts` : l'éventail entier peint
+> offscreen en UNE image ≤168 px, 4 `<img>` → 1, repli propre si le canvas
+> est souillé ; et le DOM ne garde plus que les tas dans le cadre).
+> **Reste du chantier** : le carnet du cercle (§7).
 
 > **À lire en premier par la session qui code.** Tout ce qui est en §1 a été
 > tranché avec Ersan après trois jours de prototypage et un panel de 10 agences
@@ -320,14 +343,34 @@ db.ts:446) transportent les nouveaux champs ; `televerserPhoto` pose
 2. **L'ordre vertical du carrousel** : fraîcheur pure (retenu) ou pondéré par
    la distance ? Instinct actuel : fraîcheur pure — c'est *la nuit*, pas
    *ton quartier*.
-3. **Le nom de la section jumelle dans l'onglet cercle** (§7) : « le carnet du
-   cercle » / « leurs soirs » / « ils y sont allés ».
-4. **Le tri du carnet du cercle** : chronologique (les nouvelles) ou groupé par
-   personne (les gens) ?
+3. ~~**Le nom de la section jumelle dans l'onglet cercle** (§7).~~
+   **TRANCHÉ le 7 août 2026 : « les soirs du cercle. »** — la forme voulue par
+   Ersan (« … du cercle »), mais avec le bon nom : une entrée n'est pas un
+   *spot* (l'annuaire juste en dessous est déjà ça), c'est **une soirée qui a
+   eu lieu**. « le carnet du cercle » a été écarté : « carnet » désigne déjà
+   *ma carte* ailleurs dans l'app.
+4. ~~**Le tri du carnet du cercle.**~~ **TRANCHÉ : chronologique, coupé par
+   nuit** — un intertitre au crayon (« ce soir », « hier soir », « samedi »)
+   entre chaque nuit ; la semaine se tourne comme des pages et la dernière
+   rend la fin évidente. Le groupement par personne est refusé : il recrée des
+   profils à consulter et un classement implicite des potes.
 
 ---
 
-## 7 · La suite immédiate : « le carnet du cercle » (partie 2)
+## 7 · « les soirs du cercle » (partie 2) — ✅ CODÉ le 7 août 2026
+
+> **Livré** (tsc, eslint, 259 tests, build verts) : `pellicule.ts` gagne
+> `construireCarnet` / `libelleNuit` / `parNuits` / `tipDeLaSoiree` (purs,
+> testés — dérivés de `construireTas`, aucun second pipeline) ·
+> `CarnetCercle.tsx` (la section) · `App.tsx` (`carnetCercle` useMemo + rendu
+> au-dessus de l'annuaire, qui gagne son titre « ton cercle. ») ·
+> `EcranGroupe.tsx` gagne la prop `graine` (le spot de « on y retourne ? »
+> arrive déjà coché dans les candidats) · CSS `.carnet-*` · dico EN.
+> **DA** : les deux tampons de verdict sont au GRAPHITE (le « bof » a
+> strictement la même place que le « validé » — et la cire du deck aurait
+> rallumé dix rouges dans la page) ; l'unique cire de l'écran va à
+> « on y retourne ? ». **Pas encore vu en vrai sur téléphone.**
+
 
 Même donnée, lecture humaine au lieu de spatiale — **dans l'onglet `cercle`**,
 au-dessus de l'annuaire (qui est aujourd'hui mort, un simple répertoire).

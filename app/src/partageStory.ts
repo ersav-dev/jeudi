@@ -122,7 +122,7 @@ export async function genererCarteStory(lieu: Lieu): Promise<Blob | null> {
 
   // le tampon rouge incliné, en bas — la signature de l'objet
   const couleur =
-    getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#a8322a'
+    getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#5d8dff'
   ctx.save()
   ctx.translate(L / 2, H - 250)
   ctx.rotate(-0.035)
@@ -291,7 +291,7 @@ export async function genererCarteMembre(m: CarteMembre): Promise<Blob | null> {
 
   // le tampon + l'adresse (la même signature que la story de spot)
   const couleur =
-    getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#a8322a'
+    getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#5d8dff'
   ctx.save()
   ctx.translate(L / 2, H - 250)
   ctx.rotate(-0.035)

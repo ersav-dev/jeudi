@@ -76,14 +76,29 @@
   --sauge: #84b6a3; /* le refuge (no foot) — vert-de-gris */
   --sauge-2: #6b9e8c; /* le trait de bordure du refuge */
   --vu: #5fb0c9; /* déjà consulté sur la carte — halo cyan */
-  --moi: #14c6b0; /* « moi » sur la carte — défaut ; db.ts la dérive de la marque */
+  --moi: #efb839; /* « moi » sur la carte — LE JAUNE par défaut : le complément
+     exact du bleu jeudi (hsl 42° 85% 58%), même valeur que la dérivation
+     db.ts/couleurMoi. Une couleur perso le recalcule toujours en face. */
+
+  /* « je sais pas » : l'encre de chaque proposition (1/2/3) — des encres
+     d'état EXISTANTES (cire / reco / sauge), jamais une couleur inventée.
+     Le B du plan = la même encre, passée au graphite (désaturée). */
+  --plan-1: var(--cire);
+  --plan-2: var(--reco);
+  --plan-3: var(--sauge);
+  --plan-1-b: color-mix(in srgb, var(--cire) 52%, var(--graphite));
+  --plan-2-b: color-mix(in srgb, var(--reco) 52%, var(--graphite));
+  --plan-3-b: color-mix(in srgb, var(--sauge) 52%, var(--graphite));
 
   /* anciens noms V4 → alias vers la matière V5 (ne pas casser l'existant) */
   --paper: var(--nuit);
   --paper-2: var(--nuit-2);
   --ivory: var(--encre);
   --ivory-faded: var(--encre-2);
-  --red: var(--cire);
+  /* la marque par défaut : LE BLEU DE JEUDI (db.ts COULEUR_DEFAUT — même hex).
+     C'est le fallback statique (auth, premier écran) avant que le choix perso
+     s'applique ; la cire, elle, reste l'encre rouge du carnet. */
+  --red: #5d8dff;
   --print-white: #fbf8f1;
 }
 
@@ -1740,16 +1755,30 @@ button {
 .maplibregl-user-location-dot::before {
   background-color: var(--moi);
 }
+/* ── L'ÉPINGLE NÉON — réglée par Ersan dans design/atelier_pins.html
+      (07/08, « copier mes réglages ») : pastille quasi transparente,
+      contour bleu, glow, glyphe de type CENTRÉ et lumineux. Les valeurs
+      vivent en variables : le prochain passage à l'atelier ne change
+      que ce bloc. ── */
+:root {
+  --pin-taille: 30px; /* 38 à l'atelier → « un peu grand » en vrai (07/08) */
+  --pin-fond: rgba(115, 115, 115, 0.1);
+  --pin-contour: #628ef3;
+  --pin-contour-ep: 2px;
+  --pin-glow: rgba(69, 153, 232, 0.6);
+  --pin-glow-blur: 16px;
+  --pin-glyphe: #33a7ff;
+}
 .pin {
-  width: 18px;
-  height: 18px;
-  /* forme "D" : anneau (la bordure) + cœur (le point central du radial-gradient),
-     centre vide entre les deux. plus lisible au premier regard qu'un disque plein.
-     pas de pseudo ici : ::before = le label du nom, ::after = la zone de tap. */
-  background: radial-gradient(circle at center, var(--red) 0 2.6px, transparent 3.2px);
-  border: 2.5px solid var(--red);
+  width: var(--pin-taille);
+  height: var(--pin-taille);
+  /* pas de pseudo ici : ::before = le label du nom, ::after = la zone de tap. */
+  background: var(--pin-fond);
+  border: var(--pin-contour-ep) solid var(--pin-contour);
   border-radius: 50%;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 var(--pin-glow-blur) var(--pin-glow),
+    0 1px 0 rgba(0, 0, 0, 0.5);
   cursor: pointer;
   /* appui long (panneau de marque) : pas de sélection/loupe iOS pendant les 450 ms */
   user-select: none;
@@ -1758,11 +1787,11 @@ button {
   /* PAS de position ici : maplibre applique position:absolute + transform
      sur le pin pour l'ancrer à la carte. L'écraser le fait "flotter". */
 }
-/* zone de tap invisible de 44px : on vise un pin avec le pouce, de nuit */
+/* zone de tap invisible de 44px+ : on vise un pin avec le pouce, de nuit */
 .pin::after {
   content: '';
   position: absolute;
-  inset: -13px;
+  inset: -4px;
   border-radius: 50%;
 }
 /* le nom du spot, en label sous le pin (carnet annoté) */
@@ -1796,9 +1825,12 @@ button {
     animation: inkIn 150ms var(--pose) backwards;
   }
 }
-/* feedback au survol : un halo, sans bouger l'ancre du pin */
+/* feedback au survol : le glow s'intensifie, sans bouger l'ancre du pin */
 .pin:hover {
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--red) 25%, transparent), 0 1px 0 rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--pin-contour) 25%, transparent),
+    0 0 var(--pin-glow-blur) var(--pin-glow),
+    0 1px 0 rgba(0, 0, 0, 0.5);
 }
 .pin-curateur:hover {
   box-shadow: 0 0 0 6px rgba(239, 233, 216, 0.25);
@@ -1842,6 +1874,54 @@ button {
   line-height: 15px;
   text-align: center;
   border: 1px solid var(--paper);
+}
+/* « je sais pas » : l'épingle raconte sa proposition. La classe pin-pN pose
+   l'ENCRE du plan (--encre-plan) ; le rôle B la désature. Le jeton (n° sur
+   le A, « B » sur le B) est rond, penché, à cette encre. */
+.pin-p1 { --encre-plan: var(--plan-1); }
+.pin-p2 { --encre-plan: var(--plan-2); }
+.pin-p3 { --encre-plan: var(--plan-3); }
+.pin-p1.pin-role-b { --encre-plan: var(--plan-1-b); }
+.pin-p2.pin-role-b { --encre-plan: var(--plan-2-b); }
+.pin-p3.pin-role-b { --encre-plan: var(--plan-3-b); }
+.pin-plan {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--nuit);
+  background: var(--encre-plan, var(--nuit));
+  color: var(--print-white);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  transform: rotate(-4deg);
+}
+/* le plan choisi S'ÉCLAIRE : le corps du pin prend l'encre de son plan
+   (A pleine, B désaturée) avec un petit sursaut à l'allumage — l'ajout de
+   .pin-allume rejoue l'animation. Bat le grisé, sous l'actif. */
+.carte .pin-allume:not(.pin-actif) {
+  background: var(--encre-plan, var(--encre)) !important;
+  color: var(--print-white);
+  opacity: 1 !important;
+  filter: none !important;
+  z-index: 4 !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--encre-plan, var(--encre)) 30%, transparent),
+    0 1px 0 rgba(0, 0, 0, 0.5);
+  animation: pin-eclaire 320ms var(--frappe);
+}
+@keyframes pin-eclaire {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carte .pin-allume:not(.pin-actif) { animation: none; }
 }
 /* Coupe du monde : pastille ballon ivoire en haut-gauche du pin */
 .pin-ballon {
@@ -2394,6 +2474,482 @@ button {
   display: flex;
   flex-direction: column;
   margin: 4px 0 8px;
+}
+/* ── les sections réelles de « moi » (07/08) : notifications, spots
+      archivés, amis archivés, mes listes ── */
+.reglages-liste {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 10px;
+}
+.reglages-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 2px;
+  border-bottom: 1px dashed rgba(239, 233, 216, 0.12);
+  font-size: 12px;
+  color: var(--encre-2);
+}
+.reglages-item.estompe {
+  color: var(--encre-3);
+}
+.reglages-item.anniv {
+  color: var(--encre);
+}
+.reglages-action {
+  flex: none;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.35);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.reglages-compteur {
+  margin-left: 8px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: var(--rayon);
+  background: var(--red);
+  color: var(--print-white);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+/* la fête du jour, au crayon sous la question de « sortir » */
+.cesoir-fete {
+  margin: 2px 0 10px;
+  font-size: 17px;
+  color: var(--encre-2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LA PELLICULE (CHANTIER_PELLICULE.md) — le tas de polaroids piqué
+   sur la carte + le carrousel deux axes. CSS transposé du proto
+   validé au panel (design/carte_complete.html).
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── le tas ── */
+.tas {
+  width: var(--t, 60px);
+  /* le carré du tas ne dépend PAS de la photo du dessus : l'aplatissement
+     §5.3 remplace les <img> par une nappe absolue, et sans ça le tas
+     s'effondrerait à zéro. */
+  aspect-ratio: 1;
+  cursor: pointer;
+  position: relative;
+  transition:
+    width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.28s;
+}
+.tas::before {
+  content: '';
+  position: absolute;
+  inset: -12px; /* zone de frappe 44px+ */
+}
+.tas .f {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid #f7f3e8;
+  border-bottom-width: 12px;
+  background: var(--nuit-2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition:
+    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.5s,
+    filter 0.9s;
+}
+.tas .f.p1 {
+  transform: rotate(7deg) translate(4%, -3%);
+}
+.tas .f.p2 {
+  transform: rotate(-9deg) translate(-5%, 2%);
+}
+.tas .f.p3 {
+  transform: rotate(13deg) translate(7%, 4%);
+}
+/* la fonte : jamais un delete — un souvenir qui s'efface (§1.7) */
+.tas .f.morte {
+  opacity: 0;
+  filter: sepia(0.8);
+  transform: rotate(24deg) translate(14%, 42%);
+}
+.tas .haut {
+  position: relative;
+  display: block;
+  transform: rotate(-2deg);
+}
+/* au-delà de 48 h : le tirage souvenir — sépia, il ne disparaît jamais */
+.tas.souvenir .haut,
+.tas.souvenir .nappe {
+  filter: sepia(0.75) saturate(0.5) brightness(0.92);
+}
+/* §5.3 — LA NAPPE : l'éventail entier aplati en UNE image peinte offscreen
+   (cadres et rotations compris), 168 px maximum. La toile déborde du carré
+   du tas de 28 % de chaque côté : c'est ce que la rotation des feuilles
+   emporte. Elle remplace 2 à 4 <img> ; le reste du CSS (kraft, bloc,
+   épingle) ne bouge pas d'un pixel. */
+.tas .nappe {
+  position: absolute;
+  left: -28%;
+  top: -28%;
+  width: 156%;
+  height: 156%;
+  pointer-events: none;
+}
+/* §1.7 — LE DÉVELOPPEMENT : une photo de moins d'1 h arrive laiteuse et se
+   révèle en 3,2 s. La légende dit « ça se développe… » à la place de l'heure
+   (libelleAge) — jamais un tirage qui prétend être sec. */
+@media (prefers-reduced-motion: no-preference) {
+  .tas .haut.dev {
+    animation: tas-developpe 3.2s ease-out forwards;
+  }
+  @keyframes tas-developpe {
+    0% {
+      filter: brightness(2.1) saturate(0.05) contrast(0.55) sepia(0.3);
+    }
+    100% {
+      filter: none;
+    }
+  }
+}
+.tas .kraft {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 42%;
+  height: 12px;
+  z-index: 5;
+  transform: translateX(-50%) rotate(-38deg);
+  background: rgba(239, 233, 216, 0.26);
+  border: 1px solid rgba(239, 233, 216, 0.12);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+/* l'épingle graphite : la position géographique exacte (ancre bottom) */
+.tas::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--graphite);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pin-depose.tas {
+    animation: tas-pose 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes tas-pose {
+    from {
+      transform: translateY(-16px) scale(1.08);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+}
+
+/* le bloc sous le tas : le prénom (l'état) + l'heure (le fait) */
+.tas .bloc {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+/* PAS VU : l'étiquette de cire — « il y a quelque chose ici pour toi » */
+.tas .nom {
+  background: var(--cire, #a8322a);
+  color: #fff;
+  padding: 2px 8px;
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  transform: rotate(-1.5deg);
+  position: relative;
+  overflow: hidden;
+  transition:
+    background 0.45s,
+    transform 0.45s,
+    padding 0.45s;
+}
+.tas .nom i {
+  font-style: normal;
+  position: relative;
+  z-index: 2;
+  transition: color 0.3s 0.15s;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+.tas .nom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cire, #a8322a);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* LU : la cire GLISSE et découvre le prénom au crayon (§1.4) */
+.tas.lu .nom {
+  background: transparent;
+  transform: none;
+  padding: 2px 0;
+}
+.tas.lu .nom::before {
+  transform: translateY(105%);
+}
+.tas.lu .nom i {
+  color: var(--encre-3);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* l'heure : un FAIT, écrite à la main — Caveat jamais sous 15px */
+.tas .quand {
+  display: block;
+  font-size: 15px;
+  color: var(--encre);
+  margin-top: 1px;
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+
+/* ══ §5.2 · LA GRAPPE — deux tas qui se chevauchent n'en font qu'un ══
+   La plus fraîche reste (la MENEUSE, rotations plus fortes : on voit qu'il
+   y en a dessous), les autres se rangent derrière elle, et le crayon dit
+   « 3 spots ici ». Le tap les déploie en éventail. */
+.tas-meneuse .f.p1 {
+  transform: rotate(13deg) translate(7%, -5%);
+}
+.tas-meneuse .f.p2 {
+  transform: rotate(-16deg) translate(-9%, 4%);
+}
+.tas-meneuse .f.p3 {
+  transform: rotate(22deg) translate(12%, 7%);
+}
+/* la meneuse aplatie (nappe) ne peut plus tourner ses feuilles : un léger
+   décalé de papier suffit à dire « il y en a d'autres dessous » */
+.tas-meneuse .nappe {
+  transform: rotate(-3deg);
+}
+/* rangées derrière : présentes dans le DOM (le déploiement est instantané),
+   invisibles et intouchables */
+.tas.tas-suivante {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+}
+/* déployées : l'éventail s'ouvre autour de la meneuse, chacune redevient
+   un tas à part entière qu'on peut ouvrir */
+.tas.tas-deploye {
+  transform: translate(var(--gx, 0), var(--gy, 0));
+  z-index: 3;
+}
+/* « 3 spots ici » — au CRAYON, jamais un badge chiffré (§1.2) : c'est un
+   fait de lieu, pas un compteur de likes. Caveat ≥ 15 px (règle du panel). */
+.grappe-lbl {
+  display: block;
+  font-size: 15px;
+  color: var(--encre-2);
+  margin-top: 1px;
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* l'heure cède sa ligne au crayon de la grappe (le bloc reste à 2 lignes) */
+.tas .quand.grappe-off {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tas {
+    transition: none;
+  }
+}
+
+/* ══ §1.9 · LA LIGNE-BOUSSOLE — ce qu'on ne peut pas voir ══
+   Elle nomme une chose (un cap, un tirage, un lieu) et ne compte jamais
+   des gens. À l'encre : l'unique rouge cire de l'écran appartient au
+   pas-encore-vu des étiquettes, à rien d'autre. */
+.boussole {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 6;
+  display: block;
+  width: auto;
+  margin: 0 auto;
+  max-width: 480px;
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--encre);
+  cursor: pointer;
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* tout est lu : ce n'est plus une direction, c'est une fin — et une
+   invitation. Rien à taper. */
+.boussole-fin {
+  color: var(--encre-2);
+  cursor: default;
+}
+
+/* ── le carrousel deux axes ── */
+.pel {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 10, 7, 0.93);
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+}
+.pel-lieu {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--encre);
+}
+.pel-fen {
+  width: min(74vw, 300px);
+  height: calc(min(74vw, 300px) + 66px);
+  overflow: hidden;
+  touch-action: none;
+  position: relative;
+}
+.pel-col {
+  position: absolute;
+  inset: 0;
+}
+.pel-col.souple,
+.pel-rangee.souple {
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pel-perso {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.pel-rangee {
+  display: flex;
+  width: 100%;
+}
+.pel-dia {
+  flex: 0 0 100%;
+  padding: 0 5px;
+}
+.pel-cad {
+  transform: rotate(-2deg);
+}
+.pel-dia:nth-child(even) .pel-cad {
+  transform: rotate(2deg);
+}
+.pel-dia img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 9px solid #f7f3e8;
+  border-bottom-width: 52px;
+  background: var(--nuit-2);
+  display: block;
+  user-select: none;
+}
+.pel-leg {
+  margin-top: -46px;
+  position: relative;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.1;
+  color: #14120e;
+}
+.pel-leg em {
+  font-style: normal;
+  font-size: 14px;
+  opacity: 0.7;
+}
+.pel-pts {
+  display: flex;
+  gap: 6px;
+}
+.pel-pts span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(239, 233, 216, 0.28);
+}
+.pel-pts span.v {
+  background: var(--encre);
+}
+.pel-meta {
+  font-size: 11px;
+  color: var(--encre-2);
+}
+.pel-aide {
+  font-size: 14px;
+  color: var(--encre-3);
+  text-align: center;
+  line-height: 1.25;
+}
+/* la sortie : le tampon de cire — l'UNIQUE accent de cet écran */
+.pel-va {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--cire, #a8322a);
+  color: #fff;
+  border: none;
+  border-radius: var(--rayon);
+  padding: 10px 18px;
+  transform: rotate(-1.5deg);
+  cursor: pointer;
+}
+.pel-fermer {
+  margin-top: 2px;
+}
+/* l'état vide de la pellicule : l'invitation posée sur la carte */
+.carte-pellicule-vide {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 110px;
+  z-index: 6;
+  text-align: center;
+  font-size: 16px;
+  color: var(--encre-2);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+  pointer-events: none;
 }
 .reglages-bientot-item {
   display: flex;
@@ -4191,6 +4747,11 @@ button {
   border-color: var(--ivory);
   box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ivory);
 }
+/* le bleu de jeudi : LA pastille de la maison, un cran plus grande */
+.palette-swatch.jeudi {
+  transform: scale(1.28);
+  z-index: 1;
+}
 
 /* le picker couleur : suggestions Pantone + roue HSV */
 .picker {
@@ -4198,8 +4759,9 @@ button {
 }
 .picker-suggestions {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(9, 1fr); /* 9 pastilles — le bleu jeudi au centre */
+  gap: 9px;
+  align-items: center;
 }
 .picker-toggle {
   margin-top: 14px;
@@ -6036,6 +6598,118 @@ button {
   transform: rotate(0.6deg) translateY(1px);
 }
 
+/* ── la PORTE « je sais pas » : trois cartes en éventail qu'on tape ──
+   L'entrée de l'aléatoire a gagné en présence (c'était une ligne mono
+   timide) : une étiquette papier posée de travers, l'éventail dessiné à
+   l'encre, la voix serif. Un seul tressaillement à la pose — l'œil va au
+   mouvement, puis ça se tient tranquille. */
+.jsp-porte {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px auto 0;
+  background: var(--nuit-2);
+  border: 1px solid color-mix(in srgb, var(--graphite) 45%, transparent);
+  border-radius: var(--rayon);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  padding: 12px 18px;
+  color: var(--encre);
+  text-align: left;
+  cursor: pointer;
+  rotate: -0.6deg;
+  animation: porte-pose 420ms var(--tourne) backwards;
+}
+.jsp-porte:active {
+  translate: 0 1px;
+}
+.jsp-porte-cartes {
+  flex: none;
+  width: 58px;
+  height: 39px;
+  color: var(--encre-2);
+}
+.jsp-porte-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.jsp-porte-titre {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1;
+}
+.jsp-porte-sous {
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+  color: var(--encre-2);
+}
+/* la pose : l'étiquette arrive avec un léger balancement, une seule fois */
+@keyframes porte-pose {
+  0% { opacity: 0; rotate: 1.4deg; translate: 0 4px; }
+  60% { opacity: 1; rotate: -1.2deg; }
+  100% { rotate: -0.6deg; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jsp-porte { animation: none; }
+}
+
+/* ── la RANGÉE des deux portes : « je sais pas » · « on dit où » ──
+   Deux cases sur la même ligne, même langage : le glyphe dessiné en haut
+   (l'éventail / les trois silhouettes), le titre serif, la glose mono.
+   Chacune penche de son côté — posées à la main, pas alignées au pixel. */
+.cesoir-portes {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 26px;
+}
+.cesoir-portes > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.cesoir-portes .jsp-porte {
+  margin: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 14px 10px 12px;
+  text-align: center;
+}
+.cesoir-portes .jsp-porte-txt {
+  align-items: center;
+  text-align: center;
+}
+.cesoir-portes .match-bandeau {
+  margin: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 14px 10px 12px;
+  text-align: center;
+  border-color: color-mix(in srgb, var(--graphite) 45%, transparent);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  rotate: 0.6deg; /* l'autre carte penche à gauche : elles se répondent */
+}
+.cesoir-portes .match-bandeau.vivant {
+  border-color: var(--encre); /* un vote vit : la case se démarque toujours */
+}
+.cesoir-portes .match-bandeau-nom {
+  font-size: 20px;
+  line-height: 1.1;
+}
+.cesoir-portes .match-bandeau-sous {
+  font-size: 10.5px;
+}
+/* les trois silhouettes du match — même gabarit que l'éventail */
+.match-porte-potes {
+  flex: none;
+  width: 58px;
+  height: 39px;
+  color: var(--encre-2);
+  margin-bottom: 3px;
+}
+
 .jsp {
   display: flex;
   flex-direction: column;
@@ -6048,6 +6722,95 @@ button {
   margin: 2px 0 18px;
 }
 /* la carte-plan : une page posée (le biais vient du style inline, alterné) */
+/* la vraie carte au-dessus des plans : les spots épinglés + le point
+   rouge « toi » — on sait OÙ c'est avant de choisir */
+.jsp-carte {
+  position: relative;
+  height: 260px;
+  width: 100%;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(239, 233, 216, 0.2);
+  border-radius: var(--rayon);
+}
+/* le jeton du plan : sa place dans la liste, posé de travers */
+.jsp-tete {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  /* l'en-tête est un BOUTON depuis « le plan qui s'allume » : reset sobre */
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* la petite mention « sur la carte ○/● » : l'affordance du jeton tapable */
+.jsp-tete-carte {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--encre-2);
+  opacity: 0.6;
+  white-space: nowrap;
+}
+/* chaque carte-plan porte l'encre de sa proposition (la même que ses
+   épingles) : le jeton et les lettres A/B s'y trempent */
+.jsp-plan.p1 { --encre-plan: var(--plan-1); --encre-plan-b: var(--plan-1-b); }
+.jsp-plan.p2 { --encre-plan: var(--plan-2); --encre-plan-b: var(--plan-2-b); }
+.jsp-plan.p3 { --encre-plan: var(--plan-3); --encre-plan-b: var(--plan-3-b); }
+.jsp-plan .jsp-jeton {
+  border-color: var(--encre-plan, var(--encre-2));
+  color: var(--encre-plan, var(--encre-2));
+}
+/* le plan allumé : le jeton s'encre plein, la carte-plan se démarque */
+.jsp-plan.allume .jsp-jeton {
+  background: var(--encre-plan, var(--encre));
+  color: var(--print-white);
+  border-color: var(--encre-plan, var(--encre));
+}
+.jsp-plan.allume {
+  border-color: color-mix(in srgb, var(--encre-plan, var(--encre)) 55%, transparent);
+}
+.jsp-plan.allume .jsp-tete-carte {
+  opacity: 1;
+}
+/* la lettre du rôle devant chaque spot : A à l'encre du plan, B désaturé —
+   les mêmes que sur les épingles de la carte */
+.jsp-ab {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.2px solid var(--encre-plan, var(--encre-2));
+  color: var(--encre-plan, var(--encre-2));
+  font-size: 9px;
+  margin-top: 3px;
+  transform: rotate(-4deg);
+}
+.jsp-ab.b {
+  border-color: var(--encre-plan-b, var(--encre-3));
+  color: var(--encre-plan-b, var(--encre-3));
+}
+.jsp-spot-corps {
+  flex: 1;
+  min-width: 0;
+}
+.jsp-jeton {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border: 1.4px solid var(--encre-2);
+  border-radius: 50%;
+  color: var(--encre-2);
+  font-size: 11px;
+  transform: rotate(-4deg);
+}
 .jsp-plan {
   width: 100%;
   background: var(--nuit-2);
@@ -6087,7 +6850,9 @@ button {
 }
 /* un spot du plan : posé sur un filet crayon, tap = la fiche */
 .jsp-spot {
-  display: block;
+  display: flex; /* la lettre A/B à gauche, le corps (nom + ligne) à droite */
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
   background: none;
   border: none;
@@ -6196,6 +6961,18 @@ button {
 /* navigation clavier : la zone visée montre son trait plein */
 .croquis-zone:focus-visible path {
   stroke-opacity: 1;
+}
+/* le signe de la recherche : il se POSE (le groupe parent porte le
+   translate en attribut ; ici on n'anime que l'échelle, autour du centre
+   du signe — origine locale (0,0), jamais le coin du dessin) */
+.croquis-marqueur {
+  animation: croquis-pose 260ms var(--tourne) backwards;
+}
+@keyframes croquis-pose {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -6353,6 +7130,96 @@ button {
 .takeout-msg {
   color: var(--encre-2);
   font-size: 13px;
+}
+/* la petite ligne d'aide sous le dépôt */
+.takeout-aide {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--encre-3);
+}
+
+/* ── le rangement : chaque liste Google devient une catégorie ── */
+.takeout-rangement {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.takeout-liste {
+  padding: 10px 12px;
+  border: 1px solid rgba(239, 233, 216, 0.28);
+  border-radius: var(--rayon);
+  transition: opacity 150ms var(--pose);
+}
+.takeout-liste.ecartee {
+  opacity: 0.4;
+}
+.takeout-liste-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.takeout-liste-nom {
+  font-size: 18px;
+}
+.takeout-liste-nb {
+  font-size: 11px;
+  color: var(--encre-3);
+}
+.takeout-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.takeout-chip {
+  padding: 5px 10px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.3);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.takeout-chip.choisi {
+  color: var(--encre);
+  border-color: rgba(239, 233, 216, 0.8);
+  background: rgba(239, 233, 216, 0.08);
+}
+.takeout-go {
+  margin-top: 4px;
+}
+/* la course : le géocodage en direct */
+.takeout-course {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.takeout-courant {
+  font-size: 16px;
+  color: var(--encre-2);
+}
+
+/* ── les étiquettes PERSO (0012) : du crayon dans la marge, pas la
+      langue commune — bord pointillé partout où elles apparaissent ── */
+.mot.etiquette,
+.idx-envie.etiquette {
+  border-style: dashed;
+  font-style: italic;
+}
+.etiquette-saisie {
+  background: none;
+  border: 1px dashed rgba(239, 233, 216, 0.35);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  font-size: 12px;
+  padding: 5px 10px;
+  width: 130px;
+}
+.etiquette-saisie:focus {
+  outline: none;
+  border-color: rgba(239, 233, 216, 0.7);
 }
 /* le seul --cire de l'écran d'import : le sceau du carnet nourri */
 .takeout-msg-ok {
@@ -6590,9 +7457,11 @@ button {
   background: none;
   border: none;
   padding: 0;
-  color: inherit;
+  /* le moment se TAPE : il s'encre à la marque (le même que le tampon
+     « Jeudi. ») — visible, plus un mot gris perdu dans la question */
+  color: var(--red);
   font: inherit;
-  border-bottom: 1px dashed var(--encre-2);
+  border-bottom: 1px dashed color-mix(in srgb, var(--red) 65%, transparent);
   cursor: pointer;
 }
 .cesoir-moment:active {
@@ -6609,7 +7478,8 @@ button {
 .cesoir-moment-chev {
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px;
-  color: var(--encre-2);
+  color: inherit; /* le chevron suit l'encre du moment */
+  opacity: 0.75;
 }
 .cesoir-moment {
   padding: 8px 4px;
@@ -6648,32 +7518,66 @@ button {
    révélé AVEC le label (zoom quartier, pins prioritaires) : la carte
    reste sobre de loin, et raconte de près — verre, note, tasse,
    cornet, cloche, assiette, au trait. */
+/* le tampon de douane : la cuisine en deux lettres (IT, JP…) — en bas à
+   droite. Réglé à l'atelier (07/08) : nuit, texte rose néon, liseré bleu
+   pâle, bien penché. Jamais un drapeau émoji. */
+.pin-douane {
+  position: absolute;
+  bottom: -8px;
+  right: -11px;
+  padding: 1px 4px;
+  border-radius: var(--rayon);
+  background: #161816;
+  border: 1px solid #bde2ff;
+  color: #fe5da3;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1.25;
+  transform: rotate(-15deg); /* tamponné, pas imprimé */
+  display: none; /* révélé au zoom quartier, comme le label */
+  pointer-events: none;
+}
+.pin.label-on .pin-douane {
+  display: block;
+}
+/* le glyphe de type CENTRÉ dans l'épingle néon : c'est LUI l'identité
+   du pin — toujours visible, à l'encre lumineuse (atelier 07/08) */
 .pin-type {
   position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pin-type svg {
+  width: 85%;
+  height: 85%;
+  stroke: var(--pin-glyphe);
+  filter: drop-shadow(0 0 4px var(--pin-glow));
+}
+/* le pin CURATEUR garde son initiale au centre : son glyphe redevient
+   un petit satellite en haut à gauche, à l'encre sombre sur papier */
+.pin-curateur .pin-type {
+  inset: auto;
   top: -8px;
-  right: -8px;
+  left: -8px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: var(--ivory);
   border: 1px solid var(--paper);
   display: none;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
 }
-.pin-type svg {
+.pin-curateur .pin-type svg {
   width: 11px;
   height: 11px;
+  stroke: #15130f;
+  filter: none;
 }
-.pin.label-on .pin-type {
+.pin-curateur.label-on .pin-type {
   display: flex;
-}
-/* le pin curateur porte déjà son badge de voix en haut à droite : le
-   glyphe glisse alors en haut à gauche (le ballon foot, lui, reste rare) */
-.pin-curateur .pin-type {
-  right: auto;
-  left: -8px;
 }
 
 /* ── les monuments-repères : le croquis s'oriente ──
@@ -6704,9 +7608,8 @@ button {
  * en lettres claires sur un rectangle plein aux couleurs RATP, puis le nom
  * de la station en Caveat encre. Variante « C » de
  * design/etiquettes_transport.html (retenue le 08/08 après B).
- * Le rectangle a été choisi CONTRE le rond : un cercle se confondait avec
- * les épingles de spot. Opacité 0.42–0.58 : présent, mais toujours sous les
- * épingles (opaques). Jamais tapable. */
+ * Opacité 0.42–0.58 : plus présent que le filigrane précédent, mais toujours
+ * sous les pins spots (opaques). Jamais tapable. */
 .repere-transport {
   display: inline-flex;
   align-items: center;
@@ -7277,4 +8180,491 @@ button:focus:not(:focus-visible) {
   max-width: 96vw;
   max-height: 88vh;
   object-fit: contain;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LE SUPER 8 — la photo qui bouge (CHANTIER_SUPER8.md).
+   Le fichier vidéo est PROPRE : tout ce qui suit est projeté à la
+   lecture. Deux couches qui s'ajoutent : la chambre noire (les
+   réglages du membre : --s8-grain/-vignette/-trem/-filtre) et
+   l'usure calculée depuis l'âge (--s8-pouss/-ray/-halo). Les
+   variables sont posées par habillageVersStyle() sur .s8-ecran.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── le photogramme : une photo, plus une perforation qui dit
+      « ça bouge ». Se pose sur .tirage-vue et .bobine-apercu. ── */
+.pf::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 11px;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 4px,
+      rgba(239, 233, 216, 0.55) 4px 9px,
+      transparent 9px 14px
+    ) 3px 0 / 5px 100% no-repeat,
+    rgba(20, 18, 14, 0.72);
+}
+.pf-duree {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  z-index: 2;
+  font-size: 15px; /* Caveat : jamais moins */
+  color: var(--encre-2);
+  text-shadow:
+    0 1px 0 #14120e,
+    0 -1px 0 #14120e,
+    1px 0 0 #14120e,
+    -1px 0 0 #14120e;
+}
+/* le déclic qui allume le projecteur — sur la photo de la fiche */
+.pf-projeter {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 18, 14, 0.7);
+  border: 1px solid rgba(239, 233, 216, 0.4);
+  border-radius: 50%;
+  color: var(--encre);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* ── l'écran : le média + les couches, du film vers l'œil ─────── */
+.s8-ecran {
+  --s8-grain: 0.6;
+  --s8-vignette: 0.4;
+  --s8-trem: 0px;
+  --s8-pouss: 0;
+  --s8-ray: 0;
+  --s8-halo: 0;
+  --s8-filtre: none;
+  position: relative;
+  overflow: hidden;
+  background: #0b0a08;
+  border-radius: var(--rayon);
+}
+.s8-cadre {
+  display: block;
+}
+.s8-cadre video,
+.s8-cadre img {
+  display: block;
+  width: 100%;
+  max-height: inherit;
+  object-fit: contain;
+  filter: var(--s8-filtre);
+}
+.s8-ecran > span[aria-hidden] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* la vignette : le bord du cadre qui mange la lumière */
+.s8-vignette {
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(8, 6, 4, 0.92) 132%);
+  opacity: var(--s8-vignette);
+}
+/* les halos de brûlure : le film qui a chauffé (usure) */
+.s8-halo {
+  background:
+    radial-gradient(120% 90% at 0% 100%, rgba(196, 122, 44, 0.5), transparent 52%),
+    radial-gradient(110% 80% at 100% 0%, rgba(196, 122, 44, 0.38), transparent 48%);
+  mix-blend-mode: screen;
+  opacity: var(--s8-halo);
+}
+/* le grain : le choix du membre (chambre noire) */
+.s8-grain {
+  background: var(--grain);
+  background-size: 140px;
+  mix-blend-mode: overlay;
+  opacity: calc(var(--s8-grain) * 0.85);
+}
+/* les poussières et cheveux qui dansent (usure) — le même bruit,
+   étiré et éclairci : des taches claires, éparses */
+.s8-poussieres {
+  background: var(--grain);
+  background-size: 440px;
+  mix-blend-mode: screen;
+  filter: contrast(3.2) brightness(1.25);
+  opacity: calc(var(--s8-pouss) * 0.5);
+}
+/* les rayures verticales — LE marqueur du super 8 (usure) */
+.s8-rayures {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 41px,
+    rgba(239, 233, 216, 0.5) 41px 42px,
+    transparent 42px 97px,
+    rgba(239, 233, 216, 0.28) 97px 98px,
+    transparent 98px 173px,
+    rgba(20, 18, 14, 0.55) 173px 174px,
+    transparent 174px 240px
+  );
+  opacity: var(--s8-ray);
+}
+/* l'amorce : tant qu'on n'a pas tapé, le projecteur attend */
+.s8-amorce {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.s8-declic {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 18, 14, 0.66);
+  border: 1px solid rgba(239, 233, 216, 0.45);
+  border-radius: 50%;
+  color: var(--encre);
+  font-size: 22px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* le sautillement du projecteur : le cadre respire par à-coups */
+  .s8-cadre {
+    animation: s8-saute 0.82s steps(2, jump-none) infinite;
+  }
+  .s8-grain {
+    animation: s8-danse 0.42s steps(3, jump-none) infinite;
+  }
+  .s8-poussieres {
+    animation: s8-danse 0.68s steps(4, jump-none) infinite reverse;
+  }
+  .s8-rayures {
+    animation: s8-derive 1.1s steps(3, jump-none) infinite;
+  }
+}
+@keyframes s8-saute {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, var(--s8-trem), 0);
+  }
+  100% {
+    transform: translate3d(calc(var(--s8-trem) * -0.4), calc(var(--s8-trem) * 0.5), 0);
+  }
+}
+@keyframes s8-danse {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 37% 61%;
+  }
+  100% {
+    background-position: 73% 22%;
+  }
+}
+@keyframes s8-derive {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(-2px);
+  }
+}
+
+/* ── le projecteur : plein écran, tap-to-play, muet d'abord ───── */
+.projecteur {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(10, 8, 6, 0.96);
+}
+.projecteur-toile {
+  display: block;
+  width: min(94vw, 540px);
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.projecteur-toile .s8-ecran {
+  max-height: 74vh;
+}
+.projecteur-toile video {
+  max-height: 74vh;
+}
+.projecteur-pied {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.projecteur-nom {
+  font-size: 16px;
+  color: var(--encre-2);
+}
+.projecteur-son {
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.3);
+  border-radius: var(--rayon);
+  color: var(--encre-3);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.projecteur-son.actif {
+  color: var(--encre);
+  border-color: rgba(239, 233, 216, 0.7);
+}
+
+/* ── la réglette : choisir SA bobine de 10 s ──────────────────── */
+.bobine-apercu {
+  position: relative;
+  margin: 16px auto 0;
+  max-width: 300px;
+  border: 1px solid rgba(239, 233, 216, 0.4);
+  border-radius: var(--rayon);
+  overflow: hidden;
+}
+.bobine-apercu img {
+  display: block;
+  width: 100%;
+  max-height: 44vh;
+  object-fit: contain;
+  background: #0b0a08;
+}
+.bobine-reglette {
+  margin: 14px 2px 0;
+}
+.bobine-bande {
+  position: relative;
+  display: flex;
+  height: 52px;
+  overflow: hidden;
+  border: 1px solid rgba(239, 233, 216, 0.35);
+  border-radius: var(--rayon);
+  background: #0b0a08;
+}
+.bobine-bande img {
+  flex: 1 1 0;
+  min-width: 0;
+  object-fit: cover;
+  opacity: 0.75;
+}
+.bobine-fenetre {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 2px solid var(--encre);
+  border-radius: var(--rayon);
+  background: rgba(239, 233, 216, 0.12);
+  pointer-events: none;
+  transition: left 80ms linear;
+}
+.bobine-reglette input[type='range'] {
+  width: 100%;
+  margin-top: 10px;
+  accent-color: var(--encre-2);
+}
+/* la cuve du développement : la barre, rien d'autre à faire */
+.bobine-cuve {
+  height: 8px;
+  margin: 22px 2px 10px;
+  border: 1px solid rgba(239, 233, 216, 0.35);
+  border-radius: var(--rayon);
+  overflow: hidden;
+  background: rgba(239, 233, 216, 0.06);
+}
+.bobine-bain {
+  display: block;
+  height: 100%;
+  background: var(--encre-2);
+  transition: width 200ms linear;
+}
+
+/* ── la chambre noire : l'aperçu vivant + le pupitre ──────────── */
+.chambre-apercu {
+  margin: 14px auto 0;
+  max-width: 320px;
+}
+.chambre-apercu video {
+  max-height: 38vh;
+}
+.chambre-pupitre {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 2px 0;
+}
+.chambre-curseur {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chambre-nom {
+  flex: 0 0 108px;
+  text-align: right;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  color: var(--encre-3);
+}
+.chambre-curseur input[type='range'] {
+  flex: 1;
+  accent-color: var(--encre-2);
+}
+.chambre-teintes {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LES SOIRS DU CERCLE (CHANTIER_PELLICULE §7)
+   La pellicule lue humainement, au-dessus de l'annuaire. Une entrée =
+   le résultat d'une soirée. Aucun compteur, aucun like, aucune mesure —
+   et la page FINIT. Un seul rouge cire à l'écran : « on y retourne ? ».
+   ══════════════════════════════════════════════════════════════ */
+.carnet-soirs {
+  margin: 22px 0 30px;
+}
+.carnet-vide {
+  color: var(--encre-2);
+  margin: 8px 2px 0;
+}
+.carnet-nuit {
+  margin-top: 18px;
+}
+/* l'intertitre : la nuit qu'on tourne, écrite au crayon dans la marge */
+.carnet-nuit-titre {
+  color: var(--encre-3);
+  font-size: 17px;
+  margin: 0 0 6px 2px;
+}
+.carnet-entree {
+  padding: 14px 0 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+}
+.carnet-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.carnet-lieu {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--encre);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* le tampon de verdict, en petit : GRAPHITE pour les deux — le « bof » a
+   exactement la même place que le « validé », c'est ce qui prouve que ce
+   n'est pas un feed (et la cire de l'écran est réservée à la relance). */
+.carnet-tampon {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 2px 7px;
+  border: 2px solid var(--graphite);
+  border-radius: var(--rayon);
+  color: var(--graphite);
+}
+.carnet-tampon.valide {
+  transform: rotate(-4deg);
+}
+.carnet-tampon.bof {
+  transform: rotate(3deg);
+  text-decoration: line-through;
+}
+.carnet-tip {
+  color: var(--encre-2);
+  margin: 8px 0 0;
+}
+.carnet-signature {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 2px 0 0;
+}
+.carnet-signature .hand {
+  font-size: 17px;
+  color: var(--encre-3);
+}
+.carnet-quand {
+  font-size: 10px;
+  color: var(--encre-3);
+}
+/* la bande de tirages : des preuves alignées sur la table, pas une galerie
+   (elle défile au doigt, elle ne s'agrandit pas — il n'y a rien à liker) */
+.carnet-bande {
+  display: flex;
+  gap: 7px;
+  margin-top: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.carnet-bande::-webkit-scrollbar {
+  display: none;
+}
+.carnet-bande img {
+  flex: none;
+  width: 62px;
+  height: 62px;
+  object-fit: cover;
+  background: var(--tirage);
+  border: 3px solid var(--encre);
+  border-bottom-width: 10px;
+  border-radius: var(--rayon);
+}
+.carnet-bande img:nth-child(even) {
+  transform: rotate(1.4deg);
+}
+.carnet-bande img:nth-child(3n) {
+  transform: rotate(-1.8deg);
+}
+.carnet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+}
+/* L'UNIQUE cire de l'écran : la seule action qui engage les autres.
+   Un filet, jamais un pavé rouge — sinon dix entrées = dix alarmes. */
+.carnet-retour {
+  color: var(--cire);
+  text-decoration-color: var(--cire);
+}
+/* LA FIN. Rien ne charge en dessous : le filet ferme la page. */
+.carnet-fin {
+  margin: 20px 2px 0;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+  color: var(--encre-2);
+  text-align: center;
+}
+.carnet-fin-relance {
+  color: var(--encre-3);
+}
+/* le titre de l'annuaire, maintenant qu'une section vit au-dessus */
+.annuaire-titre {
+  margin-top: 26px;
 }

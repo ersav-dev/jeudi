@@ -89,6 +89,18 @@ export default function BandeauMatch({
 
   return (
     <button className="match-bandeau" onClick={() => onOuvrir(null)}>
+      {/* la bande : trois silhouettes à l'encre (celle de devant en avant),
+          le pendant du glyphe éventail de « je sais pas » — même langage */}
+      <svg className="match-porte-potes" viewBox="0 0 66 44" aria-hidden="true">
+        <g fill="var(--nuit-2)" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="16.5" cy="17" r="5.2" />
+          <path d="M7.5 38 Q7.5 27 16.5 27 Q25.5 27 25.5 38" />
+          <circle cx="49.5" cy="17" r="5.2" />
+          <path d="M40.5 38 Q40.5 27 49.5 27 Q58.5 27 58.5 38" />
+          <circle cx="33" cy="13.5" r="6.2" />
+          <path d="M21.5 38 Q21.5 24.5 33 24.5 Q44.5 24.5 44.5 38" />
+        </g>
+      </svg>
       <span className="match-bandeau-nom">{t('on dit où.')} →</span>
       <span className="mono match-bandeau-sous">{t('le match — tes potes votent par un lien')}</span>
     </button>

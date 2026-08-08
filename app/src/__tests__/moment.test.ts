@@ -10,24 +10,29 @@ describe('dateDuMoment', () => {
     expect(dateDuMoment(MOMENT_DEFAUT, mardi18h).getTime()).toBe(mardi18h.getTime())
   })
 
-  it('ce soir → 22h du même jour', () => {
+  it('ce soir → 20h du même jour (l’heure où une soirée commence)', () => {
     const d = dateDuMoment({ cle: 'soir' }, mardi18h)
-    expect([d.getDate(), d.getHours()]).toEqual([4, 22])
+    expect([d.getDate(), d.getHours()]).toEqual([4, 20])
   })
 
-  it('ce soir après 22h → reste vivant (jamais hier)', () => {
-    const tard = new Date(2026, 7, 4, 23, 30)
+  it('ce soir après 20h → reste vivant (jamais hier)', () => {
+    const tard = new Date(2026, 7, 4, 21, 30)
     expect(dateDuMoment({ cle: 'soir' }, tard).getTime()).toBe(tard.getTime())
   })
 
-  it('demain soir → lendemain 21h', () => {
+  it('demain soir → lendemain 20h', () => {
     const d = dateDuMoment({ cle: 'demain' }, mardi18h)
-    expect([d.getDate(), d.getHours()]).toEqual([5, 21])
+    expect([d.getDate(), d.getHours()]).toEqual([5, 20])
   })
 
-  it('jeudi → le jeudi le plus proche à 22h', () => {
+  it('jeudi → le jeudi le plus proche à 20h', () => {
     const d = dateDuMoment({ cle: 'jeudi' }, mardi18h)
-    expect([d.getDay(), d.getDate(), d.getHours()]).toEqual([4, 6, 22])
+    expect([d.getDay(), d.getDate(), d.getHours()]).toEqual([4, 6, 20])
+  })
+
+  it('jeudi entre 20h et 22h → encore CE soir (repli maintenant)', () => {
+    const jeudiSoir = new Date(2026, 7, 6, 21, 0)
+    expect(dateDuMoment({ cle: 'jeudi' }, jeudiSoir).getTime()).toBe(jeudiSoir.getTime())
   })
 
   it('jeudi soir après 22h → le jeudi suivant', () => {
@@ -66,10 +71,11 @@ describe('libelleMoment — la question qui s’accorde', () => {
 describe('momentFutur — la porte « avant le rendez-vous »', () => {
   it('maintenant / ce soir proche → non', () => {
     expect(momentFutur({ cle: 'maintenant' }, mardi18h)).toBe(false)
-    // 18h → 22h = 4h d'écart : c'est un vrai « plus tard »
-    expect(momentFutur({ cle: 'soir' }, mardi18h)).toBe(true)
-    const presque22h = new Date(2026, 7, 4, 21, 0)
-    expect(momentFutur({ cle: 'soir' }, presque22h)).toBe(false)
+    // 15h → 20h = 5h d'écart : c'est un vrai « plus tard »
+    const mardi15h = new Date(2026, 7, 4, 15, 0)
+    expect(momentFutur({ cle: 'soir' }, mardi15h)).toBe(true)
+    const presque20h = new Date(2026, 7, 4, 19, 0)
+    expect(momentFutur({ cle: 'soir' }, presque20h)).toBe(false)
   })
   it('demain / jeudi → oui', () => {
     expect(momentFutur({ cle: 'demain' }, mardi18h)).toBe(true)

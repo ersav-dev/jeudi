@@ -113,6 +113,43 @@ describe('tirerPlans', () => {
       }
     }
   })
+
+  // LA RÈGLE (07/08) : on ne dîne qu'une fois — jamais deux « manger »
+  // dans un plan, quelle que soit la compagnie. Deux « boire », oui.
+  const MANGER = new Set(['resto', 'gastro', 'alloco', 'tranquilo'])
+  it('jamais deux « manger » dans un même plan (solo compris)', () => {
+    for (const compagnie of ['solo', 'duo', 'potos'] as const) {
+      for (const graine of [3, 17, 44, 90]) {
+        for (const p of tirerPlans(LIEUX, compagnie, graine, { maintenant: SOIR })) {
+          const tables = p.spots.filter((s) => MANGER.has(s.lieu.envies[0] ?? '')).length
+          expect(tables).toBeLessThanOrEqual(1)
+        }
+      }
+    }
+  })
+
+  it('un coin qui n’a QUE des restos ne produit aucun plan à deux tables', () => {
+    // deux restos voisins, rien d'autre à portée : plutôt aucun plan qu'un
+    // plan à deux tables
+    const queDesTables: Lieu[] = [
+      mkLieu({ id: 'r1', nom: 'resto un', lat: 48.86, lng: 2.35, envies: ['resto'] }),
+      mkLieu({ id: 'r2', nom: 'resto deux', lat: 48.8605, lng: 2.35, envies: ['gastro'] }),
+    ]
+    for (const graine of [1, 9, 33]) {
+      expect(tirerPlans(queDesTables, 'solo', graine, { maintenant: SOIR })).toHaveLength(0)
+    }
+  })
+
+  it('deux « boire » restent une soirée valable (bar puis bar/boîte)', () => {
+    // deux bars voisins : le plan a le droit d'exister
+    const queDesBars: Lieu[] = [
+      mkLieu({ id: 'b1', nom: 'bar un', lat: 48.86, lng: 2.35, envies: ['apéro'] }),
+      mkLieu({ id: 'b2', nom: 'boîte deux', lat: 48.8605, lng: 2.35, envies: ['turbo'] }),
+    ]
+    const plans = tirerPlans(queDesBars, 'solo', 7, { maintenant: SOIR })
+    expect(plans.length).toBe(1)
+    expect(plans[0].spots).toHaveLength(2)
+  })
 })
 
 describe('nomZone', () => {

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — l'atelier des épingles</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit:#14120e; --nuit-2:#1b1813;
+    --encre:#efe9d8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.36);
+    --cire:#a8322a; --rayon:3px;
+    /* ── les variables de l'atelier (pilotées par les curseurs) ── */
+    --p-taille:34px; --p-fond:#efe9d8; --p-alpha:1; --p-radius:50%;
+    --p-contour:#15130f; --p-contour-ep:0px;
+    --p-glow:#efe9d8; --p-glow-blur:0px; --p-glow-alpha:0;
+    --g-couleur:#15130f; --g-taille:56%;
+    --d-fond:#efe9d8; --d-texte:#15130f; --d-taille:8px; --d-rot:-6deg;
+    --d-contour:#15130f; --d-glow:#efe9d8; --d-glow-blur:0px; --d-glow-alpha:0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--nuit);color:var(--encre);font-family:'IBM Plex Mono',monospace;font-size:12px}
+  .page{max-width:900px;margin:0 auto;padding:18px 16px 80px}
+  h1{font-family:Georgia,serif;font-style:italic;font-weight:normal;font-size:22px;margin:0 0 2px}
+  .sous{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--encre-3);margin-bottom:16px}
+  .cols{display:grid;grid-template-columns:300px 1fr;gap:18px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+
+  /* ── le pupitre ─────────────────────────────────────────────── */
+  .pupitre{border:1px solid rgba(239,233,216,.22);border-radius:var(--rayon);background:var(--nuit-2);padding:14px}
+  .sec{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--encre-3);
+    margin:14px 0 8px;border-top:1px solid rgba(239,233,216,.12);padding-top:10px}
+  .sec:first-child{margin-top:0;border-top:0;padding-top:0}
+  .ligne{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .ligne label{flex:0 0 92px;color:var(--encre-2);font-size:11px}
+  .ligne input[type=range]{flex:1;accent-color:var(--encre-2)}
+  .ligne input[type=color]{width:34px;height:24px;border:1px solid rgba(239,233,216,.3);
+    border-radius:3px;background:none;padding:1px;cursor:pointer}
+  .ligne input[type=checkbox]{accent-color:var(--cire);width:16px;height:16px}
+  .ligne input[type=text]{width:52px;background:none;border:1px solid rgba(239,233,216,.3);
+    border-radius:3px;color:var(--encre);font-family:inherit;font-size:11px;padding:3px 6px;text-transform:uppercase}
+  .val{flex:0 0 38px;text-align:right;color:var(--encre-3);font-size:10px}
+  .presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .preset{background:none;border:1px solid rgba(239,233,216,.35);border-radius:3px;
+    color:var(--encre-2);font-family:inherit;font-size:10px;padding:5px 8px;cursor:pointer}
+  .preset:hover{border-color:var(--encre)}
+  .copier{width:100%;margin-top:14px;background:var(--encre);color:var(--nuit);border:none;
+    border-radius:3px;font-family:inherit;font-weight:700;font-size:12px;padding:10px;cursor:pointer}
+  .sortie{margin-top:10px;width:100%;height:110px;background:#0d0c09;border:1px solid rgba(239,233,216,.2);
+    border-radius:3px;color:var(--encre-2);font-family:inherit;font-size:10px;padding:8px;resize:vertical}
+
+  /* ── la scène : la nuit de la carte ─────────────────────────── */
+  .scene{border:1px solid rgba(239,233,216,.22);border-radius:var(--rayon);overflow:hidden}
+  .carte{
+    position:relative;height:290px;
+    background:
+      radial-gradient(340px 160px at 30% 20%, rgba(239,233,216,.05), transparent 60%),
+      radial-gradient(280px 200px at 80% 75%, rgba(239,233,216,.04), transparent 55%),
+      #171410;
+  }
+  .rue{position:absolute;background:rgba(239,233,216,.07);transform-origin:0 0}
+  .zoomrow{display:flex;gap:34px;justify-content:center;align-items:center;
+    padding:30px 10px 34px;background:#171410;border-top:1px dashed rgba(239,233,216,.2)}
+  .zoomrow .pin{position:relative;transform:scale(2.2);margin:0 10px}
+  .zoomlbl{position:absolute;left:12px;bottom:8px;color:var(--encre-3);font-size:9px;letter-spacing:1px}
+
+  /* ── l'épingle paramétrée ───────────────────────────────────── */
+  .pin{
+    position:absolute;width:var(--p-taille);height:var(--p-taille);border-radius:var(--p-radius);
+    background:color-mix(in srgb, var(--p-fond) calc(var(--p-alpha)*100%), transparent);
+    border:var(--p-contour-ep) solid var(--p-contour);
+    box-shadow:0 0 var(--p-glow-blur) color-mix(in srgb, var(--p-glow) calc(var(--p-glow-alpha)*100%), transparent),
+               0 2px 6px rgba(0,0,0,.55);
+    display:grid;place-items:center;
+  }
+  .sans-pastille .pin{background:transparent;border-color:transparent;
+    box-shadow:0 0 var(--p-glow-blur) color-mix(in srgb, var(--p-glow) calc(var(--p-glow-alpha)*100%), transparent)}
+  .pin svg{width:var(--g-taille);height:var(--g-taille);stroke:var(--g-couleur);
+    fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 0 calc(var(--p-glow-blur)/3) color-mix(in srgb, var(--p-glow) calc(var(--p-glow-alpha)*80%), transparent))}
+  .pin-nom{position:absolute;font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);
+    text-shadow:0 1px 0 #14120e,0 -1px 0 #14120e,1px 0 0 #14120e,-1px 0 0 #14120e;white-space:nowrap}
+  .douane{position:absolute;bottom:-7px;right:-9px;padding:1px 3px;border-radius:3px;
+    background:var(--d-fond);border:1px solid var(--d-contour);color:var(--d-texte);
+    font-size:var(--d-taille);font-weight:700;letter-spacing:.4px;line-height:1.2;
+    transform:rotate(var(--d-rot));
+    box-shadow:0 0 var(--d-glow-blur) color-mix(in srgb, var(--d-glow) calc(var(--d-glow-alpha)*100%), transparent)}
+  .moi{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--cire);
+    box-shadow:0 0 0 3px rgba(168,50,42,.25)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>l'atelier des épingles</h1>
+  <div class="sous">règle tout, puis « copier mes réglages » — et colle-les moi</div>
+
+  <div class="cols">
+    <div class="pupitre">
+      <div class="sec">départs rapides</div>
+      <div class="presets">
+        <button class="preset" data-p="actuel">actuel (ivoire)</button>
+        <button class="preset" data-p="inverse">encre inversée</button>
+        <button class="preset" data-p="nu">sans pastille + glow</button>
+        <button class="preset" data-p="neon">nuit néon</button>
+      </div>
+
+      <div class="sec">la pastille</div>
+      <div class="ligne"><label>afficher</label><input type="checkbox" id="p-on" checked></div>
+      <div class="ligne"><label>fond</label><input type="color" id="p-fond" value="#efe9d8">
+        <input type="range" id="p-alpha" min="0" max="1" step="0.05" value="1"><span class="val" id="v-alpha">100%</span></div>
+      <div class="ligne"><label>taille</label><input type="range" id="p-taille" min="22" max="48" value="34"><span class="val" id="v-taille">34px</span></div>
+      <div class="ligne"><label>contour</label><input type="color" id="p-contour" value="#15130f">
+        <input type="range" id="p-contour-ep" min="0" max="4" step="0.5" value="0"><span class="val" id="v-contour">0px</span></div>
+      <div class="ligne"><label>glow couleur</label><input type="color" id="p-glow" value="#efe9d8"></div>
+      <div class="ligne"><label>glow force</label><input type="range" id="p-glow-blur" min="0" max="30" value="0"><span class="val" id="v-glow">0px</span></div>
+      <div class="ligne"><label>glow opacité</label><input type="range" id="p-glow-alpha" min="0" max="1" step="0.05" value="0"><span class="val" id="v-glowa">0%</span></div>
+
+      <div class="sec">le glyphe</div>
+      <div class="ligne"><label>couleur</label><input type="color" id="g-couleur" value="#15130f"></div>
+      <div class="ligne"><label>taille</label><input type="range" id="g-taille" min="40" max="100" value="56"><span class="val" id="v-gtaille">56%</span></div>
+
+      <div class="sec">le tampon (FR, CN…)</div>
+      <div class="ligne"><label>afficher</label><input type="checkbox" id="d-on" checked></div>
+      <div class="ligne"><label>codes test</label><input type="text" id="d-code1" value="MAR"><input type="text" id="d-code2" value="CHN"></div>
+      <div class="ligne"><label>fond</label><input type="color" id="d-fond" value="#efe9d8"></div>
+      <div class="ligne"><label>texte</label><input type="color" id="d-texte" value="#15130f"></div>
+      <div class="ligne"><label>contour</label><input type="color" id="d-contour" value="#15130f"></div>
+      <div class="ligne"><label>taille</label><input type="range" id="d-taille" min="6" max="12" value="8"><span class="val" id="v-dtaille">8px</span></div>
+      <div class="ligne"><label>rotation</label><input type="range" id="d-rot" min="-15" max="15" value="-6"><span class="val" id="v-drot">-6°</span></div>
+      <div class="ligne"><label>glow couleur</label><input type="color" id="d-glow" value="#efe9d8"></div>
+      <div class="ligne"><label>glow force</label><input type="range" id="d-glow-blur" min="0" max="20" value="0"><span class="val" id="v-dglow">0px</span></div>
+      <div class="ligne"><label>glow opacité</label><input type="range" id="d-glow-alpha" min="0" max="1" step="0.05" value="0"><span class="val" id="v-dglowa">0%</span></div>
+
+      <button class="copier" id="copier">copier mes réglages</button>
+      <textarea class="sortie" id="sortie" readonly placeholder="tes réglages apparaîtront ici — colle-les moi tels quels"></textarea>
+    </div>
+
+    <div class="scene">
+      <div class="carte" id="carte">
+        <div class="rue" style="left:-10px;top:70px;width:150%;height:9px;transform:rotate(6deg)"></div>
+        <div class="rue" style="left:40px;top:-10px;width:8px;height:150%;transform:rotate(14deg)"></div>
+        <div class="rue" style="left:-10px;top:170px;width:150%;height:7px;transform:rotate(-4deg)"></div>
+        <div class="rue" style="left:250px;top:-20px;width:7px;height:160%;transform:rotate(-10deg)"></div>
+
+        <div class="pin" style="left:60px;top:36px"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+        <span class="pin-nom" style="left:44px;top:76px">le syndicat</span>
+
+        <div class="pin" style="left:185px;top:88px"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg><span class="douane douane-1">MAR</span></div>
+        <span class="pin-nom" style="left:171px;top:128px">chez momo</span>
+
+        <div class="pin" style="left:305px;top:40px"><svg viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg></div>
+        <span class="pin-nom" style="left:293px;top:80px">badaboum</span>
+
+        <div class="pin" style="left:110px;top:160px"><svg viewBox="0 0 24 24"><path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/></svg></div>
+        <span class="pin-nom" style="left:100px;top:200px">fréquence</span>
+
+        <div class="pin" style="left:350px;top:150px"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg><span class="douane douane-2">CHN</span></div>
+        <span class="pin-nom" style="left:340px;top:190px">bao bar</span>
+
+        <div class="pin" style="left:480px;top:90px"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg></div>
+        <span class="pin-nom" style="left:468px;top:130px">gelati gigi</span>
+
+        <div class="moi" style="left:250px;top:190px"></div>
+        <span class="pin-nom" style="left:266px;top:184px">toi</span>
+        <span class="zoomlbl">taille réelle</span>
+      </div>
+      <div class="zoomrow" id="zoomrow">
+        <div class="pin"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg><span class="douane douane-1">MAR</span></div>
+        <div class="pin"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+        <div class="pin"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg><span class="douane douane-2">CHN</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id)
+  const R = document.documentElement.style
+  const scene = document.querySelector('.scene')
+
+  const lire = () => ({
+    pastille: $('p-on').checked,
+    fond: $('p-fond').value, alpha: +$('p-alpha').value,
+    taille: +$('p-taille').value,
+    contour: $('p-contour').value, contourEp: +$('p-contour-ep').value,
+    glow: $('p-glow').value, glowBlur: +$('p-glow-blur').value, glowAlpha: +$('p-glow-alpha').value,
+    glyphe: $('g-couleur').value, glypheTaille: +$('g-taille').value,
+    tampon: $('d-on').checked,
+    dFond: $('d-fond').value, dTexte: $('d-texte').value, dContour: $('d-contour').value,
+    dTaille: +$('d-taille').value, dRot: +$('d-rot').value,
+    dGlow: $('d-glow').value, dGlowBlur: +$('d-glow-blur').value, dGlowAlpha: +$('d-glow-alpha').value,
+  })
+
+  const appliquer = () => {
+    const v = lire()
+    scene.classList.toggle('sans-pastille', !v.pastille)
+    R.setProperty('--p-fond', v.fond); R.setProperty('--p-alpha', v.alpha)
+    R.setProperty('--p-taille', v.taille + 'px')
+    R.setProperty('--p-contour', v.contour); R.setProperty('--p-contour-ep', v.contourEp + 'px')
+    R.setProperty('--p-glow', v.glow); R.setProperty('--p-glow-blur', v.glowBlur + 'px')
+    R.setProperty('--p-glow-alpha', v.glowAlpha)
+    R.setProperty('--g-couleur', v.glyphe); R.setProperty('--g-taille', v.glypheTaille + '%')
+    R.setProperty('--d-fond', v.dFond); R.setProperty('--d-texte', v.dTexte)
+    R.setProperty('--d-contour', v.dContour)
+    R.setProperty('--d-taille', v.dTaille + 'px'); R.setProperty('--d-rot', v.dRot + 'deg')
+    R.setProperty('--d-glow', v.dGlow); R.setProperty('--d-glow-blur', v.dGlowBlur + 'px')
+    R.setProperty('--d-glow-alpha', v.dGlowAlpha)
+    document.querySelectorAll('.douane').forEach(d => d.style.display = v.tampon ? '' : 'none')
+    document.querySelectorAll('.douane-1').forEach(d => d.textContent = ($('d-code1').value || 'MAR').toUpperCase())
+    document.querySelectorAll('.douane-2').forEach(d => d.textContent = ($('d-code2').value || 'CHN').toUpperCase())
+    // les petites valeurs affichées
+    $('v-alpha').textContent = Math.round(v.alpha * 100) + '%'
+    $('v-taille').textContent = v.taille + 'px'
+    $('v-contour').textContent = v.contourEp + 'px'
+    $('v-glow').textContent = v.glowBlur + 'px'
+    $('v-glowa').textContent = Math.round(v.glowAlpha * 100) + '%'
+    $('v-gtaille').textContent = v.glypheTaille + '%'
+    $('v-dtaille').textContent = v.dTaille + 'px'
+    $('v-drot').textContent = v.dRot + '°'
+    $('v-dglow').textContent = v.dGlowBlur + 'px'
+    $('v-dglowa').textContent = Math.round(v.dGlowAlpha * 100) + '%'
+  }
+
+  document.querySelectorAll('input').forEach(i => i.addEventListener('input', appliquer))
+
+  // ── les départs rapides ───────────────────────────────────────
+  const PRESETS = {
+    actuel: { 'p-on': true, 'p-fond': '#efe9d8', 'p-alpha': 1, 'p-taille': 34, 'p-contour': '#15130f', 'p-contour-ep': 0, 'p-glow-blur': 0, 'p-glow-alpha': 0, 'g-couleur': '#15130f', 'g-taille': 56, 'd-fond': '#efe9d8', 'd-texte': '#15130f', 'd-contour': '#15130f', 'd-taille': 8, 'd-rot': -6 },
+    inverse: { 'p-on': true, 'p-fond': '#1b1813', 'p-alpha': 1, 'p-taille': 34, 'p-contour': '#efe9d8', 'p-contour-ep': 1.5, 'p-glow-blur': 0, 'p-glow-alpha': 0, 'g-couleur': '#efe9d8', 'g-taille': 60, 'd-fond': '#1b1813', 'd-texte': '#efe9d8', 'd-contour': '#efe9d8', 'd-taille': 8, 'd-rot': -6 },
+    nu: { 'p-on': false, 'p-glow': '#efe9d8', 'p-glow-blur': 10, 'p-glow-alpha': 0.7, 'g-couleur': '#efe9d8', 'g-taille': 78, 'd-fond': '#14120e', 'd-texte': '#efe9d8', 'd-contour': '#efe9d8', 'd-taille': 8, 'd-rot': -6 },
+    neon: { 'p-on': false, 'p-glow': '#a8322a', 'p-glow-blur': 16, 'p-glow-alpha': 0.9, 'g-couleur': '#efe9d8', 'g-taille': 80, 'd-fond': '#a8322a', 'd-texte': '#ffffff', 'd-contour': '#a8322a', 'd-taille': 8, 'd-rot': -6 },
+  }
+  document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => {
+    const p = PRESETS[b.dataset.p]
+    for (const [k, val] of Object.entries(p)) {
+      const el = $(k)
+      if (!el) continue
+      if (el.type === 'checkbox') el.checked = val
+      else el.value = val
+    }
+    appliquer()
+  }))
+
+  // ── copier les réglages ───────────────────────────────────────
+  $('copier').addEventListener('click', async () => {
+    const v = lire()
+    const texte = [
+      '— réglages épingles (atelier) —',
+      `pastille : ${v.pastille ? 'oui' : 'NON'} · fond ${v.fond} @ ${Math.round(v.alpha*100)}% · ${v.taille}px`,
+      `contour : ${v.contourEp}px ${v.contour}`,
+      `glow : ${v.glow} · blur ${v.glowBlur}px · opacité ${Math.round(v.glowAlpha*100)}%`,
+      `glyphe : ${v.glyphe} · ${v.glypheTaille}%`,
+      `tampon : ${v.tampon ? 'oui' : 'NON'} · fond ${v.dFond} · texte ${v.dTexte} · contour ${v.dContour} · ${v.dTaille}px · ${v.dRot}°`,
+      `tampon glow : ${v.dGlow} · blur ${v.dGlowBlur}px · opacité ${Math.round(v.dGlowAlpha*100)}%`,
+    ].join('\n')
+    $('sortie').value = texte
+    try { await navigator.clipboard.writeText(texte) ; $('copier').textContent = 'copié ! colle-les moi' }
+    catch { $('copier').textContent = 'sélectionne et copie le texte dessous' }
+    setTimeout(() => $('copier').textContent = 'copier mes réglages', 2500)
+  })
+
+  appliquer()
+</script>
+</body>
+</html>

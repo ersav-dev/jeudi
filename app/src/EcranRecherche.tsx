@@ -50,7 +50,7 @@ export default function Recherche({
   type Quand = 'maintenant' | 'cesoir' | 'demain' | 'perso'
   const [quand, setQuand] = useState<Quand>('maintenant')
   const [persoJour, setPersoJour] = useState(0) // 0 = aujourd'hui, 1 = demain…
-  const [persoDemiHeure, setPersoDemiHeure] = useState(44) // 44 = 22h00
+  const [persoDemiHeure, setPersoDemiHeure] = useState(40) // 40 = 20h00 (l'heure du soir)
   // « autour de » : null = ma position, sinon un repère choisi
   const [depuis, setDepuis] = useState<Repere | null>(null)
   const [adr, setAdr] = useState('')
@@ -92,15 +92,16 @@ export default function Recherche({
     [depuis],
   )
 
-  // le moment de la recherche : maintenant (défaut), ce soir 22h, demain soir,
+  // le moment de la recherche : maintenant (défaut), ce soir 20h, demain soir,
   // ou le jour + l'heure choisis à la molette. Tout « ouvert/fermé » et le
-  // classement du moteur s'évaluent À CE MOMENT-LÀ.
+  // classement du moteur s'évaluent À CE MOMENT-LÀ. (20h = l'heure où une
+  // soirée commence — même réglage que moment.ts / HEURE_SOIR.)
   const dateEffective = useMemo(() => {
     const d = new Date()
-    if (quand === 'cesoir') d.setHours(22, 0, 0, 0)
+    if (quand === 'cesoir') d.setHours(20, 0, 0, 0)
     else if (quand === 'demain') {
       d.setDate(d.getDate() + 1)
-      d.setHours(22, 0, 0, 0)
+      d.setHours(20, 0, 0, 0)
     } else if (quand === 'perso') {
       d.setDate(d.getDate() + persoJour)
       d.setHours(Math.floor(persoDemiHeure / 2), (persoDemiHeure % 2) * 30, 0, 0)
@@ -243,7 +244,9 @@ export default function Recherche({
       </div>
 
       {/* la ville en un coup d'œil : le croquis choisit la MÊME chose que les
-          chips « autour de » — un seul état (depuis), deux façons de le poser */}
+          chips « autour de » — un seul état (depuis), deux façons de le poser.
+          Un repère GÉOCODÉ (métro/adresse tapés) n'est pas une zone : il se
+          pose en marqueur — la carte accuse réception, « on est sûr ». */}
       <CroquisParis
         lieux={lieux}
         actif={depuis?.nom ?? null}
@@ -253,6 +256,7 @@ export default function Recherche({
         }}
         eauActive={eauSeule}
         onEau={() => setEauSeule((v) => !v)}
+        marqueur={depuis && !POINTS_REPERE.some((p) => p.nom === depuis.nom) ? depuis : null}
       />
 
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, opacity: 0.5, marginBottom: 6 }}>

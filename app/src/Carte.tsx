@@ -16,7 +16,19 @@ import {
   type Lieu,
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
-import { typeDeLieu, svgTypeLieu } from './typesLieu'
+import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
+import {
+  grouperTas,
+  eventailGrappe,
+  ligneBoussole,
+  texteBoussole,
+  type TasAffiche,
+  type PointTas,
+  type CandidatBoussole,
+  type LigneBoussole,
+} from './pellicule'
+import { composerTas } from './pelliculeComposite'
+import { t } from './langue'
 import { donneesTransport } from './transport'
 
 // les monuments du croquis : silhouettes monoline (viewBox 24, trait graphite)
@@ -137,6 +149,11 @@ export default function Carte({
   mini,
   comparer = [],
   onComparer,
+  plans,
+  onPlan,
+  allumes = null,
+  pellicule,
+  onTas,
 }: {
   lieux: Lieu[]
   onVoir?: (l: Lieu) => void
@@ -147,6 +164,21 @@ export default function Carte({
    *  Carte ne fait que lire `comparer` et signaler les bascules / l'ouverture. */
   comparer?: string[]
   onComparer?: (id: string) => void
+  /** « je sais pas » : pour chaque lieu, son plan (1..3) et son rôle —
+   *  A = le spot (jeton numéroté, l'encre du plan), B = le plan B (lettre B,
+   *  la même encre passée au graphite). On distingue les propositions. */
+  plans?: Record<string, { n: number; role: 'A' | 'B' }>
+  /** taper un pin de plan allume SA proposition (A + B ensemble) — le caller
+   *  tient l'état ; re-taper un pin déjà allumé ouvre la fiche du lieu */
+  onPlan?: (n: number) => void
+  /** les ids ALLUMÉS (le plan choisi) : les autres pins s'éteignent —
+   *  null = pas de choix, tout le monde reste allumé */
+  allumes?: string[] | null
+  /** LA PELLICULE (CHANTIER_PELLICULE) : lieuId → tas prêt à peindre.
+   *  Un lieu qui a un tas montre SES polaroids à la place du pin. */
+  pellicule?: Map<string, TasAffiche>
+  /** taper un tas ouvre le carrousel de la pellicule (le caller gère) */
+  onTas?: (lieuId: string) => void
 }) {
   const conteneur = useRef<HTMLDivElement>(null)
   const carte = useRef<maplibregl.Map | null>(null)
@@ -195,6 +227,16 @@ export default function Carte({
   const vusRef = useRef(vus)
   const comparerRef = useRef(comparer)
   const marquesRef = useRef(marques)
+  const plansRef = useRef(plans)
+  const onPlanRef = useRef(onPlan)
+  const allumesRef = useRef(allumes)
+  const pelliculeRef = useRef(pellicule)
+  const onTasRef = useRef(onTas)
+  // §5.2 : la grappe déployée (l'id de sa meneuse) — null = tout est replié.
+  // Elle se referme au moindre mouvement de carte : c'est un geste, pas un mode.
+  const grappeOuverte = useRef<string | null>(null)
+  // §1.9 : la ligne du bas — ce qu'on NE PEUT PAS voir, jamais un compteur
+  const [boussole, setBoussole] = useState<LigneBoussole | null>(null)
   // synchronisées après chaque rendu (règle react-hooks/refs : pas d'écriture
   // pendant le rendu) ; cet effet est déclaré AVANT ceux qui les consomment.
   useEffect(() => {
@@ -204,7 +246,12 @@ export default function Carte({
     vusRef.current = vus
     comparerRef.current = comparer
     marquesRef.current = marques
-  }, [setActif, onVoir, actif, vus, comparer, marques])
+    plansRef.current = plans
+    onPlanRef.current = onPlan
+    allumesRef.current = allumes
+    pelliculeRef.current = pellicule
+    onTasRef.current = onTas
+  }, [setActif, onVoir, actif, vus, comparer, marques, plans, onPlan, allumes, pellicule, onTas])
 
   const valides = lieux.filter((l) => l.lat !== 0 || l.lng !== 0)
   const lieuActif = valides.find((l) => l.id === actif) ?? null
@@ -226,7 +273,83 @@ export default function Carte({
   // ── fabrique le pin DOM d'un lieu (identité visuelle du carnet : initiale,
   // teinte du curateur, badges — inchangée). Les états volatils (actif/grisé/
   // vu/à comparer) sont appliqués À PART par appliquerEtats().
+  // ── LE TAS DE POLAROIDS (pellicule) : la nuit d'hier sèche encore ──
+  // CSS transposé du proto validé (design/carte_complete.html §2 du chantier) :
+  // éventail p1..p3, photo du dessus à −2°, scotch kraft, étiquette de cire
+  // avec le prénom (le pas-encore-vu), l'heure au crayon (le fait).
+  const creerTas = (l: Lieu, tasA: TasAffiche): HTMLElement => {
+    const el = document.createElement('div')
+    el.className = `tas${tasA.vu ? ' lu' : ''}${tasA.souvenir ? ' souvenir' : ''}`
+    el.style.setProperty('--t', `${tasA.taille}px`)
+    const dessous = [3, 2, 1]
+      .map((i) =>
+        tasA.srcs[i]
+          ? `<img class="f p${i}${i >= tasA.vivantes ? ' morte' : ''}" src="${tasA.srcs[i]}" alt=""/>`
+          : '',
+      )
+      .join('')
+    el.innerHTML =
+      dessous +
+      // §1.7 : une photo de moins d'1 h n'est pas sèche — elle arrive laiteuse
+      // et se révèle en 3,2 s (classe .dev)
+      `<img class="f haut${tasA.developpe ? ' dev' : ''}" src="${tasA.srcs[0]}" alt=""/><span class="kraft"></span>` +
+      `<div class="bloc"><span class="nom"><i>${tasA.prenom}</i></span>` +
+      `<span class="quand hand">${tasA.age}</span></div>`
+    el.setAttribute('role', 'button')
+    el.setAttribute(
+      'aria-label',
+      `${l.nom}, ${tasA.srcs.length} photo${tasA.srcs.length > 1 ? 's' : ''}, ${
+        tasA.developpe ? 'la plus récente se développe encore' : `la plus récente ${tasA.age}`
+      }`,
+    )
+    // §5.3 — l'aplatissement : l'éventail devient UNE image peinte offscreen
+    // (2 à 4 <img> → 1, plafonnée à 168 px). Best-effort et asynchrone : le
+    // tas est déjà juste à l'écran, l'image composite ne fait que le remplacer.
+    // On ne l'aplatit pas pendant le développement — cette photo-là s'anime.
+    if (!tasA.developpe) void aplatirTas(el, tasA)
+    // le tap propre du chantier (étape 2.6) : < 8 px et < 300 ms — un pan qui
+    // démarre sur un tas n'ouvre JAMAIS le carrousel
+    let d0: { x: number; y: number; t: number } | null = null
+    el.addEventListener('pointerdown', (e) => {
+      d0 = { x: e.clientX, y: e.clientY, t: Date.now() }
+    })
+    el.addEventListener('pointerup', (e) => {
+      if (d0 && Math.hypot(e.clientX - d0.x, e.clientY - d0.y) < 8 && Date.now() - d0.t < 300) {
+        // §5.2 : une meneuse de grappe ne s'ouvre pas — elle se DÉPLOIE.
+        // Les tas qu'elle cachait s'étalent en éventail, puis chacun s'ouvre.
+        if (el.classList.contains('tas-meneuse')) {
+          grappeOuverte.current = l.id
+          majGrappesRef.current()
+        } else {
+          onTasRef.current?.(l.id)
+        }
+      }
+      d0 = null
+    })
+    return el
+  }
+
+  // ── §5.3 : remplace les <img> de l'éventail par l'image composite, une
+  // fois peinte. Si le pinceau renonce (photo illisible, canvas souillé par
+  // un tirage distant sans CORS), on ne touche à rien : les <img> restent.
+  const aplatirTas = async (el: HTMLElement, tasA: TasAffiche) => {
+    const src = await composerTas(tasA.srcs, tasA.vivantes, tasA.taille)
+    // le tas a pu être retiré (pan, fonte) pendant la peinture
+    if (!src || !el.isConnected) return
+    const nappe = document.createElement('img')
+    nappe.className = 'nappe'
+    nappe.src = src
+    nappe.alt = ''
+    nappe.draggable = false
+    el.querySelectorAll('img.f').forEach((i) => i.remove())
+    el.prepend(nappe)
+  }
+
   const creerPinLieu = (l: Lieu): HTMLElement => {
+    // LA PELLICULE d'abord : un lieu qui porte un tas montre ses polaroids
+    // à la place du pin — la carte devient la page du carnet où la nuit sèche.
+    const tasA = pelliculeRef.current?.get(l.id)
+    if (tasA && tasA.srcs.length) return creerTas(l, tasA)
     // la pastille avec initiale est un SIGNAL FORT : « un pote de ton cercle a
     // curé ce spot ». On ne la met QUE pour une vraie voix nommée (tipsCercle).
     // Le fond éditorial « jeudi. », lui, reste des pins NEUTRES — sinon la carte
@@ -268,6 +391,20 @@ export default function Carte({
       glyphe.className = 'pin-type'
       glyphe.innerHTML = svgTypeLieu(typeDeLieu(l))
       el.appendChild(glyphe)
+      // le TAMPON DE DOUANE : la nationalité de la cuisine en deux lettres
+      // au crayon (IT, JP, LB…) — jamais un drapeau émoji (DA). Réservé aux
+      // lieux où l'on mange ; la cuisine française n'a pas de tampon.
+      const type = typeDeLieu(l)
+      if (type === 'resto' || type === 'gastro' || type === 'street') {
+        const cuisine = cuisineDeLieu(l)
+        if (cuisine) {
+          const douane = document.createElement('span')
+          douane.className = 'pin-douane mono'
+          douane.textContent = cuisine.code
+          douane.title = cuisine.mot
+          el.appendChild(douane)
+        }
+      }
       // Coupe du monde : pastille ballon sur les lieux qui diffusent les matchs
       if (l.match === 'diffuse') {
         const ballon = document.createElement('span')
@@ -277,6 +414,18 @@ export default function Carte({
           '<svg viewBox="0 0 24 24" fill="none" stroke="#15130f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7l3.4 2.5-1.3 4h-4.2l-1.3-4z"/></svg>'
         el.appendChild(ballon)
       }
+    }
+    // « je sais pas » : le rôle du lieu dans sa proposition — le A (le spot)
+    // porte le jeton numéroté à l'encre du plan, le B (le plan B) porte un
+    // « B » de la même encre désaturée. La classe pin-pN pose l'encre (CSS).
+    const pl = plansRef.current?.[l.id]
+    if (pl) {
+      el.classList.add(`pin-p${pl.n}`)
+      if (pl.role === 'B') el.classList.add('pin-role-b')
+      const jeton = document.createElement('span')
+      jeton.className = 'pin-plan mono'
+      jeton.textContent = pl.role === 'B' ? 'B' : String(pl.n)
+      el.appendChild(jeton)
     }
     // le diffing des marques compare ce dataset à l'état courant (effet [marques])
     el.dataset.marque = marque ?? ''
@@ -328,6 +477,17 @@ export default function Carte({
       if (!p) return // parti en pan (ou déjà annulé) : pas une sélection
       window.clearTimeout(p.timer)
       if (p.fired) return // c'était l'appui long → le panneau est déjà là
+      // « je sais pas » : taper un pin de plan allume SA proposition (A + B
+      // s'éclairent ensemble) — re-taper un pin déjà allumé ouvre sa fiche
+      const plTap = plansRef.current?.[l.id]
+      if (plTap && onPlanRef.current) {
+        if (el.classList.contains('pin-allume')) {
+          onVoirRef.current?.(l)
+          return
+        }
+        onPlanRef.current(plTap.n)
+        return
+      }
       if (el.classList.contains('pin-actif')) {
         onVoirRef.current?.(l)
         return
@@ -399,9 +559,17 @@ export default function Carte({
     const a = actifRef.current
     const c = comparerRef.current
     const v = vusRef.current
+    // le plan allumé (« je sais pas ») : hors du plan choisi, le pin s'éteint
+    const alm = allumesRef.current ? new Set(allumesRef.current) : null
     for (const [id, el] of Object.entries(pinEls.current)) {
       el.classList.toggle('pin-actif', id === a)
-      el.classList.toggle('pin-grise', a !== null && id !== a)
+      el.classList.toggle(
+        'pin-grise',
+        (a !== null && id !== a) || (alm !== null && !alm.has(id)),
+      )
+      // le plan choisi S'ÉCLAIRE : le pin prend l'encre de son plan (A pleine,
+      // B désaturée) avec un petit sursaut — l'ajout de la classe rejoue l'anim
+      el.classList.toggle('pin-allume', alm !== null && alm.has(id))
       el.classList.toggle('pin-acomparer', c.includes(id))
       el.classList.toggle('pin-vu', v?.has(id) === true)
     }
@@ -460,6 +628,125 @@ export default function Carte({
     }
   }
 
+  // ── §5.2 LE CLUSTERING DES TAS ────────────────────────────────────
+  // Oberkampf un samedi = 15 tas superposés. Ceux qui se chevauchent
+  // fusionnent : la plus FRAÎCHE reste (la meneuse), les autres se cachent
+  // derrière elle, et le crayon annonce « 3 spots ici ». Le tap déploie
+  // l'éventail. Le z-order suit la fraîcheur décroissante.
+  const majGrappes = () => {
+    const m = carte.current
+    const pel = pelliculeRef.current
+    if (!m) return
+    const points: PointTas[] = []
+    for (const id of Object.keys(pinEls.current)) {
+      const ta = pel?.get(id)
+      const l = lieuxParId.current.get(id)
+      if (!ta || !l || !pinEls.current[id].classList.contains('tas')) continue
+      const pt = m.project([l.lng, l.lat])
+      points.push({ lieuId: id, x: pt.x, y: pt.y, taille: ta.taille, fraicheurH: ta.fraicheurH })
+    }
+    const grappes = grouperTas(points)
+    // le z-order : la nuit la plus chaude passe devant (rang global, pas
+    // par grappe — deux grappes voisines s'ordonnent aussi entre elles)
+    const rang = new Map(
+      [...points].sort((a, b) => a.fraicheurH - b.fraicheurH).map((p, i) => [p.lieuId, i]),
+    )
+    for (const g of grappes) {
+      const deployee = grappeOuverte.current !== null && g.lieux.includes(grappeOuverte.current)
+      const suiveuses = g.lieux.slice(1)
+      const ecarts = deployee
+        ? eventailGrappe(
+            suiveuses.length,
+            Math.max(58, (pel?.get(g.lieux[0])?.taille ?? 60) * 1.15),
+          )
+        : []
+      g.lieux.forEach((id, i) => {
+        const el = pinEls.current[id]
+        if (!el) return
+        const mk = poses.current.get(id)
+        if (mk) mk.getElement().style.zIndex = String(500 - (rang.get(id) ?? 0))
+        const meneuse = i === 0 && suiveuses.length > 0 && !deployee
+        el.classList.toggle('tas-meneuse', meneuse)
+        el.classList.toggle('tas-suivante', i > 0 && !deployee)
+        el.classList.toggle('tas-deploye', i > 0 && deployee)
+        if (i > 0 && deployee) {
+          const p = ecarts[i - 1]
+          el.style.setProperty('--gx', `${p.dx}px`)
+          el.style.setProperty('--gy', `${p.dy}px`)
+        } else {
+          el.style.removeProperty('--gx')
+          el.style.removeProperty('--gy')
+        }
+        habillerMeneuse(el, meneuse ? g.lieux : [id])
+      })
+    }
+  }
+
+  // la meneuse parle pour toute sa grappe : le crayon dit combien de spots
+  // sont là-dessous, et l'étiquette de cire reste allumée tant qu'un seul
+  // des tas cachés n'a pas été ouvert (sinon la fusion effacerait le signal)
+  const habillerMeneuse = (el: HTMLElement, lieux: string[]) => {
+    const pel = pelliculeRef.current
+    const bloc = el.querySelector('.bloc')
+    const quand = el.querySelector('.quand')
+    let lbl = el.querySelector('.grappe-lbl')
+    if (lieux.length < 2) {
+      lbl?.remove()
+      quand?.classList.remove('grappe-off')
+      const seul = pel?.get(lieux[0])
+      if (seul) {
+        el.classList.toggle('lu', seul.vu)
+        const nom = el.querySelector('.nom i')
+        if (nom && nom.textContent !== seul.prenom) nom.textContent = seul.prenom
+      }
+      return
+    }
+    const membres = lieux.map((id) => pel?.get(id)).filter((x): x is TasAffiche => !!x)
+    const tousLus = membres.every((x) => x.vu)
+    el.classList.toggle('lu', tousLus)
+    // le prénom affiché = celui de la plus fraîche encore SCELLÉE — la
+    // meneuse porte la nouvelle qui reste à lire, pas la sienne
+    const porteVoix = membres.find((x) => !x.vu) ?? membres[0]
+    const nom = el.querySelector('.nom i')
+    if (nom && nom.textContent !== porteVoix.prenom) nom.textContent = porteVoix.prenom
+    // l'heure cède sa ligne au crayon : « 3 spots ici »
+    quand?.classList.add('grappe-off')
+    if (!lbl && bloc) {
+      lbl = document.createElement('span')
+      lbl.className = 'grappe-lbl hand'
+      bloc.appendChild(lbl)
+    }
+    const texte = `${lieux.length} ${t('spots ici')}`
+    if (lbl && lbl.textContent !== texte) lbl.textContent = texte
+  }
+
+  // ── §1.9 LA LIGNE-BOUSSOLE ────────────────────────────────────────
+  // Elle ne parle QUE de ce que la carte ne montre pas : le hors-champ,
+  // ou le pas-encore-lu. Elle nomme une chose, jamais des gens.
+  const majBoussole = () => {
+    const m = carte.current
+    const pel = pelliculeRef.current
+    if (!m) return setBoussole(null)
+    const b = m.getBounds()
+    const candidats: CandidatBoussole[] = []
+    for (const [id, ta] of pel ?? []) {
+      const l = lieuxParId.current.get(id)
+      if (!l) continue
+      candidats.push({
+        lieuId: id,
+        nom: l.nom,
+        lng: l.lng,
+        lat: l.lat,
+        prenom: ta.prenom,
+        vu: ta.vu,
+        fraicheurH: ta.fraicheurH,
+        aLEcran: b.contains([l.lng, l.lat]),
+      })
+    }
+    const c = m.getCenter()
+    setBoussole(ligneBoussole(candidats, { lng: c.lng, lat: c.lat }))
+  }
+
   // ── LE cœur : pose en DOM les N meilleurs lieux VISIBLES (N selon le
   // zoom), en diffant contre l'existant (crée les nouveaux, retire les
   // disparus, ne touche pas au reste). La poussière d'encre (layer GPU)
@@ -510,6 +797,16 @@ export default function Carte({
     // le lieu SÉLECTIONNÉ garde toujours son pin, même non prioritaire
     const a = actifRef.current
     if (a && lieuxParId.current.has(a)) voulus.add(a)
+    // les TAS de la pellicule passent toujours devant le plafond : c'est
+    // la nuit du cercle, jamais une victime du tri de densité. Mais §5.3 :
+    // le DOM ne garde QUE les tas visibles — un tas à l'autre bout de Paris
+    // n'a rien à faire dans la page (la boussole, elle, le sait toujours).
+    for (const id of pelliculeRef.current?.keys() ?? []) {
+      const l = lieuxParId.current.get(id)
+      if (!l) continue
+      if (l.lng < ouest || l.lng > est || l.lat < sud || l.lat > nord) continue
+      voulus.add(id)
+    }
 
     // ── pose des entrants (naissance : l'encre se dépose, .pin-depose) ──
     for (const id of voulus) {
@@ -520,7 +817,14 @@ export default function Carte({
       pinEls.current[id] = el
       poses.current.set(
         id,
-        new maplibregl.Marker({ element: enrober(el) }).setLngLat([l.lng, l.lat]).addTo(m),
+        new maplibregl.Marker({
+          element: enrober(el),
+          // le tas est ANCRÉ par le bas : l'épingle graphite (::after)
+          // pointe la position géographique exacte (chantier §1.2)
+          anchor: el.classList.contains('tas') ? 'bottom' : 'center',
+        })
+          .setLngLat([l.lng, l.lat])
+          .addTo(m),
       )
       if (animees) el.classList.add('pin-depose')
     }
@@ -538,6 +842,8 @@ export default function Carte({
     }
     appliquerEtats()
     majLabels()
+    majGrappes()
+    majBoussole()
   }
 
   // refs vivantes pour les listeners maplibre posés une seule fois au mount ;
@@ -545,12 +851,44 @@ export default function Carte({
   const poserRef = useRef(poserVisibles)
   const majLabelsRef = useRef(majLabels)
   const appliquerEtatsRef = useRef(appliquerEtats)
+  const majGrappesRef = useRef(majGrappes)
   useEffect(() => {
     poserRef.current = poserVisibles
     majLabelsRef.current = majLabels
     appliquerEtatsRef.current = appliquerEtats
+    majGrappesRef.current = majGrappes
     ouvrirPanneauRef.current = ouvrirPanneauMarque
   })
+
+  // ── la pellicule a changé (sceau brisé, nouvelle photo, fonte) : les
+  // tas concernés sont re-fabriqués — peu nombreux, re-création directe
+  const tasPoses = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    const ids = new Set(pellicule?.keys() ?? [])
+    for (const id of new Set([...ids, ...tasPoses.current])) {
+      const mk = poses.current.get(id)
+      if (mk) {
+        mk.remove()
+        poses.current.delete(id)
+        delete pinEls.current[id]
+      }
+    }
+    tasPoses.current = ids
+    // les éléments ont été refaits : l'éventail déployé n'existe plus
+    grappeOuverte.current = null
+    poserRef.current()
+  }, [pellicule])
+
+  // le carrousel demande à la carte de suivre la soirée (chantier §1.6) :
+  // un CustomEvent léger — pas de ref à faire remonter jusqu'à App
+  useEffect(() => {
+    const suivre = (e: Event) => {
+      const d = (e as CustomEvent<{ lng: number; lat: number }>).detail
+      if (d) carte.current?.easeTo({ center: [d.lng, d.lat], duration: 600 })
+    }
+    window.addEventListener('jeudi:easeto', suivre)
+    return () => window.removeEventListener('jeudi:easeto', suivre)
+  }, [])
 
   useEffect(() => {
     const cont = conteneur.current
@@ -574,32 +912,14 @@ export default function Carte({
       // ── la poussière d'encre : tous les lieux en points GPU. Rayon ~2 px
       // à z11 → ~4 px à z14, encre (--encre #EFE9D8) à ~55 %, léger halo.
       // C'est la texture de la ville, toujours là sous les pins.
-      if (!m.getSource(SOURCE_POUSSIERE)) {
-        m.addSource(SOURCE_POUSSIERE, { type: 'geojson', data: donneesPoussiere() })
-        m.addLayer({
-          id: LAYER_POUSSIERE,
-          type: 'circle',
-          source: SOURCE_POUSSIERE,
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 2, 14, 4],
-            'circle-color': '#EFE9D8',
-            'circle-opacity': 0.55,
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#EFE9D8',
-            'circle-stroke-opacity': 0.12,
-          },
-        })
-      }
       // ── les repères de transport : le NOM de la station en Caveat, précédé
       // du mode en PLAQUE pleine aux couleurs RATP (M / RER / T / BAT).
       // Variante « C » de design/etiquettes_transport.html (6 pistes comparées
       // le 07/08 : nom seul, sigle+nom, plaque, M° manuscrit, souligné,
       // cocarde ; B d'abord retenue puis remplacée par C le 08/08).
-      // PAS de cercle : il se confondait avec les spots. Cap 24 étiquettes
-      // dans le viewport, collision 82 px, priorité RER > métro > tram >
-      // batobus. Bus/Vélib' PAS étiquetés (trop denses). Jamais tapables.
-      // Data OSM figée le 2026-08-07 (5 205 points dans /transport.json,
-      // fetchée à la demande — ~150 ko gzip, hors bundle initial).
+      // Opacité très basse : c'est un filigrane, un cran sous tout le reste.
+      // Bus/Vélib' non étiquetés (trop denses, ~4500 points). Cap 24,
+      // collision 82 px, seuils zoom par mode. Rien de tapable.
       if (!transportDejaCharge.current) {
         transportDejaCharge.current = true
         donneesTransport()
@@ -666,8 +986,8 @@ export default function Carte({
                 const el = document.createElement('div')
                 el.className = 'repere-transport'
                 el.dataset.mode = c.type
-                // la plaque puis le nom — textContent sur des spans séparés :
-                // rien à échapper, aucune injection possible depuis la donnée
+                // le mode en petit code texte (M / RER / T / BAT), puis le nom —
+                // textContent sur des spans séparés : rien à échapper
                 const code = document.createElement('span')
                 code.className = 'repere-transport-mode'
                 code.textContent = CONFIG[c.type].code
@@ -686,6 +1006,22 @@ export default function Carte({
           })
           .catch((err) => console.warn('[carte] transport.json:', err))
       }
+      if (!m.getSource(SOURCE_POUSSIERE)) {
+        m.addSource(SOURCE_POUSSIERE, { type: 'geojson', data: donneesPoussiere() })
+        m.addLayer({
+          id: LAYER_POUSSIERE,
+          type: 'circle',
+          source: SOURCE_POUSSIERE,
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 2, 14, 4],
+            'circle-color': '#EFE9D8',
+            'circle-opacity': 0.55,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#EFE9D8',
+            'circle-stroke-opacity': 0.12,
+          },
+        })
+      }
       poserRef.current()
     })
     // ── la poussière se touche comme un pin : tap (hitbox ~12 px) =
@@ -697,6 +1033,11 @@ export default function Carte({
         // le click résiduel d'un appui long déjà consommé : avalé
         pressCarte.current = null
         return
+      }
+      // taper à côté replie l'éventail déployé (§5.2)
+      if (grappeOuverte.current !== null) {
+        grappeOuverte.current = null
+        majGrappesRef.current()
       }
       const id = lieuSousPoint(e.point)
       if (id) setActifRef.current(id)
@@ -738,8 +1079,15 @@ export default function Carte({
     carte.current.on('mouseup', finAppui)
     carte.current.on('touchend', finAppui)
     carte.current.on('touchcancel', finAppui)
-    // la carte bouge : le panneau de marque (ancré au point écran) se ferme
-    carte.current.on('movestart', () => setPanneauMarque(null))
+    // la carte bouge : le panneau de marque (ancré au point écran) se ferme,
+    // et l'éventail d'une grappe déployée se replie (c'est un geste, pas un mode)
+    carte.current.on('movestart', () => {
+      setPanneauMarque(null)
+      if (grappeOuverte.current !== null) {
+        grappeOuverte.current = null
+        majGrappesRef.current()
+      }
+    })
     carte.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
       'bottom-left',
@@ -837,9 +1185,9 @@ export default function Carte({
       if (pressCarte.current) window.clearTimeout(pressCarte.current.timer)
       window.clearInterval(suiviMoi)
       posesCourantes.forEach((mk) => mk.remove())
+      posesCourantes.clear()
       etiquettesTransport.current.forEach((mk) => mk.remove())
       etiquettesTransport.current = []
-      posesCourantes.clear()
       for (const id of Object.keys(pins)) delete pins[id]
       dejaCadre.current = false
       carte.current?.remove()
@@ -897,11 +1245,11 @@ export default function Carte({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lieux])
 
-  // ── `vus` / `comparer` : un simple toggle de classes sur les pins existants —
-  // AUCUN marker recréé, la vue ne bouge pas.
+  // ── `vus` / `comparer` / `allumes` : un simple toggle de classes sur les
+  // pins existants — AUCUN marker recréé, la vue ne bouge pas.
   useEffect(() => {
     appliquerEtatsRef.current()
-  }, [vus, comparer])
+  }, [vus, comparer, allumes])
 
   // ── marques : on écoute marques.ts (pose/retrait depuis le panneau, ou
   // « effacer mes données » ailleurs) → l'état local suit.
@@ -998,6 +1346,30 @@ export default function Carte({
   return (
     <>
       <div ref={conteneur} className={`carte${lieuActif ? ' carte-sel' : ''}`} />
+
+      {/* ── §1.9 LA LIGNE-BOUSSOLE : elle ne dit QUE ce que la carte ne
+          montre pas (le hors-champ, le pas-encore-lu), elle nomme une chose
+          et ne compte jamais des gens. Taper y emmène la carte.
+          Elle s'efface dès qu'un lieu est sélectionné : le bottom-sheet a
+          la parole, et deux voix en bas d'écran n'en font aucune. */}
+      {boussole && !lieuActif && (
+        <button
+          className={`boussole hand${boussole.genre === 'tout-lu' ? ' boussole-fin' : ''}`}
+          onClick={() => {
+            if (boussole.genre === 'tout-lu') return
+            const m = carte.current
+            if (!m) return
+            m.easeTo({
+              center: [boussole.cible.lng, boussole.cible.lat],
+              zoom: Math.max(m.getZoom(), 14),
+              duration: animees ? 900 : 0,
+            })
+          }}
+          disabled={boussole.genre === 'tout-lu'}
+        >
+          {texteBoussole(boussole, t)}
+        </button>
+      )}
 
       {/* la barre « à comparer » + la table vivent maintenant dans App (source
           unique), rendues sous les filtres → plus de superposition en vue carte. */}

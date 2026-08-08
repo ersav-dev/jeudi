@@ -20,7 +20,7 @@ import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
 import TirageDuSoir from './TirageDuSoir'
 import { fusionnerPhotos } from './tirage'
-import { typeDeLieu, labelTypeLieu } from './typesLieu'
+import { typeDeLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
 import Recherche from './EcranRecherche'
 import Groupe from './EcranGroupe'
 import BandeauMatch from './BandeauMatch'
@@ -129,7 +129,33 @@ import {
   lienInvitation,
   capterInvite,
   traiterInviteAttente,
+  estClip,
+  seDeconnecter,
+  lireSuivis,
+  lireAmisArchives,
+  basculerAmiArchive,
+  lireVuesPellicule,
+  chargerVuesPellicule,
+  marquerVuPellicule,
 } from './db'
+import { anniversairesAVenir, motAnniversaire } from './fetes'
+import {
+  construireTas,
+  taillePolaroid,
+  libelleAge,
+  estVu,
+  estSouvenir,
+  enDeveloppement,
+  construireCarnet,
+  parNuits,
+  tipDeLaSoiree,
+  type TasAffiche,
+  type SoireePellicule,
+  type NuitAffichee,
+} from './pellicule'
+import Pellicule from './CarrouselPellicule'
+import CarnetCercle from './CarnetCercle'
+import Projecteur from './Projecteur'
 
 // A4 : MapLibre (~1 Mo) sort du bundle principal — chargé à la demande
 const CarteLazy = lazy(() => import('./Carte'))
@@ -354,7 +380,28 @@ function StatProfil({ n, l, onClick }: { n: React.ReactNode; l: string; onClick?
   )
 }
 
-function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => void }) {
+function Reglages({
+  lieux,
+  cercle,
+  demandes,
+  sorties,
+  amisArchives,
+  onBasculerAmi,
+  onRestaurer,
+  onVoir,
+  onGrandJeudi,
+}: {
+  lieux: Lieu[]
+  /** le cercle réel COMPLET (archivés compris — c'est ici qu'on les gère) */
+  cercle: MembreCercle[]
+  demandes: DemandeRecue[]
+  sorties: SortieEnAttente[]
+  amisArchives: string[]
+  onBasculerAmi: (id: string) => void
+  onRestaurer: (l: Lieu) => void
+  onVoir: (l: Lieu) => void
+  onGrandJeudi: () => void
+}) {
   const [couleur, setCouleur] = useState(() => lireCouleur())
   const [s1, setS1] = useState(() => String(lireSeuils()[0]))
   const [s2, setS2] = useState(() => String(lireSeuils()[1]))
@@ -369,7 +416,17 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
   const [compteEnCours, setCompteEnCours] = useState(false)
   const [erreurCompte, setErreurCompte] = useState<string | null>(null)
   const [ouvert, setOuvert] = useState<
-    'ville' | 'couleur' | 'argent' | 'marche' | 'donnees' | 'bientot' | null
+    | 'ville'
+    | 'couleur'
+    | 'argent'
+    | 'marche'
+    | 'donnees'
+    | 'notifs'
+    | 'archives'
+    | 'amis'
+    | 'listes'
+    | 'bientot'
+    | null
   >(null)
   // ton pas : la vitesse derrière tous les « X min à pied » de l'app
   const [vitesse, setVitesse] = useState(() => lireVitesse())
@@ -631,6 +688,146 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
         </div>
       )}
 
+      {/* NOTIFICATIONS — le centre in-app (07/08) : ce que la cloche sait,
+          plus les anniversaires du cercle. Le push web reste « bientôt ». */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'notifs'}
+        onClick={() => bascule('notifs')}
+      >
+        {t('notifications')}
+        {sorties.length + demandes.length > 0 && (
+          <span className="reglages-compteur mono">{sorties.length + demandes.length}</span>
+        )}
+        <span className="reglages-chevron">{ouvert === 'notifs' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'notifs' && (
+        <div className="reglages-liste">
+          {sorties.map((s) => (
+            <span key={`${s.lieuId}-${s.date}`} className="reglages-item mono">
+              {s.nom} — {t('la sortie attend ton verdict.')}
+            </span>
+          ))}
+          {demandes.map((d) => (
+            <span key={d.deId} className="reglages-item mono">
+              @{d.prenom.toLowerCase()} {t('veut rejoindre ton cercle (onglet cercle).')}
+            </span>
+          ))}
+          {anniversairesAVenir(cercle, new Date()).map((a) => (
+            <span key={`anniv-${a.prenom}`} className="reglages-item mono anniv">
+              {motAnniversaire(a)}
+            </span>
+          ))}
+          {sorties.length + demandes.length === 0 &&
+            anniversairesAVenir(cercle, new Date()).length === 0 && (
+              <span className="reglages-item mono estompe">
+                {t('rien à signaler — la cloche est calme.')}
+              </span>
+            )}
+        </div>
+      )}
+
+      {/* SPOTS ARCHIVÉS — voir + restaurer (07/08) */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'archives'}
+        onClick={() => bascule('archives')}
+      >
+        {t('spots archivés')}
+        <span className="reglages-chevron">{ouvert === 'archives' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'archives' && (
+        <div className="reglages-liste">
+          {lieux
+            .filter((l) => l.statut === 'archive' && estAMoi(l))
+            .map((l) => (
+              <span key={l.id} className="reglages-item mono">
+                <button className="lien" onClick={() => onVoir(l)}>
+                  {l.nom}
+                </button>
+                <button className="reglages-action mono" onClick={() => onRestaurer(l)}>
+                  {t('restaurer')} →
+                </button>
+              </span>
+            ))}
+          {lieux.filter((l) => l.statut === 'archive' && estAMoi(l)).length === 0 && (
+            <span className="reglages-item mono estompe">{t('aucun spot archivé.')}</span>
+          )}
+        </div>
+      )}
+
+      {/* AMIS ARCHIVÉS — la mise en sommeil locale (07/08) : la relation
+          cloud reste, le membre sort de l'annuaire et de ma carte */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'amis'}
+        onClick={() => bascule('amis')}
+      >
+        {t('amis archivés')}
+        <span className="reglages-chevron">{ouvert === 'amis' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'amis' && (
+        <div className="reglages-liste">
+          {cercle.map((m) => {
+            const dort = amisArchives.includes(m.id)
+            return (
+              <span key={m.id} className={`reglages-item mono${dort ? '' : ' estompe'}`}>
+                @{m.prenom.toLowerCase()}
+                <button className="reglages-action mono" onClick={() => onBasculerAmi(m.id)}>
+                  {dort ? `${t('réintégrer')} →` : `${t('archiver')} →`}
+                </button>
+              </span>
+            )
+          })}
+          {cercle.length === 0 && (
+            <span className="reglages-item mono estompe">{t('aucun ami archivé.')}</span>
+          )}
+        </div>
+      )}
+
+      {/* MES LISTES — favoris (♥ de ma carte) + éclaireurs suivis */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'listes'}
+        onClick={() => bascule('listes')}
+      >
+        {t('mes listes')}
+        <span className="reglages-chevron">{ouvert === 'listes' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'listes' && (
+        <div className="reglages-liste">
+          <span className="reglages-item mono estompe">{t('favoris —')}</span>
+          {lieux
+            .filter((l) => lireFavoris().includes(l.id))
+            .map((l) => (
+              <span key={l.id} className="reglages-item mono">
+                <button className="lien" onClick={() => onVoir(l)}>
+                  {l.nom}
+                </button>
+              </span>
+            ))}
+          {lieux.filter((l) => lireFavoris().includes(l.id)).length === 0 && (
+            <span className="reglages-item mono estompe">{t('aucun favori pour l’instant.')}</span>
+          )}
+          {lireSuivis().length > 0 && (
+            <>
+              <span className="reglages-item mono estompe">{t('suivis —')}</span>
+              {lireSuivis().map((nom) => (
+                <span key={nom} className="reglages-item mono">
+                  @{nom.toLowerCase()}
+                </span>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* SE DÉCONNECTER — réel (07/08) : la session part, le carnet reste */}
+      <button className="mono reglages-section" onClick={() => void seDeconnecter()}>
+        {t('se déconnecter')}
+        <span className="reglages-chevron">→</span>
+      </button>
+
       {/* BIENTÔT (backend) */}
       <button
         className="mono reglages-section reglages-toggle"
@@ -642,12 +839,7 @@ function Reglages({ lieux, onGrandJeudi }: { lieux: Lieu[]; onGrandJeudi: () => 
       </button>
       {ouvert === 'bientot' && (
         <div className="reglages-bientot mono">
-          {[
-            'amis archivés',
-            'spots archivés',
-            'notifications',
-            'se déconnecter',
-          ].map((t) => (
+          {['notifications push'].map((t) => (
             <span key={t} className="reglages-bientot-item">
               {t} <span className="reglages-bientot-tag">bientôt</span>
             </span>
@@ -698,7 +890,10 @@ export default function App() {
   // true = le formulaire d'ajout s'ouvre panneau import Google DÉPLIÉ
   // (arrivée depuis le bandeau de rappel) — remis à false à la fermeture
   const [importDirect, setImportDirect] = useState(false)
-  const [vue, setVue] = useState<'liste' | 'carte'>('liste')
+  // CHANTIER_PELLICULE §1.1 : l'accueil, c'est LA CARTE avec la pellicule —
+  // le seul écran qui change tous les jours sans que l'utilisateur fasse quoi
+  // que ce soit. « sortir » reste le 1er onglet de la nav (le rituel ne bouge pas).
+  const [vue, setVue] = useState<'liste' | 'carte'>('carte')
   // chantier 1 : les lieux « à comparer » + l'ouverture de la table (accès aussi
   // depuis l'index, pas seulement la carte). source de vérité = localStorage.
   const [comparer, setComparer] = useState<string[]>(() => lireComparer())
@@ -716,6 +911,8 @@ export default function App() {
   // le match de groupe vit dans l'onglet cercle : l'étiquette « sortir à
   // plusieurs → » ouvre le parcours composer → trianguler → swiper → match
   const [sortieGroupe, setSortieGroupe] = useState(false)
+  // le spot semé dans le match par « on y retourne ? » (null = présélection normale)
+  const [graineGroupe, setGraineGroupe] = useState<Lieu | null>(null)
   // …et depuis la refonte du cœur (audit 01/08), sa porte PRINCIPALE est
   // l'étiquette « on dit où. » en tête de l'onglet « sortir »
   const [matchSortir, setMatchSortir] = useState(false)
@@ -809,6 +1006,20 @@ export default function App() {
   const [demandes, setDemandes] = useState<DemandeRecue[]>([])
   // le cercle réel (relations acceptées) : les vrais membres, devant le décor seed
   const [cercleReel, setCercleReel] = useState<MembreCercle[]>([])
+  // les amis mis en sommeil (local) : hors annuaire, leurs spots hors carte
+  const [amisArchives, setAmisArchives] = useState<string[]>(() => lireAmisArchives())
+
+  // ── LA PELLICULE (CHANTIER_PELLICULE) : les tas + le carrousel ──
+  const [vuesPel, setVuesPel] = useState<ReadonlySet<string>>(() => lireVuesPellicule())
+  useEffect(() => {
+    void chargerVuesPellicule().then(setVuesPel) // fusion cloud → local au boot
+  }, [])
+  // la soirée ouverte dans le carrousel (index dans `soirees`) — null = fermé
+  const [pelIndex, setPelIndex] = useState<number | null>(null)
+  const cercleActif = useMemo(
+    () => cercleReel.filter((m) => !amisArchives.includes(m.id)),
+    [cercleReel, amisArchives],
+  )
   // bandeau doux d'arrivée par lien d'invite : « ta demande est partie chez… »
   const [bandeauInvite, setBandeauInvite] = useState<string | null>(null)
   // realtime léger (étape 5) : un rechargement à l'ouverture + au focus suffit
@@ -930,6 +1141,9 @@ export default function App() {
   const [surLeauOn, setSurLeauOn] = useState(false)
   // phase 2 : filtre par envie (apéro, resto, turbo…), combinable. null = toutes.
   const [envieF, setEnvieF] = useState<string | null>(null)
+  // le rangement PERSO (0012) : filtre par étiquette — n'apparaît que si
+  // MES spots en portent (import Takeout ou saisie sur la fiche)
+  const [etiquetteF, setEtiquetteF] = useState<string | null>(null)
   // les filtres statut/ouvert/match repliés dans un menu « filtres ⌄ »
   const [filtresOuvert, setFiltresOuvert] = useState(false)
   // les favoris (signets) : ids gardés sous la main + filtre dédié
@@ -1127,9 +1341,10 @@ export default function App() {
   // qui possède quoi : mes spots + ceux de mon cercle = "ma carte" ; les
   // éclaireurs hors cercle (proprietaire pub-*) ne vivent que dans "public".
   // bloc D : le cercle = les VRAIS membres (relations acceptées), point.
-  const idsCercle = useMemo(() => new Set(cercleReel.map((m) => m.id)), [cercleReel])
+  const idsCercle = useMemo(() => new Set(cercleActif.map((m) => m.id)), [cercleActif])
   // l'écran cercle : RÉEL uniquement — plus aucun membre de décor
-  const membresCercle = useMemo(() => fusionnerCercle(cercleReel), [cercleReel])
+  // (les amis en sommeil n'y figurent plus : ils vivent dans moi → amis archivés)
+  const membresCercle = useMemo(() => fusionnerCercle(cercleActif), [cercleActif])
   // le cercle pour les tris de confiance (recherche, « pour toi ») : ids + prénoms
   const cerclePourTri = useMemo(
     () => cercleReel.flatMap((m) => [m.id, m.prenom]),
@@ -1168,10 +1383,11 @@ export default function App() {
             ? l.match !== 'diffuse'
             : true
       const okEnvie = !envieF || (l.envies as string[]).includes(envieF)
+      const okEtiquette = !etiquetteF || (l.etiquettes ?? []).includes(etiquetteF)
       const okFav = !favOn || favoris.includes(l.id)
       const okRooftop = !rooftopOn || !!l.rooftop
       const okSurLeau = !surLeauOn || !!l.surLeau
-      return okStatut && okOuvert && okMatch && okEnvie && okFav && okRooftop && okSurLeau
+      return okStatut && okOuvert && okMatch && okEnvie && okEtiquette && okFav && okRooftop && okSurLeau
     })
     if (tri === 'wc') {
       return [...liste].sort((a, b) => (b.propreteWc ?? 0) - (a.propreteWc ?? 0))
@@ -1198,7 +1414,82 @@ export default function App() {
       )
     }
     return [...liste].sort((a, b) => distanceM(a) - distanceM(b))
-  }, [baseCarte, filtre, ouvertOn, matchF, envieF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cerclePourTri])
+  }, [baseCarte, filtre, ouvertOn, matchF, envieF, etiquetteF, favOn, favoris, rooftopOn, surLeauOn, tri, vus, cerclePourTri])
+
+  // ── la pellicule, prête à peindre : les tas (carte) + les soirées
+  // (carrousel), prénoms et sources résolus — le moteur pur fait le reste
+  const pelliculeDonnees = useMemo(() => {
+    const maintenant = new Date()
+    const tousTas = construireTas(lieux, maintenant)
+    const prenomDe = (auteurId?: string) =>
+      cercleReel.find((m) => m.id === auteurId)?.prenom.toLowerCase() ?? 'toi'
+    const parLieu = new Map<string, TasAffiche>()
+    const soirees: SoireePellicule[] = []
+    for (const tas of tousTas) {
+      const srcs = tas.photos.slice(0, 4).map((p) => srcPhoto(p)).filter(Boolean)
+      if (!srcs.length) continue
+      parLieu.set(tas.lieu.id, {
+        lieuId: tas.lieu.id,
+        srcs,
+        vivantes: tas.vivantes,
+        taille: taillePolaroid(tas.fraicheurH),
+        age: libelleAge(tas.fraicheurH),
+        prenom: prenomDe(tas.auteurId),
+        vu: estVu(tas, vuesPel as Set<string>),
+        souvenir: estSouvenir(tas.fraicheurH),
+        fraicheurH: tas.fraicheurH,
+        developpe: enDeveloppement(tas.fraicheurH),
+      })
+      soirees.push({
+        lieuId: tas.lieu.id,
+        nom: tas.lieu.nom,
+        lat: tas.lieu.lat,
+        lng: tas.lieu.lng,
+        soiree: tas.soiree,
+        diapos: tas.photos
+          .map((p) => ({
+            src: srcPhoto(p),
+            age: libelleAge((maintenant.getTime() - new Date(p.priseLe!).getTime()) / 3600000),
+            prenom: prenomDe(p.auteurId),
+          }))
+          .filter((d) => d.src),
+      })
+    }
+    return { parLieu, soirees }
+  }, [lieux, cercleReel, vuesPel])
+
+  // ── les soirs du cercle (§7) : la MÊME pellicule, lue humainement.
+  // Une entrée = le résultat d'une soirée. 7 jours, chronologique, coupé
+  // par nuit — rien ne classe, rien ne compte, et ça finit.
+  const carnetCercle = useMemo(() => {
+    const maintenant = new Date()
+    const entrees = construireCarnet(lieux, maintenant)
+    const prenomDe = (auteurId?: string) =>
+      cercleReel.find((m) => m.id === auteurId)?.prenom.toLowerCase() ?? 'toi'
+    const nuits: NuitAffichee[] = parNuits(entrees, maintenant).map((n) => ({
+      soiree: n.soiree,
+      libelle: n.libelle,
+      entrees: n.entrees.map((e) => ({
+        cle: `${e.lieu.id}|${e.soiree}`,
+        lieuId: e.lieu.id,
+        nom: e.lieu.nom,
+        age: libelleAge(e.fraicheurH),
+        prenom: prenomDe(e.auteurId),
+        verdict: e.verdict,
+        tip: tipDeLaSoiree(e.lieu, e.auteurId),
+        srcs: e.photos.slice(0, 5).map((p) => srcPhoto(p)).filter(Boolean),
+      })),
+    }))
+    return { nuits, total: entrees.length }
+  }, [lieux, cercleReel])
+
+  // les étiquettes qui existent sur MES spots — la rangée de filtre ne
+  // s'affiche que si le rangement perso est réellement utilisé
+  const mesEtiquettes = useMemo(() => {
+    const toutes = new Set<string>()
+    for (const l of baseCarte) if (estAMoi(l)) for (const e of l.etiquettes ?? []) toutes.add(e)
+    return [...toutes].sort((a, b) => a.localeCompare(b, 'fr'))
+  }, [baseCarte])
 
   // le compteur « N ouverts » — partagé, calculé une fois par liste filtrée
   const nbOuverts = useMemo(
@@ -1532,6 +1823,31 @@ export default function App() {
             </div>
           )}
 
+          {/* le rangement PERSO (0012) : la rangée n'existe que si mes spots
+              portent des étiquettes — jamais de chrome vide */}
+          {mesEtiquettes.length > 0 && (
+            <div className="idx-envies mono">
+              <span className="idx-envies-lbl">{t('étiquette :')}</span>
+              <button
+                className={`idx-envie ${etiquetteF === null ? 'on' : ''}`}
+                aria-pressed={etiquetteF === null}
+                onClick={() => setEtiquetteF(null)}
+              >
+                {t('toutes')}
+              </button>
+              {mesEtiquettes.map((e) => (
+                <button
+                  key={e}
+                  className={`idx-envie etiquette ${etiquetteF === e ? 'on' : ''}`}
+                  aria-pressed={etiquetteF === e}
+                  onClick={() => setEtiquetteF((p) => (p === e ? null : e))}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+
           {vue === 'carte' && (
             <>
               <div className="voile-haut" />
@@ -1541,7 +1857,33 @@ export default function App() {
                 onVoir={(l) => ouvrirFiche(l, lieuxFiltres)}
                 comparer={comparer}
                 onComparer={(id) => setComparer(basculerComparer(id))}
+                pellicule={pelliculeDonnees.parLieu}
+                onTas={(id) => {
+                  const i = pelliculeDonnees.soirees.findIndex((s) => s.lieuId === id)
+                  if (i >= 0) setPelIndex(i)
+                }}
               />
+              {/* l'état vide de la pellicule (§1.8) : une INVITATION,
+                  jamais un constat — et les souvenirs, eux, restent */}
+              {pelliculeDonnees.soirees.length === 0 && (
+                <p className="hand carte-pellicule-vide">
+                  {t('la ville se recharge — ce soir, c’est toi qui shootes.')}
+                </p>
+              )}
+              {/* le carrousel deux axes : la nuit du cercle au pouce */}
+              {pelIndex != null && pelliculeDonnees.soirees.length > 0 && (
+                <Pellicule
+                  soirees={pelliculeDonnees.soirees}
+                  depart={Math.min(pelIndex, pelliculeDonnees.soirees.length - 1)}
+                  onVu={(lieuId, soiree) => setVuesPel(new Set(marquerVuPellicule(lieuId, soiree)))}
+                  onJyVais={(id) => {
+                    setPelIndex(null)
+                    const l = lieux.find((x) => x.id === id)
+                    if (l) ouvrirFiche(l, lieux)
+                  }}
+                  onFermer={() => setPelIndex(null)}
+                />
+              )}
               {/* la note en marge de la carte — montée ICI (niveau App),
                   par-dessus l'onglet : Carte.tsx n'est pas touché */}
               <NoteMarge
@@ -1906,7 +2248,20 @@ export default function App() {
           </button>
 
           <TitreSection>réglages</TitreSection>
-          <Reglages lieux={lieux} onGrandJeudi={() => setGjOuvert(true)} />
+          <Reglages
+            lieux={lieux}
+            cercle={cercleReel}
+            demandes={demandes}
+            sorties={sorties}
+            amisArchives={amisArchives}
+            onBasculerAmi={(id) => setAmisArchives(basculerAmiArchive(id))}
+            onRestaurer={(l) => {
+              void majLieu({ ...l, statut: 'actif' }).then(recharger)
+              setFlash(`${l.nom} revient sur ta carte.`)
+            }}
+            onVoir={(l) => ouvrirFiche(l, lieux)}
+            onGrandJeudi={() => setGjOuvert(true)}
+          />
 
           <button
             className="lien"
@@ -1924,19 +2279,62 @@ export default function App() {
           en tête du cercle ouvre le parcours composer → trianguler → swiper → match */}
       {onglet === 'cercle' && !curateur && sortieGroupe && (
         <div className="cercle">
-          <button className="lien fiche-retour" onClick={() => setSortieGroupe(false)}>
+          <button
+            className="lien fiche-retour"
+            onClick={() => {
+              setSortieGroupe(false)
+              setGraineGroupe(null)
+            }}
+          >
             ← le cercle
           </button>
-          <Groupe lieux={lieux} onOuvrir={(l) => ouvrirFiche(l, lieux)} />
+          <Groupe
+            lieux={lieux}
+            graine={graineGroupe}
+            onOuvrir={(l) => ouvrirFiche(l, lieux)}
+          />
         </div>
       )}
 
       {onglet === 'cercle' && !curateur && !sortieGroupe && (
         <div className="cercle">
           {/* sortir à plusieurs : l'entrée du match de groupe, une étiquette papier */}
-          <button className="inviter-pote sortir-groupe" onClick={() => setSortieGroupe(true)}>
+          <button
+            className="inviter-pote sortir-groupe"
+            onClick={() => {
+              setGraineGroupe(null)
+              setSortieGroupe(true)
+            }}
+          >
             {t('on dit où.')} →
           </button>
+
+          {/* LES SOIRS DU CERCLE (§7) — la lecture humaine de la pellicule,
+              au-dessus de l'annuaire. On ne l'affiche pas à un cercle vide :
+              l'ex-libris fantôme, plus bas, dit déjà quoi faire. */}
+          {(carnetCercle.total > 0 || cercleReel.length > 0) && (
+            <CarnetCercle
+              nuits={carnetCercle.nuits}
+              total={carnetCercle.total}
+              onJyVais={(id) => {
+                const l = lieux.find((x) => x.id === id)
+                if (l) ouvrirFiche(l, lieux)
+              }}
+              onGarder={(id) => {
+                const l = lieux.find((x) => x.id === id)
+                if (l) void adopter(l)
+              }}
+              onRetourner={(id) => {
+                // le match de groupe déjà en prod, avec ce spot déjà en lice
+                setGraineGroupe(lieux.find((x) => x.id === id) ?? null)
+                setSortieGroupe(true)
+              }}
+            />
+          )}
+
+          {/* l'annuaire commence ici — il lui fallait un titre, maintenant
+              qu'une section vit au-dessus */}
+          <h2 className="labo-titre annuaire-titre">{t('ton cercle.')}</h2>
           {membresCercle.length > 0 && (
             <p className="mono cercle-compteur">
               {membresCercle.length} membre{membresCercle.length > 1 ? 's' : ''} ·{' '}
@@ -2894,6 +3292,8 @@ function Fiche({
   // le switch de la visionneuse : la COUVERTURE (polaroid + gravure) par
   // défaut, la photo ENTIÈRE sur demande (les verticales que le carré coupe)
   const [vueNue, setVueNue] = useState(false)
+  // le projecteur super 8 : la photo courante est un clip et on l'a tapé
+  const [projection, setProjection] = useState(false)
   const zoomDepart = useRef({ x: 0, y: 0 })
   // le doigt a bougé (> 8px) entre down et up → c'est un feuilletage, pas un clic de fermeture
   const zoomBouge = useRef(false)
@@ -2971,6 +3371,19 @@ function Fiche({
     await enregistrer({ ...lieu, meteo: lieu.meteo === m ? undefined : m })
   }
 
+  // les étiquettes perso : libres, privées, à moi (0012)
+  const ajouterEtiquette = async (texte: string) => {
+    if (!mien) return
+    const e = texte.trim()
+    if (!e || (lieu.etiquettes ?? []).includes(e)) return
+    await enregistrer({ ...lieu, etiquettes: [...(lieu.etiquettes ?? []), e] })
+  }
+  const retirerEtiquette = async (e: string) => {
+    if (!mien) return
+    const restantes = (lieu.etiquettes ?? []).filter((x) => x !== e)
+    await enregistrer({ ...lieu, etiquettes: restantes.length ? restantes : undefined })
+  }
+
   // le partage : si photo + tampon, le tampon s'IMPRIME dans l'image envoyée
   const partager = async () => {
     const texte = `${lieu.nom} — ${lieu.note || "regarde où je t'emmène."}\n${lieu.adresse ?? ''}\nhttps://maps.google.com/?q=${lieu.lat},${lieu.lng}\n— dit sur Jeudi.`
@@ -2993,7 +3406,7 @@ function Fiche({
         )
         ctx.rotate((-12 * Math.PI) / 180)
         const racine = getComputedStyle(document.documentElement)
-        const couleurMarque = racine.getPropertyValue('--red').trim() || '#a8322a'
+        const couleurMarque = racine.getPropertyValue('--red').trim() || '#5d8dff'
         // le « bof » suit le crayon graphite du carnet (token), pas un gris à part
         const couleurBof = racine.getPropertyValue('--graphite').trim() || '#8a857a'
         ctx.strokeStyle = t.v === 'valide' ? couleurMarque : couleurBof
@@ -3079,6 +3492,14 @@ function Fiche({
 
   return (
     <div className="fiche">
+      {/* le projecteur super 8 : la photo courante bouge et on l'a tapée */}
+      {projection && nbPhotos > 0 && estClip(lieu.photos[photoIndex]) && (
+        <Projecteur
+          photo={lieu.photos[photoIndex]}
+          nomLieu={lieu.nom}
+          onFermer={() => setProjection(false)}
+        />
+      )}
       {/* visionneuse photo plein écran (bouton « agrandir ») — feuilletable */}
       {agrandi && nbPhotos > 0 && (
         <div
@@ -3147,6 +3568,8 @@ function Fiche({
                 {lieu.nom}
                 <br />
                 {labelTypeLieu(typeDeLieu(lieu))}
+                {/* le tampon de douane, en toutes lettres sur la couverture */}
+                {cuisineDeLieu(lieu) ? ` · ${cuisineDeLieu(lieu)!.mot}` : ''}
               </span>
               {horaire && horaire.ouvert !== undefined && (
                 <span className="affiche-grave ag-hd">
@@ -3231,6 +3654,22 @@ function Fiche({
                 <span className="croix">✕</span>
                 <span className="hand sans-photo">pas encore de photo.</span>
               </div>
+            )}
+            {/* le photogramme d'un clip : la perforation + le déclic qui
+                allume le projecteur (jamais d'autoplay) */}
+            {nbPhotos > 0 && estClip(lieu.photos[photoIndex]) && (
+              <button
+                className="pf-projeter"
+                aria-label={t('projeter la bobine')}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setProjection(true)
+                }}
+              >
+                ▸
+              </button>
             )}
             {nbPhotos > 1 && (
               <span className="mono photo-compteur">
@@ -3466,6 +3905,17 @@ function Fiche({
               <span className="glose"> ≈ {uniteParPersonne(lieu.envies)}</span>
             </span>
           )}
+          {/* les étiquettes PERSO (0012) : le rangement à soi — visibles
+              uniquement sur MES spots, jamais sur ceux du cercle */}
+          {(lieu.etiquettes?.length ?? 0) > 0 && (
+            <div className="rangée">
+              {(lieu.etiquettes ?? []).map((e) => (
+                <span key={e} className="mot fige etiquette">
+                  {e}
+                </span>
+              ))}
+            </div>
+          )}
           <button className="lien fiche-modifier" onClick={() => setEdition(true)}>
             {t('modifier les infos')}
           </button>
@@ -3502,6 +3952,35 @@ function Fiche({
             valeur={lieu.horaires}
             onChange={(v) => enregistrer({ ...lieu, horaires: v })}
           />
+          <span className="lbl mono">{t('tes étiquettes ? (privées)')}</span>
+          <div className="rangée">
+            {(lieu.etiquettes ?? []).map((e) => (
+              <button
+                key={e}
+                className="mot entouré etiquette"
+                title={t('retirer')}
+                onClick={() => retirerEtiquette(e)}
+              >
+                {e} ×
+              </button>
+            ))}
+            <input
+              className="etiquette-saisie mono"
+              placeholder={t('+ étiquette')}
+              maxLength={30}
+              onKeyDown={(ev) => {
+                if (ev.key === 'Enter') {
+                  const cible = ev.target as HTMLInputElement
+                  void ajouterEtiquette(cible.value)
+                  cible.value = ''
+                }
+              }}
+              onBlur={(ev) => {
+                void ajouterEtiquette(ev.target.value)
+                ev.target.value = ''
+              }}
+            />
+          </div>
           <span className="lbl mono">situation du portefeuille ?</span>
           <div className="form-meteo">
             {METEOS.map((m) => (

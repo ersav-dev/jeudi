@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — les glyphes de la carte</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit:#14120e; --nuit-2:#1b1813;
+    --encre:#efe9d8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.36);
+    --encre-papier:#15130f; --cire:#a8322a; --rayon:3px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--nuit);color:var(--encre);font-family:'IBM Plex Mono',monospace}
+  .page{max-width:520px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-family:Georgia,serif;font-style:italic;font-weight:normal;font-size:24px;margin:0 0 2px}
+  .sous{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--encre-3);margin-bottom:20px}
+  .lbl{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--encre-3);margin:26px 0 12px;border-top:1px solid rgba(239,233,216,.15);padding-top:14px}
+
+  /* ── la planche : les 6 glyphes en grand, à l'encre ─────────── */
+  .planche{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .g{
+    border:1px solid rgba(239,233,216,.22);border-radius:var(--rayon);
+    background:var(--nuit-2);padding:16px 8px 10px;text-align:center;
+  }
+  .g svg{width:44px;height:44px;stroke:var(--encre);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .g .nom{display:block;font-family:'Caveat',cursive;font-size:18px;color:var(--encre-2);margin-top:6px}
+  .g .cle{display:block;font-size:9px;color:var(--encre-3);letter-spacing:.5px}
+
+  /* ── en situation : les épingles sur la nuit de la carte ────── */
+  .carte{
+    position:relative;border:1px solid rgba(239,233,216,.22);border-radius:var(--rayon);
+    background:
+      radial-gradient(340px 160px at 30% 20%, rgba(239,233,216,.045), transparent 60%),
+      radial-gradient(280px 200px at 80% 75%, rgba(239,233,216,.035), transparent 55%),
+      #171410;
+    height:230px;overflow:hidden;
+  }
+  .rue{position:absolute;background:rgba(239,233,216,.07);transform-origin:0 0}
+  .pin{
+    position:absolute;width:34px;height:34px;border-radius:50%;
+    background:var(--encre);display:grid;place-items:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.6);
+  }
+  .pin svg{width:19px;height:19px;stroke:var(--encre-papier);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .pin::after{
+    content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+    width:5px;height:5px;border-radius:50%;background:#3a362d;
+  }
+  .pin-nom{position:absolute;font-family:'Caveat',cursive;font-size:15px;color:var(--encre-2);
+    text-shadow:0 1px 0 #14120e,0 -1px 0 #14120e,1px 0 0 #14120e,-1px 0 0 #14120e;white-space:nowrap}
+  .moi{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--cire);
+    box-shadow:0 0 0 3px rgba(168,50,42,.25)}
+  /* le tampon de douane : la cuisine en 2 lettres, tamponnée de travers */
+  .douane{position:absolute;bottom:-7px;right:-9px;padding:1px 3px;border-radius:3px;
+    background:var(--encre);border:1px solid rgba(21,19,15,.55);color:var(--encre-papier);
+    font-size:8px;font-weight:700;letter-spacing:.4px;transform:rotate(-6deg)}
+
+  /* ── la suite (différée) : le contour dit le propriétaire ───── */
+  .contours{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .c{border:1px solid rgba(239,233,216,.22);border-radius:var(--rayon);background:var(--nuit-2);
+    padding:14px 8px 10px;text-align:center}
+  .c .rond{width:38px;height:38px;border-radius:50%;background:var(--encre);margin:0 auto;
+    display:grid;place-items:center}
+  .c svg{width:20px;height:20px;stroke:var(--encre-papier);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .c.moi2 .rond{outline:2px solid var(--cire);outline-offset:2px}
+  .c.cercle2 .rond{outline:2px dashed rgba(239,233,216,.75);outline-offset:2px}
+  .c.public2 .rond{outline:1px dotted rgba(239,233,216,.4);outline-offset:2px}
+  .c .nom{display:block;font-family:'Caveat',cursive;font-size:16px;color:var(--encre-2);margin-top:8px}
+  .note{font-family:'Caveat',cursive;font-size:17px;color:var(--encre-2);margin-top:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>les glyphes de la carte</h1>
+  <div class="sous">déjà en prod sur les épingles · monoline, jamais un émoji (DA)</div>
+
+  <div class="lbl">les dix types — tels que dessinés dans typesLieu.ts</div>
+  <div class="planche">
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg>
+      <span class="nom">bar</span><span class="cle">le verre à pied</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/></svg>
+      <span class="nom">cave à vin</span><span class="cle">la bouteille · nouveau</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg>
+      <span class="nom">club</span><span class="cle">la note</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg>
+      <span class="nom">café</span><span class="cle">la tasse</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/></svg>
+      <span class="nom">salon de thé</span><span class="cle">la théière · nouveau</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg>
+      <span class="nom">glacier</span><span class="cle">le cornet à dôme · revu</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/></svg>
+      <span class="nom">pâtisserie</span><span class="cle">le cupcake · revu</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg>
+      <span class="nom">rapido</span><span class="cle">le burger · revu</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg>
+      <span class="nom">grande table</span><span class="cle">la cloche</span></div>
+    <div class="g"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg>
+      <span class="nom">resto</span><span class="cle">les couverts · ton choix</span></div>
+  </div>
+
+  <div class="lbl">en situation — la nuit de la carte</div>
+  <div class="carte">
+    <div class="rue" style="left:-10px;top:70px;width:150%;height:9px;transform:rotate(6deg)"></div>
+    <div class="rue" style="left:40px;top:-10px;width:8px;height:150%;transform:rotate(14deg)"></div>
+    <div class="rue" style="left:-10px;top:150px;width:150%;height:7px;transform:rotate(-4deg)"></div>
+    <div class="rue" style="left:250px;top:-20px;width:7px;height:160%;transform:rotate(-10deg)"></div>
+
+    <div class="pin" style="left:60px;top:36px"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <span class="pin-nom" style="left:44px;top:74px">le syndicat</span>
+
+    <div class="pin" style="left:180px;top:88px"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg><span class="douane">MAR</span></div>
+    <span class="pin-nom" style="left:166px;top:126px">chez momo</span>
+
+    <div class="pin" style="left:300px;top:40px"><svg viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg></div>
+    <span class="pin-nom" style="left:288px;top:78px">badaboum</span>
+
+    <div class="pin" style="left:110px;top:150px"><svg viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg></div>
+    <span class="pin-nom" style="left:100px;top:188px">fréquence</span>
+
+    <div class="pin" style="left:340px;top:140px"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg><span class="douane">CHN</span></div>
+    <span class="pin-nom" style="left:330px;top:178px">bao bar</span>
+
+    <div class="moi" style="left:236px;top:170px"></div>
+    <span class="pin-nom" style="left:252px;top:164px">toi</span>
+  </div>
+
+  <div class="lbl">la suite (différée) — le contour dira le propriétaire</div>
+  <div class="contours">
+    <div class="c moi2"><span class="rond"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+      <span class="nom">à toi</span></div>
+    <div class="c cercle2"><span class="rond"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+      <span class="nom">ton cercle</span></div>
+    <div class="c public2"><span class="rond"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+      <span class="nom">public</span></div>
+  </div>
+
+  <div class="lbl">le tampon de douane — la cuisine, sans drapeau émoji</div>
+  <p class="note" style="margin-top:4px">regarde « chez momo » (MA) et « bao bar » (CN) sur la carte au-dessus :
+  deux lettres tamponnées de travers, révélées au zoom quartier. 21 cuisines
+  reconnues (IT · JP · CN · KR · TH · VN · IN · LB · IL · TR · GR · MA · TN ·
+  AF · ET · MX · PE · BR · ES · PT · US). la cuisine française n'a pas de
+  tampon : on ne tamponne pas son propre passeport.</p>
+
+  <p class="note">prérequis avant d'affiner : la fusion type/cuisine (OSM ✓ · GPT prêts · Google en attente de ta clé)</p>
+</div>
+</body>
+</html>

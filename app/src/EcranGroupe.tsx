@@ -148,11 +148,15 @@ export default function Groupe({
   lieux,
   onOuvrir,
   rejoindre,
+  graine,
 }: {
   lieux: Lieu[]
   onOuvrir?: (l: Lieu) => void
   /** un match du cloud où je suis membre (bandeau) — je le rejoins in-app */
   rejoindre?: MatchOuvert | null
+  /** le spot d'où l'on vient (« on y retourne ? » des soirs du cercle) :
+   *  déjà coché dans les candidats, jamais imposé — on peut le décocher */
+  graine?: Lieu | null
 }) {
   const [session, setSession] = useState<SessionMatch | null>(() => sessionDepuisActive())
   const [etape, setEtape] = useState<Etape>(session || rejoindre ? 'suivi' : 'compose')
@@ -165,8 +169,9 @@ export default function Groupe({
   )
   // null = la présélection du carnet (top 5) ; sinon le choix explicite
   const [selIds, setSelIds] = useState<string[] | null>(null)
-  // les spots piochés dans TOUTE ma carte, en plus du top 8 proposé
-  const [extras, setExtras] = useState<Lieu[]>([])
+  // les spots piochés dans TOUTE ma carte, en plus du top 8 proposé —
+  // et la graine de « on y retourne ? », posée là dès l'ouverture
+  const [extras, setExtras] = useState<Lieu[]>(() => (graine ? [graine] : []))
   const [vue, setVue] = useState<SortieVue | null>(null)
   const [mesVotes, setMesVotes] = useState<Record<string, ReactionSG>>(() =>
     session ? (lireCleSortie(session.token)?.votes ?? {}) : {},

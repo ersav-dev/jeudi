@@ -16,27 +16,33 @@ export interface Moment {
 
 export const MOMENT_DEFAUT: Moment = { cle: 'maintenant' }
 
+/** l'heure du soir proposé : 20h — l'heure où une soirée COMMENCE (on
+ *  cherche avant d'y être), plus le 22h d'avant (décision Ersan, 07/08) */
+export const HEURE_SOIR = 20
+
 /** la date effective d'un moment, depuis une référence (testable) */
 export function dateDuMoment(m: Moment, ref = new Date()): Date {
   const d = new Date(ref)
   if (m.cle === 'soir') {
-    d.setHours(22, 0, 0, 0)
-    // l'app ouverte après 22h : « ce soir » c'est encore CE soir (pas hier)
+    d.setHours(HEURE_SOIR, 0, 0, 0)
+    // l'app ouverte après 20h : « ce soir » c'est encore CE soir (pas hier)
     if (d.getTime() < ref.getTime()) return new Date(ref)
     return d
   }
   if (m.cle === 'demain') {
     d.setDate(d.getDate() + 1)
-    d.setHours(21, 0, 0, 0)
+    d.setHours(HEURE_SOIR, 0, 0, 0)
     return d
   }
   if (m.cle === 'jeudi') {
-    // jeudi le plus proche : si on est jeudi avant 22h, c'est CE soir ;
-    // jeudi après 22h → celui d'après.
+    // jeudi le plus proche : jusqu'à 22h un jeudi, c'est ENCORE ce soir
+    // (après 20h on retombe sur maintenant, comme « ce soir ») ; passé 22h,
+    // la nuit bascule → le jeudi d'après.
     const brut = (4 - d.getDay() + 7) % 7
     const delta = brut === 0 ? (d.getHours() < 22 ? 0 : 7) : brut
     d.setDate(d.getDate() + delta)
-    d.setHours(22, 0, 0, 0)
+    d.setHours(HEURE_SOIR, 0, 0, 0)
+    if (d.getTime() < ref.getTime()) return new Date(ref)
     return d
   }
   if (m.cle === 'libre' && m.iso) {

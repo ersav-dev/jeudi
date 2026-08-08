@@ -206,3 +206,47 @@ export const MONUMENTS_CROQUIS: MonumentCroquis[] = [
 
 /** le périph : une boucle approximative en pointillés, à peine là */
 export const TRAIT_PERIPH = 'M 30 12 Q 160 4 310 14 Q 336 100 326 200 Q 320 246 240 250 Q 120 256 40 246 Q 8 240 10 170 Q 6 80 30 12'
+
+// ── projeter un point réel sur le dessin ────────────────────────
+// LA projection du croquis (celle qui a posé les 21 zones, documentée
+// au-dessus de ZONES_CROQUIS) : linéaire, centrée sur Châtelet.
+// Sert aux épingles précises (les plans de « je sais pas », « toi »).
+export function projeterSurCroquis(lat: number, lng: number): { x: number; y: number } {
+  return {
+    x: 183 + (lng - 2.348) * 1900,
+    y: 138 - (lat - 48.854) * 2684,
+  }
+}
+
+// ── le marqueur de recherche : l'accusé de réception spatial ────
+// Quand « autour de » est un lieu géocodé (un métro tapé, une adresse),
+// un signe se pose sur le croquis À L'ENDROIT reconnu : « comme ça on
+// est sûr » que jeudi a compris de quel coin on parle. Si le lieu sort
+// du carnet (hors Paris), le signe se colle au bord, tourné vers lui.
+export interface Marqueur {
+  x: number
+  y: number
+  /** vrai si le point tombe dans le cadre du dessin (marge comprise) */
+  dedans: boolean
+  /** direction du vrai point quand il est hors cadre (degrés, 0 = est) */
+  angle: number
+}
+
+const MARGE_MARQUEUR = 14 // le signe ne mord jamais le bord du carnet
+
+export function poserMarqueur(lat: number, lng: number): Marqueur {
+  const p = projeterSurCroquis(lat, lng)
+  const x = Math.min(340 - MARGE_MARQUEUR, Math.max(MARGE_MARQUEUR, p.x))
+  const y = Math.min(260 - MARGE_MARQUEUR, Math.max(MARGE_MARQUEUR, p.y))
+  const dedans = x === p.x && y === p.y
+  return {
+    x,
+    y,
+    dedans,
+    angle: dedans ? 0 : (Math.atan2(p.y - y, p.x - x) * 180) / Math.PI,
+  }
+}
+
+/** le rond du marqueur : on ENTOURE l'endroit au crayon (une patatoïde
+ *  serrée, graine fixe → même coup de crayon à chaque pose), centré (0,0) */
+export const CHEMIN_MARQUEUR = cheminPatatoide(0, 0, 8, 7, 47, 7)

@@ -7,9 +7,9 @@ import { type Moment, type MomentCle, dateDuMoment } from './moment'
 // natif : sur téléphone c'est la roue système, le meilleur clavier d'heure).
 const PRESETS: { cle: MomentCle; label: string }[] = [
   { cle: 'maintenant', label: 'maintenant' },
-  { cle: 'soir', label: 'ce soir · 22h' },
+  { cle: 'soir', label: 'ce soir · 20h' },
   { cle: 'demain', label: 'demain soir' },
-  { cle: 'jeudi', label: 'jeudi · 22h' },
+  { cle: 'jeudi', label: 'jeudi · 20h' },
 ]
 
 /** la valeur par défaut du champ libre : demain 20h, format datetime-local */

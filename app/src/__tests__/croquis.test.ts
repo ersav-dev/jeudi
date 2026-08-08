@@ -11,7 +11,7 @@ vi.mock('../supabase', () => ({
   },
 }))
 
-import { ZONES_CROQUIS, compterSpotsZones } from '../croquisZones'
+import { ZONES_CROQUIS, compterSpotsZones, poserMarqueur, projeterSurCroquis } from '../croquisZones'
 import { POINTS_REPERE } from '../autour'
 
 describe('croquis de paris — zones ↔ chips « autour de »', () => {
@@ -79,5 +79,41 @@ describe('croquis de paris — compterSpotsZones', () => {
   it('sans lieux : toutes les zones à 0 (rendu pâle, pas de nombre)', () => {
     const comptes = compterSpotsZones([])
     for (const z of ZONES_CROQUIS) expect(comptes[z.repere]).toBe(0)
+  })
+})
+
+describe('croquis de paris — poserMarqueur (le lieu reconnu se pose)', () => {
+  it('un point dans paris tombe DEDANS, à sa projection exacte', () => {
+    // edgar quinet (montparnasse) — LE cas d'usage : « comme ça on est sûr »
+    const m = poserMarqueur(48.8408, 2.3252)
+    expect(m.dedans).toBe(true)
+    const p = projeterSurCroquis(48.8408, 2.3252)
+    expect(m.x).toBe(p.x)
+    expect(m.y).toBe(p.y)
+  })
+
+  it('un lieu hors du carnet se colle au bord (jamais hors cadre)', () => {
+    // marseille : très au sud → borné en bas du dessin
+    const m = poserMarqueur(43.2965, 5.3698)
+    expect(m.dedans).toBe(false)
+    expect(m.x).toBeGreaterThanOrEqual(14)
+    expect(m.x).toBeLessThanOrEqual(326)
+    expect(m.y).toBeGreaterThanOrEqual(14)
+    expect(m.y).toBeLessThanOrEqual(246)
+  })
+
+  it('hors cadre : la flèche pointe vers le vrai lieu', () => {
+    // saint-denis, plein nord → le signe au bord haut, tourné vers le haut
+    const nord = poserMarqueur(48.9362, 2.3574)
+    expect(nord.dedans).toBe(false)
+    expect(nord.angle).toBeLessThan(0) // y SVG vers le bas : le haut = angle négatif
+    // versailles, à l'ouest → tourné vers la gauche (|angle| > 90°)
+    const ouest = poserMarqueur(48.8049, 2.1204)
+    expect(ouest.dedans).toBe(false)
+    expect(Math.abs(ouest.angle)).toBeGreaterThan(90)
+  })
+
+  it('dedans : angle neutre (0) — la flèche ne sert pas', () => {
+    expect(poserMarqueur(48.8584, 2.347).angle).toBe(0) // châtelet
   })
 })

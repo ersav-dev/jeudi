@@ -15,6 +15,7 @@ import {
   ecrireMeteo,
   distanceM,
   formatDistance,
+  tempsMarche,
   etatHoraire,
   propreteWcLabel,
   lireFavoris,
@@ -23,6 +24,7 @@ import {
   NOM_JEUDI,
 } from './db'
 import { tirerPlans, type CompagnieTirage, type Plan } from './plans'
+import { feteDuJour } from './fetes'
 import { suivre } from './analytique'
 import { t } from './langue'
 import { srcPhoto, photoIndisponible } from './photos'
@@ -182,12 +184,22 @@ export default function CeSoir({
       </h2>
       {reglerMoment && <ChoixMoment valeur={moment} onChange={choisirMoment} />}
 
+      {/* la fête du jour (fetes.ts) : le 9 août c'est la Saint-Amour —
+          un mot au crayon sous la question, 361 soirs sur 365 il n'y a rien */}
+      {(() => {
+        const fete = feteDuJour(dateEffective)
+        return fete ? (
+          <p className="hand cesoir-fete">
+            {t('c’est')} {fete.nom} — {fete.mot}
+          </p>
+        ) : null
+      })()}
+
       {surprise ? (
         <JeSaisPas
           lieux={lieux}
           maintenant={dateEffective}
           onVoir={onVoir}
-          onComparer={onComparer}
           onFermer={() => setSurprise(false)}
         />
       ) : !(compagnie && envie) ? (
@@ -210,10 +222,31 @@ export default function CeSoir({
               {t('vous décidez ensemble ? on dit où. →')}
             </button>
           )}
-          {/* la porte de l'aléatoire, sous les chemins existants : une étiquette papier */}
-          <button className="jsp-entree mono" onClick={() => setSurprise(true)}>
-            {t('je sais pas — surprends-moi')}
-          </button>
+          {/* les deux portes, côte à côte : le tirage (« je sais pas ») et le
+              match (« on dit où ») — deux cases sur la même ligne, chacune en
+              pile (glyphe dessiné, titre serif, glose mono). Plus lisible. */}
+          <div className="cesoir-portes">
+            <button className="jsp-porte" onClick={() => setSurprise(true)}>
+              <svg className="jsp-porte-cartes" viewBox="0 0 66 44" aria-hidden="true">
+                {/* l'éventail : trois cartes à jouer monoline, faces inconnues (?) */}
+                <g fill="var(--nuit-2)" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round">
+                  <rect x="7" y="11" width="17" height="25" rx="2" transform="rotate(-13 15.5 23.5)" />
+                  <rect x="24.5" y="8" width="17" height="25" rx="2" />
+                  <rect x="42" y="11" width="17" height="25" rx="2" transform="rotate(13 50.5 23.5)" />
+                </g>
+                <g fontFamily="'JetBrains Mono', monospace" fontSize="10" fill="currentColor" textAnchor="middle">
+                  <text x="14.5" y="27" transform="rotate(-13 15.5 23.5)">?</text>
+                  <text x="33" y="24">?</text>
+                  <text x="51.5" y="27" transform="rotate(13 50.5 23.5)">?</text>
+                </g>
+              </svg>
+              <span className="jsp-porte-txt">
+                <span className="jsp-porte-titre">{t('je sais pas.')}</span>
+                <span className="mono jsp-porte-sous">{t('tire trois plans du carnet →')}</span>
+              </span>
+            </button>
+            {encart}
+          </div>
         </>
       ) : (
         <>
@@ -243,7 +276,9 @@ export default function CeSoir({
         </>
       )}
 
-      {encart}
+      {/* sur l'écran des questions, l'étiquette du match vit DANS la rangée
+          des portes (ci-dessus) — ailleurs (surprise, deck) elle garde sa place */}
+      {(surprise || (compagnie && envie)) && encart}
 
       <span className="lbl mono meteo-bas-lbl">{t('situation du portefeuille ?')}</span>
       <div className="meteo-bas">
@@ -274,17 +309,18 @@ function JeSaisPas({
   lieux,
   maintenant,
   onVoir,
-  onComparer,
   onFermer,
 }: {
   lieux: Lieu[]
   maintenant: Date
   onVoir?: (l: Lieu) => void
-  onComparer?: (ids: string[]) => void
   onFermer: () => void
 }) {
   const [compagnie, setCompagnie] = useState<CompagnieTirage>('solo')
   const [graine, setGraine] = useState(() => Math.floor(Math.random() * 1_000_000_000))
+  // le plan ALLUMÉ (index 0..2) : taper le jeton ① n'allume que SES épingles
+  // sur la carte — on relie enfin chaque proposition à ses points. null = tous.
+  const [planAllume, setPlanAllume] = useState<number | null>(null)
   const favoris = useMemo(() => lireFavoris(), [])
   // arrondi à la minute : le tirage ne bouge pas sous les yeux à chaque re-rendu
   const minute = Math.floor(maintenant.getTime() / 60000)
@@ -295,13 +331,33 @@ function JeSaisPas({
 
   const retirer = () => {
     navigator.vibrate?.(15) // la frappe légère
+    setPlanAllume(null) // nouveau tirage : plus rien d'allumé
     setGraine(Math.floor(Math.random() * 1_000_000_000))
   }
-  // « ce plan me va » : les 2 spots côte à côte dans la table de comparaison
-  // (le récap existant, rendue au niveau global) — sans elle, la fiche du 1ᵉʳ
-  const cePlanMeVa = (p: Plan) => {
-    if (onComparer && p.spots.length > 1) onComparer(p.spots.map((s) => s.lieu.id))
-    else if (p.spots[0]) onVoir?.(p.spots[0].lieu)
+
+  // tous les spots des plans → la VRAIE carte (MapLibre), avec le point
+  // rouge « toi » déjà dedans : même code de position que « ma carte »
+  const spotsDesPlans = useMemo(() => plans.flatMap((p) => p.spots.map((s) => s.lieu)), [plans])
+  // chaque épingle porte son plan ET son rôle : A = le spot (jeton numéroté),
+  // B = le plan B (lettre B, même encre désaturée) — la carte dit tout
+  const plansDesPins = useMemo(() => {
+    const rec: Record<string, { n: number; role: 'A' | 'B' }> = {}
+    plans.forEach((p, i) =>
+      p.spots.forEach((s, j) => (rec[s.lieu.id] = { n: i + 1, role: j === 0 ? 'A' : 'B' })),
+    )
+    return rec
+  }, [plans])
+  // le plan allumé → ses ids ; les autres épingles s'éteignent
+  const idsAllumes =
+    planAllume !== null && plans[planAllume]
+      ? plans[planAllume].spots.map((s) => s.lieu.id)
+      : null
+
+  // « celui-là. » : la décision débouche sur du concret — la FICHE du spot
+  // principal (itinéraire, photos, tampon). Le plan B reste lisible sur la
+  // carte du plan avant de taper — plus jamais la table de comparaison.
+  const celuiLa = (p: Plan) => {
+    if (p.spots[0]) onVoir?.(p.spots[0].lieu)
   }
 
   return (
@@ -316,7 +372,10 @@ function JeSaisPas({
             key={c}
             className={`meteo-choix ${compagnie === c ? 'on' : ''}`}
             aria-pressed={compagnie === c}
-            onClick={() => setCompagnie(c)}
+            onClick={() => {
+              setPlanAllume(null) // autre compagnie = autre tirage : rien d'allumé
+              setCompagnie(c)
+            }}
           >
             <span className="meteo-prix mono">{c}</span>
           </button>
@@ -327,27 +386,64 @@ function JeSaisPas({
         <p className="hand jsp-vide">pas deux spots ouverts assez proches pour un plan. capture, ou reviens plus tard.</p>
       )}
 
+      {/* LA VRAIE CARTE (MapLibre, même code que « ma carte ») : les spots
+          des plans épinglés sur la ville, le point rouge « toi » avec — on
+          sait enfin OÙ c'est avant de choisir (rue inconnue ≠ plan invisible).
+          Taper une épingle ouvre la fiche du spot. */}
+      {plans.length > 0 && (
+        <div className="jsp-carte">
+          <Carte
+            lieux={spotsDesPlans}
+            onVoir={onVoir}
+            mini
+            plans={plansDesPins}
+            allumes={idsAllumes}
+            onPlan={(n) => setPlanAllume((v) => (v === n - 1 ? null : n - 1))}
+          />
+        </div>
+      )}
+
       {plans.map((p, i) => (
         <div
-          className="jsp-plan"
+          className={`jsp-plan p${i + 1}${planAllume === i ? ' allume' : ''}`}
           key={p.spots.map((s) => s.lieu.id).join('+')}
           style={{
             animationDelay: `${i * 70}ms`,
             transform: `rotate(${i % 2 ? 0.35 : -0.4}deg)`, // posées à la main
           }}
         >
-          <span className="jsp-zone">{p.zone}</span>
-          <span className="mono jsp-accroche">{p.accroche}</span>
+          {/* taper l'en-tête (le jeton ①) allume CE plan sur la carte —
+              re-taper éteint. La carte répond, les cartes-plans commandent. */}
+          <button
+            type="button"
+            className="jsp-tete"
+            aria-pressed={planAllume === i}
+            onClick={() => setPlanAllume((v) => (v === i ? null : i))}
+          >
+            <span className="mono jsp-jeton">{i + 1}</span>
+            <span className="jsp-zone">{p.zone}</span>
+            <span className="mono jsp-tete-carte">
+              {planAllume === i ? 'sur la carte ●' : 'sur la carte ○'}
+            </span>
+          </button>
+          <span className="mono jsp-accroche">
+            à {tempsMarche(distanceM(p.spots[0].lieu))} min de toi · {p.accroche}
+          </span>
           <div className="jsp-spots">
-            {p.spots.map((s) => (
+            {p.spots.map((s, j) => (
               <button key={s.lieu.id} className="jsp-spot" onClick={() => onVoir?.(s.lieu)}>
-                <span className="jsp-spot-nom">{s.lieu.nom}</span>
-                <span className="mono jsp-spot-ligne">{s.ligne}</span>
+                {/* la lettre du rôle, à l'encre du plan (A pleine, B désaturée) :
+                    la même que sur l'épingle — l'index et la carte se répondent */}
+                <span className={`mono jsp-ab${j === 0 ? '' : ' b'}`}>{j === 0 ? 'A' : 'B'}</span>
+                <span className="jsp-spot-corps">
+                  <span className="jsp-spot-nom">{s.lieu.nom}</span>
+                  <span className="mono jsp-spot-ligne">{s.ligne}</span>
+                </span>
               </button>
             ))}
           </div>
-          <button className="jsp-va mono" onClick={() => cePlanMeVa(p)}>
-            ce plan me va →
+          <button className="jsp-va mono" onClick={() => celuiLa(p)}>
+            celui-là. →
           </button>
         </div>
       ))}

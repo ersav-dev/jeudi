@@ -5,7 +5,9 @@ import {
   MONUMENTS_CROQUIS,
   TRAIT_SEINE,
   TRAIT_PERIPH,
+  CHEMIN_MARQUEUR,
   compterSpotsZones,
+  poserMarqueur,
 } from './croquisZones'
 import { t } from './langue'
 
@@ -35,6 +37,7 @@ export default function CroquisParis({
   onChoisir,
   eauActive = false,
   onEau,
+  marqueur = null,
 }: {
   /** les lieux visibles (mêmes que la recherche) — lat/lng + le tag sur-l'eau */
   lieux: { lat: number; lng: number; surLeau?: boolean }[]
@@ -46,6 +49,10 @@ export default function CroquisParis({
    *  « sur l'eau » (péniches, guinguettes, quais) — même état que la chip */
   eauActive?: boolean
   onEau?: () => void
+  /** le lieu géocodé (un métro tapé, une adresse) : un signe se pose sur le
+   *  croquis à l'endroit reconnu — l'accusé de réception spatial. Les zones
+   *  s'encrent déjà toutes seules : ce marqueur est pour les points LIBRES. */
+  marqueur?: { nom: string; lat: number; lng: number } | null
 }) {
   const [ouvert, setOuvert] = useState(lireOuvert)
   const basculer = () => {
@@ -61,6 +68,18 @@ export default function CroquisParis({
 
   const comptes = useMemo(() => compterSpotsZones(lieux), [lieux])
   const nbEau = useMemo(() => lieux.filter((l) => l.surLeau).length, [lieux])
+
+  // le lieu reconnu, posé sur le dessin (+ où écrire son nom sans sortir
+  // du cadre : ancre horizontale, au-dessus si le signe touche le bas)
+  const pose = useMemo(() => {
+    if (!marqueur) return null
+    const m = poserMarqueur(marqueur.lat, marqueur.lng)
+    return {
+      ...m,
+      ancre: (m.x < 45 ? 'start' : m.x > 295 ? 'end' : 'middle') as 'start' | 'end' | 'middle',
+      dyNom: m.y > 230 ? -14 : 21,
+    }
+  }, [marqueur])
 
   // le croquis en PLEIN ÉCRAN : même dessin, mêmes zones tapables — taper
   // un quartier filtre ET referme (on retombe sur les résultats)
@@ -237,6 +256,52 @@ export default function CroquisParis({
               </g>
             )
           })}
+          {/* le signe de la recherche : le lieu géocodé (métro, adresse) est
+              ENTOURÉ au crayon, à l'encre du membre — l'accusé de réception
+              spatial (« comme ça on est sûr »). Hors du carnet : une flèche
+              au bord, tournée vers lui. Pas cliquable : c'est une réponse.
+              key = nom → le coup de crayon se rejoue à chaque nouveau lieu. */}
+          {marqueur && pose && (
+            <g key={marqueur.nom} transform={`translate(${pose.x.toFixed(1)} ${pose.y.toFixed(1)})`} pointerEvents="none">
+              <g className="croquis-marqueur">
+                <title>{marqueur.nom}</title>
+                {pose.dedans ? (
+                  <>
+                    <path
+                      d={CHEMIN_MARQUEUR}
+                      fill="none"
+                      stroke="var(--red)"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle r="1.6" fill="var(--red)" />
+                  </>
+                ) : (
+                  <path
+                    d="M -2.5 -5 L 5 0 L -2.5 5"
+                    fill="none"
+                    stroke="var(--red)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    transform={`rotate(${pose.angle.toFixed(0)})`}
+                  />
+                )}
+                <text
+                  x={0}
+                  y={pose.dyNom}
+                  textAnchor={pose.ancre}
+                  fontFamily="'Caveat', cursive"
+                  fontSize="12"
+                  fill="var(--red)"
+                  opacity="0.9"
+                >
+                  {marqueur.nom}
+                </text>
+              </g>
+            </g>
+          )}
         </svg>
       </div>
     </div>

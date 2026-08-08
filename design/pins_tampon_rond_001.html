@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>jeudi — banc d'essai « le tampon rond » (pins v001)</title>
+<style>
+  /* ── la matière du carnet ── */
+  :root {
+    --nuit: #14120e;
+    --nuit-2: #1b1813;
+    --encre: #efe9d8;
+    --encre-2: rgba(239, 233, 216, 0.62);
+    --graphite: #8a857a;
+    --marque: #5d8dff;
+    --cire: #a8322a;
+    --rayon: 3px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--nuit); color: var(--encre);
+    font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    display: flex; flex-direction: column; align-items: center; padding: 18px 12px 60px;
+  }
+  h1 { font-family: Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 4px 0 2px; }
+  .sous { font-size: 11px; color: var(--encre-2); margin-bottom: 16px; }
+
+  /* ── les interrupteurs ── */
+  .commandes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; max-width: 420px; }
+  .chip {
+    background: var(--nuit-2); border: 1px solid rgba(138,133,122,.45); color: var(--encre-2);
+    border-radius: var(--rayon); padding: 7px 11px; font: inherit; font-size: 11px; cursor: pointer;
+  }
+  .chip.on { border-color: var(--encre); color: var(--encre); }
+
+  /* ── la scène : un quartier de nuit ── */
+  .scene {
+    position: relative; width: min(420px, 96vw); height: 560px; overflow: hidden;
+    background: #0d0c0a; border: 1px solid rgba(138,133,122,.3); border-radius: var(--rayon);
+  }
+  .scene svg.fond { position: absolute; inset: 0; }
+
+  /* ── LE TAMPON ROND ── */
+  .pin {
+    position: absolute; transform: translate(-50%, -50%);
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 3px solid var(--c, var(--marque));
+    background: rgba(20, 18, 14, 0.92);            /* l'assise charbon : le vide est un vide DE charbon */
+    box-shadow: 0 0 0 1px rgba(13, 12, 10, 0.95);   /* le liseré de découpe — permanent */
+    display: flex; align-items: center; justify-content: center;
+  }
+  .zoom-loin .pin { width: 14px; height: 14px; border-width: 2.5px; }
+  /* variante A au zoom quartier : l'anneau s'ouvre et loge le glyphe */
+  .vA.zoom-pres .pin { width: 22px; height: 22px; }
+  .pin .glyphe { display: none; width: 11px; height: 11px; color: var(--encre); }
+  .vA.zoom-pres .pin .glyphe { display: block; }
+  .pin .glyphe svg { width: 100%; height: 100%; display: block; }
+
+  /* fermé : le trait passe au graphite, l'anneau respire encore (jamais 40 %) */
+  .pin.ferme { border-color: var(--graphite); opacity: .6; }
+  .vA.zoom-pres .pin.ferme .glyphe { color: var(--graphite); }
+
+  /* recommandé par le cercle : le disque ivoire au centre — le seul plein clair */
+  .pin.reco::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--encre); position: absolute;
+  }
+  .vA.zoom-pres .pin.reco::before { width: 12px; height: 12px; }
+  .vA.zoom-pres .pin.reco .glyphe { color: #211d19; z-index: 1; width: 9px; height: 9px; } /* glyphe inversé dans le disque */
+  .pin.voix2 { border-width: 3.5px; }
+
+  /* sélectionné : LE seul halo du système */
+  .pin.actif {
+    transform: translate(-50%, -50%) scale(1.3); border-width: 3.5px; z-index: 5;
+    box-shadow: 0 0 0 1px rgba(13,12,10,.95), 0 0 12px color-mix(in srgb, var(--c, var(--marque)) 35%, transparent);
+  }
+  .scene.selection .pin:not(.actif) { opacity: .55; }
+  .scene.selection .pin.ferme:not(.actif) { opacity: .35; }
+
+  /* émoji marqué : posé sur l'assise commune (recommandation) ou libre */
+  .pin.emoji { font-size: 13px; line-height: 1; border-color: transparent; }
+  .emoji-libre .pin.emoji { background: none; box-shadow: none; }
+
+  /* le label : promu porteur des faits */
+  .etiquette {
+    position: absolute; transform: translate(-50%, 0); margin-top: 13px;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap;
+    font-size: 10.5px; background: rgba(20,18,14,.85); padding: 2px 5px; border-radius: var(--rayon);
+  }
+  .etiquette .g9 { width: 9px; height: 9px; color: var(--graphite); flex: none; }
+  .etiquette .g9 svg { width: 100%; height: 100%; display: block; }
+  .etiquette .nom { color: var(--encre); }
+  .etiquette .nom.vu { color: var(--graphite); }   /* déjà vu : la valeur, pas un halo */
+  .etiquette .meta { color: var(--graphite); font-size: 9px; }
+  .zoom-loin .etiquette { display: none; }
+  /* variante A : le glyphe vit dans l'anneau, pas en préfixe du label */
+  .vA.zoom-pres .etiquette .g9 { display: none; }
+
+  /* couleurs des potes (interrupteur) : l'anneau du lieu recommandé prend la couleur du pote */
+  /* (les teintes viennent des pastilles du picker) */
+  /* mode « contour = qui a posté » : plus de disque ivoire — la couleur du trait EST la voix */
+  .sans-disque .pin.reco::before { display: none; }
+  .sans-disque.vA.zoom-pres .pin.reco .glyphe { color: var(--encre); width: 11px; height: 11px; z-index: auto; }
+
+  /* ── l'avant / après ── */
+  .rangée { display: flex; gap: 26px; align-items: center; justify-content: center; margin: 22px 0 6px; }
+  .avant-bloc { text-align: center; }
+  .avant-bloc .lbl { font-size: 10px; color: var(--encre-2); margin-top: 26px; }
+  .demo { position: relative; width: 90px; height: 64px; margin: 0 auto; }
+  /* réplique du pin ACTUEL : anneau + point + pastille satellite + douane */
+  .vieux { position: absolute; left: 50%; top: 55%; width: 18px; height: 18px; border-radius: 50%;
+    border: 2.5px solid var(--marque); transform: translate(-50%, -50%);
+    background: radial-gradient(circle at center, var(--marque) 0 2.6px, transparent 3.2px); }
+  .vieux .pastille { position: absolute; top: -8px; right: -8px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--encre); border: 1px solid #000; display: flex; align-items: center; justify-content: center; color: #211d19; }
+  .vieux .pastille svg { width: 11px; height: 11px; }
+  .vieux .douane { position: absolute; bottom: -7px; right: -9px; font-size: 8px; font-weight: 700;
+    background: var(--encre); color: #211d19; padding: 1px 3px; border-radius: var(--rayon); transform: rotate(-6deg); }
+  .note { max-width: 420px; font-size: 10.5px; color: var(--encre-2); line-height: 1.55; margin-top: 14px; }
+</style>
+</head>
+<body>
+  <h1>le tampon rond.</h1>
+  <div class="sous">banc d'essai des épingles — v001 · rien n'est branché dans l'app</div>
+
+  <div class="commandes">
+    <button class="chip" id="bVar">variante : A — anneau habité</button>
+    <button class="chip" id="bZoom">zoom : quartier</button>
+    <button class="chip" id="bCoul">couleur : monochrome</button>
+    <button class="chip" id="bEmoji">émoji : sur l'assise</button>
+    <button class="chip" id="bSel">sélection : off</button>
+  </div>
+
+  <div class="scene vA zoom-pres" id="scene"></div>
+
+  <div class="rangée">
+    <div class="avant-bloc">
+      <div class="demo"><div class="vieux"><span class="pastille" data-g="verre"></span><span class="douane">IT</span></div></div>
+      <div class="lbl">avant</div>
+    </div>
+    <div class="avant-bloc">
+      <div class="demo"><div class="pin" style="left:50%;top:55%"></div></div>
+      <div class="lbl">après — dézoomé</div>
+    </div>
+    <div class="avant-bloc">
+      <div class="demo"><div class="pin" style="left:50%;top:55%;width:22px;height:22px"><span class="glyphe" style="display:block" data-g="verre"></span></div></div>
+      <div class="lbl">après — quartier (A)</div>
+    </div>
+    <div class="avant-bloc">
+      <div class="demo"><div class="pin reco" style="left:50%;top:55%"></div></div>
+      <div class="lbl">recommandé</div>
+    </div>
+  </div>
+
+  <p class="note">
+    l'anneau : trait 3px à la couleur du thème, assise charbon (le vide poinçonne la poussière), liseré de
+    découpe 1px. fermé = trait graphite. recommandé par le cercle = disque ivoire au centre (2+ voix : trait épais).
+    le nom, le type (variante B), la cuisine « ·IT » et les voix « ×3 » vivent au label. déjà vu = nom graphite.
+    sélectionné = le seul halo. l'émoji garde sa liberté sur l'assise commune.
+  </p>
+
+<script>
+  // ── les glyphes monoline, redessinés pour 9-11px : 2-3 traits max ──
+  const GLYPHES = {
+    verre:  '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h8L6 7z"/><path d="M6 7v3M4 10h4"/></svg>',
+    tasse:  '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="M8 5h2v2H8"/></svg>',
+    assiette:'<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="6" r="4.5"/><circle cx="6" cy="6" r="1.6"/></svg>',
+    note:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.5V2.5l5 1v6"/><circle cx="3" cy="9.5" r="1.5"/><circle cx="8" cy="9.5" r="1.5"/></svg>',
+    cornet: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5h5L6 11z"/><path d="M3.5 5a2.5 2.5 0 0 1 5 0"/></svg>',
+    cloche: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5c1-1 1-3 1-4a2.5 2.5 0 0 1 5 0c0 1 0 3 1 4z"/><path d="M5 10.5h2"/></svg>',
+  }
+  document.querySelectorAll('[data-g]').forEach(el => { el.innerHTML = GLYPHES[el.dataset.g] })
+
+  // ── la scène : rues fantômes + poussière d'encre + 40 tampons ──
+  const scene = document.getElementById('scene')
+  const W = scene.clientWidth, H = 560
+
+  // aléa déterministe : la même scène à chaque rechargement (on compare A/B à pins constants)
+  let graine = 47
+  const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647 }
+
+  // le fond : quelques rues au graphite + la poussière GPU (points ivoire 2-4px)
+  let fond = `<svg class="fond" width="${W}" height="${H}">`
+  fond += `<path d="M0 ${H*0.28} L${W} ${H*0.16}" stroke="#1e1b16" stroke-width="7"/>`
+  fond += `<path d="M${W*0.3} 0 L${W*0.52} ${H}" stroke="#1e1b16" stroke-width="5"/>`
+  fond += `<path d="M0 ${H*0.72} Q ${W*0.5} ${H*0.62} ${W} ${H*0.78}" stroke="#1e1b16" stroke-width="4" fill="none"/>`
+  fond += `<path d="M${W*0.75} 0 L${W*0.62} ${H}" stroke="#191713" stroke-width="3"/>`
+  for (let i = 0; i < 90; i++) {
+    const x = alea() * W, y = alea() * H, r = 1 + alea() * 1
+    fond += `<circle cx="${x}" cy="${y}" r="${r}" fill="#efe9d8" opacity="${0.25 + alea() * 0.3}"/>`
+  }
+  fond += '</svg>'
+  scene.innerHTML = fond
+
+  // les couleurs perso des potes (pastilles du picker)
+  const POTES = ['#a8322a', '#3e8e6e', '#c99a2e', '#bb2649', '#6667ab']
+  const TYPES = Object.keys(GLYPHES)
+  const NOMS = ['Le Tambour', 'Frog Hop House', "Harry's Bar", 'Chez Micheline', 'Le Syndicat', 'Aux Deux Amis', 'Combat', 'Le Perchoir']
+
+  // 40 spots : 60 % ouverts simples, 15 % fermés, 15 % recommandés, 2 émojis, 1 sélectionné
+  const pins = []
+  for (let i = 0; i < 40; i++) {
+    const x = 6 + alea() * 88, y = 5 + alea() * 90
+    const t = TYPES[Math.floor(alea() * TYPES.length)]
+    const de = alea()
+    pins.push({
+      x, y, type: t,
+      ferme: de < 0.15,
+      reco: de >= 0.15 && de < 0.30,
+      voix2: de >= 0.15 && de < 0.21,
+      emoji: i === 11 ? '🍷' : i === 29 ? '💃' : null,
+      pote: POTES[i % POTES.length],
+      // mode « qui a posté » : ~1 spot sur 3 vient d'un pote (les recommandés + quelques autres)
+      auteur: de >= 0.15 && de < 0.38 ? POTES[i % POTES.length] : null,
+      label: null, vu: false,
+    })
+  }
+  // ~8 labels anti-collision simulés : les recommandés d'abord, puis des ouverts
+  let li = 0
+  for (const p of pins) { if (p.reco && li < NOMS.length) { p.label = NOMS[li]; p.vu = li === 2; li++ } }
+  for (const p of pins) { if (!p.label && !p.ferme && !p.emoji && li < NOMS.length) { p.label = NOMS[li]; p.vu = li === 6; li++ } }
+  pins[5].actif = false // (la sélection se pose à l'interrupteur)
+
+  const conteneur = document.createElement('div')
+  scene.appendChild(conteneur)
+
+  function dessiner() {
+    conteneur.innerHTML = ''
+    for (const p of pins) {
+      const el = document.createElement('div')
+      el.className = 'pin' + (p.ferme ? ' ferme' : '') + (p.reco ? ' reco' : '') + (p.voix2 ? ' voix2' : '') + (p.emoji ? ' emoji' : '') + (p.actif ? ' actif' : '')
+      el.style.left = p.x + '%'
+      el.style.top = p.y + '%'
+      if (p.emoji) el.textContent = p.emoji
+      else {
+        const g = document.createElement('span')
+        g.className = 'glyphe'
+        g.innerHTML = GLYPHES[p.type]
+        el.appendChild(g)
+      }
+      // mode 1 : seuls les lieux RECOMMANDÉS portent la couleur de la voix (+ disque)
+      // mode 2 : plus de disque — le CONTOUR dit qui a posté (moi = thème, pote = sa couleur)
+      if (modeCouleur === 1 && p.reco) el.style.setProperty('--c', p.pote)
+      if (modeCouleur === 2 && p.auteur && !p.ferme) el.style.setProperty('--c', p.auteur)
+      conteneur.appendChild(el)
+      if (p.label) {
+        const et = document.createElement('div')
+        et.className = 'etiquette'
+        et.style.left = p.x + '%'
+        et.style.top = p.y + '%'
+        et.innerHTML = `<span class="g9">${GLYPHES[p.type]}</span><span class="nom${p.vu ? ' vu' : ''}">${p.label}</span>` +
+          (p.voix2 ? '<span class="meta">×3</span>' : '') + (p.type === 'assiette' ? '<span class="meta">·IT</span>' : '')
+        conteneur.appendChild(et)
+      }
+    }
+  }
+
+  // ── les interrupteurs ──
+  let vA = true, pres = true, modeCouleur = 0, emojiAssise = true, sel = false
+  const bVar = document.getElementById('bVar'), bZoom = document.getElementById('bZoom'),
+        bCoul = document.getElementById('bCoul'), bEmoji = document.getElementById('bEmoji'),
+        bSel = document.getElementById('bSel')
+  function appliquer() {
+    scene.classList.toggle('vA', vA)
+    scene.classList.toggle('zoom-pres', pres)
+    scene.classList.toggle('zoom-loin', !pres)
+    scene.classList.toggle('emoji-libre', !emojiAssise)
+    scene.classList.toggle('selection', sel)
+    scene.classList.toggle('sans-disque', modeCouleur === 2)
+    pins[5].actif = sel
+    bVar.textContent = 'variante : ' + (vA ? 'A — anneau habité' : 'B — anneau muet')
+    bZoom.textContent = 'zoom : ' + (pres ? 'quartier' : 'dézoomé')
+    bCoul.textContent = 'couleur : ' +
+      (modeCouleur === 0 ? 'monochrome' : modeCouleur === 1 ? 'potes sur recommandés' : 'contour = qui a posté')
+    bEmoji.textContent = 'émoji : ' + (emojiAssise ? "sur l'assise" : 'libre')
+    bSel.textContent = 'sélection : ' + (sel ? 'on' : 'off')
+    for (const b of [bVar, bZoom, bCoul, bEmoji, bSel]) b.classList.add('on')
+    dessiner()
+  }
+  bVar.onclick = () => { vA = !vA; appliquer() }
+  bZoom.onclick = () => { pres = !pres; appliquer() }
+  bCoul.onclick = () => { modeCouleur = (modeCouleur + 1) % 3; appliquer() }
+  bEmoji.onclick = () => { emojiAssise = !emojiAssise; appliquer() }
+  bSel.onclick = () => { sel = !sel; appliquer() }
+  appliquer()
+</script>
+</body>
+</html>

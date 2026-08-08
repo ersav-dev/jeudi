@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — les plans sur le croquis (proto)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit:#14120e; --nuit-2:#1b1813;
+    --encre:#efe9d8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.36);
+    --cire:#a8322a; --rayon:3px;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.05'/%3E%3C/svg%3E");
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--nuit); color:var(--encre);
+    font-family:'IBM Plex Mono',monospace; -webkit-font-smoothing:antialiased;
+  }
+  body::before{content:'';position:fixed;inset:0;background:var(--grain);pointer-events:none}
+  .page{max-width:430px;margin:0 auto;padding:18px 16px 60px}
+  .titre{font-family:Georgia,serif;font-style:italic;font-size:26px;margin:6px 0 2px}
+  .sous{font-size:10px;letter-spacing:1.5px;color:var(--encre-3);text-transform:uppercase;margin-bottom:14px}
+
+  /* ── le croquis ─────────────────────────────────────────────── */
+  .croquis{
+    position:relative;border:1px solid rgba(239,233,216,.25);border-radius:var(--rayon);
+    background:var(--nuit-2);overflow:hidden;margin-bottom:16px;
+  }
+  .croquis svg{display:block;width:100%;height:auto}
+  .cq-trait{fill:none;stroke:rgba(239,233,216,.4);stroke-width:1.6;stroke-linecap:round}
+  .cq-seine{fill:none;stroke:rgba(239,233,216,.28);stroke-width:7;stroke-linecap:round}
+  .cq-nom{font-family:'Caveat',cursive;font-size:15px;fill:var(--encre-3)}
+  .cq-toi{font-family:'Caveat',cursive;font-size:16px;fill:var(--encre-2)}
+
+  /* la pastille : à l'encre ; CELLE qu'on regarde passe à la cire */
+  .pastille{cursor:pointer}
+  .pastille circle{
+    fill:var(--nuit); stroke:var(--encre-2); stroke-width:1.6;
+    transition:all .25s cubic-bezier(.4,0,.2,1);
+  }
+  .pastille text{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;
+    fill:var(--encre-2);text-anchor:middle;dominant-baseline:central;
+    transition:fill .25s;
+  }
+  .pastille.on circle{fill:var(--cire);stroke:var(--cire);r:12}
+  .pastille.on text{fill:#fff}
+  .pastille.on .halo{animation:pulse 2s infinite}
+  .halo{fill:none;stroke:var(--cire);stroke-width:1;opacity:0}
+  @keyframes pulse{0%{r:12;opacity:.5}100%{r:22;opacity:0}}
+
+  /* ── les cartes de plan ─────────────────────────────────────── */
+  .plan{
+    border:1px solid rgba(239,233,216,.25);border-radius:var(--rayon);
+    background:var(--nuit-2);padding:14px;margin-bottom:12px;cursor:pointer;
+    transition:border-color .25s;
+  }
+  .plan.on{border-color:rgba(239,233,216,.7)}
+  .plan-tete{display:flex;align-items:baseline;gap:10px}
+  .plan-jeton{
+    flex:none;width:22px;height:22px;border-radius:50%;
+    border:1.6px solid var(--encre-2);color:var(--encre-2);
+    display:grid;place-items:center;font-size:12px;
+    transition:all .25s;transform:rotate(-4deg);
+  }
+  .plan.on .plan-jeton{background:var(--cire);border-color:var(--cire);color:#fff}
+  .plan-nom{font-family:Georgia,serif;font-style:italic;font-size:20px}
+  .plan-meta{font-size:11px;color:var(--encre-3);margin:4px 0 10px 32px}
+  .plan-meta b{color:var(--encre-2);font-weight:500}
+  .spot{border-top:1px solid rgba(239,233,216,.14);padding:8px 0 8px 32px}
+  .spot-nom{font-family:Georgia,serif;font-size:16px}
+  .spot-ligne{display:block;font-size:11px;color:var(--encre-3);margin-top:2px}
+  .plan-pied{display:flex;justify-content:flex-end;margin-top:6px}
+  .va{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    background:none;border:1px solid rgba(239,233,216,.5);border-radius:var(--rayon);
+    color:var(--encre);padding:8px 14px;cursor:pointer;
+  }
+  .va:active{transform:translateY(1px)}
+  .note{font-family:'Caveat',cursive;font-size:17px;color:var(--encre-2);text-align:center;margin-top:18px}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);
+    background:var(--encre);color:var(--nuit);font-size:12px;padding:10px 16px;
+    border-radius:var(--rayon);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    max-width:88vw;text-align:center;
+  }
+  .toast.la{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="titre">je sais pas.</div>
+  <div class="sous">trois plans tirés du carnet — pique celui qui te parle</div>
+
+  <!-- ── le croquis de Paris : les 3 plans + toi ─────────────── -->
+  <div class="croquis">
+    <svg viewBox="0 0 400 240" aria-label="croquis de Paris, trois plans et toi">
+      <!-- la Seine, d'un trait paresseux -->
+      <path class="cq-seine" d="M -10 150 C 60 138, 120 128, 185 132 C 240 136, 262 158, 300 172 C 340 186, 375 184, 412 176"/>
+      <!-- monuments à l'encre -->
+      <path class="cq-trait" d="M 78 120 l 7 -22 l 7 22 M 80 113 l 10 0"/><!-- tour eiffel -->
+      <text class="cq-nom" x="62" y="138">tour eiffel</text>
+      <path class="cq-trait" d="M 196 42 a 8 8 0 0 1 16 0 l 0 6 l -16 0 z"/><!-- sacré-cœur -->
+      <text class="cq-nom" x="178" y="34">montmartre</text>
+      <path class="cq-trait" d="M 212 132 l 8 -10 l 8 10 z"/><!-- notre-dame -->
+      <path class="cq-trait" d="M 318 148 a 7 7 0 1 1 0 .1"/><!-- bastille -->
+      <text class="cq-nom" x="300" y="128">bastille</text>
+      <text class="cq-nom" x="140" y="205">montparnasse</text>
+
+      <!-- toi -->
+      <g>
+        <path class="cq-trait" d="M 150 178 l 10 10 M 160 178 l -10 10" style="stroke:var(--encre)"/>
+        <text class="cq-toi" x="168" y="192">toi</text>
+      </g>
+
+      <!-- les pastilles des plans -->
+      <g class="pastille on" data-plan="1" transform="translate(186,92)">
+        <circle class="halo" r="12"/><circle r="11"/><text>1</text>
+      </g>
+      <g class="pastille" data-plan="2" transform="translate(330,120)">
+        <circle class="halo" r="12"/><circle r="11"/><text>2</text>
+      </g>
+      <g class="pastille" data-plan="3" transform="translate(238,110)">
+        <circle class="halo" r="12"/><circle r="11"/><text>3</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ── les 3 cartes ────────────────────────────────────────── -->
+  <div class="plan on" data-plan="1">
+    <div class="plan-tete"><span class="plan-jeton">1</span><span class="plan-nom">rue du Quatre Septembre</span></div>
+    <div class="plan-meta"><b>à 12 min de toi</b> · sans détour · ton spot, un plan B à côté</div>
+    <div class="spot"><span class="spot-nom">Chimère</span><span class="spot-ligne">le spot · resto · 378 m de toi</span></div>
+    <div class="spot"><span class="spot-nom">The Shed</span><span class="spot-ligne">le plan B · tranquilo · à 1 min du premier</span></div>
+    <div class="plan-pied"><button class="va">celui-là. →</button></div>
+  </div>
+
+  <div class="plan" data-plan="2">
+    <div class="plan-tete"><span class="plan-jeton">2</span><span class="plan-nom">passage de la Main d'Or</span></div>
+    <div class="plan-meta"><b>à 25 min de toi</b> · sans se presser · ton spot, un plan B à côté</div>
+    <div class="spot"><span class="spot-nom">Menekse</span><span class="spot-ligne">le spot · resto · 3,9 km de toi</span></div>
+    <div class="spot"><span class="spot-nom">Badaboum</span><span class="spot-ligne">le plan B · à 3 min du premier</span></div>
+    <div class="plan-pied"><button class="va">celui-là. →</button></div>
+  </div>
+
+  <div class="plan" data-plan="3">
+    <div class="plan-tete"><span class="plan-jeton">3</span><span class="plan-nom">autour de Rooftop National</span></div>
+    <div class="plan-meta"><b>à 18 min de toi</b> · sans se presser · ton spot, un plan B à côté</div>
+    <div class="spot"><span class="spot-nom">Rooftop National</span><span class="spot-ligne">le spot · tranquilo · 1,4 km de toi</span></div>
+    <div class="spot"><span class="spot-nom">Au Pied de Cochon</span><span class="spot-ligne">le plan B · resto · ferme à 0h</span></div>
+    <div class="plan-pied"><button class="va">celui-là. →</button></div>
+  </div>
+
+  <p class="note">tape une pastille sur le croquis, ou une carte — les deux se répondent.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // la pastille et la carte se répondent — UNE cire à la fois (la DA)
+  const choisir = (n) => {
+    document.querySelectorAll('.pastille').forEach(p => p.classList.toggle('on', p.dataset.plan === n))
+    document.querySelectorAll('.plan').forEach(p => p.classList.toggle('on', p.dataset.plan === n))
+  }
+  document.querySelectorAll('.pastille').forEach(p => {
+    p.addEventListener('click', () => {
+      choisir(p.dataset.plan)
+      document.querySelector(`.plan[data-plan="${p.dataset.plan}"]`)
+        .scrollIntoView({behavior:'smooth', block:'nearest'})
+    })
+  })
+  document.querySelectorAll('.plan').forEach(p => {
+    p.addEventListener('click', (e) => {
+      if (e.target.closest('.va')) return
+      choisir(p.dataset.plan)
+    })
+  })
+  // « celui-là. » : dans l'app, ça ouvrira la FICHE du spot principal
+  // (avec le plan B rappelé en bandeau) — ici, on le dit
+  const NOMS = {1:['Chimère','The Shed'],2:['Menekse','Badaboum'],3:['Rooftop National','Au Pied de Cochon']}
+  document.querySelectorAll('.va').forEach(b => {
+    b.addEventListener('click', () => {
+      const n = b.closest('.plan').dataset.plan
+      choisir(n)
+      const t = document.getElementById('toast')
+      t.textContent = `→ ouvre la fiche de ${NOMS[n][0]} · en secours : ${NOMS[n][1]}`
+      t.classList.add('la')
+      clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('la'), 2600)
+    })
+  })
+</script>
+</body>
+</html>

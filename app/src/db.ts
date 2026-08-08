@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 import { adresseDepuis } from './nominatim'
 import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
+import { extensionClip, normaliserReglages, type ReglagesRendu } from './super8'
+import { parserGeoJson, type EntreeImport } from './takeout'
 
 // ── Le modèle de données de jeudi ──────────────────────────────
 // La fondation : utilisateur → carnet → lieu (visibilité + envies).
@@ -65,6 +67,23 @@ export interface PhotoLieu {
   visibleLe?: string
   /** qui l'a prise (id profil) — posé par la base à l'écriture */
   auteurId?: string
+  // ── LE SUPER 8 (migration 0011) : une photo qui bouge. Le blob/url
+  // de la photo est alors son PHOTOGRAMME ; la vidéo vit à côté, dans
+  // le bucket `clips`. Le rendu (chambre noire) est un JSON projeté à
+  // la lecture — jamais cuit dans le fichier.
+  /** la vidéo réencodée (10 s max), en local avant la sync */
+  clipBlob?: Blob
+  /** la vidéo dans le cloud : URL signée à l'affichage */
+  clipUrl?: string
+  clipMime?: string
+  clipDureeS?: number
+  /** grain / vignette / teinte / tremblement — modifiable toujours */
+  reglagesRendu?: ReglagesRendu
+}
+
+/** cette photo bouge-t-elle ? (le photogramme d'un clip super 8) */
+export function estClip(p: PhotoLieu): boolean {
+  return !!(p.clipBlob || p.clipUrl)
 }
 
 /** l'ancien générique 'lieu' se lit « salle » partout */
@@ -134,6 +153,10 @@ export interface Lieu {
   tampon?: { v: 'valide' | 'bof'; x: number; y: number; qui?: string; date?: string }
   /** les conditions optimales recommandées (sous-ensemble des envies/compagnies, marqué à l'appui long) */
   recos?: string[]
+  /** le rangement PERSO (migration 0012) : libre, privé, jamais une mécanique
+   *  partagée — les envies restent la seule langue commune. À l'import
+   *  Takeout, le nom de la liste Google devient l'étiquette de ses spots. */
+  etiquettes?: string[]
   /** horaires d'ouverture : [ouverture, fermeture] en heures décimales (0.5 = 30 min).
    *  fermeture > 24 = après minuit (ex: [19, 26] = 19h → 2h). une borne à null =
    *  "je sais pas" pour cette borne. undefined = horaires inconnus tout court. */
@@ -281,6 +304,7 @@ interface LigneLieu {
   tampon: Lieu['tampon'] | null
   derniere_validation: string | null
   recos?: string[] | null
+  etiquettes?: string[] | null
   cree_le: string
 }
 function ligneVersLieu(r: LigneLieu): Lieu {
@@ -314,6 +338,8 @@ function ligneVersLieu(r: LigneLieu): Lieu {
     propreteWc: r.proprete_wc ?? undefined,
     // colonne créée par la migration 0003 : absente en base = undefined
     recos: Array.isArray(r.recos) ? r.recos : undefined,
+    // colonne créée par la migration 0012 : le rangement perso
+    etiquettes: Array.isArray(r.etiquettes) ? r.etiquettes : undefined,
   }
 }
 function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
@@ -341,9 +367,10 @@ function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
     horaire_ferm: l.horaires?.[1] ?? null,
     tampon: l.tampon ?? null,
     derniere_validation: l.derniereValidation ?? null,
-    // text[] côté base (0003). Si la colonne n'existe pas encore, l'écriture
-    // échoue avec « column recos… » → pousserLieuCloud retente sans elle.
+    // text[] côté base (0003/0012). Si une colonne n'existe pas encore,
+    // l'écriture échoue avec « column … » → pousserLieuCloud retente sans.
     recos: l.recos ?? null,
+    etiquettes: l.etiquettes ?? null,
   }
 }
 
@@ -354,6 +381,9 @@ function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
 // SIGNÉES à la lecture. createSignedUrl marche AUSSI sur un bucket public →
 // le code est compatible avant ET après la migration.
 const BUCKET_PHOTOS = 'photos'
+// les clips super 8 vivent dans LEUR bucket (0011) : le jour où l'egress
+// pique, ils basculent sur R2 en changeant une URL de base, pas en triant
+const BUCKET_CLIPS = 'clips'
 const TTL_SIGNATURE_S = 3600 // 1 h
 
 /** retrouve le CHEMIN bucket depuis une valeur stockée (compat avant/après 0003) :
@@ -370,8 +400,20 @@ function cheminDepuis(valeur: string): string | null {
   return valeur
 }
 
+/** pareil, pour le bucket `clips` (les vidéos super 8) */
+function cheminClipDepuis(valeur: string): string | null {
+  if (valeur.startsWith('blob:') || valeur.startsWith('data:')) return null
+  if (/^https?:\/\//i.test(valeur)) {
+    const m = valeur.match(/\/object\/(?:public|sign|authenticated)\/clips\/([^?]+)/)
+    return m ? decodeURIComponent(m[1]) : null
+  }
+  return valeur
+}
+
 // petit cache mémoire des signatures : chemin → { url signée, expiration }
 const signatures = new Map<string, { url: string; expire: number }>()
+// le même cache pour le bucket `clips` (chemins identiques, bucket différent)
+const signaturesClips = new Map<string, { url: string; expire: number }>()
 
 /** URL affichable d'un fichier du bucket (signée, TTL 1 h, mise en cache).
  *  null si hors-ligne / chemin inconnu — l'appelant garde sa valeur de repli. */
@@ -412,31 +454,50 @@ async function televerserPhoto(blob: Blob, chemin: string): Promise<string | nul
   return data?.path ?? chemin
 }
 
+/** téléverse une vidéo super 8 dans MON dossier du bucket `clips` */
+async function televerserClip(blob: Blob, chemin: string): Promise<string | null> {
+  if (!monId) return null
+  const { data, error } = await supabase.storage
+    .from(BUCKET_CLIPS)
+    .upload(chemin, blob, { upsert: true, contentType: blob.type || 'video/webm' })
+  if (error) {
+    console.error('[jeudi] upload clip KO', chemin, error)
+    return null
+  }
+  signaturesClips.delete(chemin)
+  return data?.path ?? chemin
+}
+
 /** ménage Storage d'un lieu : supprime les fichiers de `<monId>/<lieuId>/`
  *  qui ne sont plus référencés (`gardes` = chemins encore utilisés ; sans
- *  gardes → tout le dossier part). Best-effort : un échec ne casse rien. */
-async function nettoyerStorageLieu(lieuId: string, gardes?: Set<string>): Promise<void> {
+ *  gardes → tout le dossier part). Best-effort : un échec ne casse rien.
+ *  `bucket` : les photos par défaut, les clips super 8 sur demande. */
+async function nettoyerStorageLieu(
+  lieuId: string,
+  gardes?: Set<string>,
+  bucket: string = BUCKET_PHOTOS,
+): Promise<void> {
   if (!monId) return
   const dossier = `${monId}/${lieuId}`
   try {
-    const { data, error } = await supabase.storage.from(BUCKET_PHOTOS).list(dossier)
+    const { data, error } = await supabase.storage.from(bucket).list(dossier)
     if (error || !data) {
-      if (error) console.warn('[jeudi] listage Storage KO', dossier, error)
+      if (error) console.warn('[jeudi] listage Storage KO', bucket, dossier, error)
       return
     }
     const aSupprimer = data
       .map((f) => `${dossier}/${f.name}`)
       .filter((ch) => !gardes || !gardes.has(ch))
     if (!aSupprimer.length) return
-    const { error: eSuppr } = await supabase.storage.from(BUCKET_PHOTOS).remove(aSupprimer)
-    if (eSuppr) console.warn('[jeudi] ménage Storage KO', dossier, eSuppr)
+    const { error: eSuppr } = await supabase.storage.from(bucket).remove(aSupprimer)
+    if (eSuppr) console.warn('[jeudi] ménage Storage KO', bucket, dossier, eSuppr)
   } catch (e) {
-    console.warn('[jeudi] ménage Storage KO', dossier, e)
+    console.warn('[jeudi] ménage Storage KO', bucket, dossier, e)
   }
 }
 
-/** une ligne de la table `photos` telle qu'on l'écrit (les trois dernières
- *  colonnes viennent de la migration 0010) */
+/** une ligne de la table `photos` telle qu'on l'écrit (dates : migration
+ *  0010 · colonnes clip : migration 0011) */
 interface LignePhoto {
   lieu_id: string
   type: string
@@ -445,24 +506,48 @@ interface LignePhoto {
   prise_le?: string | null
   visible_le?: string | null
   auteur_id?: string | null
+  clip_path?: string | null
+  clip_mime?: string | null
+  clip_duree_s?: number | null
+  reglages_rendu?: ReglagesRendu | null
 }
 
-/** insère les lignes photo — et retombe sur le schéma d'AVANT la 0010 si la
- *  migration n'est pas passée (colonnes de date absentes, ou type 'soir'
- *  refusé par le check de la 0008). Le carnet continue de marcher sans dates :
- *  elles arriveront le jour où le SQL est collé, sur les photos suivantes.
- *  En repli, un tirage du soir est rangé en « salle » — mieux qu'une photo
- *  perdue. */
+/** insère les lignes photo — avec deux replis en couches si les migrations
+ *  ne sont pas passées :
+ *  · 0011 absente (colonnes clip) → on retire les champs clip : le
+ *    photogramme survit en simple tirage, la vidéo restera locale ;
+ *  · 0010 absente (dates, type 'soir') → on retire aussi les dates et
+ *    'soir' devient « salle » — mieux qu'une photo perdue.
+ *  Le carnet continue de marcher ; tout arrivera le jour où le SQL est collé. */
 async function insererPhotos(lignes: LignePhoto[]): Promise<boolean> {
   const { error } = await supabase.from('photos').insert(lignes)
   if (!error) return true
-  const dit = `${error.message ?? ''} ${error.details ?? ''}`
-  if (!/prise_le|visible_le|auteur_id|photos_type_check/i.test(dit)) {
+  let dit = `${error.message ?? ''} ${error.details ?? ''}`
+  let restantes = lignes
+  if (/clip_path|clip_mime|clip_duree_s|reglages_rendu/i.test(dit)) {
+    console.warn('[jeudi] migration 0011 pas passée — les clips restent locaux', error.message)
+    restantes = lignes.map((l) => ({
+      lieu_id: l.lieu_id,
+      type: l.type,
+      url: l.url,
+      ordre: l.ordre,
+      prise_le: l.prise_le,
+      visible_le: l.visible_le,
+      auteur_id: l.auteur_id,
+    }))
+    const { error: e1 } = await supabase.from('photos').insert(restantes)
+    if (!e1) return true
+    dit = `${e1.message ?? ''} ${e1.details ?? ''}`
+    if (!/prise_le|visible_le|auteur_id|photos_type_check/i.test(dit)) {
+      console.error('[jeudi] syncPhotos insert KO (repli 0011) — anciennes lignes conservées', e1)
+      return false
+    }
+  } else if (!/prise_le|visible_le|auteur_id|photos_type_check/i.test(dit)) {
     console.error('[jeudi] syncPhotos insert KO — anciennes lignes conservées', error)
     return false
   }
-  console.warn('[jeudi] migration 0010 pas passée — les tirages partent sans date', error.message)
-  const repli = lignes.map((l) => ({
+  console.warn('[jeudi] migration 0010 pas passée — les tirages partent sans date')
+  const repli = restantes.map((l) => ({
     lieu_id: l.lieu_id,
     type: l.type === 'soir' ? 'salle' : l.type,
     url: l.url,
@@ -493,6 +578,17 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
       // test) → stockée telle quelle (compat) ; blob:/data: → rien à stocker
       valeur = cheminDepuis(p.url) ?? (/^https?:\/\//i.test(p.url) ? p.url : undefined)
     }
+    // la vidéo du clip part dans SON bucket ; en base on stocke le CHEMIN
+    let clip: string | undefined
+    if (p.clipBlob) {
+      clip =
+        (await televerserClip(
+          p.clipBlob,
+          `${monId}/${lieu.id}/${i}-clip.${extensionClip(p.clipMime ?? p.clipBlob.type)}`,
+        )) ?? undefined
+    } else if (p.clipUrl) {
+      clip = cheminClipDepuis(p.clipUrl) ?? undefined
+    }
     if (valeur)
       lignes.push({
         lieu_id: lieu.id,
@@ -505,6 +601,10 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
         prise_le: p.priseLe ?? null,
         visible_le: p.visibleLe ?? null,
         auteur_id: p.auteurId ?? monId,
+        clip_path: clip ?? null,
+        clip_mime: clip ? (p.clipMime ?? null) : null,
+        clip_duree_s: clip ? (p.clipDureeS ?? null) : null,
+        reglages_rendu: clip ? (p.reglagesRendu ?? null) : null,
       })
     i++
   }
@@ -523,6 +623,11 @@ async function syncPhotosLieu(lieu: Lieu): Promise<void> {
     if (del.error) console.error('[jeudi] syncPhotos delete KO (doublons possibles)', del.error)
   }
   await nettoyerStorageLieu(lieu.id, new Set(lignes.map((l) => l.url)))
+  await nettoyerStorageLieu(
+    lieu.id,
+    new Set(lignes.map((l) => l.clip_path).filter((c): c is string => !!c)),
+    BUCKET_CLIPS,
+  )
 }
 
 /** charge les photos (table `photos`) pour une liste d'ids de lieux → map
@@ -542,6 +647,10 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
     prise_le?: string | null
     visible_le?: string | null
     auteur_id?: string | null
+    clip_path?: string | null
+    clip_mime?: string | null
+    clip_duree_s?: number | string | null
+    reglages_rendu?: unknown
   }[]
   // 1er passage : signer en UN lot les chemins pas (ou plus) en cache
   const aSigner: string[] = []
@@ -568,6 +677,31 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
       /* hors-ligne : on servira la valeur brute ci-dessous */
     }
   }
+  // même lot pour les vidéos super 8 (bucket `clips`)
+  const clipsASigner: string[] = []
+  for (const r of lignes) {
+    const ch = typeof r.clip_path === 'string' ? cheminClipDepuis(r.clip_path) : null
+    if (!ch) continue
+    const connue = signaturesClips.get(ch)
+    if ((!connue || connue.expire <= Date.now()) && !clipsASigner.includes(ch)) clipsASigner.push(ch)
+  }
+  if (clipsASigner.length) {
+    try {
+      const { data: signees } = await supabase.storage
+        .from(BUCKET_CLIPS)
+        .createSignedUrls(clipsASigner, TTL_SIGNATURE_S)
+      for (const s of signees ?? []) {
+        if (s.path && s.signedUrl) {
+          signaturesClips.set(s.path, {
+            url: s.signedUrl,
+            expire: Date.now() + (TTL_SIGNATURE_S - 60) * 1000,
+          })
+        }
+      }
+    } catch {
+      /* hors-ligne : le photogramme s'affiche, le projecteur attendra */
+    }
+  }
   // 2e passage : construire la map avec l'URL signée (ou la valeur brute :
   // URL externe de test, ou chemin nu si la signature a échoué)
   for (const r of lignes) {
@@ -575,12 +709,23 @@ async function chargerPhotos(ids: string[]): Promise<Map<string, PhotoLieu[]>> {
     let url: string = r.url
     const ch = typeof r.url === 'string' ? cheminDepuis(r.url) : null
     if (ch) url = signatures.get(ch)?.url ?? url
+    const chClip = typeof r.clip_path === 'string' ? cheminClipDepuis(r.clip_path) : null
+    const clipUrl = chClip ? signaturesClips.get(chClip)?.url : undefined
     arr.push({
       type: r.type,
       url,
       priseLe: r.prise_le ?? undefined,
       visibleLe: r.visible_le ?? undefined,
       auteurId: r.auteur_id ?? undefined,
+      ...(chClip
+        ? {
+            clipUrl,
+            clipMime: r.clip_mime ?? undefined,
+            clipDureeS: r.clip_duree_s != null ? Number(r.clip_duree_s) : undefined,
+            reglagesRendu:
+              r.reglages_rendu != null ? normaliserReglages(r.reglages_rendu) : undefined,
+          }
+        : {}),
     })
     map.set(r.lieu_id, arr)
   }
@@ -1033,10 +1178,11 @@ async function pousserLieuCloud(lieu: Lieu): Promise<boolean> {
       console.warn('[jeudi] écriture cloud : 0 ligne touchée (RLS ?)', lieu.id)
       return false
     }
-    if (essai === 0 && /recos/i.test(error.message ?? '')) {
-      console.warn('[jeudi] colonne `recos` absente en base (migration 0003 pas passée) — nouvel essai sans elle')
+    if (essai === 0 && /recos|etiquettes/i.test(error.message ?? '')) {
+      console.warn('[jeudi] colonne `recos`/`etiquettes` absente en base (migration 0003/0012 pas passée) — nouvel essai sans elles')
       ligne = { ...ligne }
       delete ligne.recos
+      delete ligne.etiquettes
       continue
     }
     console.warn('[jeudi] écriture cloud KO', lieu.id, error)
@@ -1283,7 +1429,9 @@ export const METEO_INFOS: Record<Meteo, { mot: string }> = {
 
 // la couleur de "jeudi" : l'accent de marque, choisi par chacun à l'inscription.
 // tout l'app passe par la variable CSS --red, donc la changer recolore tout.
-export const COULEUR_DEFAUT = '#a8322a' // le rouge cire d'origine
+// LE BLEU DE JEUDI (décision Ersan, 07/08) : la couleur d'identité par défaut —
+// le rouge cire reste l'encre du carnet (--cire), mais la marque naît bleue.
+export const COULEUR_DEFAUT = '#5d8dff'
 export function lireCouleur(): string {
   return localStorage.getItem('jeudi-couleur') || COULEUR_DEFAUT
 }
@@ -1585,53 +1733,64 @@ export function nouvelId(): string {
   return uuidV4Manuel()
 }
 
-// ── import Google Takeout ("Saved Places.json" / "Lieux enregistrés") ──
-// Format GeoJSON : FeatureCollection, coordonnées [lng, lat]. On crée tes
-// spots privés (proprietaire 'moi'), en sautant les doublons par nom.
-interface TakeoutFeature {
-  geometry?: { coordinates?: number[] } | null
-  properties?: {
-    Title?: string
-    Location?: { Address?: string; 'Business Name'?: string; Geo?: { coordinates?: number[] } }
-    google_maps_url?: string
-    Comment?: string
-  }
+// ── import Google Takeout — TOUT y passe (voir takeout.ts) ──────
+// GeoJSON (Saved Places.json) ET listes CSV « Saved » : le parsing vit
+// dans takeout.ts (pur), ici on ÉCRIT — spots privés (proprietaire
+// 'moi'), doublons par nom sautés, catégories posées à la volée
+// (envies de la liste choisie + favoris).
+
+export interface BilanImport {
+  ajoutes: number
+  /** déjà dans le carnet (même nom) : sautés, pas des erreurs */
+  deja: number
 }
 
-export async function importerTakeout(json: unknown): Promise<number> {
-  const fc = json as { features?: TakeoutFeature[] }
-  if (!fc || !Array.isArray(fc.features)) {
-    throw new Error('fichier non reconnu (attendu : Saved Places.json de Google Takeout)')
-  }
+export async function importerEntrees(
+  entrees: EntreeImport[],
+  options: { envies?: Envie[]; favori?: boolean; etiquette?: string } = {},
+): Promise<BilanImport> {
   const db = await getDB()
   const existants = new Set((await db.getAll('lieux')).map((l) => l.nom))
-  let n = 0
-  for (const f of fc.features) {
-    const props = f.properties ?? {}
-    const coords = f.geometry?.coordinates ?? props.Location?.Geo?.coordinates
-    const nom = props.Title || props.Location?.['Business Name']
-    if (!coords || coords.length < 2 || !nom || existants.has(nom)) continue
-    existants.add(nom)
+  const bilan: BilanImport = { ajoutes: 0, deja: 0 }
+  for (const e of entrees) {
+    if (e.lat == null || e.lng == null) continue // sans point, pas de carte
+    if (existants.has(e.nom)) {
+      bilan.deja++
+      continue
+    }
+    existants.add(e.nom)
+    const id = nouvelId()
     await ajouterLieu({
-      id: nouvelId(),
-      nom,
-      // GeoJSON : [lng, lat]
-      lng: coords[0],
-      lat: coords[1],
-      adresse: props.Location?.Address,
-      note: props.Comment ?? '',
+      id,
+      nom: e.nom,
+      lng: e.lng,
+      lat: e.lat,
+      adresse: e.adresse,
+      note: e.note,
       visibilite: 'prive',
-      envies: [],
+      envies: options.envies ?? [],
       compagnies: [],
       photos: [],
       statut: 'actif',
       creeLe: new Date().toISOString(),
       source: 'google',
       proprietaire: 'moi',
+      // le nom de la liste Google voyage avec le spot (rangement perso)
+      etiquettes: options.etiquette ? [options.etiquette] : undefined,
     })
-    n++
+    if (options.favori) basculerFavori(id)
+    bilan.ajoutes++
   }
-  return n
+  return bilan
+}
+
+/** compat : l'ancien chemin « un Saved Places.json déposé » */
+export async function importerTakeout(json: unknown): Promise<number> {
+  const entrees = parserGeoJson(json)
+  if (!entrees) {
+    throw new Error('fichier non reconnu (attendu : Saved Places.json de Google Takeout)')
+  }
+  return (await importerEntrees(entrees)).ajoutes
 }
 
 export async function majLieu(lieu: Lieu): Promise<void> {
@@ -1828,9 +1987,12 @@ export interface MembreCercle {
   bio?: string
   insta?: string
   photoUrl?: string
+  /** « MM-DD » — jour et mois SEULEMENT, jamais l'année (migration 0013) */
+  anniversaire?: string
 }
 
-/** ligne de la vue `profils_publics` — la vitrine, JAMAIS naissance/seuils */
+/** ligne de la vue `profils_publics` — la vitrine, JAMAIS naissance/seuils.
+ *  `anniversaire` (MM-DD) arrive avec la 0013 : optionnel avant. */
 interface LigneProfilPublic {
   id: string
   prenom: string | null
@@ -1838,6 +2000,7 @@ interface LigneProfilPublic {
   bio: string | null
   insta: string | null
   photo_url: string | null
+  anniversaire?: string | null
 }
 
 const CLE_CERCLE_CACHE = 'jeudi-cercle-cache'
@@ -1857,9 +2020,11 @@ async function portraitSigne(photoUrl: string | null): Promise<string | undefine
 async function profilsPublics(ids: string[]): Promise<Map<string, LigneProfilPublic>> {
   const map = new Map<string, LigneProfilPublic>()
   if (!ids.length) return map
+  // `*` et pas une liste de colonnes : nommer `anniversaire` ferait échouer
+  // tout le select tant que la 0013 n'est pas passée (même motif que photos)
   const { data, error } = await supabase
     .from('profils_publics')
-    .select('id,prenom,critere,bio,insta,photo_url')
+    .select('*')
     .in('id', ids)
   if (error) throw error
   for (const p of (data ?? []) as LigneProfilPublic[]) map.set(p.id, p)
@@ -2033,6 +2198,7 @@ export async function monCercle(): Promise<MembreCercle[]> {
         bio: p?.bio ?? undefined,
         insta: p?.insta ?? undefined,
         photoUrl: await portraitSigne(p?.photo_url ?? null),
+        anniversaire: p?.anniversaire ?? undefined,
       })
     }
     try {
@@ -2320,6 +2486,76 @@ export function ecrireTagline(s: string): void {
 }
 
 // les curateurs suivis, choisis à l'onboarding
+// ── la pellicule : le vu / pas vu (migration 0014) ──────────────
+// Optimiste en LOCAL d'abord (le sceau se brise sous le doigt), le
+// cloud suit en best-effort — et au chargement on fusionne les deux.
+const CLE_VUES_PELLICULE = 'jeudi-vues-pellicule'
+
+export function lireVuesPellicule(): Set<string> {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_VUES_PELLICULE) ?? '[]')
+    return new Set(Array.isArray(v) ? v : [])
+  } catch {
+    return new Set()
+  }
+}
+
+/** fusionne les vues cloud dans le local (best-effort, jamais bloquant) */
+export async function chargerVuesPellicule(): Promise<Set<string>> {
+  const vues = lireVuesPellicule()
+  try {
+    await pretAuth
+    if (!monId) return vues
+    const { data } = await supabase.from('vues_pellicule').select('lieu_id,soiree')
+    for (const r of (data ?? []) as { lieu_id: string; soiree: string }[]) {
+      vues.add(`${r.lieu_id}|${r.soiree}`)
+    }
+    localStorage.setItem(CLE_VUES_PELLICULE, JSON.stringify([...vues]))
+  } catch {
+    /* hors-ligne ou 0014 pas passée : le local fait foi */
+  }
+  return vues
+}
+
+/** brise le sceau (lieu, soirée) — local tout de suite, cloud ensuite */
+export function marquerVuPellicule(lieuId: string, soiree: string): Set<string> {
+  const vues = lireVuesPellicule()
+  vues.add(`${lieuId}|${soiree}`)
+  localStorage.setItem(CLE_VUES_PELLICULE, JSON.stringify([...vues]))
+  if (monId && estUuid(lieuId)) {
+    void supabase
+      .from('vues_pellicule')
+      .upsert(
+        { user_id: monId, lieu_id: lieuId, soiree },
+        { onConflict: 'user_id,lieu_id,soiree', ignoreDuplicates: true },
+      )
+      .then(({ error }) => {
+        if (error) console.warn('[jeudi] vue pellicule cloud KO (0014 pas passée ?)', error.message)
+      })
+  }
+  return vues
+}
+
+// ── les amis archivés : la mise en sommeil LOCALE (07/08) ───────
+// La relation cloud RESTE (on ne casse rien, l'autre ne voit rien) :
+// on met juste le membre en sommeil sur CE téléphone — il sort de
+// l'annuaire et ses spots quittent ma carte, réintégrable en un tap
+// depuis « moi → amis archivés ».
+export function lireAmisArchives(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem('jeudi-amis-archives') ?? '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+export function basculerAmiArchive(id: string): string[] {
+  const l = lireAmisArchives()
+  const n = l.includes(id) ? l.filter((x) => x !== id) : [...l, id]
+  localStorage.setItem('jeudi-amis-archives', JSON.stringify(n))
+  return n
+}
+
 export function lireSuivis(): string[] {
   try {
     const v = JSON.parse(localStorage.getItem('jeudi-suivis') ?? '[]')
@@ -2393,6 +2629,19 @@ export async function effacerTout(): Promise<void> {
       resolve()
     }
   })
+}
+
+/** se déconnecter — la session part, le carnet local RESTE (local-first :
+ *  se reconnecter le retrouve tel quel, et la sync cloud réconcilie).
+ *  Téléphone partagé → passer par « supprimer mon compte » ou effacer les
+ *  données du navigateur. Reload : la barrière Auth reprend la main. */
+export async function seDeconnecter(): Promise<void> {
+  try {
+    await supabase.auth.signOut()
+  } catch (e) {
+    console.warn('[jeudi] signOut', e)
+  }
+  window.location.reload()
 }
 
 // ── RGPD (chantier 6, étape 5) ─────────────────────────────────

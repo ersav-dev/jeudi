@@ -118,7 +118,11 @@ function ligneSpot(role: string, l: Lieu, complement: string, maintenant: Date):
   return [role, enviePrincipale(l), complement, bribeHoraire(l, maintenant)].filter(Boolean).join(' · ')
 }
 
-/** le 2ᵉ spot du plan : le complément du pivot (jamais deux restos identiques) */
+/** le 2ᵉ spot du plan : le complément du pivot.
+ *  LA RÈGLE (Ersan, 07/08) : les deux spots d'un plan ne sont JAMAIS deux
+ *  « manger » — on ne dîne qu'une fois. Deux « boire », oui (deux bars, un
+ *  bar puis une boîte : c'est une soirée). Plutôt AUCUN plan qu'un plan à
+ *  deux restos. */
 function choisirSuite(
   pivot: Lieu,
   voisins: Lieu[],
@@ -126,17 +130,21 @@ function choisirSuite(
   poids: (l: Lieu) => number,
   rnd: () => number,
 ): { suite: Lieu; sequence: Sequence } | null {
+  const g = genreDe(pivot)
+  // le vivier de base respecte la règle : pivot « manger » → la suite ne
+  // mange pas (le tirage retentera un autre pivot si le coin n'a que ça)
+  const sansDoubleTable = g === 'manger' ? voisins.filter((l) => genreDe(l) !== 'manger') : voisins
+
   if (compagnie === 'solo') {
     // le plan B : le plus proche, à envie différente si possible (tri stable par id)
-    const autres = voisins.filter((l) => enviePrincipale(l) !== enviePrincipale(pivot))
-    const vivier = autres.length ? autres : voisins
+    const autres = sansDoubleTable.filter((l) => enviePrincipale(l) !== enviePrincipale(pivot))
+    const vivier = autres.length ? autres : sansDoubleTable
     const suite = [...vivier].sort(
       (a, b) => distanceM(a, pivot) - distanceM(b, pivot) || a.id.localeCompare(b.id),
     )[0]
     return suite ? { suite, sequence: 'solo' } : null
   }
 
-  const g = genreDe(pivot)
   if (g === 'boire') {
     const suite = tirerPondere(voisins.filter((l) => genreDe(l) === 'manger'), poids, rnd)
     if (suite) return { suite, sequence: 'apero-assiettes' }
@@ -145,10 +153,12 @@ function choisirSuite(
     const suite = tirerPondere(voisins.filter((l) => genreDe(l) === 'boire'), poids, rnd)
     if (suite) return { suite, sequence: 'assiettes-verres' }
   }
-  // pas de complément parfait : deux voisins aux envies VARIÉES. même envie
-  // principale + même genre = deux restos identiques → on refuse (sauf fiches
-  // sans envies, qu'on ne peut pas départager honnêtement).
-  const varies = voisins.filter((l) => enviePrincipale(l) !== enviePrincipale(pivot) || genreDe(l) !== g)
+  // pas de complément parfait : deux voisins VARIÉS — jamais deux « manger »
+  // (déjà exclu par sansDoubleTable), et pas deux fois la même envie au sein
+  // du même genre (deux bars, oui — deux bars « apéro » identiques, non).
+  const varies = sansDoubleTable.filter(
+    (l) => enviePrincipale(l) !== enviePrincipale(pivot) || genreDe(l) !== g,
+  )
   const vivier = varies.length ? varies : g === 'autre' ? voisins : []
   const suite = tirerPondere(vivier, poids, rnd)
   return suite ? { suite, sequence: 'voisins' } : null

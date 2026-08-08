@@ -21,15 +21,22 @@ import {
   preparerTirage,
   type FenetreSoiree,
 } from './tirage'
+import ImportBobine, { type BobinePrete } from './ImportBobine'
+import { libelleDuree } from './super8'
 
 /** une heure de séchage : la photo devient publique après (voir 0010) */
 const SECHAGE_MS = 3600_000
+
+/** ce fichier est-il une vidéo ? (le type mime d'abord, le nom en repli) */
+const estVideo = (f: File) => f.type.startsWith('video/') || /\.(mp4|mov|webm|m4v)$/i.test(f.name)
 
 interface Choisi {
   blob: Blob
   priseLe: Date
   /** dans la fenêtre de la soirée ? */
   dedans: boolean
+  /** présent = c'est un clip super 8 : blob est alors son photogramme */
+  bobine?: BobinePrete
 }
 
 export default function TirageDuSoir({
@@ -54,16 +61,22 @@ export default function TirageDuSoir({
   const [garderHors, setGarderHors] = useState(false)
   const [developpe, setDeveloppe] = useState(0)
   const [refuses, setRefuses] = useState(0)
+  // les vidéos passent une à une par la bobine (réglette + chambre noire)
+  const [bobines, setBobines] = useState<File[]>([])
 
   const ouvrir = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fichiers = [...(e.target.files ?? [])]
     e.target.value = '' // reprendre la pellicule une deuxième fois reste possible
     if (!fichiers.length) return
-    setDeveloppe(fichiers.length)
+    const videos = fichiers.filter(estVideo)
+    const images = fichiers.filter((f) => !estVideo(f))
+    if (videos.length) setBobines((prev) => [...prev, ...videos])
+    if (!images.length) return
+    setDeveloppe(images.length)
     setRefuses(0)
     const pris: Choisi[] = []
     let kos = 0
-    for (const f of fichiers) {
+    for (const f of images) {
       try {
         const tir = await preparerTirage(f)
         pris.push({ blob: tir.blob, priseLe: tir.priseLe, dedans: estDeLaSoiree(tir.priseLe, fen) })
@@ -77,6 +90,15 @@ export default function TirageDuSoir({
     setCouv(0)
     setRefuses(kos)
     setDeveloppe(0)
+  }
+
+  /** une bobine sort de la chambre noire : elle rejoint la planche */
+  const bobineFinie = (b: BobinePrete) => {
+    setChoisis((prev) => [
+      ...prev,
+      { blob: b.clip.photogramme, priseLe: b.priseLe, dedans: b.dedans, bobine: b },
+    ])
+    setBobines((prev) => prev.slice(1))
   }
 
   const dedans = choisis.filter((c) => c.dedans).length
@@ -117,7 +139,29 @@ export default function TirageDuSoir({
         blob: c.blob,
         priseLe: c.priseLe.toISOString(),
         visibleLe: new Date(c.priseLe.getTime() + SECHAGE_MS).toISOString(),
+        // le super 8 : blob est le photogramme, la vidéo part à côté
+        ...(c.bobine
+          ? {
+              clipBlob: c.bobine.clip.clipBlob,
+              clipMime: c.bobine.clip.clipMime,
+              clipDureeS: c.bobine.clip.clipDureeS,
+              reglagesRendu: c.bobine.reglages,
+            }
+          : {}),
       })),
+    )
+  }
+
+  // ── une vidéo attend son tour : la bobine passe devant tout ────
+  if (bobines.length) {
+    return (
+      <ImportBobine
+        key={bobines.length}
+        fichier={bobines[0]}
+        fen={fen}
+        onFini={bobineFinie}
+        onPasser={() => setBobines((prev) => prev.slice(1))}
+      />
     )
   }
 
@@ -135,7 +179,7 @@ export default function TirageDuSoir({
           </span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             hidden
             disabled={developpe > 0}
@@ -146,6 +190,9 @@ export default function TirageDuSoir({
 
         <p className="mono tirage-aide">
           {t('elle s’ouvre sur hier soir — tes photos les plus récentes sont en haut.')}
+        </p>
+        <p className="mono tirage-aide">
+          {t('une vidéo aussi : elle deviendra une bobine de 10 secondes.')}
         </p>
         {developpe > 0 && (
           <p className="mono tirage-attente" role="status">
@@ -187,8 +234,10 @@ export default function TirageDuSoir({
               key={i}
               className={`tirage-vue${c.dedans ? '' : ' hors'}${gardee ? '' : ' ecartee'}${
                 i === couv && gardee ? ' couv' : ''
+              }${c.bobine ? ' pf' : ''}`}
+              aria-label={`${c.bobine ? `${t('bobine')}, ` : ''}${heureTirage(c.priseLe)}${
+                i === couv ? ` — ${t('sur la carte')}` : ''
               }`}
-              aria-label={`${heureTirage(c.priseLe)}${i === couv ? ` — ${t('sur la carte')}` : ''}`}
               aria-pressed={i === couv && gardee}
               onClick={() => {
                 if (!longue.current && gardee) setCouv(i)
@@ -200,7 +249,10 @@ export default function TirageDuSoir({
               onContextMenu={(e) => e.preventDefault()}
             >
               <img src={srcPhoto(c)} alt="" onError={photoIndisponible} />
-              <span className="hand tirage-heure">{heureTirage(c.priseLe)}</span>
+              <span className="hand tirage-heure">
+                {heureTirage(c.priseLe)}
+                {c.bobine ? ` · ${libelleDuree(c.bobine.clip.clipDureeS)}` : ''}
+              </span>
             </button>
           )
         })}
