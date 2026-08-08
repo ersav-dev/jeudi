@@ -6528,6 +6528,59 @@ button {
   padding: 8px 12px;
   font-size: 13px;
 }
+/* ── les stations reconnues pendant la frappe (08/08) ──
+ * 581 stations dans l'appareil : la proposition sort avant que le doigt ait
+ * quitté la touche. Même langage que la carte — la plaque du mode, puis le
+ * nom — pour qu'on reconnaisse la station qu'on ira toucher là-bas. */
+.rech-stations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.rech-station {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px 6px 6px;
+  border-radius: var(--rayon);
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.1);
+  color: var(--ivory);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.rech-station:active {
+  transform: scale(0.98);
+}
+@media (hover: hover) {
+  .rech-station:hover {
+    border-color: rgba(239, 233, 216, 0.28);
+  }
+}
+/* la plaque du mode, aux couleurs de la charte — la même qu'en carte */
+.rech-station-mode {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: #efe9d8;
+  background: #0b1a3a;
+  padding: 3px 5px 2px;
+  border-radius: 3px;
+  line-height: 1;
+  min-width: 14px;
+  text-align: center;
+  box-shadow: 0 0 0 0.5px rgba(239, 233, 216, 0.35);
+}
+.rech-station[data-mode='rer'] .rech-station-mode {
+  background: #0055c8;
+}
+.rech-station[data-mode='tram'] .rech-station-mode {
+  background: #66a933;
+}
 .labo-resultat {
   padding: 11px 14px;
   border-radius: var(--rayon);

@@ -11,6 +11,7 @@ import {
 import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
+import { chargerStations, chercherStations, stationsChargees, type Station } from './stations'
 import { estCeLeGrandJeudi, joursAvantGrandJeudi } from './grandJeudi'
 import CroquisParis from './CroquisParis'
 import { srcPhoto, photoIndisponible } from './photos'
@@ -56,6 +57,28 @@ export default function Recherche({
   const [adr, setAdr] = useState('')
   // l'état de la recherche d'adresse (Nominatim) — visible, jamais silencieux
   const [etatAdr, setEtatAdr] = useState<'off' | 'cherche' | 'introuvable' | 'reseau'>('off')
+
+  // ── les stations, en local ────────────────────────────────────────────
+  // 581 stations dans l'appareil : « Edgar Quinet » n'a plus à traverser le
+  // réseau. On les charge une fois, en fond ; Nominatim reste le filet pour
+  // tout ce qui n'est pas une station (une adresse, un monument).
+  const [stationsPretes, setStationsPretes] = useState(false)
+  useEffect(() => {
+    let vivant = true
+    chargerStations().then(() => vivant && setStationsPretes(true))
+    return () => { vivant = false }
+  }, [])
+  // les propositions pendant la frappe : un balayage de 581 entrées, immédiat.
+  // (stationsPretes n'est lu que pour recalculer une fois la table arrivée)
+  const propositions = useMemo(
+    () => (stationsPretes ? chercherStations(adr, stationsChargees(), 5) : []),
+    [adr, stationsPretes],
+  )
+  const choisirStation = (s: Station) => {
+    setDepuis({ nom: s.nom, lat: s.lat, lng: s.lng })
+    setAdr('')
+    setEtatAdr('off')
+  }
 
   // favoris / vus : relus à CHAQUE retour sur l'écran (focus / onglet visible),
   // pas seulement au premier mount — ils ont pu changer depuis un autre écran.
@@ -127,6 +150,10 @@ export default function Recherche({
   const lancerAdresse = async () => {
     const q = adr.trim()
     if (!q) return
+    // une station d'abord : c'est dans l'appareil, c'est instantané, et ça
+    // marche sans réseau. Nominatim ne sert que si ce n'en est pas une.
+    const locale = chercherStations(q, stationsChargees(), 1)[0]
+    if (locale) return choisirStation(locale)
     setEtatAdr('cherche')
     const r = await chercherAdresse(q)
     if (r.ok) {
@@ -285,8 +312,28 @@ export default function Recherche({
         onKeyDown={(e) => e.key === 'Enter' && lancerAdresse()}
         placeholder={t('…ou une adresse / un métro (Entrée)')}
         className="labo-champ petit"
-        style={{ marginBottom: etatAdr === 'off' ? 14 : 4 }}
+        style={{ marginBottom: propositions.length ? 6 : etatAdr === 'off' ? 14 : 4 }}
       />
+      {/* les stations reconnues pendant la frappe — locales, donc immédiates.
+          Entrée prend la première ; on peut aussi en toucher une autre. */}
+      {propositions.length > 0 && (
+        <div className="rech-stations">
+          {propositions.map((s) => (
+            <button
+              key={`${s.nom}|${s.lat}`}
+              type="button"
+              className="rech-station"
+              data-mode={s.type}
+              onClick={() => choisirStation(s)}
+            >
+              <span className="rech-station-mode">
+                {s.type === 'rer' ? 'RER' : s.type === 'tram' ? 'T' : 'M'}
+              </span>
+              {s.nom}
+            </button>
+          ))}
+        </div>
+      )}
       {etatAdr !== 'off' && (
         <div
           style={{
