@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — « je sais pas » : contour + palette nuit (variantes)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ── matière (copiée de app/src/index.css) ── */
+    --nuit:#14120e; --nuit-2:#1b1813; --nuit-3:#23201a;
+    --encre:#efe9d8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.34);
+    --graphite:#8a857a; --rayon:3px; --print-white:#fbf8f1;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+
+    /* ── la graine et son dérivé (db.ts couleurMoi) ── */
+    --graine:#5d8dff;      /* 222° · le bleu jeudi, LA marque par défaut */
+    --moi:#efb839;         /* 42°  · complément exact, déjà utilisé pour "moi" sur la carte */
+
+    /* ── palette ACTUELLE de « je sais pas » (encres d'état existantes, pas dérivées) ── */
+    --cire:#a8322a; --reco:#d9913b; --sauge:#84b6a3;
+
+    /* ── l'épingle néon (copiée de bouches_metro.html / index.css) ── */
+    --pin-taille:30px;
+    --pin-fond: rgba(115, 115, 115, .1);
+    --pin-contour:#628ef3;
+    --pin-contour-ep:2px;
+    --pin-glow: rgba(69, 153, 232, .6);
+    --pin-glow-blur:16px;
+    --pin-glyphe:#33a7ff;
+
+    /* palette par défaut = aujourd'hui (chaque section la resurcharge) */
+    --plan-1:var(--cire); --plan-2:var(--reco); --plan-3:var(--sauge);
+  }
+  *{box-sizing:border-box}
+  html{background:#0c0a08}
+  body{
+    margin:0 auto; max-width:390px; background:var(--nuit); color:var(--encre);
+    font-family:'JetBrains Mono',monospace; -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  body::before{content:'';position:fixed;inset:0;background:var(--grain);opacity:.05;pointer-events:none;mix-blend-mode:overlay;}
+  .page{position:relative;padding:26px 16px 90px;}
+
+  .hero-titre{font-family:'Instrument Serif',serif;font-style:italic;font-size:32px;line-height:1.05;margin:0 0 8px;color:var(--encre);}
+  .hero-sous{font-size:11.5px;color:var(--encre-2);letter-spacing:.2px;line-height:1.6;margin:0 0 4px;}
+  .hero-taille{font-size:10px;color:var(--encre-3);letter-spacing:.6px;text-transform:uppercase;margin:10px 0 0;}
+
+  h2.section-titre{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--encre-3);
+    margin:0 0 3px;padding-top:20px;border-top:1px dashed rgba(239,233,216,.18);
+  }
+  h2.section-titre b{color:var(--encre);font-weight:700;}
+  .section-wrap{margin-top:34px;}
+  .hand{font-family:'Caveat',cursive;font-size:18px;color:var(--encre-2);line-height:1.4;margin:2px 0 14px;}
+  .hand b{color:var(--encre);}
+  .petite{font-size:10.5px;color:var(--encre-3);line-height:1.55;margin:6px 0 0;}
+
+  /* ── nuage de teintes / swatches ── */
+  .swatch-row{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 14px;}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:9.5px;color:var(--encre-2);width:56px;}
+  .swatch i{display:block;width:32px;height:32px;border-radius:50%;border:1px solid rgba(239,233,216,.25);box-shadow:0 1px 0 rgba(0,0,0,.4);}
+  .swatch b{font-family:'JetBrains Mono';font-size:9.5px;color:var(--encre);letter-spacing:.2px;}
+
+  /* ══ la carte (fausse carto, façon MapLibre sombre) ══ */
+  .carte-mock{
+    position:relative;width:100%;height:186px;border-radius:var(--rayon);overflow:hidden;
+    border:1px solid rgba(239,233,216,.18);margin-bottom:8px;
+    background:
+      radial-gradient(ellipse at 68% 20%, #201d17 0%, transparent 55%),
+      radial-gradient(ellipse at 16% 84%, #1d1a15 0%, transparent 52%),
+      #171510;
+  }
+  .carte-mock::before{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(112deg, transparent 46%, rgba(239,233,216,.045) 46.6%, rgba(239,233,216,.045) 47.1%, transparent 47.7%),
+      linear-gradient(28deg, transparent 26%, rgba(239,233,216,.035) 26.6%, rgba(239,233,216,.035) 27.1%, transparent 27.7%),
+      linear-gradient(0deg, transparent 64%, rgba(239,233,216,.04) 64.6%, rgba(239,233,216,.04) 65.4%, transparent 66%);
+  }
+  .carte-mock .cap{position:absolute;left:10px;bottom:8px;font-size:9.5px;color:var(--encre-3);letter-spacing:.3px;z-index:2;}
+
+  /* le pin néon (copié de index.css) */
+  .pin{
+    position:absolute;width:var(--pin-taille);height:var(--pin-taille);
+    margin:calc(var(--pin-taille) / -2) 0 0 calc(var(--pin-taille) / -2);
+    background:var(--pin-fond);border:var(--pin-contour-ep) solid var(--pin-contour);border-radius:50%;
+    box-shadow:0 0 var(--pin-glow-blur) var(--pin-glow), 0 1px 0 rgba(0,0,0,.5);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pin-type{width:8px;height:8px;border-radius:50%;background:var(--pin-glyphe);}
+  .pin-plan{
+    position:absolute;top:-9px;left:-9px;width:15px;height:15px;border-radius:50%;
+    border:1px solid var(--nuit);background:var(--encre-plan,var(--nuit));color:var(--print-white);
+    font-family:'JetBrains Mono';font-size:9px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;transform:rotate(-4deg);
+  }
+  .pin-p1{--encre-plan:var(--plan-1);} .pin-p2{--encre-plan:var(--plan-2);} .pin-p3{--encre-plan:var(--plan-3);}
+  .pin.dim{opacity:.5;filter:grayscale(.3);}
+  .lbl-pin{
+    position:absolute;transform:translate(-50%,4px);top:100%;left:50%;white-space:nowrap;
+    font-size:9px;color:var(--encre-2);background:rgba(20,18,14,.8);padding:1px 5px;border-radius:var(--rayon);
+  }
+
+  /* AUJOURD'HUI : le FOND se colore (copie exacte de .carte .pin-allume) */
+  .actuel .pin.allume{
+    background:var(--encre-plan,var(--encre)) !important;
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--encre-plan,var(--encre)) 30%, transparent), 0 1px 0 rgba(0,0,0,.5);
+    border-color:var(--pin-contour); /* ← inchangé : reste bleu générique, quelle que soit la couleur */
+  }
+  .actuel .pin.allume .pin-type{background:var(--print-white);}
+
+  /* PROPOSÉ : le CONTOUR se colore, le fond reste neutre */
+  .pin.allume{
+    border-color:var(--encre-plan,var(--pin-contour));
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--encre-plan,var(--pin-contour)) 22%, transparent),
+      0 0 var(--pin-glow-blur) color-mix(in srgb, var(--encre-plan,var(--pin-contour)) 60%, transparent),
+      0 1px 0 rgba(0,0,0,.5);
+  }
+  .pin.allume .pin-type{background:var(--encre-plan,var(--pin-glyphe));}
+
+  /* ══ carte-plan (copiée de .jsp-*) — version CORRIGÉE par défaut ══ */
+  .jsp-plan{
+    width:100%;background:var(--nuit-2);border:1px solid color-mix(in srgb, var(--graphite) 45%, transparent);
+    border-radius:var(--rayon);box-shadow:0 1px 0 rgba(0,0,0,.5);padding:13px 15px 11px;margin-bottom:10px;text-align:left;
+  }
+  .jsp-plan.p1{--encre-plan:var(--plan-1);--encre-plan-b:color-mix(in srgb, var(--plan-1) 52%, var(--graphite));}
+  .jsp-plan.p2{--encre-plan:var(--plan-2);--encre-plan-b:color-mix(in srgb, var(--plan-2) 52%, var(--graphite));}
+  .jsp-plan.p3{--encre-plan:var(--plan-3);--encre-plan-b:color-mix(in srgb, var(--plan-3) 52%, var(--graphite));}
+
+  /* le reset que l'app fait globalement et que la planche avait oublié :
+     sans lui, le <button> natif pose son fond blanc système sous le titre */
+  button{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:inherit;}
+  .jsp-tete{display:flex;align-items:center;gap:9px;width:100%;} /* CORRIGÉ : center, pas baseline */
+  .jsp-tete-carte{margin-left:auto;font-size:9.5px;color:var(--encre-2);opacity:.7;white-space:nowrap;}
+  .jsp-jeton{ /* TRANCHÉ par Ersan (08/08) : le cadre rond ne vit que sur les
+    A/B — le numéro du titre s'écrit NU, teinté par le plan, et CENTRÉ sur
+    la hauteur du titre (comme les lettres A/B avec leur texte) */
+    flex:none;border:none;border-radius:0;width:auto;height:auto;
+    align-self:center;line-height:1;
+    display:grid;place-items:center;color:var(--encre-plan,var(--encre-2));
+    font-family:'JetBrains Mono';font-size:12px;font-weight:700;transform:rotate(-4deg);
+  }
+  .jsp-zone{display:block;font-family:'Instrument Serif',serif;font-style:italic;font-size:22px;line-height:1.1;color:var(--encre);}
+  .jsp-accroche{display:block;font-size:10.5px;color:var(--encre-3);margin:3px 0 9px;}
+  .jsp-spots{display:flex;flex-direction:column;}
+  .jsp-spot{display:flex;align-items:flex-start;gap:9px;width:100%;border-top:1px solid rgba(138,133,122,.25);padding:7px 0;}
+  .jsp-ab{
+    flex:none;width:16px;height:16px;display:grid;place-items:center;border-radius:50%;
+    border:1.2px solid var(--encre-plan,var(--encre-2));color:var(--encre-plan,var(--encre-2));
+    font-family:'JetBrains Mono';font-size:9px;margin-top:3px;transform:rotate(-4deg);
+  }
+  .jsp-ab.b{border-color:var(--encre-plan-b,var(--encre-3));color:var(--encre-plan-b,var(--encre-3));}
+  .jsp-spot-corps{flex:1;min-width:0;}
+  .jsp-spot-nom{display:block;font-family:'Instrument Serif',serif;font-size:17px;line-height:1.15;color:var(--encre);}
+  .jsp-spot-ligne{display:block;font-size:10px;color:var(--encre-2);margin-top:2px;}
+  .jsp-va{display:block;margin:6px 0 0 auto;background:none;border:1px solid rgba(239,233,216,.35);color:var(--encre);
+    border-radius:var(--rayon);padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.4px;}
+
+  /* ── scope ".actuel" : réinstalle EXACTEMENT le comportement d'aujourd'hui ── */
+  .actuel .jsp-tete{align-items:baseline;}
+  .actuel .jsp-jeton{width:21px;height:21px;border-width:1.4px;font-size:11px;}
+
+  /* ══ blocs de comparaison avant/après ══ */
+  .cmp{display:flex;gap:10px;align-items:flex-start;margin:10px 0 6px;}
+  .cmp>div{flex:1;min-width:0;}
+  .cmp-tag{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--encre-3);margin-bottom:8px;display:block;}
+  .cmp-tag.bad{color:#c87a6b;}
+  .cmp-tag.good{color:#7cb342;}
+  .stage{
+    background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+    padding:20px 10px;display:flex;align-items:center;justify-content:center;min-height:96px;
+  }
+
+  /* le cadre du ① — comparaison agrandie */
+  .cadre-demo{display:flex;gap:22px;align-items:flex-end;justify-content:center;padding:14px 6px 6px;}
+  .cadre-item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .cadre-item .num{font-size:9.5px;color:var(--encre-3);text-align:center;max-width:96px;line-height:1.35;}
+  .ring{border-radius:50%;display:grid;place-items:center;color:var(--cire);font-family:'JetBrains Mono';transform:rotate(-4deg);}
+  .ring.a1{width:63px;height:63px;border:4.2px solid var(--encre-2);color:var(--encre-2);font-size:26px;}
+  .ring.a2{width:48px;height:48px;border:3.6px solid var(--encre-2);color:var(--encre-2);font-size:20px;}
+  .ring.ref{width:48px;height:48px;border:3.6px solid var(--encre-2);color:var(--encre-2);font-size:20px;}
+
+  /* alignement : rangées avec ligne-guide */
+  .align-row{position:relative;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+    padding:14px 14px;margin-bottom:10px;overflow:hidden;}
+  .align-row .guide{position:absolute;left:0;right:0;border-top:1px dashed rgba(200,122,107,.55);z-index:2;pointer-events:none;}
+  .align-row .guide::after{content:attr(data-g);position:absolute;right:14px;top:-14px;font-size:8.5px;color:#c87a6b;letter-spacing:.4px;}
+  .align-row .jsp-tete{position:relative;z-index:1;}
+
+  /* ── roue chromatique récap ── */
+  .roue-wrap{display:flex;align-items:center;gap:16px;margin:12px 0 6px;}
+  .roue{position:relative;width:140px;height:140px;flex:none;}
+  .roue .anneau{
+    position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 0deg,
+      hsl(0 70% 55%), hsl(60 70% 55%), hsl(120 70% 55%), hsl(180 70% 55%),
+      hsl(240 70% 55%), hsl(300 70% 55%), hsl(360 70% 55%));
+    -webkit-mask-image:radial-gradient(circle, transparent 60%, black 62%, black 90%, transparent 92%);
+    mask-image:radial-gradient(circle, transparent 60%, black 62%, black 90%, transparent 92%);
+    opacity:.9;
+  }
+  .roue .pt{position:absolute;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--nuit);transform:translate(-50%,-50%);}
+  .roue .pt.grand{width:12px;height:12px;box-shadow:0 0 6px 1px currentColor;}
+  .roue .tag{position:absolute;font-size:8.5px;font-family:'JetBrains Mono';color:var(--encre-2);white-space:nowrap;transform:translate(-50%,-50%);}
+  .roue-legende{font-size:10px;color:var(--encre-2);line-height:1.7;}
+  .roue-legende b{color:var(--encre);}
+  .roue-legende .pastille{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+
+  .origine{
+    font-family:'JetBrains Mono';font-size:10.5px;color:var(--encre-2);
+    border-left:2px solid var(--encre-3);padding:4px 0 4px 10px;margin:4px 0 14px;line-height:1.5;
+  }
+  .origine b{color:var(--encre);}
+  .risque{
+    font-size:10.5px;color:#c87a6b;border:1px dashed rgba(200,122,107,.5);border-radius:var(--rayon);
+    padding:8px 10px;margin:10px 0 14px;line-height:1.5;
+  }
+
+  .footer-check{font-size:11px;color:var(--encre-2);line-height:1.8;margin-top:8px;}
+  .footer-check li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero-titre">« je sais pas. »<br>contour + palette nuit</div>
+  <p class="hero-sous">Planche de décision — pas de code d'app, juste comparer. Trois choses à trancher :
+  <b>(1)</b> le fond ou le contour qui prend la couleur du plan, <b>(2)</b> le cadre du <b>①</b> façon A/B,
+  <b>(3)</b> l'alignement des jetons, et <b>(4)</b> laquelle des palettes « nuit » ci-dessous remplace
+  cire/reco/sauge dans cette section.</p>
+  <p class="hero-taille">largeur réelle mobile — 390 px</p>
+
+  <div class="swatch-row">
+    <div class="swatch"><i style="background:var(--graine)"></i><b>#5d8dff</b>graine · 222°</div>
+    <div class="swatch"><i style="background:var(--moi)"></i><b>#efb839</b>moi · 42° (complément)</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       AUJOURD'HUI
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap actuel" style="--plan-1:var(--cire);--plan-2:var(--reco);--plan-3:var(--sauge)">
+    <h2 class="section-titre"><b>Aujourd'hui</b> — état actuel du code</h2>
+    <p class="hand">le fond du pin se remplit, le cadre du ① est chunky, les chiffres flottent au-dessus du texte.</p>
+
+    <div class="carte-mock">
+      <span class="cap">MapLibre — 3 plans allumés simultanément (pour comparer)</span>
+      <div class="pin pin-p1 allume" style="left:78px;top:58px"><span class="pin-type"></span><span class="pin-plan">1</span></div>
+      <div class="pin pin-p2 allume" style="left:198px;top:112px"><span class="pin-type"></span><span class="pin-plan">2</span></div>
+      <div class="pin pin-p3 allume" style="left:298px;top:52px"><span class="pin-type"></span><span class="pin-plan">3</span></div>
+      <div class="pin dim" style="left:342px;top:140px"><span class="pin-type"></span></div>
+    </div>
+    <p class="petite">les trois pins allumés changent de FOND (rouge / orange / vert) mais gardent le même contour
+    bleu générique — la couleur du plan ne "tient" pas le symbole, elle le repeint par-dessus.</p>
+
+    <div class="jsp-plan p1">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></button>
+      <span class="jsp-accroche">à 9 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Chez Prune</span><span class="jsp-spot-ligne">resto · M° Bastille</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Java</span><span class="jsp-spot-ligne">bar · à 2 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p2">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">2</span><span class="jsp-zone">canal St-Martin</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 16 min de toi · sans détour</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Hôtel du Nord</span><span class="jsp-spot-ligne">bar · M° Jacques Bonsergent</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Point Éphémère</span><span class="jsp-spot-ligne">tranquilo · à 4 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p3">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">3</span><span class="jsp-zone">Pigalle</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 21 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Dirty Dick</span><span class="jsp-spot-ligne">bar · M° Pigalle</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Fourmi</span><span class="jsp-spot-ligne">bar · à 1 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+
+    <div class="swatch-row">
+      <div class="swatch"><i style="background:var(--cire)"></i><b>#a8322a</b>plan 1 · cire</div>
+      <div class="swatch"><i style="background:var(--reco)"></i><b>#d9913b</b>plan 2 · reco</div>
+      <div class="swatch"><i style="background:var(--sauge)"></i><b>#84b6a3</b>plan 3 · sauge</div>
+    </div>
+    <p class="petite">ces trois encres sont des encres d'état existantes (accents « ouvert »/« recommandé »/« refuge »),
+    pas des dérivés de la graine bleue — d'où l'impression que « ça ne fait pas jeudi ».</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LA CORRECTION — contour, jamais fond
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap" style="--plan-1:var(--cire)">
+    <h2 class="section-titre"><b>Correction 1</b> — le contour, jamais le fond</h2>
+    <p class="hand">le corps du pin reste transparent (comme au repos) ; c'est son <b>cadre</b> qui prend l'encre du plan.</p>
+
+    <div class="cmp">
+      <div class="actuel">
+        <span class="cmp-tag bad">aujourd'hui</span>
+        <div class="stage"><div class="pin pin-p1 allume" style="position:relative;left:0;top:0;margin:0;transform:scale(1.6)">
+          <span class="pin-type"></span><span class="pin-plan">1</span></div></div>
+      </div>
+      <div>
+        <span class="cmp-tag good">proposé</span>
+        <div class="stage"><div class="pin pin-p1 allume" style="position:relative;left:0;top:0;margin:0;transform:scale(1.6)">
+          <span class="pin-type"></span><span class="pin-plan">1</span></div></div>
+      </div>
+    </div>
+    <p class="petite">même classe <code>pin-allume</code>, une seule règle changée : au lieu de
+    <code>background: var(--encre-plan)</code>, c'est <code>border-color: var(--encre-plan)</code> (+ le halo teinté).
+    Le petit jeton d'angle (①/B) reste plein — c'est un badge, pas le symbole.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LE CADRE DU ①
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>Correction 2</b> — le cadre du ①, façon A/B</h2>
+    <p class="hand">« le cadre sur A/B, c'est plus joli » — le ① adopte ses proportions : 16 px, trait 1,2 px
+    (au lieu de 21 px / 1,4 px), même rotation −4°.</p>
+    <div class="cadre-demo">
+      <div class="cadre-item"><div class="ring a1">1</div><span class="num">aujourd'hui<br>21 px · 1,4 px</span></div>
+      <div class="cadre-item"><div class="ring a2" style="border-color:var(--cire);color:var(--cire)">1</div><span class="num">proposé<br>façon A/B — 16 px · 1,2 px</span></div>
+      <div class="cadre-item"><div class="ring ref" style="border-color:var(--cire);color:var(--cire)">A</div><span class="num">référence<br>le rond A/B réel</span></div>
+    </div>
+    <p class="petite">agrandis ×3 ici pour comparer le trait ; en usage réel les trois font 16–21 px, comme aujourd'hui dans l'app.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ALIGNEMENT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap" style="--plan-1:var(--cire)">
+    <h2 class="section-titre"><b>Correction 3</b> — l'alignement du ①</h2>
+    <p class="hand">le ① est centré dans son rond (<code>place-items: center</code>) mais la ligne l'aligne
+    au <b>texte</b> (<code>align-items: baseline</code>) — le rond flotte au-dessus du milieu du nom de zone.</p>
+
+    <div class="align-row actuel">
+      <div class="guide" data-g="align-items: baseline" style="top:60%"></div>
+      <div class="jsp-tete p1"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></div>
+    </div>
+    <div class="align-row">
+      <div class="guide" data-g="align-items: center" style="top:50%"></div>
+      <div class="jsp-tete p1"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></div>
+    </div>
+    <p class="petite">correction : <code>.jsp-tete { align-items: center }</code> — le rond retombe au milieu
+    du bloc de texte, plus au-dessus.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTES — méthode
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>Les palettes nuit</b> — méthode</h2>
+    <p class="hand">une seule graine (#5d8dff, 222°), tout le reste tourne sur la roue — jamais une couleur inventée.</p>
+    <div class="roue-wrap">
+      <div class="roue">
+        <div class="anneau"></div>
+        <div class="pt grand" style="left:33.9px;top:110.1px;background:#5d8dff;color:#5d8dff"></div>
+        <div class="pt grand" style="left:106.1px;top:29.9px;background:#efb839;color:#efb839"></div>
+        <div class="pt" style="left:68.1px;top:124px;background:#52dce0;color:#52dce0"></div>
+        <div class="pt" style="left:49.8px;top:120.1px;background:#52ace0;color:#52ace0"></div>
+        <div class="pt" style="left:22.3px;top:95.4px;background:#5652e0;color:#5652e0"></div>
+        <div class="pt" style="left:53.3px;top:18.6px;background:#cf597c;color:#cf597c"></div>
+        <div class="pt" style="left:122.8px;top:81.2px;background:#7ccf59;color:#7ccf59"></div>
+        <div class="pt" style="left:81.2px;top:17.2px;background:#c66a53;color:#c66a53"></div>
+        <div class="pt" style="left:121.4px;top:53.3px;background:#afc653;color:#afc653"></div>
+      </div>
+      <div class="roue-legende">
+        <div><span class="pastille" style="background:#5d8dff"></span><b>graine</b> 222°</div>
+        <div><span class="pastille" style="background:#efb839"></span><b>moi</b> 42° (+180°)</div>
+        <div><span class="pastille" style="background:#52ace0"></span><b>analogues</b> −40/−20/+20°</div>
+        <div><span class="pastille" style="background:#cf597c"></span><b>triade</b> +120/+240°</div>
+        <div><span class="pastille" style="background:#c66a53"></span><b>split-complément</b> autour de 42°</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTE 1 — ANALOGUES
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap" style="--plan-1:#52dce0;--plan-2:#52ace0;--plan-3:#5652e0">
+    <h2 class="section-titre"><b>Variante A</b> — analogues</h2>
+    <div class="origine">teintes à <b>182° / 202° / 242°</b> — soit <b>−40° / −20° / +20°</b> de la graine (222°) :
+    la famille du bleu jeudi, étirée en cyan et en indigo. Aucune ne sort du camaïeu froid.</div>
+
+    <div class="carte-mock">
+      <span class="cap">3 plans, contour uniquement</span>
+      <div class="pin pin-p1 allume" style="left:78px;top:58px"><span class="pin-type"></span><span class="pin-plan">1</span></div>
+      <div class="pin pin-p2 allume" style="left:198px;top:112px"><span class="pin-type"></span><span class="pin-plan">2</span></div>
+      <div class="pin pin-p3 allume" style="left:298px;top:52px"><span class="pin-type"></span><span class="pin-plan">3</span></div>
+      <div class="pin dim" style="left:342px;top:140px"><span class="pin-type"></span></div>
+    </div>
+
+    <div class="jsp-plan p1">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></button>
+      <span class="jsp-accroche">à 9 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Chez Prune</span><span class="jsp-spot-ligne">resto · M° Bastille</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Java</span><span class="jsp-spot-ligne">bar · à 2 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p2">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">2</span><span class="jsp-zone">canal St-Martin</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 16 min de toi · sans détour</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Hôtel du Nord</span><span class="jsp-spot-ligne">bar · M° Jacques Bonsergent</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Point Éphémère</span><span class="jsp-spot-ligne">tranquilo · à 4 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p3">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">3</span><span class="jsp-zone">Pigalle</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 21 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Dirty Dick</span><span class="jsp-spot-ligne">bar · M° Pigalle</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Fourmi</span><span class="jsp-spot-ligne">bar · à 1 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+
+    <div class="swatch-row">
+      <div class="swatch"><i style="background:#52dce0"></i><b>#52dce0</b>plan 1 · 182°</div>
+      <div class="swatch"><i style="background:#52ace0"></i><b>#52ace0</b>plan 2 · 202°</div>
+      <div class="swatch"><i style="background:#5652e0"></i><b>#5652e0</b>plan 3 · 242°</div>
+    </div>
+    <p class="petite">la plus « nuit » des trois — tout reste bleu, la distinction vient de la clarté plus que de la teinte.
+    risque : sur une petite carte chargée, deux bleus voisins (182°/202°) peuvent se confondre au premier coup d'œil.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTE 2 — TRIADE
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap" style="--plan-1:#597ccf;--plan-2:#cf597c;--plan-3:#7ccf59">
+    <h2 class="section-titre"><b>Variante B</b> — triade adoucie</h2>
+    <div class="origine">teintes à <b>222° / 342° / 102°</b> — trois pointes à 120° d'écart sur la roue,
+    saturation et clarté abaissées (55 %/58 %) pour rester nocturnes plutôt que criardes.</div>
+
+    <div class="carte-mock">
+      <span class="cap">3 plans, contour uniquement</span>
+      <div class="pin pin-p1 allume" style="left:78px;top:58px"><span class="pin-type"></span><span class="pin-plan">1</span></div>
+      <div class="pin pin-p2 allume" style="left:198px;top:112px"><span class="pin-type"></span><span class="pin-plan">2</span></div>
+      <div class="pin pin-p3 allume" style="left:298px;top:52px"><span class="pin-type"></span><span class="pin-plan">3</span></div>
+      <div class="pin dim" style="left:342px;top:140px"><span class="pin-type"></span></div>
+    </div>
+
+    <div class="jsp-plan p1">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></button>
+      <span class="jsp-accroche">à 9 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Chez Prune</span><span class="jsp-spot-ligne">resto · M° Bastille</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Java</span><span class="jsp-spot-ligne">bar · à 2 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p2">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">2</span><span class="jsp-zone">canal St-Martin</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 16 min de toi · sans détour</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Hôtel du Nord</span><span class="jsp-spot-ligne">bar · M° Jacques Bonsergent</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Point Éphémère</span><span class="jsp-spot-ligne">tranquilo · à 4 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p3">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">3</span><span class="jsp-zone">Pigalle</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 21 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Dirty Dick</span><span class="jsp-spot-ligne">bar · M° Pigalle</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Fourmi</span><span class="jsp-spot-ligne">bar · à 1 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+
+    <div class="swatch-row">
+      <div class="swatch"><i style="background:#597ccf"></i><b>#597ccf</b>plan 1 · 222°</div>
+      <div class="swatch"><i style="background:#cf597c"></i><b>#cf597c</b>plan 2 · 342°</div>
+      <div class="swatch"><i style="background:#7ccf59"></i><b>#7ccf59</b>plan 3 · 102°</div>
+    </div>
+    <p class="petite">la plus lisible des trois à distance — chaque plan a vraiment sa couleur. plan 1 reprend presque
+    la graine elle-même (222°, assourdie), ce qui garde un lien direct avec la marque.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTE 3 — SPLIT-COMPLÉMENT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap" style="--plan-1:#5375c6;--plan-2:#c66a53;--plan-3:#afc653">
+    <h2 class="section-titre"><b>Variante C</b> — split-complément</h2>
+    <div class="origine">teintes à <b>222° / 12° / 72°</b> — la graine, plus les deux voisines du complément
+    (42° ± 30°). Saturation/clarté à 50 %/55 %, la plus tempérée des trois.</div>
+
+    <div class="carte-mock">
+      <span class="cap">3 plans, contour uniquement</span>
+      <div class="pin pin-p1 allume" style="left:78px;top:58px"><span class="pin-type"></span><span class="pin-plan">1</span></div>
+      <div class="pin pin-p2 allume" style="left:198px;top:112px"><span class="pin-type"></span><span class="pin-plan">2</span></div>
+      <div class="pin pin-p3 allume" style="left:298px;top:52px"><span class="pin-type"></span><span class="pin-plan">3</span></div>
+      <div class="pin dim" style="left:342px;top:140px"><span class="pin-type"></span></div>
+    </div>
+
+    <div class="jsp-plan p1">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">1</span><span class="jsp-zone">Bastille</span>
+        <span class="jsp-tete-carte">sur la carte ●</span></button>
+      <span class="jsp-accroche">à 9 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Chez Prune</span><span class="jsp-spot-ligne">resto · M° Bastille</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Java</span><span class="jsp-spot-ligne">bar · à 2 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p2">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">2</span><span class="jsp-zone">canal St-Martin</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 16 min de toi · sans détour</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Hôtel du Nord</span><span class="jsp-spot-ligne">bar · M° Jacques Bonsergent</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Point Éphémère</span><span class="jsp-spot-ligne">tranquilo · à 4 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+    <div class="jsp-plan p3">
+      <button class="jsp-tete" type="button"><span class="jsp-jeton">3</span><span class="jsp-zone">Pigalle</span>
+        <span class="jsp-tete-carte">sur la carte ○</span></button>
+      <span class="jsp-accroche">à 21 min de toi · sans se presser</span>
+      <div class="jsp-spots">
+        <div class="jsp-spot"><span class="jsp-ab">A</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">Dirty Dick</span><span class="jsp-spot-ligne">bar · M° Pigalle</span></span></div>
+        <div class="jsp-spot"><span class="jsp-ab b">B</span><span class="jsp-spot-corps">
+          <span class="jsp-spot-nom">La Fourmi</span><span class="jsp-spot-ligne">bar · à 1 min du premier</span></span></div>
+      </div>
+      <button class="jsp-va">celui-là. →</button>
+    </div>
+
+    <div class="swatch-row">
+      <div class="swatch"><i style="background:#5375c6"></i><b>#5375c6</b>plan 1 · 222°</div>
+      <div class="swatch"><i style="background:#c66a53"></i><b>#c66a53</b>plan 2 · 12°</div>
+      <div class="swatch"><i style="background:#afc653"></i><b>#afc653</b>plan 3 · 72°</div>
+    </div>
+    <div class="risque">⚠ le plan 3 (72°, olive) est le voisin le plus proche du jaune « moi » (42°, #efb839) —
+    à vérifier côte à côte sur la vraie carte pour ne pas confondre un spot avec ton propre repère GPS.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       RÉCAP
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>À trancher</b></h2>
+    <ul class="footer-check">
+      <li>contour colorable / fond neutre — au lieu de l'inverse (section « Correction 1 »)</li>
+      <li>le ① reprend les proportions du rond A/B — 16 px / 1,2 px (section « Correction 2 »)</li>
+      <li><code>.jsp-tete</code> passe en <code>align-items: center</code> (section « Correction 3 »)</li>
+      <li>palette : <b>A analogues</b> / <b>B triade adoucie</b> / <b>C split-complément</b> — ou retour à cire/reco/sauge</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
