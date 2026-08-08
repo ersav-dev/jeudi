@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — l'épingle : cercle vs goutte (variantes)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Instrument+Serif:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ── matière (copiée de app/src/index.css) ── */
+    --nuit:#14120e; --nuit-2:#1b1813; --nuit-3:#23201a;
+    --encre:#efe9d8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.34);
+    --graphite:#8a857a; --rayon:3px;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+
+    /* ── l'épingle néon, EXACTE (copiée de index.css, §« L'ÉPINGLE NÉON ») ── */
+    --pin-taille: 30px;
+    --pin-fond: rgba(115, 115, 115, .1);
+    --pin-contour: #628ef3;
+    --pin-contour-ep: 2px;
+    --pin-glow: rgba(69, 153, 232, .6);
+    --pin-glow-blur: 16px;
+    --pin-glyphe: #33a7ff;
+
+    /* ── le rose « je sais pas » retenu (plan-2, Variante B triade adoucie — index.css l.90) ── */
+    --rose: #cf597c;
+    --rose-glow: rgba(207, 89, 124, .55);
+
+    /* ── la croix « vraie position » ── */
+    --croix: #c87a6b;
+  }
+  *{box-sizing:border-box}
+  html{background:#0c0a08}
+  body{
+    margin:0 auto; max-width:720px; background:var(--nuit); color:var(--encre);
+    font-family:'JetBrains Mono',monospace; -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  body::before{content:'';position:fixed;inset:0;background:var(--grain);opacity:.05;pointer-events:none;mix-blend-mode:overlay;}
+  .page{position:relative;padding:28px 20px 90px;}
+
+  .hero-titre{font-family:'Instrument Serif',serif;font-style:italic;font-size:32px;line-height:1.08;margin:0 0 8px;color:var(--encre);}
+  .hero-sous{font-size:12px;color:var(--encre-2);letter-spacing:.2px;line-height:1.6;margin:0 0 4px;max-width:58ch;}
+  .hero-taille{font-size:10px;color:var(--encre-3);letter-spacing:.6px;text-transform:uppercase;margin:10px 0 0;}
+
+  h2.section-titre{
+    font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--encre-3);
+    margin:0 0 3px;padding-top:22px;border-top:1px dashed rgba(239,233,216,.18);
+  }
+  h2.section-titre b{color:var(--encre);font-weight:700;}
+  h2.section-titre .px{font-family:'JetBrains Mono';color:var(--encre-2);text-transform:none;letter-spacing:0;font-size:10.5px;}
+  .section-wrap{margin-top:36px;}
+  .hand{font-family:'Caveat',cursive;font-size:19px;color:var(--encre-2);line-height:1.4;margin:2px 0 14px;}
+  .hand b{color:var(--encre);}
+  .petite{font-size:11px;color:var(--encre-3);line-height:1.6;margin:8px 0 0;max-width:64ch;}
+  .petite b{color:var(--encre-2);}
+  .risque{
+    font-size:11px;color:#c87a6b;border:1px dashed rgba(200,122,107,.5);border-radius:var(--rayon);
+    padding:8px 10px;margin:8px 0 0;line-height:1.55;max-width:64ch;
+  }
+  .avantage{
+    font-size:11px;color:#8ec27a;border:1px dashed rgba(142,194,122,.45);border-radius:var(--rayon);
+    padding:8px 10px;margin:8px 0 0;line-height:1.55;max-width:64ch;
+  }
+
+  /* ══ la carte (fausse carto, façon MapLibre sombre — copiée de jsp_palette_nuit.html) ══ */
+  .carte-mock{
+    position:relative;width:320px;max-width:100%;height:180px;border-radius:var(--rayon);overflow:hidden;
+    border:1px solid rgba(239,233,216,.18);margin:10px 0 8px;
+    background:
+      radial-gradient(ellipse at 68% 20%, #201d17 0%, transparent 55%),
+      radial-gradient(ellipse at 16% 84%, #1d1a15 0%, transparent 52%),
+      #171510;
+  }
+  .carte-mock::before{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(112deg, transparent 46%, rgba(239,233,216,.045) 46.6%, rgba(239,233,216,.045) 47.1%, transparent 47.7%),
+      linear-gradient(28deg, transparent 26%, rgba(239,233,216,.035) 26.6%, rgba(239,233,216,.035) 27.1%, transparent 27.7%),
+      linear-gradient(0deg, transparent 64%, rgba(239,233,216,.04) 64.6%, rgba(239,233,216,.04) 65.4%, transparent 66%);
+  }
+  .carte-mock .cap{position:absolute;left:10px;bottom:8px;font-size:9.5px;color:var(--encre-3);letter-spacing:.3px;z-index:5;}
+
+  /* ── la croix : la vraie position du lieu, au trait fin ── */
+  .croix{position:absolute;width:15px;height:15px;transform:translate(-50%,-50%);pointer-events:none;}
+  .croix svg{width:100%;height:100%;overflow:visible}
+  .croix path{stroke:var(--croix);stroke-width:1.2;}
+  .croix circle{fill:var(--croix);}
+  .croix.dessous{z-index:1;opacity:.85;}
+  .croix.dessus{z-index:6;}
+
+  /* ══ LE PIN CERCLE ACTUEL (copié EXACTEMENT de .pin / .pin-type / .pin-douane, index.css) ══ */
+  .pin{
+    position:absolute;z-index:3;
+    width:var(--pin-taille);height:var(--pin-taille);
+    margin:calc(var(--pin-taille) / -2) 0 0 calc(var(--pin-taille) / -2);
+    background:var(--pin-fond);border:var(--pin-contour-ep) solid var(--pin-contour);border-radius:50%;
+    box-shadow:0 0 var(--pin-glow-blur) var(--pin-glow), 0 1px 0 rgba(0,0,0,.5);
+  }
+  .pin-type{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .pin-type svg{width:85%;height:85%;stroke:var(--pin-glyphe);filter:drop-shadow(0 0 4px var(--pin-glow));}
+  .pin-douane{
+    position:absolute;bottom:-8px;right:-11px;padding:1px 4px;border-radius:var(--rayon);
+    background:#161816;border:1px solid #bde2ff;color:#fe5da3;font-size:12px;font-weight:700;
+    letter-spacing:.4px;line-height:1.25;transform:rotate(-15deg);pointer-events:none;
+  }
+
+  /* ══ LA GOUTTE — même identité (fond/contour/glow/glyphe/tampon), silhouette SVG ══
+     construite en coordonnées LOCALES : un cercle (ou ellipse) de rayon 15, plus deux
+     béziers symétriques qui referment la base en pointe. Le SVG déborde le "corps
+     logique" 30×30 (ou 30×33 pour l'ovale) de 10px de PAD sur les côtés/haut, pour le
+     halo, et se prolonge sous ce corps de la longueur de pointe (6 / 11 / 8px). */
+  .goutte-pin{position:relative;width:30px;height:30px;}
+  .goutte-pin.oval{height:33px;}
+  .goutte-svg{position:absolute;left:-10px;top:-10px;display:block;overflow:visible;
+    filter:drop-shadow(0 0 5px var(--pin-glow)) drop-shadow(0 0 9px var(--pin-glow)) drop-shadow(0 1px 1px rgba(0,0,0,.5));}
+  .goutte-svg path.corps{fill:var(--pin-fond);stroke:var(--pin-contour);stroke-width:2;}
+  .goutte-pin .pin-type,
+  .goutte-pin .pin-douane{ /* inchangées : ancrées au CORPS logique (30×30 / 30×33), jamais à la pointe */ }
+
+  /* état « allumé, je sais pas » — plan-2, Variante B (index.css l.90 : --plan-2:#cf597c) —
+     copie de `.carte .pin-allume:not(.pin-actif)` : le CONTOUR prend l'encre, jamais le fond. */
+  .goutte-pin.allume .goutte-svg{
+    filter:drop-shadow(0 0 5px var(--rose-glow)) drop-shadow(0 0 9px var(--rose-glow)) drop-shadow(0 1px 1px rgba(0,0,0,.5));
+  }
+  .goutte-pin.allume .goutte-svg path.corps{stroke:var(--rose);}
+  .goutte-pin.allume .pin-type svg{stroke:var(--rose);filter:drop-shadow(0 0 4px var(--rose-glow));}
+  .pin.allume{border-color:var(--rose);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--rose) 22%, transparent), 0 0 var(--pin-glow-blur) var(--rose-glow), 0 1px 0 rgba(0,0,0,.5);}
+  .pin.allume .pin-type svg{stroke:var(--rose);filter:drop-shadow(0 0 4px var(--rose-glow));}
+
+  /* ── mise en scène des 4 démonstrations par variante ── */
+  .stage-row{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 6px;}
+  .stage{
+    flex:1;min-width:132px;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+    padding:16px 8px 10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:120px;
+    position:relative;
+  }
+  .stage .lbl{font-size:9.5px;color:var(--encre-3);text-align:center;margin-top:12px;line-height:1.4;letter-spacing:.2px;}
+  .stage .lbl b{color:var(--encre-2);}
+  .stage-carte{padding:0;overflow:hidden;justify-content:flex-start;min-height:0;}
+  .stage-zoom .goutte-pin,.stage-zoom .pin{transform:scale(3);transform-origin:50% 100%;margin-bottom:22px;}
+  .stage-plain{justify-content:flex-end;padding-bottom:16px;}
+
+  /* ── nuage de teintes / swatches ── */
+  .swatch-row{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0 4px;}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:9.5px;color:var(--encre-2);width:58px;}
+  .swatch i{display:block;width:28px;height:28px;border-radius:50%;border:1px solid rgba(239,233,216,.25);box-shadow:0 1px 0 rgba(0,0,0,.4);}
+  .swatch b{font-family:'JetBrains Mono';font-size:9.5px;color:var(--encre);letter-spacing:.2px;}
+
+  .footer-check{font-size:11.5px;color:var(--encre-2);line-height:1.9;margin-top:10px;padding-left:20px;}
+  .footer-check li{margin-bottom:6px;}
+  .footer-check b{color:var(--encre);}
+  .footer-check code{color:var(--rose);font-size:10.5px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero-titre">le rond ne pointe rien.<br>la goutte, si.</div>
+  <p class="hero-sous">Planche de comparaison — pas de code d'app, juste trancher. Aujourd'hui le pin est un
+  cercle centré sur la position : le centre du disque EST l'ancre, mais rien ne le montre à l'œil. Demain,
+  la <b>pointe</b> de la goutte descend jusqu'à la position exacte — l'ancre passe du centre à la racine.</p>
+  <p class="hero-taille">taille réelle du corps — 30 px, comme aujourd'hui</p>
+
+  <!-- ══════════════════════════════════════════════════════════
+       AUJOURD'HUI — le cercle
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>Aujourd'hui</b> — le cercle, ancré au centre</h2>
+    <p class="hand">le disque flotte sur le point — son <b>centre</b> est l'ancre, mais un cercle n'a
+    pas de sens : rien ne dit "c'est précisément ici" plutôt qu'à 3 px de là.</p>
+
+    <div class="carte-mock">
+      <span class="cap">extrait de carte — le pin ancré au centre (comme aujourd'hui)</span>
+      <div class="croix dessous" style="left:160px;top:100px">
+        <svg viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+      </div>
+      <div class="pin" style="left:160px;top:100px">
+        <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        <span class="pin-douane">ITA</span>
+      </div>
+    </div>
+    <p class="petite">la croix marque la position réelle — exactement au même endroit que l'ancre actuelle
+    (le centre du disque), mais <b>avalée</b> par le fond translucide (10 % d'opacité) : sans l'annoter,
+    impossible de distinguer "le point exact" de "quelque part sous le rond". C'est ça, l'ambiguïté —
+    pas une erreur de coordonnées, un défaut de silhouette.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       G1 — la goutte classique
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>G1</b> — la goutte classique <span class="px">· pointe ≈ 6 px</span></h2>
+    <p class="hand">cercle + pointe courte : la silhouette reste compacte, proche du rond d'aujourd'hui —
+    la carte ne se charge presque pas visuellement.</p>
+
+    <div class="stage-row">
+      <div class="stage stage-carte" style="flex:0 0 320px;max-width:100%;height:180px;padding:0;">
+        <div class="carte-mock" style="margin:0;width:100%;height:100%;">
+          <span class="cap">taille réelle — la pointe touche la croix</span>
+          <div class="croix dessus" style="left:160px;top:130px">
+            <svg viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+          </div>
+          <div class="goutte-pin" style="position:absolute;left:145px;top:94px">
+            <svg class="goutte-svg" width="50" height="56" viewBox="0 0 50 56">
+              <path class="corps" d="M25,10 A15,15 0 0 1 30.63,38.9 C26.92,40.4 26.69,43 25,46 C23.31,43 23.08,40.4 19.37,38.9 A15,15 0 0 1 25,10 Z"/>
+            </svg>
+            <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage stage-zoom">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="56" viewBox="0 0 50 56">
+            <path class="corps" d="M25,10 A15,15 0 0 1 30.63,38.9 C26.92,40.4 26.69,43 25,46 C23.31,43 23.08,40.4 19.37,38.9 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">agrandi <b>×3</b><br>la pointe reste nette au trait</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin allume">
+          <svg class="goutte-svg" width="50" height="56" viewBox="0 0 50 56">
+            <path class="corps" d="M25,10 A15,15 0 0 1 30.63,38.9 C26.92,40.4 26.69,43 25,46 C23.31,43 23.08,40.4 19.37,38.9 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">allumé <b>« je sais pas »</b><br>contour #cf597c, palette B</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="56" viewBox="0 0 50 56">
+            <path class="corps" d="M25,10 A15,15 0 0 1 30.63,38.9 C26.92,40.4 26.69,43 25,46 C23.31,43 23.08,40.4 19.37,38.9 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          <span class="pin-douane">ITA</span>
+        </div>
+        <span class="lbl">avec le tampon<br>toujours bas-droite du corps</span>
+      </div>
+    </div>
+    <p class="avantage"><b>avantage :</b> la moins dépaysante des trois — de loin, sur une carte chargée de pins,
+    elle se confond presque avec le rond d'aujourd'hui.</p>
+    <p class="risque"><b>risque :</b> la pointe est si courte qu'au zoom "rue" (là où on a justement besoin de
+    précision), elle peut se lire comme un artefact d'anticrénelage plutôt qu'un vrai repère.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       G2 — la pointe longue
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>G2</b> — la pointe longue <span class="px">· pointe ≈ 11 px</span></h2>
+    <p class="hand">une silhouette élancée, presque un tampon de cire qui coule — c'est elle qui
+    désigne le plus nettement l'endroit exact.</p>
+
+    <div class="stage-row">
+      <div class="stage stage-carte" style="flex:0 0 320px;max-width:100%;height:180px;padding:0;">
+        <div class="carte-mock" style="margin:0;width:100%;height:100%;">
+          <span class="cap">taille réelle — la pointe touche la croix</span>
+          <div class="croix dessus" style="left:160px;top:130px">
+            <svg viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+          </div>
+          <div class="goutte-pin" style="position:absolute;left:145px;top:89px">
+            <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+              <path class="corps" d="M25,10 A15,15 0 0 1 31.57,38.49 C27.07,40.68 26.64,47 25,51 C23.36,47 22.93,40.68 18.43,38.49 A15,15 0 0 1 25,10 Z"/>
+            </svg>
+            <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage stage-zoom">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,15 0 0 1 31.57,38.49 C27.07,40.68 26.64,47 25,51 C23.36,47 22.93,40.68 18.43,38.49 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">agrandi <b>×3</b><br>le corps reste un vrai cercle</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin allume">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,15 0 0 1 31.57,38.49 C27.07,40.68 26.64,47 25,51 C23.36,47 22.93,40.68 18.43,38.49 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">allumé <b>« je sais pas »</b><br>contour #cf597c, palette B</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,15 0 0 1 31.57,38.49 C27.07,40.68 26.64,47 25,51 C23.36,47 22.93,40.68 18.43,38.49 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          <span class="pin-douane">ITA</span>
+        </div>
+        <span class="lbl">avec le tampon<br>toujours bas-droite du corps</span>
+      </div>
+    </div>
+    <p class="avantage"><b>avantage :</b> zéro ambiguïté possible — même vue de loin, la racine tombe
+    clairement sur un pixel précis, jamais sur "une zone".</p>
+    <p class="risque"><b>risque :</b> sur une carte dense (plusieurs pins voisins), les pointes longues
+    peuvent se croiser ou mordre sur le pin d'à côté — à vérifier en situation réelle, pas en solo.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       G3 — le corps ovale
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>G3</b> — le corps ovale <span class="px">· hauteur +10 % · pointe ≈ 8 px</span></h2>
+    <p class="hand">le corps s'étire un peu à la verticale avant de se refermer en pointe moyenne —
+    entre les deux, ni trop rond ni trop tendu.</p>
+
+    <div class="stage-row">
+      <div class="stage stage-carte" style="flex:0 0 320px;max-width:100%;height:180px;padding:0;">
+        <div class="carte-mock" style="margin:0;width:100%;height:100%;">
+          <span class="cap">taille réelle — la pointe touche la croix</span>
+          <div class="croix dessus" style="left:160px;top:130px">
+            <svg viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
+          </div>
+          <div class="goutte-pin oval" style="position:absolute;left:145px;top:89px">
+            <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+              <path class="corps" d="M25,10 A15,16.5 0 0 1 31.1,41.58 C27.06,43.56 26.71,47.7 25,51 C23.29,47.7 22.94,43.56 18.9,41.58 A15,16.5 0 0 1 25,10 Z"/>
+            </svg>
+            <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage stage-zoom">
+        <div class="goutte-pin oval">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,16.5 0 0 1 31.1,41.58 C27.06,43.56 26.71,47.7 25,51 C23.29,47.7 22.94,43.56 18.9,41.58 A15,16.5 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">agrandi <b>×3</b><br>l'ovale se voit à peine</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin oval allume">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,16.5 0 0 1 31.1,41.58 C27.06,43.56 26.71,47.7 25,51 C23.29,47.7 22.94,43.56 18.9,41.58 A15,16.5 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">allumé <b>« je sais pas »</b><br>contour #cf597c, palette B</span>
+      </div>
+
+      <div class="stage stage-plain">
+        <div class="goutte-pin oval">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,16.5 0 0 1 31.1,41.58 C27.06,43.56 26.71,47.7 25,51 C23.29,47.7 22.94,43.56 18.9,41.58 A15,16.5 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+          <span class="pin-douane">ITA</span>
+        </div>
+        <span class="lbl">avec le tampon<br>toujours bas-droite du corps</span>
+      </div>
+    </div>
+    <p class="avantage"><b>avantage :</b> compromis lisible — la pointe se voit mieux que G1 sans le risque
+    de collision de G2, et l'ovale donne au corps un léger effet "goutte qui tombe" même à taille réelle.</p>
+    <p class="risque"><b>risque :</b> +10 % de hauteur = le glyphe (verre, tasse…) n'est plus parfaitement
+    centré dans un disque — il faut re-vérifier son <code>inset:0</code> sur un corps qui n'est plus rond.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LES TROIS CÔTE À CÔTE
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>Les trois</b> — côte à côte, taille réelle</h2>
+    <div class="stage-row">
+      <div class="stage stage-plain">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="56" viewBox="0 0 50 56">
+            <path class="corps" d="M25,10 A15,15 0 0 1 30.63,38.9 C26.92,40.4 26.69,43 25,46 C23.31,43 23.08,40.4 19.37,38.9 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl"><b>G1</b> classique</span>
+      </div>
+      <div class="stage stage-plain">
+        <div class="goutte-pin">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,15 0 0 1 31.57,38.49 C27.07,40.68 26.64,47 25,51 C23.36,47 22.93,40.68 18.43,38.49 A15,15 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl"><b>G2</b> pointe longue</span>
+      </div>
+      <div class="stage stage-plain">
+        <div class="goutte-pin oval">
+          <svg class="goutte-svg" width="50" height="61" viewBox="0 0 50 61">
+            <path class="corps" d="M25,10 A15,16.5 0 0 1 31.1,41.58 C27.06,43.56 26.71,47.7 25,51 C23.29,47.7 22.94,43.56 18.9,41.58 A15,16.5 0 0 1 25,10 Z"/>
+          </svg>
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl"><b>G3</b> corps ovale</span>
+      </div>
+      <div class="stage stage-plain">
+        <div class="pin" style="position:relative;left:0;top:0;margin:0;">
+          <span class="pin-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></span>
+        </div>
+        <span class="lbl">pour mémoire :<br>le cercle d'aujourd'hui</span>
+      </div>
+    </div>
+    <p class="petite">technique : SVG (un seul <code>&lt;path&gt;</code> avec arc + deux courbes de Bézier
+    symétriques), pas de <code>border-radius</code> tourné — un rond+coin carré pivoté donne un angle vif
+    de 90°, jamais une vraie pointe fine avec un contour 2px propre tout du long. Le glyphe et le tampon
+    restent positionnés sur le <b>corps logique 30×30</b> (30×33 pour G3), <code>inset:0</code> /
+    <code>bottom:-8px;right:-11px</code> inchangés — seule la silhouette dessinée derrière eux change,
+    et l'ancrage de la carte (le point que MapLibre pose sur la coordonnée GPS) passe du <b>centre</b> à
+    la <b>pointe</b>.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       À TRANCHER
+  ══════════════════════════════════════════════════════════ -->
+  <div class="section-wrap">
+    <h2 class="section-titre"><b>À trancher</b></h2>
+    <ul class="footer-check">
+      <li>quelle goutte — <b>G1</b> compacte / <b>G2</b> élancée / <b>G3</b> ovale (ou un retour au cercle)</li>
+      <li>la pointe garde-t-elle le glow néon, ou le halo se resserre-t-il autour du seul corps rond
+        (un <code>&lt;path&gt;</code> unique = le glow enveloppe la pointe par défaut, comme montré ici)</li>
+      <li>le tampon douane reste en bas-droite du <b>corps</b> — jamais accroché à la pointe (les trois
+        variantes le confirment ci-dessus)</li>
+      <li>l'ancrage carte passe du <b>centre</b> (aujourd'hui) à la <b>racine de la pointe</b> (demain) —
+        impact à vérifier partout où le pin est positionné (Carte.tsx, popups, recentrage)</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

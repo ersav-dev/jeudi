@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — la goutte, deuxième passe (max cercle, pointe douce)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --encre:#EFE9D8; --nuit:#0b1a3a; --papier:#14120e;
+    --pin-taille:30px; --pin-fond:rgba(115,115,115,.10); --pin-contour:#628ef3;
+    --pin-contour-ep:2px; --pin-glow:rgba(69,153,232,.6); --pin-glow-blur:16px;
+    --pin-glyphe:#33a7ff; --rose:#cf597c;
+  }
+  *{margin:0;box-sizing:border-box}
+  body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+       padding:26px 16px 80px;max-width:430px;margin:0 auto}
+  h1{font-family:'Caveat',cursive;font-size:30px;font-weight:600;margin-bottom:4px}
+  .sous{opacity:.55;font-size:13px;line-height:1.5;margin-bottom:6px}
+  .consigne{font-family:'Caveat',cursive;font-size:18px;opacity:.9;margin:12px 0 22px;line-height:1.35}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.5;margin:30px 0 10px}
+  .note{font-size:12px;opacity:.5;margin:8px 2px 0;line-height:1.5}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.55}
+
+  .carte{position:relative;height:130px;border-radius:10px;overflow:hidden;
+         border:1px solid rgba(239,233,216,.08);
+         background:radial-gradient(ellipse at 65% 25%,#232838 0%,transparent 55%),
+                    radial-gradient(ellipse at 20% 80%,#20242f 0%,transparent 50%),#191c25}
+  .carte::before{content:'';position:absolute;inset:0;
+    background:linear-gradient(115deg,transparent 48%,rgba(239,233,216,.05) 48.5%,rgba(239,233,216,.05) 49%,transparent 49.5%),
+               linear-gradient(35deg,transparent 40%,rgba(239,233,216,.04) 40.5%,rgba(239,233,216,.04) 41%,transparent 41.5%),
+               linear-gradient(0deg,transparent 66%,rgba(239,233,216,.05) 66.5%,rgba(239,233,216,.05) 67%,transparent 67.5%)}
+
+  /* la croix : la VRAIE position du spot, celle que la pointe doit désigner */
+  .croix{position:absolute;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;pointer-events:none;z-index:9}
+  .croix::before,.croix::after{content:'';position:absolute;background:rgba(224,90,58,.95)}
+  .croix::before{left:7px;top:0;width:1px;height:15px}
+  .croix::after{top:7px;left:0;height:1px;width:15px}
+
+  .marq{position:absolute;pointer-events:none}
+  .marq svg{display:block;overflow:visible}
+  .corps{fill:var(--pin-fond);stroke:var(--pin-contour);stroke-width:2;
+         stroke-linejoin:round;filter:drop-shadow(0 0 6px var(--pin-glow))}
+  .marq.on .corps{stroke:var(--rose);filter:drop-shadow(0 0 6px rgba(207,89,124,.55))}
+  .glyphe{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .glyphe svg{width:15px;height:15px;stroke:var(--pin-glyphe);fill:none;
+              stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+              filter:drop-shadow(0 0 4px rgba(51,167,255,.55))}
+  .marq.on .glyphe svg{stroke:var(--rose);filter:drop-shadow(0 0 4px rgba(207,89,124,.5))}
+  .douane{position:absolute;right:-7px;bottom:2px;font-family:'JetBrains Mono',monospace;
+          font-weight:700;font-size:7px;letter-spacing:.04em;color:var(--encre);
+          background:var(--nuit);border:1px solid rgba(239,233,216,.5);
+          border-radius:2px;padding:1px 2px;line-height:1}
+
+  .rangee{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;
+          background:#191c25;border-radius:10px;padding:20px 16px 14px;
+          border:1px solid rgba(239,233,216,.07)}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:7px;width:78px}
+  .cell .lbl{font-family:'JetBrains Mono',monospace;font-size:9px;opacity:.6;text-align:center;line-height:1.3}
+  .cell .zone{position:relative;height:76px;display:flex;align-items:flex-start;justify-content:center;width:100%}
+
+  .fiche{border:1px solid rgba(239,233,216,.09);border-radius:12px;padding:14px;margin-bottom:12px;background:#171411}
+  .fiche h3{font-size:15px;font-weight:500;margin-bottom:2px}
+  .fiche .params{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.5;margin-bottom:10px}
+  .fiche .duo{display:flex;gap:14px;align-items:center}
+  .fiche .duo > div{position:relative}
+
+  .check{border:1px dashed rgba(239,233,216,.25);border-radius:10px;padding:14px 16px;margin-top:26px}
+  .check li{font-size:13px;margin:7px 0;opacity:.85}
+</style>
+</head>
+<body>
+  <h1>la goutte — deuxième passe</h1>
+  <p class="sous">La croix rouge est la VRAIE position du spot. Sur le cercle
+  d'aujourd'hui elle se cache sous le centre ; sur la goutte, la pointe tombe pile dessus.</p>
+  <p class="consigne">« que ça ressemble un max à un cercle… sauf la petite
+  pointe en bas. la pointe peut être douce ! »</p>
+
+  <h2>aujourd'hui — le cercle centré</h2>
+  <div class="carte" id="ref"></div>
+  <p class="note">Le rond est <b>centré</b> sur la position : le lieu est « quelque part
+  dessous ». C'est l'ambiguïté qu'on veut lever.</p>
+
+  <h2>les six essais, à taille réelle</h2>
+  <div class="carte" id="scene"></div>
+  <p class="note mono" id="legende"></p>
+
+  <h2>les mêmes, en rang, ×1 puis ×3</h2>
+  <div class="rangee" id="rangee"></div>
+
+  <h2>les trois plus ronds, en situation complète</h2>
+  <div id="fiches"></div>
+
+  <div class="check">
+    <div class="mono" style="margin-bottom:6px">à trancher</div>
+    <ul>
+      <li>① quelle goutte — <b>A</b>, <b>B</b>, <b>C</b> ?</li>
+      <li>② la pointe : <b>douce</b> (A-D, F) ou <b>nette</b> (E) ?</li>
+      <li>③ la pointe garde-t-elle le <b>glow</b> néon, ou s'éteint-elle en bas ?</li>
+      <li>④ le tampon douane reste-t-il en bas-droite du corps ?</li>
+    </ul>
+  </div>
+
+<script>
+// ── la goutte : un vrai cercle, ouvert d'un angle φ tout en bas, refermé par
+// deux courbes qui prolongent la tangente et se rejoignent sous le centre.
+// φ petit = cercle quasi intact · L = longueur de la pointe · dur = 0 douce → 1 nette
+function goutte(r, phi, L, dur) {
+  const p = phi * Math.PI / 180
+  const xJ = r * Math.sin(p), yJ = r * Math.cos(p)
+  const tipY = r + L
+  const t = L * 0.62 + r * 0.10          // le contrôle qui quitte la tangente
+  const c1x = xJ - t * Math.cos(p), c1y = yJ + t * Math.sin(p)
+  const w = (1 - dur) * (r * 0.17) + 0.4 // large = pointe ronde · étroit = pointe nette
+  const v = L * (0.22 + dur * 0.48)
+  return `M ${(-xJ).toFixed(2)} ${yJ.toFixed(2)}
+          A ${r} ${r} 0 1 1 ${xJ.toFixed(2)} ${yJ.toFixed(2)}
+          C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${w.toFixed(2)} ${(tipY-v).toFixed(2)}, 0 ${tipY.toFixed(2)}
+          C ${(-w).toFixed(2)} ${(tipY-v).toFixed(2)}, ${(-c1x).toFixed(2)} ${c1y.toFixed(2)}, ${(-xJ).toFixed(2)} ${yJ.toFixed(2)} Z`
+}
+
+const R = 15
+const V = [
+  { id:'A', phi:8,  L:4, dur:0,   nom:'le téton',        mot:'cercle quasi intact, pointe minuscule' },
+  { id:'B', phi:13, L:5, dur:0,   nom:'la douce',        mot:'à peine ouverte, pointe ronde' },
+  { id:'C', phi:18, L:5, dur:0,   nom:'la lisible',      mot:'un peu plus marquée, reste très ronde' },
+  { id:'D', phi:18, L:7, dur:0,   nom:'la longue douce', mot:'même ouverture, pointe plus basse' },
+  { id:'E', phi:18, L:5, dur:0.9, nom:'la nette',        mot:'même forme que C, pointe pointue' },
+  { id:'F', phi:26, L:8, dur:0.4, nom:'la v1',           mot:'la proposition d\'hier, pour mesurer' },
+]
+
+const VERRE = '<svg viewBox="0 0 24 24"><path d="M8 3h8l-.9 5a3.1 3.1 0 0 1-6.2 0z"/><path d="M12 11v6"/><path d="M9 20h6"/></svg>'
+
+// un marqueur : la pointe tombe exactement sur (x, y)
+function marqueur(v, ech, glyphe, douane, allume) {
+  const L = v.L, tipY = R + L
+  const pad = 6
+  const w = (R + pad) * 2, h = R + L + pad * 2
+  const d = goutte(R, v.phi, L, v.dur)
+  const el = document.createElement('div')
+  el.className = 'marq' + (allume ? ' on' : '')
+  el.style.width = (w * ech) + 'px'
+  el.style.height = (h * ech) + 'px'
+  el.innerHTML =
+    `<svg width="${w*ech}" height="${h*ech}" viewBox="${-R-pad} ${-R-pad} ${w} ${h}">
+       <path class="corps" d="${d}"/></svg>` +
+    (glyphe ? `<div class="glyphe" style="bottom:${(L+pad)*ech}px;top:${pad*ech}px">${VERRE}</div>` : '') +
+    (douane ? `<span class="douane" style="bottom:${(L+pad+2)*ech}px">ITA</span>` : '')
+  // l'ancre : la pointe, au milieu en x, à (pad + R + L) du haut
+  el._ancre = { x: (R + pad) * ech, y: (R + L + pad) * ech }
+  return el
+}
+
+function poser(hote, el, x, y) {
+  el.style.position = 'absolute'
+  el.style.left = (x - el._ancre.x) + 'px'
+  el.style.top = (y - el._ancre.y) + 'px'
+  hote.appendChild(el)
+  const c = document.createElement('div')
+  c.className = 'croix'; c.style.left = x + 'px'; c.style.top = y + 'px'
+  hote.appendChild(c)
+}
+
+// ── référence : le cercle d'aujourd'hui, centré sur la croix
+{
+  const h = document.getElementById('ref')
+  const d = document.createElement('div')
+  d.className = 'marq'
+  d.style.cssText = 'width:30px;height:30px;left:180px;top:50px;position:absolute'
+  d.innerHTML = `<svg width="30" height="30" viewBox="-16 -16 32 32"><circle class="corps" cx="0" cy="0" r="15"/></svg>`
+                + `<div class="glyphe">${VERRE}</div>`
+  h.appendChild(d)
+  const c = document.createElement('div')
+  c.className = 'croix'; c.style.left = '195px'; c.style.top = '65px'
+  h.appendChild(c)
+}
+
+// ── les six, posés sur la même carte
+{
+  const h = document.getElementById('scene')
+  const xs = [34, 100, 166, 232, 298, 364]
+  V.forEach((v, i) => poser(h, marqueur(v, 1, true, false, false), xs[i], 46 + (i % 2) * 42))
+  document.getElementById('legende').textContent =
+    V.map(v => `${v.id} φ${v.phi}° L${v.L}`).join('   ·   ')
+}
+
+// ── le rang : ×1 puis ×3
+{
+  const h = document.getElementById('rangee')
+  V.forEach(v => {
+    const c = document.createElement('div')
+    c.className = 'cell'
+    const z = document.createElement('div'); z.className = 'zone'
+    const petit = marqueur(v, 1, true, false, false)
+    petit.style.position = 'absolute'; petit.style.left = '4px'; petit.style.top = '0'
+    const gros = marqueur(v, 2.2, false, false, false)
+    gros.style.position = 'absolute'; gros.style.right = '0'; gros.style.top = '0'
+    z.appendChild(petit); z.appendChild(gros)
+    const l = document.createElement('div'); l.className = 'lbl'
+    l.innerHTML = `<b>${v.id}</b> · ${v.nom}<br>φ${v.phi}° L${v.L}`
+    c.appendChild(z); c.appendChild(l); h.appendChild(c)
+  })
+}
+
+// ── les trois plus ronds, en situation
+{
+  const h = document.getElementById('fiches')
+  V.filter(v => ['A','B','C'].includes(v.id)).forEach(v => {
+    const f = document.createElement('div')
+    f.className = 'fiche'
+    f.innerHTML = `<h3>${v.id} — ${v.nom}</h3><div class="params">φ ${v.phi}° · pointe ${v.L} px · ${v.mot}</div>`
+    const duo = document.createElement('div'); duo.className = 'duo'
+    const a = document.createElement('div'); a.style.cssText = 'width:60px;height:60px;position:relative'
+    const m1 = marqueur(v, 1.6, true, true, false); m1.style.position='absolute'; m1.style.left='0'; m1.style.top='0'
+    a.appendChild(m1)
+    const b = document.createElement('div'); b.style.cssText = 'width:60px;height:60px;position:relative'
+    const m2 = marqueur(v, 1.6, true, false, true); m2.style.position='absolute'; m2.style.left='0'; m2.style.top='0'
+    b.appendChild(m2)
+    const t = document.createElement('div')
+    t.className = 'mono'; t.style.lineHeight = '1.6'
+    t.innerHTML = 'avec tampon<br>allumé « je sais pas »'
+    duo.appendChild(a); duo.appendChild(b); duo.appendChild(t)
+    f.appendChild(duo); h.appendChild(f)
+  })
+}
+</script>
+</body>
+</html>
