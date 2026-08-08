@@ -326,9 +326,14 @@ export default function Recherche({
               data-mode={s.type}
               onClick={() => choisirStation(s)}
             >
-              <span className="rech-station-mode">
-                {s.type === 'rer' ? 'RER' : s.type === 'tram' ? 'T' : 'M'}
-              </span>
+              {s.type === 'monument' && s.trait ? (
+                // le monument porte sa silhouette monoline, pas une plaque
+                <span className="rech-monument" dangerouslySetInnerHTML={{ __html: s.trait }} />
+              ) : (
+                <span className="rech-station-mode">
+                  {s.type === 'rer' ? 'RER' : s.type === 'tram' ? 'T' : 'M'}
+                </span>
+              )}
               {s.nom}
             </button>
           ))}

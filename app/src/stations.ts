@@ -10,12 +10,18 @@
 // n'est pas une station. Ici on ne traite QUE les stations, et vite.
 // ════════════════════════════════════════════════════════════════
 import { donneesTransport, type TypeTransport } from './transport'
+import { MONUMENTS } from './monuments'
 
+// un repère cherchable : une station de transport… ou un monument du croquis.
+// « rdv à la tour eiffel » vaut « rdv à Edgar Quinet » — les monuments sont
+// déjà la langue des repères sur la carte, la recherche la parle aussi (09/08).
 export type Station = {
   nom: string
-  type: TypeTransport
+  type: TypeTransport | 'monument'
   lat: number
   lng: number
+  /** la silhouette monoline (monuments seulement) — pour la suggestion */
+  trait?: string
 }
 
 /** la forme comparable d'un nom : sans accent, sans ponctuation, sans casse.
@@ -97,20 +103,31 @@ export const chargerStations = (): Promise<Station[]> => {
   if (promesse) return promesse
   promesse = donneesTransport()
     .then((geo) => {
-      cache = geo.features
-        .filter((f) => NOMMABLES.includes(f.properties.type))
-        .map((f) => ({
-          nom: f.properties.nom,
-          type: f.properties.type,
-          lat: f.geometry.coordinates[1],
-          lng: f.geometry.coordinates[0],
-        }))
+      cache = [
+        // les monuments d'abord : à égalité de rang, ils gagnent par nom court
+        // (« opéra » = le monument avant la station homonyme, même position)
+        ...MONUMENTS.map((m) => ({
+          nom: m.nom, type: 'monument' as const, lat: m.lat, lng: m.lng, trait: m.trait,
+        })),
+        ...geo.features
+          .filter((f) => NOMMABLES.includes(f.properties.type))
+          .map((f) => ({
+            nom: f.properties.nom,
+            type: f.properties.type,
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+          })),
+      ]
       return cache
     })
     .catch(() => {
-      // pas de table : l'appelant retombera sur Nominatim, comme avant
+      // pas de table : l'appelant retombera sur Nominatim, comme avant.
+      // (même sans transport.json, les monuments, eux, sont dans le bundle)
+      cache = MONUMENTS.map((m) => ({
+        nom: m.nom, type: 'monument' as const, lat: m.lat, lng: m.lng, trait: m.trait,
+      }))
       promesse = null
-      return []
+      return cache
     })
   return promesse
 }

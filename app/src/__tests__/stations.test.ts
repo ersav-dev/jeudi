@@ -89,3 +89,23 @@ describe('chercherStations', () => {
     expect(chercherStations('o', table, 2).length).toBeLessThanOrEqual(2)
   })
 })
+
+describe('les monuments dans la recherche', () => {
+  const avecMonument: Station[] = [
+    ...table,
+    { nom: 'tour eiffel', type: 'monument', lat: 48.8584, lng: 2.2945, trait: '<svg/>' },
+  ]
+
+  it('« rdv à la tour eiffel » vaut « rdv à Edgar Quinet »', () => {
+    const [r] = chercherStations('tour eiffel', avecMonument)
+    expect(r).toMatchObject({ type: 'monument', lat: 48.8584 })
+  })
+
+  it('se trouve par un bout du nom, comme une station', () => {
+    expect(chercherStations('eiffel', avecMonument)[0].nom).toBe('tour eiffel')
+  })
+
+  it('porte sa silhouette pour la suggestion', () => {
+    expect(chercherStations('tour eiffel', avecMonument)[0].trait).toBeTruthy()
+  })
+})

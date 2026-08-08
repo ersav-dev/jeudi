@@ -6654,6 +6654,19 @@ button {
 .rech-station[data-mode='tram'] .rech-station-mode {
   background: #66a933;
 }
+/* le monument : sa silhouette monoline graphite, comme sur le croquis —
+ * pas de plaque, un monument n'est pas une ligne de transport */
+.rech-monument {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: #9a958a;
+  flex: 0 0 auto;
+}
+.rech-monument svg {
+  width: 16px;
+  height: 16px;
+}
 .labo-resultat {
   padding: 11px 14px;
   border-radius: var(--rayon);
