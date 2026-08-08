@@ -3327,6 +3327,40 @@ button {
 .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group {
   margin: 0 0 8px 0;
 }
+/* l'échelle (bas-gauche) au-dessus de l'attribution, peu importe l'ordre
+   d'ajout des contrôles — column-reverse place le dernier ajouté en haut */
+.maplibregl-ctrl-bottom-left {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 4px;
+}
+/* l'échelle éphémère : jamais posée en permanence — visible seulement
+   pendant le geste de zoom (Carte.tsx, zoomstart/zoomend). Style carnet,
+   pas la boîte blanche par défaut de maplibre. */
+.maplibregl-ctrl-scale {
+  background: color-mix(in srgb, var(--nuit) 55%, transparent);
+  border: 1px solid rgba(239, 233, 216, 0.3);
+  border-top: 1px solid rgba(239, 233, 216, 0.3);
+  border-radius: var(--rayon);
+  box-sizing: border-box;
+  color: var(--encre-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  padding: 1px 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1000ms ease;
+}
+.maplibregl-ctrl-scale.s-visible {
+  opacity: 1;
+  transition: opacity 120ms ease; /* apparition quasi instantanée au zoomstart */
+}
+@media (prefers-reduced-motion: reduce) {
+  .maplibregl-ctrl-scale {
+    transition: none; /* apparition/disparition nettes, pas de fondu */
+  }
+}
 
 /* bandeau dégradé derrière l'entête en vue carte */
 .voile-haut {
