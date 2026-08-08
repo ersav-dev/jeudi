@@ -11,7 +11,7 @@
 // #6e6e00 au lieu du #9F9825 olive).
 //
 // Données OSM figées le 2026-08-08.
-import type { FeatureCollection, MultiLineString, Point } from 'geojson'
+import type { FeatureCollection, MultiLineString } from 'geojson'
 
 export type Ligne = {
   id: string
@@ -22,13 +22,38 @@ export type Ligne = {
   brins: [number, number][][]
 }
 
-export type Bouche = { p: [number, number]; n: string | null }
+// une bouche : sa position, son numéro de sortie (celui écrit sur les
+// panneaux, en bas), son nom de rue brut, sa distance à la station
+export type Bouche = { p: [number, number]; r: string | null; n: string | null; d: number }
+
+// « Place de l'Opéra (théâtre national de l'Opéra) » → « Pl. de l'Opéra ».
+// Les noms bruts montent à 89 caractères ; sur la carte il en faut ~15.
+// La parenthèse saute d'abord (c'est toujours une précision, jamais l'adresse),
+// puis les génériques de voie s'abrègent comme sur un plan.
+const ABREGE: [RegExp, string][] = [
+  [/^Avenue\b/i, 'Av.'],
+  [/^Boulevard\b/i, 'Bd'],
+  [/^Place\b/i, 'Pl.'],
+  [/^Rue\b/i, 'R.'],
+  [/^Quai\b/i, 'Q.'],
+  [/^Passage\b/i, 'Pass.'],
+  [/^Théâtre\b/i, 'Th.'],
+  [/^Galeries\b/i, 'Gal.'],
+  [/\bSainte-/gi, 'Ste-'],
+  [/\bSaint-/gi, 'St-'],
+]
+
+export const elaguer = (nom: string | null): string | null => {
+  if (!nom) return null
+  let s = nom.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!s) return null
+  for (const [re, court] of ABREGE) s = s.replace(re, court)
+  return s
+}
 
 export const SOURCE_LIGNES = 'lignes-tracees'
 export const LAYER_LIGNES = 'lignes-tracees-trait'
 export const LAYER_LIGNES_HALO = 'lignes-tracees-halo'
-export const SOURCE_BOUCHES = 'bouches-metro'
-export const LAYER_BOUCHES = 'bouches-metro-points'
 
 let cacheL: Map<string, Ligne> | null = null
 let promL: Promise<Map<string, Ligne>> | null = null
@@ -60,10 +85,6 @@ export const AUCUNE_LIGNE: FeatureCollection<MultiLineString, { couleur: string;
   type: 'FeatureCollection',
   features: [],
 }
-export const AUCUNE_BOUCHE: FeatureCollection<Point, { nom: string | null }> = {
-  type: 'FeatureCollection',
-  features: [],
-}
 
 // un seul layer peint toutes les lignes : la couleur voyage dans la donnée,
 // lue côté MapLibre par ['get','couleur']
@@ -87,18 +108,35 @@ export const tracesPour = (
   return { type: 'FeatureCollection', features }
 }
 
+// combien de bouches on accepte d'afficher d'un coup : Châtelet en a dix,
+// au-delà de huit la carte devient une grille de flèches
+export const PLAFOND_BOUCHES = 8
+// le numéro apparaît dès qu'on est sur un quartier, le nom seulement quand
+// on marche vraiment vers la sortie
+export const Z_BOUCHES = 15
+export const Z_NOM_BOUCHE = 17
+
+export type BoucheAffichee = {
+  p: [number, number]
+  num: string | null
+  nom: string | null
+}
+
+// les bouches à poser pour la station touchée : plafonnées aux plus proches
+// (la donnée est déjà triée par distance), nom élagué et rendu seulement
+// au-delà de Z_NOM_BOUCHE.
 export const bouchesPour = (
   station: string | null,
   toutes: Record<string, Bouche[]> | null,
-): FeatureCollection<Point, { nom: string | null }> => {
+  zoom: number,
+): BoucheAffichee[] => {
+  if (zoom < Z_BOUCHES) return []
   const l = station && toutes ? toutes[station] : null
-  if (!l?.length) return AUCUNE_BOUCHE
-  return {
-    type: 'FeatureCollection',
-    features: l.map((b) => ({
-      type: 'Feature' as const,
-      properties: { nom: b.n },
-      geometry: { type: 'Point' as const, coordinates: b.p },
-    })),
-  }
+  if (!l?.length) return []
+  const avecNom = zoom >= Z_NOM_BOUCHE
+  return l.slice(0, PLAFOND_BOUCHES).map((b) => ({
+    p: b.p,
+    num: b.r,
+    nom: avecNom ? elaguer(b.n) : null,
+  }))
 }

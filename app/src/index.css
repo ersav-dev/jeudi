@@ -7698,6 +7698,55 @@ button {
   }
 }
 
+/* ── les bouches de métro (08/08) ──
+ * Une flèche qui descend dans un U géométrique, le numéro de sortie à côté,
+ * le nom de rue centré dessous. Variante « 7d » de
+ * design/bouches_metro.html : le chiffre domine — c'est lui qu'on raccroche
+ * au panneau une fois en bas — et la rue passe en murmure.
+ * Tout en sans-serif, JAMAIS en Caveat : sur cette carte l'écriture à la
+ * main dit les lieux, le sans-serif dit la signalétique.
+ * Le glyphe est le point d'ancrage : la flèche tombe sur la vraie bouche,
+ * le texte déborde à droite et en dessous. Jamais tapable. */
+.bouche-metro {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--encre);
+  pointer-events: none;
+  z-index: 0;
+  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.55);
+}
+.bouche-metro-tete {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.bouche-metro-glyphe {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+.bouche-metro-glyphe svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+.bouche-metro-num {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+/* la rue : présente, mais elle ne réclame rien */
+.bouche-metro-rue {
+  font-size: 7.5px;
+  line-height: 1.15;
+  opacity: 0.62;
+  white-space: nowrap;
+}
+
 /* le focus au trait d'encre — jamais l'anneau bleu du navigateur */
 button:focus-visible,
 a:focus-visible,

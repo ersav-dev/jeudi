@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
   tracesPour,
   bouchesPour,
+  elaguer,
   AUCUNE_LIGNE,
-  AUCUNE_BOUCHE,
+  PLAFOND_BOUCHES,
   type Ligne,
   type Bouche,
 } from '../lignes'
@@ -64,35 +65,70 @@ describe('tracesPour', () => {
   })
 })
 
+describe('elaguer', () => {
+  it('coupe la parenthèse — c\'est une précision, jamais l\'adresse', () => {
+    expect(elaguer('Place de l\'Opéra (théâtre national de l\'Opéra)')).toBe('Pl. de l\'Opéra')
+  })
+
+  it('abrège les génériques de voie comme sur un plan', () => {
+    expect(elaguer('Avenue Victoria')).toBe('Av. Victoria')
+    expect(elaguer('Rue Saint-Denis')).toBe('R. St-Denis')
+    expect(elaguer('Boulevard des Capucines')).toBe('Bd des Capucines')
+    expect(elaguer('Théâtre du Châtelet')).toBe('Th. du Châtelet')
+    expect(elaguer('Place Sainte-Opportune')).toBe('Pl. Ste-Opportune')
+  })
+
+  it('n\'abrège « Rue » qu\'en tête — pas au milieu d\'un nom', () => {
+    expect(elaguer('Porte Marguerite de Navarre')).toBe('Porte Marguerite de Navarre')
+  })
+
+  it('rend null sur rien, ou sur un nom entièrement entre parenthèses', () => {
+    expect(elaguer(null)).toBeNull()
+    expect(elaguer('(sortie provisoire)')).toBeNull()
+  })
+})
+
 const bouches: Record<string, Bouche[]> = {
-  Abbesses: [{ p: [2.3383, 48.8844], n: null }],
-  'Châtelet': [
-    { p: [2.3470, 48.8580], n: 'Rue de Rivoli' },
-    { p: [2.3480, 48.8585], n: null },
-  ],
+  Abbesses: [{ p: [2.3383, 48.8844], r: '1', n: null, d: 20 }],
+  'Châtelet': Array.from({ length: 10 }, (_, i) => ({
+    p: [2.347 + i * 0.001, 48.858] as [number, number],
+    r: String(10 + i),
+    n: 'Rue de Rivoli',
+    d: 40 + i * 20,
+  })),
 }
 
 describe('bouchesPour', () => {
+  it('ne montre rien en dessous de z15 — la ligne suffit', () => {
+    expect(bouchesPour('Châtelet', bouches, 14.9)).toHaveLength(0)
+  })
+
   it('ne montre rien tant qu\'aucune station n\'est touchée', () => {
-    expect(bouchesPour(null, bouches)).toBe(AUCUNE_BOUCHE)
+    expect(bouchesPour(null, bouches, 17)).toHaveLength(0)
   })
 
   it('ne montre rien si les bouches ne sont pas encore chargées', () => {
-    expect(bouchesPour('Châtelet', null)).toBe(AUCUNE_BOUCHE)
+    expect(bouchesPour('Châtelet', null, 17)).toHaveLength(0)
   })
 
-  it('ne montre rien pour une station sans bouche connue', () => {
-    expect(bouchesPour('Gare de Lyon', bouches)).toBe(AUCUNE_BOUCHE)
+  it('plafonne à 8, en gardant les plus proches de la station', () => {
+    const l = bouchesPour('Châtelet', bouches, 16)
+    expect(l).toHaveLength(PLAFOND_BOUCHES)
+    expect(l.map((b) => b.num)).toEqual(['10', '11', '12', '13', '14', '15', '16', '17'])
   })
 
-  it('sort toutes les bouches de la station touchée', () => {
-    const fc = bouchesPour('Châtelet', bouches)
-    expect(fc.features).toHaveLength(2)
-    expect(fc.features[0].geometry.coordinates).toEqual([2.347, 48.858])
+  it('tait le nom de rue entre z15 et z17 — le numéro seul', () => {
+    const [b] = bouchesPour('Châtelet', bouches, 16)
+    expect(b.num).toBe('10')
+    expect(b.nom).toBeNull()
   })
 
-  it('accepte une bouche sans nom — la plupart n\'en ont pas', () => {
-    const fc = bouchesPour('Abbesses', bouches)
-    expect(fc.features[0].properties.nom).toBeNull()
+  it('sort le nom élagué à partir de z17', () => {
+    const [b] = bouchesPour('Châtelet', bouches, 17)
+    expect(b.nom).toBe('R. de Rivoli')
+  })
+
+  it('accepte une bouche sans nom — 127 n\'en ont pas', () => {
+    expect(bouchesPour('Abbesses', bouches, 18)[0].nom).toBeNull()
   })
 })

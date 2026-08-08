@@ -36,12 +36,9 @@ import {
   tracesPour,
   bouchesPour,
   AUCUNE_LIGNE,
-  AUCUNE_BOUCHE,
   SOURCE_LIGNES,
   LAYER_LIGNES,
   LAYER_LIGNES_HALO,
-  SOURCE_BOUCHES,
-  LAYER_BOUCHES,
   type Ligne,
   type Bouche,
 } from './lignes'
@@ -211,6 +208,10 @@ export default function Carte({
   const lignesConnues = useRef<Map<string, Ligne> | null>(null)
   const bouchesConnues = useRef<Record<string, Bouche[]> | null>(null)
   const stationTracee = useRef<string | null>(null)
+  // les bouches posées : marqueurs DOM (glyphe + numéro + rue), re-posés à
+  // chaque zoom puisque le nom n'apparaît qu'au-delà de z17
+  const marqueursBouches = useRef<maplibregl.Marker[]>([])
+  const poserBouchesRef = useRef<(nom: string | null) => void>(() => {})
   // re-poser les étiquettes après un tracé, pour que la station active
   // porte sa marque (elle est repeinte, pas juste re-stylée)
   const majEtiquettesRef = useRef<() => void>(() => {})
@@ -981,32 +982,57 @@ export default function Carte({
             'line-opacity': 1,
           },
         })
-        // les bouches de la station touchée : de petits carrés à l'encre,
-        // là où on descend vraiment. Carrés et non ronds — le rond reste
-        // réservé aux spots.
-        m.addSource(SOURCE_BOUCHES, { type: 'geojson', data: AUCUNE_BOUCHE })
-        m.addLayer({
-          id: LAYER_BOUCHES,
-          type: 'circle',
-          source: SOURCE_BOUCHES,
-          paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 2.5, 17, 5],
-            'circle-color': '#EFE9D8',
-            'circle-opacity': 0.95,
-            'circle-stroke-width': 1.5,
-            'circle-stroke-color': '#0b1a3a',
-            'circle-stroke-opacity': 0.9,
-          },
-        })
       }
       // toucher la station allume ses lignes ; la retoucher (ou toucher la
       // carte nue) les éteint. Une seule station tracée à la fois.
+      // ── la bouche de métro : une flèche qui descend dans un U, le numéro de
+      // sortie à côté, le nom de rue centré dessous. Le glyphe EST le point
+      // d'ancrage — la flèche tombe sur la vraie bouche, le texte déborde —
+      // parce qu'une bouche, sa précision est justement ce qu'on vient
+      // chercher. Numéro dès z15, nom élagué à partir de z17, 8 au maximum.
+      const FLECHE_U =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+        'stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 3v8"/><path d="M8 7.5l4 4 4-4"/><path d="M6 14v6h12v-6"/></svg>'
+      const poserBouches = (nom: string | null) => {
+        for (const mk of marqueursBouches.current) mk.remove()
+        marqueursBouches.current = []
+        if (!carte.current) return
+        const liste = bouchesPour(nom, bouchesConnues.current, carte.current.getZoom())
+        marqueursBouches.current = liste.map((b) => {
+          const el = document.createElement('div')
+          el.className = 'bouche-metro'
+          const tete = document.createElement('span')
+          tete.className = 'bouche-metro-tete'
+          const g = document.createElement('span')
+          g.className = 'bouche-metro-glyphe'
+          g.innerHTML = FLECHE_U
+          tete.append(g)
+          if (b.num) {
+            const n = document.createElement('b')
+            n.className = 'bouche-metro-num'
+            n.textContent = b.num
+            tete.append(n)
+          }
+          el.append(tete)
+          if (b.nom) {
+            const r = document.createElement('span')
+            r.className = 'bouche-metro-rue'
+            r.textContent = b.nom
+            el.append(r)
+          }
+          return new maplibregl.Marker({ element: el, anchor: 'top-left', offset: [-8, -8] })
+            .setLngLat(b.p)
+            .addTo(carte.current!)
+        })
+      }
+      poserBouchesRef.current = poserBouches
+
       const peindre = (nom: string | null, ids?: string[]) => {
         const sl = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
-        const sb = m.getSource(SOURCE_BOUCHES) as maplibregl.GeoJSONSource | undefined
         const table = lignesConnues.current
         sl?.setData(!ids || !table ? AUCUNE_LIGNE : tracesPour(ids, table))
-        sb?.setData(bouchesPour(nom, bouchesConnues.current))
+        poserBouches(nom)
       }
       const basculerLignes = (nom: string, ids?: string[]) => {
         const memeStation = stationTracee.current === nom
@@ -1132,6 +1158,9 @@ export default function Carte({
             majEtiquettes()
             carte.current?.on('moveend', majEtiquettes)
             carte.current?.on('zoomend', majEtiquettes)
+            // le zoom change ce que porte une bouche (numéro seul, puis le
+            // nom au-delà de z17) : on les repose avec les étiquettes
+            carte.current?.on('zoomend', () => poserBouchesRef.current(stationTracee.current))
           })
           .catch((err) => console.warn('[carte] transport.json:', err))
       }
@@ -1320,6 +1349,8 @@ export default function Carte({
       posesCourantes.clear()
       etiquettesTransport.current.forEach((mk) => mk.remove())
       etiquettesTransport.current = []
+      marqueursBouches.current.forEach((mk) => mk.remove())
+      marqueursBouches.current = []
       for (const id of Object.keys(pins)) delete pins[id]
       dejaCadre.current = false
       carte.current?.remove()
