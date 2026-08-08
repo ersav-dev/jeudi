@@ -147,3 +147,92 @@ export function cuisineDeLieu(l: { description?: string }): Cuisine | null {
   for (const [re, c] of CUISINES) if (re.test(d)) return c
   return null
 }
+
+/** les 21 tampons du carnet, dans l'ordre où ils se lisent — pour le
+ *  picker de la fiche (code + mot, jamais un drapeau). */
+export const TAMPONS_CUISINE: readonly Cuisine[] = CUISINES.map(([, c]) => c)
+
+// ════════════════════════════════════════════════════════════════
+// ÉCRIRE LE CHOIX DANS LA DESCRIPTION (08/08 — le carnet se tient à la main)
+//
+// Le type et le tampon n'ont pas de colonne : ils se DEVINENT de la
+// description. Corriger un lieu à la main, c'est donc réécrire la
+// description avec des mots que typeDeLieu()/cuisineDeLieu() relisent
+// EXACTEMENT — même contrat, mêmes mots que le script de fusion
+// (_enrichissement/fusionner_enrichissement.mjs), qui relit chaque
+// description avant de l'écrire. Ce qui n'est pas relu n'est pas écrit.
+// ════════════════════════════════════════════════════════════════
+
+/** le mot qui DIT un type, une fois relu par typeDeLieu() */
+export const MOT_TYPE: Record<TypeLieu, string> = {
+  bar: 'Bar',
+  vin: 'Bar à vins',
+  club: 'Club',
+  cafe: 'Café',
+  the: 'Salon de thé',
+  glace: 'Glacier',
+  patisserie: 'Pâtisserie',
+  street: 'Street food',
+  gastro: 'Cuisine gastronomique',
+  resto: 'Restaurant',
+}
+
+/** l'adjectif qui DIT une cuisine, une fois relu par cuisineDeLieu().
+ *  Pas toujours le `mot` du tampon (AFR se dit « afro » à la lecture,
+ *  « africain » à l'affichage) : ici, c'est la lecture qui commande. */
+export const ADJ_CUISINE: Record<string, string> = {
+  ITA: 'italien',
+  JPN: 'japonais',
+  CHN: 'chinois',
+  KOR: 'coréen',
+  THA: 'thaï',
+  VIE: 'vietnamien',
+  IND: 'indien',
+  LBN: 'libanais',
+  ISR: 'israélien',
+  TUR: 'turc',
+  GRE: 'grec',
+  MAR: 'marocain',
+  TUN: 'tunisien',
+  AFR: 'afro',
+  ETH: 'éthiopien',
+  MEX: 'mexicain',
+  PER: 'péruvien',
+  BRA: 'brésilien',
+  ESP: 'espagnol',
+  POR: 'portugais',
+  USA: 'américain',
+}
+
+/** le mot du carnet déjà posé en fin de description, pour ne pas l'empiler
+ *  à chaque correction (« Bar · Restaurant · Café » : jamais). Les plus
+ *  longs d'abord — « Bar à vins » avant « Bar ». */
+const RE_MOT_CARNET = new RegExp(
+  `\\s*(?:·|—|-)?\\s*(?:${Object.values(MOT_TYPE)
+    .sort((a, b) => b.length - a.length)
+    .join('|')})(?:\\s+(?:${Object.values(ADJ_CUISINE).join('|')}))?\\s*$`,
+  'i',
+)
+
+/** la description d'un lieu corrigé à la main : la prose d'Ersan gardée si
+ *  elle ne contredit pas son choix, sinon le mot du carnet, nu.
+ *  RELUE avant d'être rendue — c'est tout l'intérêt. */
+export function decrireLieu(
+  ancienne: string | undefined,
+  type: TypeLieu,
+  cuisine: string | null,
+): string {
+  const canon = [MOT_TYPE[type], cuisine ? ADJ_CUISINE[cuisine] : null].filter(Boolean).join(' ')
+  const relu = (d: string) =>
+    typeDeLieu({ description: d, envies: [] }) === type &&
+    (cuisineDeLieu({ description: d })?.code ?? null) === (cuisine ?? null)
+  // la prose de l'utilisateur, débarrassée du mot du carnet d'un tour d'avant
+  const prose = (ancienne ?? '').replace(RE_MOT_CARNET, '').trim()
+  if (prose) {
+    const avecProse = `${prose} · ${canon}`
+    if (relu(avecProse)) return avecProse
+  }
+  // la prose disait autre chose (« cocktails » pour un resto) : le choix de
+  // la main gagne, la description redevient le mot nu — toujours relu juste.
+  return canon
+}

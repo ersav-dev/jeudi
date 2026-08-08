@@ -337,6 +337,20 @@ const EN: Record<string, string> = {
   '/ pers.': '/ person',
   'démo': 'demo',
 
+  // corriger une entrée du carnet (08/08) — le carnet se tient à la main
+  'corriger': 'fix this',
+  'le nom': 'the name',
+  "l'adresse": 'the address',
+  'ton tip': 'your tip',
+  '12 rue de la Paix, 75002 Paris': '12 rue de la Paix, 75002 Paris',
+  "c'est quoi, au juste ?": 'what is it, exactly?',
+  'le tampon de douane': 'the customs stamp',
+  'aucun': 'none',
+  'le carnet lira :': 'the notebook will read:',
+  'laisse tomber': 'never mind',
+  'on corrige…': 'fixing…',
+  "c'est corrigé.": 'fixed.',
+
   // La carte de membre
   'partage ton carnet en story →': 'share your notebook as a story →',
   'ton lien d’invitation est copié — colle-le en sticker sur ta story.': 'your invite link is copied — paste it as a sticker on your story.',

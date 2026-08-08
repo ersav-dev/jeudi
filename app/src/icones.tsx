@@ -130,3 +130,8 @@ export const ITrombone = ({ taille, actif }: { taille?: number; actif?: boolean 
     <path d="M20.5 11.2l-8.7 8.7a5.6 5.6 0 0 1-7.9-7.9l8.7-8.7a3.7 3.7 0 0 1 5.3 5.3l-8.7 8.7a1.85 1.85 0 0 1-2.6-2.6l8-8" />
   </svg>
 )
+// le crayon (corriger) : la mine, le corps, le trait qu'on vient de poser —
+// on ne raye pas ce qui est écrit, on le reprend.
+export const ICrayon = ({ taille }: { taille?: number }) => (
+  <Svg taille={taille}><path d="M4 20h3.2L18.6 8.6a2.3 2.3 0 0 0-3.2-3.2L4 16.8z" /><path d="M14.4 6.6l3.2 3.2" /></Svg>
+)

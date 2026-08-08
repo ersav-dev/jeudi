@@ -14,7 +14,7 @@ import { t, lireLangue, basculerLangue } from './langue'
 import { suivre } from './analytique'
 import { partagerEnStory, partagerMaCarte } from './partageStory'
 import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
-import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau } from './icones'
+import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau, ICrayon } from './icones'
 import TirageDuSoir from './TirageDuSoir'
 import { fusionnerPhotos } from './tirage'
 import { typeDeLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
@@ -217,6 +217,15 @@ function ImportListe(p: ComponentProps<typeof ImportListeLazy>) {
   return (
     <Suspense fallback={null}>
       <ImportListeLazy {...p} />
+    </Suspense>
+  )
+}
+// corriger une entrée : un geste rare, sur un spot à moi — chargé à la demande
+const CorrigerLieuLazy = lazy(() => import('./CorrigerLieu'))
+function CorrigerLieu(p: ComponentProps<typeof CorrigerLieuLazy>) {
+  return (
+    <Suspense fallback={null}>
+      <CorrigerLieuLazy {...p} />
     </Suspense>
   )
 }
@@ -3388,6 +3397,8 @@ function Fiche({
   // pas un profil cliquable — c'est l'app, honnêtement, pas un faux membre)
   const editorial = !mien && !chez && lieu.proprietaire === CURATEUR_JEUDI
   const [edition, setEdition] = useState(false)
+  // le crayon : corriger l'entrée elle-même (nom, adresse, tip, type, tampon)
+  const [correction, setCorrection] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
   // la date gravée sur la couverture : celle de la PHOTO regardée (prise_le,
@@ -3816,6 +3827,21 @@ function Fiche({
         <p className="mono fiche-adresse">
           {adrComplete || adresseLisible(lieu.adresse, lieu.nom)}
         </p>
+      )}
+
+      {/* le crayon (08/08) : mon spot, mon écriture — l'import a pu se
+          tromper de nom, de rue, de famille. On reprend, on ne subit pas. */}
+      {mien && !correction && (
+        <button className="lien fiche-corriger mono" onClick={() => setCorrection(true)}>
+          <ICrayon taille={13} /> {t('corriger')}
+        </button>
+      )}
+      {mien && correction && (
+        <CorrigerLieu
+          lieu={lieu}
+          onEnregistre={(maj) => setLieu(maj)}
+          onFerme={() => setCorrection(false)}
+        />
       )}
 
       <div className="fiche-infos">

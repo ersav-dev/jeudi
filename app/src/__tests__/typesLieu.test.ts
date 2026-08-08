@@ -1,6 +1,16 @@
 // ── tests du type d'un lieu (glyphes de la carte) — pur, sans DOM ──────
 import { describe, it, expect } from 'vitest'
-import { typeDeLieu, labelTypeLieu, svgTypeLieu, TYPES_LIEU, cuisineDeLieu } from '../typesLieu'
+import {
+  typeDeLieu,
+  labelTypeLieu,
+  svgTypeLieu,
+  TYPES_LIEU,
+  cuisineDeLieu,
+  TAMPONS_CUISINE,
+  MOT_TYPE,
+  ADJ_CUISINE,
+  decrireLieu,
+} from '../typesLieu'
 
 const lieu = (description: string | undefined, envies: string[] = []) => ({ description, envies })
 
@@ -77,5 +87,66 @@ describe('cuisineDeLieu — le tampon de douane (jamais un drapeau émoji)', () 
       expect(c).not.toBeNull()
       expect(c!.code).toMatch(/^[A-Z]{3}$/)
     }
+  })
+  it('les 21 tampons du picker sont ceux que la lecture connaît', () => {
+    expect(TAMPONS_CUISINE).toHaveLength(21)
+    for (const c of TAMPONS_CUISINE) {
+      expect(ADJ_CUISINE[c.code]).toBeTruthy()
+      expect(c.code).toMatch(/^[A-Z]{3}$/)
+    }
+  })
+})
+
+// ── corriger à la main : ce qui est écrit doit se relire ────────────────
+// le garde-fou du script de fusion, porté dans les tests : chaque couple
+// (type, tampon) écrit par decrireLieu() DOIT se relire à l'identique.
+describe('decrireLieu — écrire un choix que la lecture rend exactement', () => {
+  it('les 10 mots de type se relisent, seuls', () => {
+    for (const type of TYPES_LIEU) {
+      expect(typeDeLieu({ description: MOT_TYPE[type], envies: [] })).toBe(type)
+    }
+  })
+
+  it('les 21 adjectifs de cuisine se relisent, posés sur un resto', () => {
+    for (const [code, adj] of Object.entries(ADJ_CUISINE)) {
+      expect(cuisineDeLieu({ description: `Restaurant ${adj}` })?.code).toBe(code)
+    }
+  })
+
+  it('les 10 types × les 22 tampons (aucun compris) : 220 couples relus juste', () => {
+    const tampons: (string | null)[] = [null, ...Object.keys(ADJ_CUISINE)]
+    for (const type of TYPES_LIEU) {
+      for (const cuisine of tampons) {
+        const d = decrireLieu(undefined, type, cuisine)
+        expect(`${type}/${cuisine ?? '—'} → « ${d} » → ${typeDeLieu({ description: d, envies: [] })}`).toBe(
+          `${type}/${cuisine ?? '—'} → « ${d} » → ${type}`,
+        )
+        expect(cuisineDeLieu({ description: d })?.code ?? null).toBe(cuisine)
+      }
+    }
+  })
+
+  it('la prose survit quand elle ne contredit pas le choix', () => {
+    const d = decrireLieu('table du fond, ambiance prohibition', 'bar', null)
+    expect(d).toBe('table du fond, ambiance prohibition · Bar')
+    expect(typeDeLieu({ description: d, envies: [] })).toBe('bar')
+  })
+
+  it('la prose qui contredit le choix cède : le mot du carnet, nu', () => {
+    // « cocktails » se relit bar ; si la main dit resto, c'est resto
+    const d = decrireLieu('cocktails et planches', 'resto', null)
+    expect(d).toBe('Restaurant')
+  })
+
+  it('on n’empile pas les mots du carnet à chaque correction', () => {
+    let d = decrireLieu('Bar à vins italien', 'cafe', 'JPN')
+    expect(d).toBe('Café japonais')
+    d = decrireLieu(d, 'glace', null)
+    expect(d).toBe('Glacier')
+  })
+
+  it('retirer le tampon retire vraiment le tampon', () => {
+    const d = decrireLieu('Trattoria familiale', 'resto', null)
+    expect(cuisineDeLieu({ description: d })).toBeNull()
   })
 })
