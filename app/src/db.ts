@@ -5,6 +5,7 @@ import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
 import { lireATester, CLE_A_TESTER } from './aTester'
 import { lireFavoris, basculerFavori, marquerFavoris, CLE_FAVORIS } from './favoris'
+import { lireMasques, masquerLieu, estMasque } from './masques'
 import {
   rayer,
   deRayer,
@@ -1316,9 +1317,14 @@ export async function tousLesLieux(): Promise<Lieu[]> {
   }
   // hors-ligne : mes spots = ce que le miroir IndexedDB a gardé de la dernière sync
   if (!cloudOk && monId) miens = actifs.filter((l) => estAMoi(l))
-  const tout = [...miens, ...duCercle, ...decor].sort((a, b) =>
-    b.creeLe.localeCompare(a.creeLe),
-  )
+  // ce que j'ai « supprimé » chez un pote ne revient jamais — même après une
+  // synchro fraîche (sa ligne à LUI reste 'actif', c'est juste ma carte qui
+  // ne la montre plus, cf. masques.ts). Jamais mes spots : ceux-là s'effacent
+  // pour de vrai (supprimerLieu) et n'ont pas de masque à porter.
+  const masques = lireMasques()
+  const tout = [...miens, ...duCercle, ...decor]
+    .filter((l) => estAMoi(l) || !estMasque(l.id, masques))
+    .sort((a, b) => b.creeLe.localeCompare(a.creeLe))
   // ── LES SIGNES DE LA CARTE (09/08) ──
   // Le cœur et la croix se dessinent depuis `l.favori` / `l.raye` (Carte.tsx,
   // creerPinLieu) : deux champs que personne n'écrivait, faute d'écran.
@@ -1634,12 +1640,13 @@ function effacerIdLocal(id: string): void {
  *  · 'differe' : parti d'ici, le cloud n'a pas répondu — resync planifiée */
 export type VerdictSuppression = 'efface' | 'differe'
 
-/** suppression définitive — pas de retour en arrière. Le local part TOUJOURS
- *  (on ne rend pas un spot que l'utilisateur vient d'effacer) ; le cloud suit,
- *  et à défaut la file d'attente le rattrapera. RLS : `lieux` se supprime sur
- *  `owner_id = auth.uid()` et les deux buckets sur le dossier `<uid>/<lieu>` —
- *  mes spots partent entièrement, ceux des autres ne sont pas les miens à
- *  effacer (le local suffit : ils reviendront du cloud, et c'est normal). */
+/** suppression — pas de retour en arrière. Le local part TOUJOURS (on ne
+ *  rend pas un spot que l'utilisateur vient d'effacer). Pour MES spots :
+ *  définitif, le cloud suit (RLS `owner_id = auth.uid()`), et à défaut la
+ *  file d'attente le rattrapera. Pour le spot d'UN POTE : je n'ai pas le
+ *  droit de toucher SA ligne (elle n'est pas à moi) — on le MASQUE (0009,
+ *  masques.ts) pour qu'il ne revienne jamais sur MA carte, sans jamais rien
+ *  changer à la sienne. */
 export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
   await pretAuth
   const db = await getDB()
@@ -1647,7 +1654,14 @@ export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
   const mien = lieu ? estAMoi(lieu) : true
   await db.delete('lieux', id) // le local part dans tous les cas
   effacerIdLocal(id)
-  if (!monId || !mien) return 'efface'
+  if (!mien) {
+    // le spot d'un pote (ou du décor) : jamais de vraie suppression, juste
+    // un masque local — sinon tousLesLieux() le retéléchargerait au prochain
+    // passage (sa ligne à lui reste 'actif' pour LUI).
+    masquerLieu(id)
+    return 'efface'
+  }
+  if (!monId) return 'efface'
   if (!estUuid(id)) {
     // id legacy : jamais poussé au cloud. On retire juste une éventuelle
     // resync en attente pour cet id, et c'est réglé.

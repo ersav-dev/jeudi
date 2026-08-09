@@ -160,7 +160,18 @@ const retirerEnFondu = (mk: maplibregl.Marker, el: HTMLElement) => {
 }
 
 // ── labels anti-collision : géométrie pure (aucune lecture du DOM) ──
-const PLAFOND_LABELS = 8
+// 09/08 — LA HIÉRARCHIE SE JOUE AU NOMBRE, PAS À L'OPACITÉ. Mesuré sur
+// design/monuments_001.html : un nom de spot est à 15,2:1 de contraste
+// contre 2,5:1 pour un nom de station — le rapport était déjà bon. Mais
+// on en affichait 8 contre 24 : l'œil compte les marques avant de mesurer
+// leur encre, et vingt-quatre chuchotements couvrent huit voix. On monte
+// donc le plafond des noms de LIEUX (c'est le niveau 1) plutôt que
+// d'écraser encore les transports — à force de descendre les couches
+// basses la carte devient fade sans rien gagner en hiérarchie.
+// Sans danger : l'anti-collision géométrique reste seule juge du placement,
+// ce nombre n'est qu'un plafond — on n'ajoute des noms que là où il y a
+// la place.
+const PLAFOND_LABELS = 14
 type Boite = { x: number; y: number; w: number; h: number }
 const chevauche = (a: Boite, b: Boite) =>
   !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y)
@@ -1248,8 +1259,12 @@ export default function Carte({
               })
               .catch(() => {})
             // priorité (RER majeur → batobus mineur) + seuil de zoom + code mode
+            // 09/08 — le RER parlait dès z12,5 alors que les noms de spots se
+            // taisent jusqu'à z13 : entre les deux, la carte ne disait QUE des
+            // transports. Un repère ne peut pas prendre la parole avant ce
+            // qu'il sert à repérer. On aligne le seuil sur celui des labels.
             const CONFIG: Record<string, { prio: number; zMin: number; code: string }> = {
-              rer: { prio: 4, zMin: 12.5, code: 'RER' },
+              rer: { prio: 4, zMin: 13, code: 'RER' },
               metro: { prio: 3, zMin: 13, code: 'M' },
               tram: { prio: 2, zMin: 14, code: 'T' },
               batobus: { prio: 1, zMin: 14, code: 'BAT' },
@@ -1257,7 +1272,9 @@ export default function Carte({
             const majEtiquettes = () => {
               if (!carte.current) return
               const z = carte.current.getZoom()
-              if (z < 12.5) {
+              // même raison qu'au-dessus : aucun transport avant z13, le zoom
+              // où les lieux commencent à dire leur nom.
+              if (z < 13) {
                 for (const mk of etiquettesTransport.current) mk.remove()
                 etiquettesTransport.current = []
                 return
@@ -1288,8 +1305,12 @@ export default function Carte({
                 const dc = (c.x - cx) ** 2 + (c.y - cy) ** 2
                 return da - dc
               })
-              const CAP = 24
-              const MIN = 82
+              // 09/08 — l'autre moitié du même réglage : on passe de 24 à 14
+              // étiquettes, et la grille se desserre (82 → 96 px). Les noms de
+              // lieux montent à 14, les transports descendent à 14 : le
+              // filigrane cesse d'être plus nombreux que le texte principal.
+              const CAP = 14
+              const MIN = 96
               const poses: { x: number; y: number }[] = []
               const retenus: typeof candidats = []
               for (const c of candidats) {

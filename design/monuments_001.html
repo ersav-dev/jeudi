@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — les monuments, et la hiérarchie du regard</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--encre:#EFE9D8;--papier:#14120e;--nuit:#0e1015;--red:#5d8dff;--cire:#c8402f}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,-apple-system,sans-serif;
+ padding:0 16px 110px;max-width:940px;margin:0 auto;line-height:1.55}
+h1{font-family:'Caveat',cursive;font-size:38px;font-weight:600;padding-top:28px;line-height:1.1}
+.sous{opacity:.6;font-size:14px;margin-top:8px;max-width:640px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.15em;opacity:.5;
+ margin:46px 0 6px;border-top:1px solid rgba(239,233,216,.12);padding-top:20px}
+h3{font-size:13.5px;margin:24px 0 6px;color:#dfe9ff;font-weight:600}
+p{font-size:13.5px;opacity:.66;margin-top:10px;max-width:660px}
+b.k{color:#dfe9ff;font-weight:600;opacity:1}
+em{font-style:normal;opacity:.55}
+.cle{background:var(--nuit);border-left:2px solid var(--red);border-radius:0 8px 8px 0;
+ padding:13px 15px;margin-top:16px;font-size:13.5px;opacity:.92;max-width:660px}
+.cle b{display:block;margin-bottom:4px;color:#dfe9ff}
+.verdict{border-left-color:var(--cire)}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ── les panneaux de carte ── */
+.rangee{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px}
+.bloc{flex:0 0 auto}
+.leg{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.55;
+ margin-bottom:5px;letter-spacing:.04em}
+.leg b{color:#dfe9ff;opacity:1;font-weight:400}
+.pan{position:relative;overflow:hidden;border-radius:8px;background:#181818;
+ border:1px solid rgba(239,233,216,.1)}
+.tuiles{position:absolute;inset:0}
+.tuiles img{position:absolute;width:256px;height:256px;image-rendering:auto}
+.mo{position:absolute;transform:translate(-50%,-100%);width:auto;
+ filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));pointer-events:none}
+.pan.ombre .mo{filter:drop-shadow(0 3px 7px rgba(0,0,0,.75)) drop-shadow(0 0 1px rgba(0,0,0,.9))}
+.pan.plat .mo{filter:none}
+
+/* ── la hierarchie ── */
+.hier .mo{opacity:.55}
+.hier.v-ap .mo{opacity:.72}
+.st{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;
+ gap:4px;font-family:'Caveat',cursive;font-size:12px;line-height:1;color:var(--encre);
+ white-space:nowrap;opacity:.30}
+.st .st-p{font-family:system-ui,sans-serif;font-weight:700;font-size:8px;color:#EFE9D8;
+ padding:2px 4px 1px;border-radius:3px;background:#0b1a3a;box-shadow:0 0 0 .5px rgba(239,233,216,.22)}
+.st .st-n{text-shadow:0 0 3px rgba(11,26,58,.7),0 0 6px rgba(11,26,58,.35)}
+.st.m-rer{opacity:.38;font-size:13px} .st.m-rer .st-p{background:#0055c8}
+.v-ap .st{opacity:.20} .v-ap .st.m-rer{opacity:.26}
+.v-ap .st .st-n{text-shadow:none}
+.v-ap .st .st-p{box-shadow:none;background:#141b2b}
+.sp{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;
+ align-items:center;z-index:3}
+.sp svg{width:15px;height:15px;fill:none;stroke:var(--red);stroke-width:2.4;stroke-linejoin:round;
+ filter:drop-shadow(0 0 4px rgba(93,141,255,.55))}
+.sp b{margin-top:3px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.5px;
+ color:var(--encre);background:rgba(20,18,14,.78);padding:1px 5px;border-radius:5px;
+ font-weight:400;white-space:nowrap}
+.v-ap .sp b{background:rgba(14,12,9,.9);font-weight:700;letter-spacing:.3px;
+ box-shadow:0 0 0 .5px rgba(239,233,216,.14)}
+.v-ap .sp svg{stroke-width:2.6}
+
+/* ── tables ── */
+.tb{border-collapse:collapse;margin-top:14px;font-family:'JetBrains Mono',monospace;
+ font-size:11px;width:100%;max-width:660px}
+.tb th{font-weight:400;opacity:.45;text-align:right;padding:5px 7px;font-size:10px}
+.tb td{padding:5px 7px;text-align:right;border-top:1px solid rgba(239,233,216,.07);opacity:.8}
+.tb td:first-child,.tb th:first-child{text-align:left;opacity:.75}
+.tb td.nul{color:#c8402f;opacity:.75}
+.tb td.ok{color:#7fd18f}
+
+/* ── les decoupes ── */
+.zoomx{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.zoomx figure{background:#101013;border:1px solid rgba(239,233,216,.08);border-radius:8px;
+ padding:10px;text-align:center}
+.zoomx img{height:300px;width:auto;image-rendering:pixelated}
+.zoomx figcaption{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.5;margin-top:7px}
+
+/* ── l'echelle des traitements ── */
+.gam{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;background:#101013;
+ border:1px solid rgba(239,233,216,.08);border-radius:8px;padding:16px 14px;margin-top:10px}
+.gam img{width:auto}
+.tt{margin-top:8px}
+.tt .lig{display:flex;align-items:flex-end;gap:10px;background:#101013;padding:12px;
+ border-radius:8px;border:1px solid rgba(239,233,216,.08);margin-top:8px;flex-wrap:wrap}
+.tt .lig>span{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.5;
+ width:74px;flex:none;align-self:center}
+
+/* ── le croquis ── */
+.cro{width:320px;height:auto;display:block;background:#101013;border-radius:8px;
+ border:1px solid rgba(239,233,216,.08)}
+</style></head><body>
+<h1>les monuments,<br>et la hiérarchie du regard</h1>
+<p class="sous">Planche du 09/08/2026. Vraies tuiles Carto <span class="mono">dark_all</span>, vraies vignettes, vraies tailles calculées. Aucun <span class="mono">&lt;script&gt;</span> : ce que tu vois est ce qui est.</p>
+<h2>1 · pourquoi « ça se perd » — les chiffres</h2>
+<p>La taille d'un monument suit sa hauteur réelle convertie au zoom, bornée entre 9 et 340 px. Voici ce que ça donne, en pixels, monument par monument. Le <b class="k">—</b> veut dire : effacé.</p>
+<table class="tb"><tr><th>zoom</th><th>z11</th><th>z12</th><th>z13</th><th>z14</th><th>z15</th><th>z16</th><th>z17</th></tr>
+<tr><td>tour eiffel <em>330 m</em></td>
+<td class="nul">—</td>
+<td class="">13</td>
+<td class="">26</td>
+<td class="">52</td>
+<td class="">105</td>
+<td class="">210</td>
+<td class="">340</td>
+</tr>
+<tr><td>montparnasse <em>210 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">17</td>
+<td class="">33</td>
+<td class="">67</td>
+<td class="">134</td>
+<td class="">267</td>
+</tr>
+<tr><td>invalides <em>107 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">17</td>
+<td class="">34</td>
+<td class="">68</td>
+<td class="">136</td>
+</tr>
+<tr><td>sacré-cœur <em>83 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">13</td>
+<td class="">26</td>
+<td class="">53</td>
+<td class="">106</td>
+</tr>
+<tr><td>panthéon <em>83 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">13</td>
+<td class="">26</td>
+<td class="">53</td>
+<td class="">106</td>
+</tr>
+<tr><td>notre-dame <em>69 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">11</td>
+<td class="">22</td>
+<td class="">44</td>
+<td class="">88</td>
+</tr>
+<tr><td>opéra <em>56 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">18</td>
+<td class="">36</td>
+<td class="">71</td>
+</tr>
+<tr><td>arc de triomphe <em>50 m</em></td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="nul">—</td>
+<td class="">16</td>
+<td class="">32</td>
+<td class="">64</td>
+</tr>
+</table><div class="cle"><b>Le fond du carnet est vide là où on en a besoin.</b>À z11 — Paris en entier, le moment où on cherche à s'orienter — <b class="k">aucun</b> monument n'existe : la tour Eiffel elle-même ferait 6,6 px. À z12, il en reste <b class="k">un</b>. Et à l'autre bout, à z17, la tour fait 340 px et Montparnasse 267 : deux images qui mangent l'écran au zoom où l'on ne cherche plus la ville mais un bar.</div>
+<p><b class="k">Le rapport d'échelle est intenable.</b> Entre la tour Eiffel et l'Arc, la réalité impose <b class="k">6,6 : 1</b>. Une famille de signes cesse de se lire comme une famille au-delà d'environ 3 : 1 — au-dessus, ce ne sont plus huit repères, c'est un géant et sept miettes.</p>
+<p><b class="k">Et l'image n'a que 128 px de haut.</b> Dès que la vignette dépasse cette taille — c'est-à-dire dès z16 pour la tour (210 px) et z16 pour Montparnasse (134 px) — le navigateur interpole. Une gravure fine agrandie 2,7 ×, c'est du flou. C'est la deuxième moitié du « pas fou ».</p>
+<h3>l'échelle réelle, sur les vraies tuiles</h3>
+<div class="rangee">
+<div class="bloc"><div class="leg">z11 · <b>A — échelle réelle (l'actuel)</b></div>
+<div class="pan " style="width:300px;height:230px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/11/1036/704.png" alt="" style="left:-171px;top:-23px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/11/1037/704.png" alt="" style="left:85px;top:-23px">
+</div>
+</div></div>
+<div class="bloc"><div class="leg">z12 · <b>A — échelle réelle (l'actuel)</b></div>
+<div class="pan " style="width:300px;height:230px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1408.png" alt="" style="left:-237px;top:-162px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1409.png" alt="" style="left:-237px;top:94px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1408.png" alt="" style="left:19px;top:-162px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1409.png" alt="" style="left:19px;top:94px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1408.png" alt="" style="left:275px;top:-162px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1409.png" alt="" style="left:275px;top:94px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/tour-eiffel.png" alt="tour eiffel" style="left:47px;top:122px;height:13px">
+</div></div>
+<div class="bloc"><div class="leg">z13 · <b>A — échelle réelle (l'actuel)</b></div>
+<div class="pan " style="width:300px;height:230px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4147/2817.png" alt="" style="left:-216px;top:-218px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4147/2818.png" alt="" style="left:-216px;top:38px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4148/2817.png" alt="" style="left:40px;top:-218px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4148/2818.png" alt="" style="left:40px;top:38px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4149/2817.png" alt="" style="left:296px;top:-218px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/13/4149/2818.png" alt="" style="left:296px;top:38px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/tour-eiffel.png" alt="tour eiffel" style="left:95px;top:94px;height:26px">
+<img class="mo" src="monuments_essais/00_brut/tour-montparnasse.png" alt="montparnasse" style="left:254px;top:238px;height:17px">
+</div></div>
+<div class="bloc"><div class="leg">z15 · <b>A — échelle réelle (l'actuel)</b></div>
+<div class="pan " style="width:300px;height:230px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/15/16592/11272.png" alt="" style="left:-161px;top:-87px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/15/16592/11273.png" alt="" style="left:-161px;top:169px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/15/16593/11272.png" alt="" style="left:95px;top:-87px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/15/16593/11273.png" alt="" style="left:95px;top:169px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/tour-eiffel.png" alt="tour eiffel" style="left:57px;top:136px;height:105px">
+</div></div>
+</div>
+<h2>2 · l'état des découpes</h2>
+<p>Vu de près (agrandi ×2,3, pixels bruts), chaque gravure porte un <b class="k">liseré crème</b> de 2 à 7 px — un contour de sticker, dentelé, qui suit les bosses. Il représente <b class="k">5 à 12 %</b> de la surface visible : sur la tour Eiffel, qui est fine, il l'épaissit d'un tiers. Deux fichiers portent en plus des <b class="k">miettes</b> détachées de la planche source (tour Eiffel : 14 px flottants à droite ; Arc : 26 px en bas à gauche).</p>
+<div class="zoomx">
+<figure><img src="monuments_essais/00_brut/tour-eiffel.png" alt=""><figcaption>tour eiffel — brut<br>liseré + miettes</figcaption></figure>
+<figure><img src="monuments_essais/01_net/tour-eiffel.png" alt=""><figcaption>tour eiffel — nettoyé<br>liseré retiré, bord redurci</figcaption></figure>
+<figure><img src="monuments_essais/00_brut/notre-dame.png" alt=""><figcaption>notre-dame — brut<br>liseré + miettes</figcaption></figure>
+<figure><img src="monuments_essais/01_net/notre-dame.png" alt=""><figcaption>notre-dame — nettoyé<br>liseré retiré, bord redurci</figcaption></figure>
+<figure><img src="monuments_essais/00_brut/sacre-coeur.png" alt=""><figcaption>sacré-cœur — brut<br>liseré + miettes</figcaption></figure>
+<figure><img src="monuments_essais/01_net/sacre-coeur.png" alt=""><figcaption>sacré-cœur — nettoyé<br>liseré retiré, bord redurci</figcaption></figure>
+</div>
+<div class="cle"><b>Bonne nouvelle : c'est réparable sans Procreate.</b>Le nettoyage ci-dessus est automatique et déjà appliqué aux huit fichiers (<span class="mono">design/monuments_essais/01_net/</span>) : suppression des composantes détachées, retrait des pixels très clairs connectés au vide dans les 7 px du bord, puis re-durcissement de l'alpha. Rien n'a été redessiné.</div>
+<h2>3 · quatre traitements, du brut au tirage</h2>
+<p>La DA dit : <em>papier charbon, encre ivoire, un seul rouge cire, rien qui brille</em> — et <em>« les photos des membres sont des tirages collés à bord blanc »</em>. Les gravures brutes sont polychromes (du vert sur les toits de Garnier et du Sacré-Cœur) et sépia doré : c'est du chromo touristique, pas du carnet.</p>
+<div class="tt"><div class="lig"><span>00 · brut<br>l'actuel — liseré, polychromie</span>
+<img src="monuments_essais/00_brut/tour-eiffel.png" alt="" style="height:74px">
+<img src="monuments_essais/00_brut/tour-montparnasse.png" alt="" style="height:74px">
+<img src="monuments_essais/00_brut/invalides.png" alt="" style="height:74px">
+<img src="monuments_essais/00_brut/sacre-coeur.png" alt="" style="height:74px">
+<img src="monuments_essais/00_brut/pantheon.png" alt="" style="height:74px">
+<img src="monuments_essais/00_brut/notre-dame.png" alt="" style="height:74px">
+</div></div>
+<div class="tt"><div class="lig"><span>01 · nettoyé<br>détourage réparé, couleurs inchangées</span>
+<img src="monuments_essais/01_net/tour-eiffel.png" alt="" style="height:74px">
+<img src="monuments_essais/01_net/tour-montparnasse.png" alt="" style="height:74px">
+<img src="monuments_essais/01_net/invalides.png" alt="" style="height:74px">
+<img src="monuments_essais/01_net/sacre-coeur.png" alt="" style="height:74px">
+<img src="monuments_essais/01_net/pantheon.png" alt="" style="height:74px">
+<img src="monuments_essais/01_net/notre-dame.png" alt="" style="height:74px">
+</div></div>
+<div class="tt"><div class="lig"><span>02 · encré<br>duotone charbon → ivoire, chroma nulle</span>
+<img src="monuments_essais/02_encre/tour-eiffel.png" alt="" style="height:74px">
+<img src="monuments_essais/02_encre/tour-montparnasse.png" alt="" style="height:74px">
+<img src="monuments_essais/02_encre/invalides.png" alt="" style="height:74px">
+<img src="monuments_essais/02_encre/sacre-coeur.png" alt="" style="height:74px">
+<img src="monuments_essais/02_encre/pantheon.png" alt="" style="height:74px">
+<img src="monuments_essais/02_encre/notre-dame.png" alt="" style="height:74px">
+</div></div>
+<div class="tt"><div class="lig"><span>03 · tirage<br>l'encré collé sur un carton droit, marge basse</span>
+<img src="monuments_essais/03_tirage/tour-eiffel.png" alt="" style="height:74px">
+<img src="monuments_essais/03_tirage/tour-montparnasse.png" alt="" style="height:74px">
+<img src="monuments_essais/03_tirage/invalides.png" alt="" style="height:74px">
+<img src="monuments_essais/03_tirage/sacre-coeur.png" alt="" style="height:74px">
+<img src="monuments_essais/03_tirage/pantheon.png" alt="" style="height:74px">
+<img src="monuments_essais/03_tirage/notre-dame.png" alt="" style="height:74px">
+</div></div>
+<h3>et à la taille où on les voit vraiment</h3>
+<p>18 · 26 · 36 · 52 px de haut — la fourchette réelle sur la carte entre z13 et z15.</p>
+<div class="tt"><div class="lig"><span>00 · brut</span>
+<img src="monuments_essais/00_brut/tour-eiffel.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/tour-eiffel.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/tour-eiffel.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/tour-eiffel.png" alt="" style="height:52px">
+<img src="monuments_essais/00_brut/tour-montparnasse.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/tour-montparnasse.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/tour-montparnasse.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/tour-montparnasse.png" alt="" style="height:52px">
+<img src="monuments_essais/00_brut/invalides.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/invalides.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/invalides.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/invalides.png" alt="" style="height:52px">
+<img src="monuments_essais/00_brut/sacre-coeur.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/sacre-coeur.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/sacre-coeur.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/sacre-coeur.png" alt="" style="height:52px">
+<img src="monuments_essais/00_brut/pantheon.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/pantheon.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/pantheon.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/pantheon.png" alt="" style="height:52px">
+<img src="monuments_essais/00_brut/notre-dame.png" alt="" style="height:18px">
+<img src="monuments_essais/00_brut/notre-dame.png" alt="" style="height:26px">
+<img src="monuments_essais/00_brut/notre-dame.png" alt="" style="height:36px">
+<img src="monuments_essais/00_brut/notre-dame.png" alt="" style="height:52px">
+</div></div>
+<div class="tt"><div class="lig"><span>02 · encré</span>
+<img src="monuments_essais/02_encre/tour-eiffel.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/tour-eiffel.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/tour-eiffel.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/tour-eiffel.png" alt="" style="height:52px">
+<img src="monuments_essais/02_encre/tour-montparnasse.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/tour-montparnasse.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/tour-montparnasse.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/tour-montparnasse.png" alt="" style="height:52px">
+<img src="monuments_essais/02_encre/invalides.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/invalides.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/invalides.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/invalides.png" alt="" style="height:52px">
+<img src="monuments_essais/02_encre/sacre-coeur.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/sacre-coeur.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/sacre-coeur.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/sacre-coeur.png" alt="" style="height:52px">
+<img src="monuments_essais/02_encre/pantheon.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/pantheon.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/pantheon.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/pantheon.png" alt="" style="height:52px">
+<img src="monuments_essais/02_encre/notre-dame.png" alt="" style="height:18px">
+<img src="monuments_essais/02_encre/notre-dame.png" alt="" style="height:26px">
+<img src="monuments_essais/02_encre/notre-dame.png" alt="" style="height:36px">
+<img src="monuments_essais/02_encre/notre-dame.png" alt="" style="height:52px">
+</div></div>
+<div class="tt"><div class="lig"><span>03 · tirage</span>
+<img src="monuments_essais/03_tirage/tour-eiffel.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/tour-eiffel.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/tour-eiffel.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/tour-eiffel.png" alt="" style="height:52px">
+<img src="monuments_essais/03_tirage/tour-montparnasse.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/tour-montparnasse.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/tour-montparnasse.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/tour-montparnasse.png" alt="" style="height:52px">
+<img src="monuments_essais/03_tirage/invalides.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/invalides.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/invalides.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/invalides.png" alt="" style="height:52px">
+<img src="monuments_essais/03_tirage/sacre-coeur.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/sacre-coeur.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/sacre-coeur.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/sacre-coeur.png" alt="" style="height:52px">
+<img src="monuments_essais/03_tirage/pantheon.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/pantheon.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/pantheon.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/pantheon.png" alt="" style="height:52px">
+<img src="monuments_essais/03_tirage/notre-dame.png" alt="" style="height:18px">
+<img src="monuments_essais/03_tirage/notre-dame.png" alt="" style="height:26px">
+<img src="monuments_essais/03_tirage/notre-dame.png" alt="" style="height:36px">
+<img src="monuments_essais/03_tirage/notre-dame.png" alt="" style="height:52px">
+</div></div>
+<div class="cle"><b>Le tirage est le seul qui tienne à 18 px.</b>Une gravure détourée à 18 px, c'est une tache — il n'y a plus de silhouette à lire. Un rectangle ivoire de 18 px, si : on lit <em>« il y a un tirage ici »</em> bien avant de lire quel monument, et on lit le monument dès 36 px. Le cadre donne au signe une forme constante que l'échelle ne détruit pas. Bénéfice de bord : le carton étant ivoire, il <b class="k">avale le liseré</b> — le mauvais détourage cesse d'exister.</div>
+<h2>4 · trois partis pris d'échelle</h2>
+<p>Combien de repères sur les huit sont réellement visibles, à chaque zoom :</p>
+<table class="tb tb2"><tr><th>parti pris</th><th>z11</th><th>z12</th><th>z13</th><th>z14</th><th>z15</th><th>z16</th><th>z17</th></tr>
+<tr><td>A · échelle réelle <em>(actuel)</em></td>
+<td class="nul">0/8</td>
+<td class="nul">1/8</td>
+<td class="nul">2/8</td>
+<td class="ok">6/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+</tr>
+<tr><td>B · courbe tempérée + plancher</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+</tr>
+<tr><td>C · paliers par rang</td>
+<td class="nul">2/8</td>
+<td class="">5/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+<td class="ok">8/8</td>
+</tr>
+</table><div class="rangee">
+<div class="bloc"><div class="leg">z12 · <b>A — échelle réelle</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1408.png" alt="" style="left:-241px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1409.png" alt="" style="left:-241px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1408.png" alt="" style="left:15px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1409.png" alt="" style="left:15px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1408.png" alt="" style="left:271px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1409.png" alt="" style="left:271px;top:91px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/tour-eiffel.png" alt="tour eiffel" style="left:43px;top:119px;height:13px">
+</div></div>
+<div class="bloc"><div class="leg">z12 · <b>B — courbe tempérée (plancher 20)</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1408.png" alt="" style="left:-241px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1409.png" alt="" style="left:-241px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1408.png" alt="" style="left:15px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1409.png" alt="" style="left:15px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1408.png" alt="" style="left:271px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1409.png" alt="" style="left:271px;top:91px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/tour-eiffel.png" alt="tour eiffel" style="left:43px;top:119px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/tour-montparnasse.png" alt="montparnasse" style="left:122px;top:191px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/invalides.png" alt="invalides" style="left:95px;top:130px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/sacre-coeur.png" alt="sacré-cœur" style="left:184px;top:-6px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/pantheon.png" alt="panthéon" style="left:194px;top:173px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/notre-dame.png" alt="notre-dame" style="left:204px;top:143px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/palais-garnier.png" alt="opéra" style="left:151px;top:59px;height:20px">
+<img class="mo" src="monuments_essais/03_tirage/arc-de-triomphe.png" alt="arc de triomphe" style="left:44px;top:51px;height:20px">
+</div></div>
+<div class="bloc"><div class="leg">z12 · <b>C — paliers par rang</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1408.png" alt="" style="left:-241px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2073/1409.png" alt="" style="left:-241px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1408.png" alt="" style="left:15px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2074/1409.png" alt="" style="left:15px;top:91px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1408.png" alt="" style="left:271px;top:-165px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/12/2075/1409.png" alt="" style="left:271px;top:91px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/tour-eiffel.png" alt="tour eiffel" style="left:43px;top:119px;height:30px">
+<img class="mo" src="monuments_essais/03_tirage/tour-montparnasse.png" alt="montparnasse" style="left:122px;top:191px;height:30px">
+<img class="mo" src="monuments_essais/03_tirage/invalides.png" alt="invalides" style="left:95px;top:130px;height:22px">
+<img class="mo" src="monuments_essais/03_tirage/sacre-coeur.png" alt="sacré-cœur" style="left:184px;top:-6px;height:22px">
+<img class="mo" src="monuments_essais/03_tirage/pantheon.png" alt="panthéon" style="left:194px;top:173px;height:22px">
+</div></div>
+<div class="bloc"><div class="leg">z14 · <b>A — échelle réelle</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5636.png" alt="" style="left:-68px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5637.png" alt="" style="left:-68px;top:205px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5636.png" alt="" style="left:188px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5637.png" alt="" style="left:188px;top:205px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/tour-eiffel.png" alt="tour eiffel" style="left:41px;top:61px;height:52px">
+<img class="mo" src="monuments_essais/00_brut/invalides.png" alt="invalides" style="left:252px;top:103px;height:17px">
+</div></div>
+<div class="bloc"><div class="leg">z14 · <b>B — courbe tempérée (plancher 20)</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5636.png" alt="" style="left:-68px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5637.png" alt="" style="left:-68px;top:205px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5636.png" alt="" style="left:188px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5637.png" alt="" style="left:188px;top:205px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/tour-eiffel.png" alt="tour eiffel" style="left:41px;top:61px;height:29px">
+<img class="mo" src="monuments_essais/03_tirage/invalides.png" alt="invalides" style="left:252px;top:103px;height:20px">
+</div></div>
+<div class="bloc"><div class="leg">z14 · <b>C — paliers par rang</b></div>
+<div class="pan ombre" style="width:292px;height:224px">
+<div class="tuiles">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5636.png" alt="" style="left:-68px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8296/5637.png" alt="" style="left:-68px;top:205px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5636.png" alt="" style="left:188px;top:-51px">
+<img src="https://a.basemaps.cartocdn.com/dark_all/14/8297/5637.png" alt="" style="left:188px;top:205px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/tour-eiffel.png" alt="tour eiffel" style="left:41px;top:61px;height:46px">
+<img class="mo" src="monuments_essais/03_tirage/invalides.png" alt="invalides" style="left:252px;top:103px;height:36px">
+</div></div>
+</div>
+<div class="cle"><b>L'échelle réelle était une bonne idée honnête et un mauvais outil.</b>Elle est vraie en physique et fausse en usage : le croquis existe pour <em>orienter</em>, et il n'oriente à aucun zoom — trop vide en dessous de z14, écrasé par deux géants au-dessus de z16. B garde l'ordre du réel (la tour reste la plus grande) mais compresse le rapport de 6,6 : 1 à ~2,4 : 1. C ne garde que le <em>rang</em> — trois tailles, trois familles — et devient parfaitement prévisible.</div>
+<h2>5 · le croquis : collage ou trait ?</h2>
+<p>Le croquis est dessiné dans un espace 340 × 260 et rendu <span class="mono">width:100%; max-height:240px</span> — soit ~0,92 à 1,0 px par unité sur un téléphone. Les monuments y font <b class="k">13 à 17 unités</b> de haut, donc <b class="k">12 à 17 px à l'écran</b>. C'est en dessous de tout ce qu'on vient de mesurer.</p>
+<div class="rangee">
+<div class="bloc"><div class="leg"><b>l'actuel — le trait</b> · 6 monuments, 13–17 px</div>
+<svg viewBox="0 0 340 260" class="cro">
+<path d="M 30 12 Q 160 4 310 14 Q 336 100 326 200 Q 320 246 240 250 Q 120 256 40 246 Q 8 240 10 170 Q 6 80 30 12" fill="none" stroke="#efe9d8" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 7"/>
+<path d="M 333 241 Q 300 224 272 205 Q 236 178 205 159 Q 172 139 138 128 Q 108 119 86 130 Q 62 143 44 165 Q 28 185 12 199" fill="none" stroke="#efe9d8" stroke-opacity=".45" stroke-width="1.6"/>
+<ellipse cx="70" cy="70" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="60" rx="30" ry="22" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="190" cy="58" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="250" cy="90" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="96" cy="130" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="170" cy="120" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="240" cy="150" rx="34" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="190" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="200" cy="200" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="280" cy="190" rx="28" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<g transform="translate(76 124)"><path d="M -5.2 0 Q -1.8 -5.5 -1.1 -10.5 L -0.7 -14 M 5.2 0 Q 1.8 -5.5 1.1 -10.5 L 0.7 -14 M -3.6 -4.6 L 3.6 -4.6 M -1.7 -9.6 L 1.7 -9.6 M 0 -14 L 0 -16.5" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(70 78)"><path d="M -5.5 0 L -5.5 -12.5 L 5.5 -12.5 L 5.5 0 M -2.4 0 L -2.4 -5.5 Q -2.4 -8 0 -8 Q 2.4 -8 2.4 -5.5 L 2.4 0 M -5.5 -9.8 L 5.5 -9.8" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(190 54)"><path d="M -7.2 0 L -7.2 -2.8 Q -7.2 -6.6 -4.8 -6.6 Q -2.6 -6.6 -2.6 -2.8 L -2.6 0 M 2.6 0 L 2.6 -2.8 Q 2.6 -6.6 4.8 -6.6 Q 7.2 -6.6 7.2 -2.8 L 7.2 0 M -2.9 0 L -2.9 -4.6 Q -2.9 -9.8 0 -9.8 Q 2.9 -9.8 2.9 -4.6 L 2.9 0 M 0 -9.8 L 0 -12.4 M -1.3 -11.3 L 1.3 -11.3" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(187 148)"><path d="M -6 0 L -6 -8.6 L -2.6 -8.6 L -2.6 0 M 2.6 0 L 2.6 -8.6 L 6 -8.6 L 6 0 M -2.6 -4.8 L 2.6 -4.8 M 1.35 -2.4 A 1.35 1.35 0 1 0 -1.35 -2.4 A 1.35 1.35 0 1 0 1.35 -2.4" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(116 124)"><path d="M -5 0 L -5 -3.8 L 5 -3.8 L 5 0 M -3.9 -3.8 Q -3.9 -9.6 0 -9.6 Q 3.9 -9.6 3.9 -3.8 M 0 -9.6 L 0 -13 M -0.9 -12 L 0.9 -12" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g transform="translate(110 168)"><path d="M -2.9 0 L -2.9 -12.6 Q -2.9 -13.8 0 -13.8 Q 2.9 -13.8 2.9 -12.6 L 2.9 0 M -2.9 -4.4 L 2.9 -4.4" fill="none" stroke="#5d8dff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>
+</svg></div>
+<div class="bloc"><div class="leg"><b>collage brut</b> · à l'échelle du croquis</div>
+<svg viewBox="0 0 340 260" class="cro">
+<path d="M 30 12 Q 160 4 310 14 Q 336 100 326 200 Q 320 246 240 250 Q 120 256 40 246 Q 8 240 10 170 Q 6 80 30 12" fill="none" stroke="#efe9d8" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 7"/>
+<path d="M 333 241 Q 300 224 272 205 Q 236 178 205 159 Q 172 139 138 128 Q 108 119 86 130 Q 62 143 44 165 Q 28 185 12 199" fill="none" stroke="#efe9d8" stroke-opacity=".45" stroke-width="1.6"/>
+<ellipse cx="70" cy="70" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="60" rx="30" ry="22" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="190" cy="58" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="250" cy="90" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="96" cy="130" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="170" cy="120" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="240" cy="150" rx="34" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="190" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="200" cy="200" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="280" cy="190" rx="28" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<image href="monuments_essais/00_brut/tour-eiffel.png" x="69.2" y="107.0" height="17" opacity=".9"/>
+<image href="monuments_essais/00_brut/arc-de-triomphe.png" x="63.2" y="61.0" height="17" opacity=".9"/>
+<image href="monuments_essais/00_brut/sacre-coeur.png" x="183.2" y="37.0" height="17" opacity=".9"/>
+<image href="monuments_essais/00_brut/notre-dame.png" x="180.2" y="131.0" height="17" opacity=".9"/>
+<image href="monuments_essais/00_brut/invalides.png" x="109.2" y="107.0" height="17" opacity=".9"/>
+<image href="monuments_essais/00_brut/tour-montparnasse.png" x="103.2" y="151.0" height="17" opacity=".9"/>
+</svg></div>
+<div class="bloc"><div class="leg"><b>collage tirage</b> · à l'échelle du croquis</div>
+<svg viewBox="0 0 340 260" class="cro">
+<path d="M 30 12 Q 160 4 310 14 Q 336 100 326 200 Q 320 246 240 250 Q 120 256 40 246 Q 8 240 10 170 Q 6 80 30 12" fill="none" stroke="#efe9d8" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 7"/>
+<path d="M 333 241 Q 300 224 272 205 Q 236 178 205 159 Q 172 139 138 128 Q 108 119 86 130 Q 62 143 44 165 Q 28 185 12 199" fill="none" stroke="#efe9d8" stroke-opacity=".45" stroke-width="1.6"/>
+<ellipse cx="70" cy="70" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="60" rx="30" ry="22" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="190" cy="58" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="250" cy="90" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="96" cy="130" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="170" cy="120" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="240" cy="150" rx="34" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="190" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="200" cy="200" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="280" cy="190" rx="28" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<image href="monuments_essais/03_tirage/tour-eiffel.png" x="69.2" y="107.0" height="17" opacity=".9"/>
+<image href="monuments_essais/03_tirage/arc-de-triomphe.png" x="63.2" y="61.0" height="17" opacity=".9"/>
+<image href="monuments_essais/03_tirage/sacre-coeur.png" x="183.2" y="37.0" height="17" opacity=".9"/>
+<image href="monuments_essais/03_tirage/notre-dame.png" x="180.2" y="131.0" height="17" opacity=".9"/>
+<image href="monuments_essais/03_tirage/invalides.png" x="109.2" y="107.0" height="17" opacity=".9"/>
+<image href="monuments_essais/03_tirage/tour-montparnasse.png" x="103.2" y="151.0" height="17" opacity=".9"/>
+</svg></div>
+<div class="bloc"><div class="leg">collage tirage · <b>28 px (le double)</b></div>
+<svg viewBox="0 0 340 260" class="cro">
+<path d="M 30 12 Q 160 4 310 14 Q 336 100 326 200 Q 320 246 240 250 Q 120 256 40 246 Q 8 240 10 170 Q 6 80 30 12" fill="none" stroke="#efe9d8" stroke-opacity=".3" stroke-width="1" stroke-dasharray="3 7"/>
+<path d="M 333 241 Q 300 224 272 205 Q 236 178 205 159 Q 172 139 138 128 Q 108 119 86 130 Q 62 143 44 165 Q 28 185 12 199" fill="none" stroke="#efe9d8" stroke-opacity=".45" stroke-width="1.6"/>
+<ellipse cx="70" cy="70" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="60" rx="30" ry="22" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="190" cy="58" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="250" cy="90" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="96" cy="130" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="170" cy="120" rx="30" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="240" cy="150" rx="34" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="120" cy="190" rx="34" ry="26" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="200" cy="200" rx="32" ry="24" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<ellipse cx="280" cy="190" rx="28" ry="20" fill="none" stroke="#efe9d8" stroke-opacity=".5" stroke-width="1"/>
+<image href="monuments_essais/03_tirage/tour-eiffel.png" x="64.8" y="96.0" height="28" opacity=".9"/>
+<image href="monuments_essais/03_tirage/arc-de-triomphe.png" x="58.8" y="50.0" height="28" opacity=".9"/>
+<image href="monuments_essais/03_tirage/sacre-coeur.png" x="178.8" y="26.0" height="28" opacity=".9"/>
+<image href="monuments_essais/03_tirage/notre-dame.png" x="175.8" y="120.0" height="28" opacity=".9"/>
+<image href="monuments_essais/03_tirage/invalides.png" x="104.8" y="96.0" height="28" opacity=".9"/>
+<image href="monuments_essais/03_tirage/tour-montparnasse.png" x="98.8" y="140.0" height="28" opacity=".9"/>
+</svg></div>
+</div>
+<h2>6 · la hiérarchie du regard — les trois niveaux ensemble</h2>
+<p>L'ordre voulu : <b class="k">1.</b> les épingles et leurs noms · <b class="k">2.</b> les monuments · <b class="k">3.</b> les transports. Mesuré au contraste, sur tuile <span class="mono">dark_all</span> :</p>
+<table class="tb"><tr><th>signe</th><th>contraste</th><th>combien à l'écran</th><th>à partir de</th></tr><tr><td>nom de spot <em>ivoire sur plaque .78</em></td><td class="ok">15,2 : 1</td><td class="nul">8 max</td><td class="nul">z13</td></tr><tr><td>vignette monument</td><td>4,6 : 1</td><td class="nul">0 à 2 sous z13,5</td><td>—</td></tr><tr><td>nom de station RER <em>op .38</em></td><td>3,2 : 1</td><td class="nul">24 max</td><td class="nul">z12,5</td></tr><tr><td>nom de station métro <em>op .30</em></td><td>2,5 : 1</td><td class="nul">(idem)</td><td>z13</td></tr><tr><td>nom de station tram <em>op .24</em></td><td>2,0 : 1</td><td>(idem)</td><td>z14</td></tr><tr><td>station tracée <em>op .95</em></td><td class="ok">13,0 : 1</td><td>1</td><td>—</td></tr></table>
+<div class="cle"><b>Le contraste par signe est déjà bon. Ce n'est pas lui, le problème.</b>15,2 contre 2,5, c'est un rapport de six. Ce qui casse la hiérarchie, ce sont trois faits de structure : <br>· <b class="k">le compte</b> — 24 étiquettes de transport contre 8 noms de spots. Trois fois plus. L'œil compte les marques avant de mesurer leur contraste : vingt-quatre chuchotements couvrent huit voix. <br>· <b class="k">le seuil</b> — le RER parle dès z12,5, les spots se taisent jusqu'à z13. Entre les deux, la carte ne dit <em>que</em> des transports. En dessous de z13, elle ne dit rien d'autre non plus. <br>· <b class="k">le trou du milieu</b> — le niveau 2 est vide. Sans monuments, il ne reste que le niveau 1 et le niveau 3 face à face, et une échelle à deux barreaux se lit toujours comme « tout au même niveau ».</div>
+<div class="rangee">
+<div class="bloc"><div class="leg">z14 · <b>AVANT</b> — 12 stations, 4 noms, monuments à l'échelle réelle</div>
+<div class="pan hier v-av" style="width:300px;height:236px">
+<div class="tuiles">
+<img src="https://b.basemaps.cartocdn.com/dark_all/14/8298/5636.png" alt="" style="left:-187px;top:-4px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/14/8299/5636.png" alt="" style="left:69px;top:-4px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/notre-dame.png" alt="" style="left:56px;top:203px;height:11px">
+<div class="st m-metro" style="left:74px;top:125px"><span class="st-p">M</span><span class="st-n">hôtel de ville</span></div>
+<div class="st m-metro" style="left:187px;top:166px"><span class="st-p">M</span><span class="st-n">saint-paul</span></div>
+<div class="st m-metro" style="left:99px;top:60px"><span class="st-p">M</span><span class="st-n">rambuteau</span></div>
+<div class="st m-metro" style="left:141px;top:192px"><span class="st-p">M</span><span class="st-n">pont marie</span></div>
+<div class="st m-metro" style="left:271px;top:132px"><span class="st-p">M</span><span class="st-n">chemin vert</span></div>
+<div class="st m-metro" style="left:193px;top:231px"><span class="st-p">M</span><span class="st-n">sully-morland</span></div>
+<div class="st m-metro" style="left:249px;top:28px"><span class="st-p">M</span><span class="st-n">filles du calvaire</span></div>
+<div class="st m-rer" style="left:22px;top:109px"><span class="st-p">RER</span><span class="st-n">châtelet</span></div>
+<div class="st m-metro" style="left:18px;top:169px"><span class="st-p">M</span><span class="st-n">cité</span></div>
+<div class="sp" style="left:122px;top:125px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>chez alain</b>
+</div>
+<div class="sp" style="left:187px;top:77px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la buvette</b>
+</div>
+<div class="sp" style="left:197px;top:37px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>le mary celeste</b>
+</div>
+<div class="sp" style="left:229px;top:58px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>candelaria</b>
+</div>
+<div class="sp" style="left:201px;top:88px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:147px;top:29px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:186px;top:157px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:127px;top:184px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:251px;top:150px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:79px;top:173px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+</div></div>
+<div class="bloc"><div class="leg">z14 · <b>APRÈS</b> — 7 stations, 8 noms, monuments en tirage/paliers</div>
+<div class="pan hier v-ap" style="width:300px;height:236px">
+<div class="tuiles">
+<img src="https://b.basemaps.cartocdn.com/dark_all/14/8298/5636.png" alt="" style="left:-187px;top:-4px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/14/8299/5636.png" alt="" style="left:69px;top:-4px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/notre-dame.png" alt="" style="left:56px;top:203px;height:30px">
+<div class="st m-metro" style="left:74px;top:125px"><span class="st-p">M</span><span class="st-n">hôtel de ville</span></div>
+<div class="st m-metro" style="left:187px;top:166px"><span class="st-p">M</span><span class="st-n">saint-paul</span></div>
+<div class="st m-metro" style="left:99px;top:60px"><span class="st-p">M</span><span class="st-n">rambuteau</span></div>
+<div class="st m-metro" style="left:141px;top:192px"><span class="st-p">M</span><span class="st-n">pont marie</span></div>
+<div class="st m-metro" style="left:271px;top:132px"><span class="st-p">M</span><span class="st-n">chemin vert</span></div>
+<div class="st m-metro" style="left:193px;top:231px"><span class="st-p">M</span><span class="st-n">sully-morland</span></div>
+<div class="sp" style="left:122px;top:125px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>chez alain</b>
+</div>
+<div class="sp" style="left:187px;top:77px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la buvette</b>
+</div>
+<div class="sp" style="left:197px;top:37px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>le mary celeste</b>
+</div>
+<div class="sp" style="left:229px;top:58px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>candelaria</b>
+</div>
+<div class="sp" style="left:201px;top:88px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la perle</b>
+</div>
+<div class="sp" style="left:147px;top:29px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>little red door</b>
+</div>
+<div class="sp" style="left:186px;top:157px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>le petit fer</b>
+</div>
+<div class="sp" style="left:127px;top:184px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>au bourguignon</b>
+</div>
+<div class="sp" style="left:251px;top:150px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:79px;top:173px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+</div></div>
+<div class="bloc"><div class="leg">z15 · <b>AVANT</b> — 12 stations, 4 noms, monuments à l'échelle réelle</div>
+<div class="pan hier v-av" style="width:300px;height:236px">
+<div class="tuiles">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16597/11272.png" alt="" style="left:-232px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16597/11273.png" alt="" style="left:-232px;top:101px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16598/11272.png" alt="" style="left:24px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16598/11273.png" alt="" style="left:24px;top:101px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16599/11272.png" alt="" style="left:280px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16599/11273.png" alt="" style="left:280px;top:101px">
+</div>
+<img class="mo" src="monuments_essais/00_brut/notre-dame.png" alt="" style="left:-4px;top:260px;height:22px">
+<div class="st m-metro" style="left:33px;top:104px"><span class="st-p">M</span><span class="st-n">hôtel de ville</span></div>
+<div class="st m-metro" style="left:260px;top:185px"><span class="st-p">M</span><span class="st-n">saint-paul</span></div>
+<div class="sp" style="left:129px;top:104px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>chez alain</b>
+</div>
+<div class="sp" style="left:260px;top:8px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la buvette</b>
+</div>
+<div class="sp" style="left:287px;top:29px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la perle</b>
+</div>
+<div class="sp" style="left:257px;top:168px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>le petit fer</b>
+</div>
+<div class="sp" style="left:138px;top:221px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+<div class="sp" style="left:43px;top:199px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+</div>
+</div></div>
+<div class="bloc"><div class="leg">z15 · <b>APRÈS</b> — 7 stations, 8 noms, monuments en tirage/paliers</div>
+<div class="pan hier v-ap" style="width:300px;height:236px">
+<div class="tuiles">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16597/11272.png" alt="" style="left:-232px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16597/11273.png" alt="" style="left:-232px;top:101px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16598/11272.png" alt="" style="left:24px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16598/11273.png" alt="" style="left:24px;top:101px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16599/11272.png" alt="" style="left:280px;top:-155px">
+<img src="https://b.basemaps.cartocdn.com/dark_all/15/16599/11273.png" alt="" style="left:280px;top:101px">
+</div>
+<img class="mo" src="monuments_essais/03_tirage/notre-dame.png" alt="" style="left:-4px;top:260px;height:38px">
+<div class="st m-metro" style="left:33px;top:104px"><span class="st-p">M</span><span class="st-n">hôtel de ville</span></div>
+<div class="st m-metro" style="left:260px;top:185px"><span class="st-p">M</span><span class="st-n">saint-paul</span></div>
+<div class="sp" style="left:129px;top:104px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>chez alain</b>
+</div>
+<div class="sp" style="left:260px;top:8px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la buvette</b>
+</div>
+<div class="sp" style="left:287px;top:29px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la perle</b>
+</div>
+<div class="sp" style="left:257px;top:168px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>le petit fer</b>
+</div>
+<div class="sp" style="left:138px;top:221px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>au bourguignon</b>
+</div>
+<div class="sp" style="left:43px;top:199px"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z"/></svg>
+<b>la caféothèque</b>
+</div>
+</div></div>
+</div>
+<p>Dans « après », on n'a presque rien enlevé au transport en opacité (.30 → .20, et le halo bleu retiré : sur fond nuit il ne servait qu'à re-durcir ce que l'opacité venait d'adoucir). Ce qui change la lecture, c'est <b class="k">le nombre</b> : moitié moins d'étiquettes, deux fois plus de noms de lieux, et un niveau 2 enfin peuplé.</p>
+<p><b class="k">La station tracée ne bouge pas.</b> À .95 elle est à 13 : 1 — elle répond à une question posée, elle sort du filigrane, et rien ici ne la touche.</p>
+<h2>7 · ce que je recommande</h2>
+<div class="cle verdict"><b>1 — Abandonner l'échelle réelle. Prendre C (paliers par rang).</b>Trois tailles selon la hauteur du monument (haut / moyen / bas), quatre paliers de zoom. On garde l'idée juste — la tour Eiffel est plus grande que l'Arc — et on jette la conséquence absurde : un croquis d'orientation qui n'oriente pas. B est défendable si tu tiens au continu ; C est plus sûr, parce qu'un palier se règle à l'œil et ne surprend jamais.</div>
+<div class="cle verdict"><b>2 — Le traitement : tirage encré (03).</b>Encre charbon → ivoire, chroma nulle, collé sur un carton droit à marge basse. C'est littéralement la phrase de la DA (<em>« des tirages collés à bord blanc »</em>), c'est le seul traitement lisible à 18 px, et il rend le mauvais détourage sans objet. Ombre portée douce, jamais de lueur.</div>
+<div class="cle verdict"><b>3 — Le croquis : non. Garder le trait.</b>À 13–17 px, une gravure est une tache — la planche le montre. Et un rectangle ivoire à cette taille au milieu des bulles de quartier ne se lit pas comme un monument mais comme un post-it : il volerait le rôle des zones, qui sont ce qu'on tape. Le croquis est un <em>schéma</em> ; son échelle veut du trait. Si tu veux du collage là-bas, il faut doubler la taille (28 px) et n'en garder que trois — c'est le dernier panneau du §5, et je le trouve déjà encombré.</div>
+<div class="cle verdict"><b>4 — La hiérarchie : monter les noms de spots avant de baisser le transport.</b>Passer le plafond de noms de spots de 8 à 14–16 au zoom quartier, et descendre le plafond de stations de 24 à 12. Aligner les seuils : aucun transport ne doit parler avant les spots (RER z12,5 → z13). Côté encre, un seul geste : retirer le halo bleu du nom de station (inutile de nuit) et poser le nom de spot en 700. L'opacité, elle, a déjà été assez baissée — continuer rendrait la carte fade sans rien gagner.</div>
+<p style="margin-top:26px;opacity:.4;font-size:12px" class="mono">planche fabriquée le 09/08/2026 · images traitées dans design/monuments_essais/ · rien n'a été poussé dans l'app</p>
+</body></html>

@@ -380,6 +380,15 @@ const EN: Record<string, string> = {
   'effacé ici — on finit le ménage au retour du réseau.':
     'gone from here — we’ll finish tidying when you’re back online.',
 
+  // le bloc d'actions tout en bas de fiche (09/08) — visible sur n'importe
+  // quel spot, pas juste les miens. « supprimer » un spot d'un pote ne
+  // touche que ma carte, jamais la sienne.
+  'retirer de ma carte': 'remove from my map',
+  'il quitte ta carte, pas son carnet à lui — rien n’est effacé de son côté.':
+    'it leaves your map, not their notebook — nothing changes on their side.',
+  'oui, supprime': 'yes, delete it',
+  'oui, retire': 'yes, remove it',
+
   // les heures d'ouverture (09/08) — le champ qui fait parler la carte
   'ça ouvre quand ?': 'when is it open?',
   'ouvre à': 'opens at',

@@ -3625,6 +3625,14 @@ function Fiche({
   const [edition, setEdition] = useState(false)
   // le crayon : corriger l'entrée elle-même (nom, adresse, tip, type, tampon)
   const [correction, setCorrection] = useState(false)
+  // le bloc d'actions du bas (09/08) — visible sur TOUTE fiche, pas juste
+  // les miennes : supprimer / rayer se posent en deux temps, jamais d'un
+  // doigt qui glisse (même idiome que CorrigerLieu → arracher/rayer).
+  const [confirmSupprFiche, setConfirmSupprFiche] = useState(false)
+  const [enCoursSupprFiche, setEnCoursSupprFiche] = useState(false)
+  const [rayerOuvertFiche, setRayerOuvertFiche] = useState(false)
+  const [motifRayerFiche, setMotifRayerFiche] = useState('')
+  const [enCoursRayerFiche, setEnCoursRayerFiche] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
   // la croix posée sur ce lieu est-elle LA MIENNE ? Le carnet local ne tient
@@ -3647,6 +3655,47 @@ function Fiche({
   const enregistrer = async (maj: Lieu) => {
     setLieu(maj)
     await majLieu(maj)
+  }
+
+  // SUPPRIMER, depuis le bloc du bas — sur MES spots ou ceux d'un pote (le
+  // geste part alors vers onSupprimer, qui sait la différence : effacé pour
+  // de vrai chez moi, simplement retiré de ma carte chez un pote — voir
+  // supprimerLieu / masques.ts). onSupprimer referme la fiche derrière lui.
+  const confirmerSupprFiche = async () => {
+    if (enCoursSupprFiche) return
+    setEnCoursSupprFiche(true)
+    try {
+      await onSupprimer(lieu)
+    } finally {
+      setEnCoursSupprFiche(false)
+    }
+  }
+
+  // RAYER, depuis le bloc du bas — le serment marche déjà sur n'importe quel
+  // spot (rayerLieu ne filtre pas par propriétaire) : ici on ne fait que
+  // demander (deux temps) et recueillir le motif, comme CorrigerLieu.
+  const confirmerRayerFiche = async () => {
+    if (enCoursRayerFiche) return
+    setEnCoursRayerFiche(true)
+    try {
+      const r = await onRayer(lieu, motifRayerFiche)
+      setLieu({ ...lieu, raye: r })
+      setRayerOuvertFiche(false)
+      setMotifRayerFiche('')
+    } finally {
+      setEnCoursRayerFiche(false)
+    }
+  }
+
+  const seDedireFiche = async () => {
+    if (enCoursRayerFiche) return
+    setEnCoursRayerFiche(true)
+    try {
+      await onDeRayer(lieu)
+      setLieu({ ...lieu, raye: undefined })
+    } finally {
+      setEnCoursRayerFiche(false)
+    }
   }
 
   // le tiroir : ranger / ressortir. On ne ferme pas la fiche — tant qu'elle
@@ -4416,6 +4465,146 @@ function Fiche({
       >
         {t('partager en story →')}
       </button>
+
+      {/* LE BLOC D'ACTIONS, TOUT EN BAS (09/08) — le crayon (plus haut) reste,
+          mais n'est plus le SEUL chemin : ces gestes sont désormais toujours
+          visibles, qu'on regarde un spot à soi ou celui d'un pote. Pendant
+          la correction, CorrigerLieu porte déjà les mêmes états (favori/à
+          tester) + supprimer/rayer — on ne les affiche pas deux fois. */}
+      {!(mien && correction) && (
+        <>
+          <div className="fiche-tags fiche-actions-bas">
+            <span className="lbl mono">{t('où il en est')}</span>
+            <div className="rangée">
+              <button
+                className={`mot ${favori ? 'entouré' : ''}`}
+                aria-pressed={favori}
+                onClick={onFavori}
+              >
+                {t('favori')}
+              </button>
+              <button
+                className={`mot ${aTester ? 'entouré' : ''}`}
+                aria-pressed={aTester}
+                onClick={onATester}
+              >
+                {t('à tester')}
+              </button>
+            </div>
+            {/* MODIFIER : uniquement mon écriture — sur le spot d'un pote, la
+                voie est « + ajouter à ma carte » plus haut, pas ce lien. */}
+            {mien && (
+              <button className="lien fiche-modifier" onClick={() => setCorrection(true)}>
+                {t('modifier les infos')}
+              </button>
+            )}
+          </div>
+
+          {/* SUPPRIMER — silencieux, deux temps. Sur un spot à moi : pour de
+              vrai (photos et clips compris). Sur celui d'un pote : ça ne
+              touche que MA carte, jamais la sienne (supprimerLieu, db.ts). */}
+          <div className="corriger-arracher">
+            {!confirmSupprFiche ? (
+              <button
+                className="lien corriger-effacer"
+                onClick={() => setConfirmSupprFiche(true)}
+              >
+                {mien ? t('supprimer') : t('retirer de ma carte')}
+              </button>
+            ) : (
+              <>
+                <p className="mono corriger-avertissement">
+                  {mien
+                    ? t('ses photos partent aussi — et ses clips. définitif, sans retour.')
+                    : t('il quitte ta carte, pas son carnet à lui — rien n’est effacé de son côté.')}
+                </p>
+                <div className="corriger-actions">
+                  <button className="lien" onClick={() => setConfirmSupprFiche(false)}>
+                    {t('non, laisse')}
+                  </button>
+                  <button
+                    className="lien corriger-effacer"
+                    disabled={enCoursSupprFiche}
+                    onClick={() => void confirmerSupprFiche()}
+                  >
+                    {enCoursSupprFiche
+                      ? t('on efface…')
+                      : mien
+                        ? t('oui, supprime')
+                        : t('oui, retire')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* SUPPRIMER + SIGNIFIER À MON CERCLE — le serment (rayer.ts) :
+              marche déjà sur n'importe quel spot, à moi ou à un pote. C'est
+              même LÀ que ça sert le plus — on t'a envoyé un spot, t'y es
+              allé, t'es déçu : ton cercle doit pouvoir le savoir. */}
+          <div className="corriger-rayer">
+            {lieu.raye ? (
+              <>
+                <p className="mono corriger-raye-etat">
+                  {t('rayé par')} {lieu.raye.qui.toLowerCase()}
+                  {maRayure ? ` · ${t('il part jeudi.')}` : ''}
+                </p>
+                {lieu.raye.motif && (
+                  <p className="hand corriger-raye-motif">« {lieu.raye.motif} »</p>
+                )}
+                {maRayure && (
+                  <button
+                    className="lien"
+                    disabled={enCoursRayerFiche}
+                    onClick={() => void seDedireFiche()}
+                  >
+                    {enCoursRayerFiche ? t('on efface…') : t('j’ai changé d’avis')}
+                  </button>
+                )}
+              </>
+            ) : !rayerOuvertFiche ? (
+              <button className="lien corriger-effacer" onClick={() => setRayerOuvertFiche(true)}>
+                {t('rayer — et le dire à ton cercle')}
+              </button>
+            ) : (
+              <>
+                <p className="mono corriger-avertissement">
+                  {t('rayer, c’est un serment : il quitte ton carnet jeudi. jusque-là tu peux te dédire.')}
+                </p>
+                <p className="mono corriger-note">
+                  {t('ça reste dans ton cercle, signé de ton nom. ça ne se compte jamais.')}
+                </p>
+                <input
+                  className="corriger-motif"
+                  value={motifRayerFiche}
+                  onChange={(e) => setMotifRayerFiche(e.target.value)}
+                  placeholder={t('trois quarts d’heure pour deux bières')}
+                  maxLength={120}
+                  aria-label={t('pourquoi ?')}
+                />
+                <div className="corriger-actions">
+                  <button
+                    className="lien"
+                    onClick={() => {
+                      setRayerOuvertFiche(false)
+                      setMotifRayerFiche('')
+                    }}
+                  >
+                    {t('non, laisse')}
+                  </button>
+                  <button
+                    className="lien corriger-effacer"
+                    disabled={enCoursRayerFiche}
+                    onClick={() => void confirmerRayerFiche()}
+                  >
+                    {enCoursRayerFiche ? t('on raye…') : t('oui, je raye')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="mono fiche-meta">
         {VISIBILITES.find((x) => x.v === lieu.visibilite)?.icone}{' '}
