@@ -343,10 +343,12 @@ export default function Onboarding({ onFini }: { onFini: () => void }) {
         <span className="mono onb-portrait-legende">
           {portrait ? t('c’est toi ? parfait.') : t('ta photo — ton cercle te reconnaît')}
         </span>
+        {/* pas de `capture` : il forçait le selfie et cachait la photothèque.
+            Personne ne veut se prendre en photo à la création du compte —
+            on choisit une photo qu'on aime déjà. */}
         <input
           type="file"
           accept="image/*"
-          capture="user"
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0]

@@ -303,6 +303,7 @@ function marquerAuthPrete(): void {
 export async function chargerMonId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession()
   monId = data.session?.user?.id ?? null
+  noterPorte(data.session) // le carnet retient par quelle porte on est entré
   marquerAuthPrete()
   // connecté : on rejoue les écritures restées en rade (file d'attente offline)
   if (monId) void rejouerAttente()
@@ -311,6 +312,7 @@ export async function chargerMonId(): Promise<string | null> {
 // tient monId à jour aux changements (connexion / déconnexion / refresh)
 supabase.auth.onAuthStateChange((_e, session) => {
   monId = session?.user?.id ?? null
+  noterPorte(session)
   marquerAuthPrete()
 })
 
@@ -3054,6 +3056,129 @@ export async function effacerTout(): Promise<void> {
       resolve()
     }
   })
+}
+
+// ── LE COMPTE EST-IL DÉJÀ INSTALLÉ ? (09/08 — le bug du téléphone) ──
+// L'accueil se décidait sur `localStorage['jeudi-onboard']`, un drapeau
+// d'APPAREIL. Conséquence vécue : arriver sur un second téléphone avec le
+// BON compte rejouait tout l'accueil, et re-demandait prénom et portrait —
+// qui écrasaient ensuite le vrai profil. L'accueil appartient au COMPTE,
+// pas au téléphone : la vérité est le prénom dans la table `profils`.
+//   true  → ce compte est déjà installé, on saute l'accueil
+//   false → compte réellement neuf (la ligne existe, posée par le trigger,
+//           mais son prénom est vide)
+//   null  → le cloud n'a pas répondu : on ne tranche pas, l'appelant se
+//           rabat sur le drapeau local (jamais d'accueil à tort hors-ligne)
+export async function compteDejaInstalle(): Promise<boolean | null> {
+  try {
+    await pretAuth
+    if (!monId) return null
+    const { data, error } = await supabase
+      .from('profils')
+      .select('prenom')
+      .eq('id', monId)
+      .maybeSingle()
+    if (error) return null
+    return !!(data?.prenom && String(data.prenom).trim())
+  } catch {
+    return null
+  }
+}
+
+// ── LES PORTES DÉJÀ UTILISÉES SUR CE TÉLÉPHONE ─────────────────
+// Le carnet se souvient de qui est entré ici. Ça n'authentifie rien : ça
+// évite de se tromper de porte (deux gmail sur le même téléphone) et de
+// repartir de zéro en croyant s'être reconnecté. Local, jamais envoyé.
+const CLE_PORTES = 'jeudi-portes'
+export type PorteConnue = { email: string; portes: string[]; idCourt: string; vu: string }
+
+export function lirePortesConnues(): PorteConnue[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_PORTES) ?? '[]')
+    if (!Array.isArray(v)) return []
+    return (v as PorteConnue[]).filter((p) => p && typeof p.email === 'string' && p.email)
+  } catch {
+    return []
+  }
+}
+
+/** note la porte de la session en cours (appelée à chaque retour d'auth) */
+function noterPorte(session: { user?: { id?: string; email?: string; identities?: { provider: string }[] } } | null) {
+  const u = session?.user
+  if (!u?.email || !u.id) return
+  const portes = u.identities?.length
+    ? [...new Set(u.identities.map((i) => i.provider))]
+    : ['email']
+  const autres = lirePortesConnues().filter((p) => p.email !== u.email)
+  const liste = [
+    { email: u.email, portes, idCourt: u.id.slice(0, 8), vu: new Date().toISOString() },
+    ...autres,
+  ].slice(0, 5) // cinq portes suffisent ; au-delà c'est un téléphone partagé
+  try {
+    localStorage.setItem(CLE_PORTES, JSON.stringify(liste))
+  } catch {
+    /* quota : tant pis, ce n'est qu'un aide-mémoire */
+  }
+}
+
+// ── SOUS QUEL COMPTE SUIS-JE ? ─────────────────────────────────
+/** Ce qu'il faut savoir pour être sûr d'être entré par la bonne porte.
+ *  Deux comptes peuvent porter le même prénom : seuls le mail, la porte
+ *  d'entrée et le début de l'identifiant les distinguent. */
+export type CompteConnecte = {
+  email: string
+  /** les portes reliées à ce compte : 'google', 'email'… */
+  portes: string[]
+  /** l'uuid complet, et ses 8 premiers caractères (ce qu'on montre) */
+  id: string
+  idCourt: string
+}
+
+/** lit le compte de la session en cours (null si personne n'est connecté) */
+export async function lireCompteConnecte(): Promise<CompteConnecte | null> {
+  const { data } = await supabase.auth.getSession()
+  const u = data.session?.user
+  if (!u) return null
+  // identities = une ligne par porte reliée (Google ET lien par mail peuvent
+  // pointer le même compte) ; repli sur app_metadata si la liste est absente.
+  const portes = u.identities?.length
+    ? [...new Set(u.identities.map((i) => i.provider))]
+    : [(u.app_metadata?.provider as string | undefined) ?? 'email']
+  return {
+    email: u.email ?? '',
+    portes,
+    id: u.id,
+    idCourt: u.id.slice(0, 8),
+  }
+}
+
+// ── REMONTER MES PHOTOS RESTÉES LOCALES ────────────────────────
+// Le bucket `photos` n'a existé qu'à partir du 07/08 : tout ce qui a été
+// pris avant est resté en blob dans IndexedDB, sur CET appareil seulement
+// (chaque upload échouait en silence, best-effort). Modifier un spot le
+// faisait remonter — ce qui suit le fait pour tous d'un coup.
+// À lancer depuis l'appareil qui DÉTIENT les blobs (le PC), pas d'un
+// téléphone neuf : ce qui n'est pas là ne peut pas remonter.
+export async function remonterMesPhotos(): Promise<{ spots: number; photos: number }> {
+  await pretAuth
+  if (!monId) return { spots: 0, photos: 0 }
+  const db = await getDB()
+  const tous = await db.getAll('lieux')
+  let spots = 0
+  let photos = 0
+  for (const l of tous) {
+    if (!estAMoi(l)) continue
+    const aRemonter = (l.photos ?? []).filter((p) => p.blob).length
+    if (!aRemonter) continue
+    try {
+      await syncPhotosLieu(l)
+      spots++
+      photos += aRemonter
+    } catch (e) {
+      console.warn('[jeudi] remonterMesPhotos', l.nom, e)
+    }
+  }
+  return { spots, photos }
 }
 
 /** se déconnecter — la session part, le carnet local RESTE (local-first :

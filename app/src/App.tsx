@@ -84,6 +84,9 @@ import {
   lireVus,
   ecrireVus,
   onboardingFait,
+  marquerOnboarding,
+  compteDejaInstalle,
+  remonterMesPhotos,
   reinitOnboarding,
   lireTagline,
   ecrireTagline,
@@ -133,6 +136,7 @@ import {
   traiterInviteAttente,
   estClip,
   seDeconnecter,
+  lireCompteConnecte,
   lireSuivis,
   lireAmisArchives,
   basculerAmiArchive,
@@ -140,6 +144,7 @@ import {
   chargerVuesPellicule,
   marquerVuPellicule,
 } from './db'
+import type { CompteConnecte } from './db'
 import { anniversairesAVenir, motAnniversaire } from './fetes'
 import {
   construireTas,
@@ -562,12 +567,24 @@ function Reglages({
   useEffect(() => {
     villeDeCoords().then(setOuTu)
   }, [])
+  // sous quel compte suis-je entré ? (deux comptes peuvent porter le même prénom)
+  const [compte, setCompte] = useState<CompteConnecte | null>(null)
+  useEffect(() => {
+    void lireCompteConnecte().then(setCompte)
+  }, [])
   const [sauve, setSauve] = useState(false)
   const [confirmEffacer, setConfirmEffacer] = useState(false)
   // RGPD : suppression du compte (double confirmation) + erreur visible si le cloud refuse
   const [confirmCompte, setConfirmCompte] = useState(false)
   const [compteEnCours, setCompteEnCours] = useState(false)
   const [erreurCompte, setErreurCompte] = useState<string | null>(null)
+  // remonter les photos restées locales (bucket absent avant le 07/08)
+  const [remonte, setRemonte] = useState<null | 'en cours' | { spots: number; photos: number }>(null)
+  const remonter = async () => {
+    if (remonte === 'en cours') return
+    setRemonte('en cours')
+    setRemonte(await remonterMesPhotos())
+  }
   const [ouvert, setOuvert] = useState<
     | 'ville'
     | 'couleur'
@@ -834,6 +851,19 @@ function Reglages({
           <button className="reglages-action" onClick={exporterDonnees}>
             {t('exporter mes données (.json)')}
           </button>
+          {/* REMONTER LES PHOTOS (09/08) — le bucket n'existait pas avant le
+              07/08 : tout ce qui a été pris avant est resté sur CET appareil.
+              À lancer depuis celui qui les détient, pas d'un téléphone neuf. */}
+          <button className="reglages-action" disabled={remonte === 'en cours'} onClick={remonter}>
+            {remonte === 'en cours' ? t('on remonte…') : t('remonter mes photos locales')}
+          </button>
+          {remonte !== null && remonte !== 'en cours' && (
+            <p className="reglages-compte-note">
+              {remonte.spots === 0
+                ? t('rien à remonter : tout est déjà en ligne.')
+                : `${remonte.photos} ${t('photos remontées, sur')} ${remonte.spots} ${t('spots.')}`}
+            </p>
+          )}
           <button
             className={`reglages-action danger ${confirmEffacer ? 'confirm' : ''}`}
             onClick={() => (confirmEffacer ? effacer() : setConfirmEffacer(true))}
@@ -989,11 +1019,36 @@ function Reglages({
         </div>
       )}
 
-      {/* SE DÉCONNECTER — réel (07/08) : la session part, le carnet reste */}
+      {/* LE COMPTE (09/08) — la porte par laquelle tu es entré, en clair.
+          Deux comptes peuvent porter le même prénom : le mail, la porte et le
+          début de l'identifiant sont les seules choses qui les distinguent.
+          Le nombre de mes spots est là parce que c'est LE symptôme : un carnet
+          vide veut presque toujours dire « mauvaise porte ». */}
+      {compte && (
+        <div className="reglages-compte mono">
+          <span className="reglages-compte-mail">{compte.email}</span>
+          <span className="reglages-compte-ligne">
+            {compte.portes.includes('google') ? t('par Google') : t('par lien mail')}
+            {compte.portes.length > 1 && ` ${t('et par lien mail')}`}
+            {' · '}
+            {lieux.filter((l) => estAMoi(l)).length} {t('spots à moi')}
+          </span>
+          <span className="reglages-compte-ligne estompe">
+            {t('compte')} {compte.idCourt}
+          </span>
+        </div>
+      )}
+
+      {/* SE DÉCONNECTER — réel (07/08) : la session part, le carnet reste.
+          C'est aussi la porte pour CHANGER de compte : Google réaffiche
+          désormais le choix du compte à chaque entrée (prompt=select_account). */}
       <button className="mono reglages-section" onClick={() => void seDeconnecter()}>
         {t('se déconnecter')}
         <span className="reglages-chevron">→</span>
       </button>
+      <p className="reglages-compte-note">
+        {t('pour changer de compte : ressors, puis rechoisis ta porte. Tes spots restent sur ce téléphone.')}
+      </p>
 
       {/* BIENTÔT (backend) */}
       <button
@@ -1160,7 +1215,30 @@ export default function App() {
     setFiche(l)
     marquerVu(l.id)
   }
-  const [onboard, setOnboard] = useState(() => !onboardingFait())
+  // L'ACCUEIL APPARTIENT AU COMPTE, PAS AU TÉLÉPHONE (corrigé le 09/08).
+  // Avant : un drapeau localStorage → arriver sur un second téléphone avec le
+  // bon compte rejouait tout l'accueil et re-demandait prénom + portrait, qui
+  // écrasaient le vrai profil. Maintenant : `null` = on ne sait pas encore, on
+  // attend la réponse du cloud plutôt que de troubler l'écran d'accueil.
+  const [onboard, setOnboard] = useState<boolean | null>(() => (onboardingFait() ? false : null))
+  useEffect(() => {
+    if (onboard !== null || !session) return
+    let vivant = true
+    void compteDejaInstalle().then((installe) => {
+      if (!vivant) return
+      if (installe === true) {
+        marquerOnboarding() // ce compte est connu : ce téléphone le sait maintenant
+        setOnboard(false)
+      } else if (installe === false) {
+        setOnboard(true) // compte réellement neuf
+      } else {
+        setOnboard(!onboardingFait()) // cloud muet : on s'en remet au local
+      }
+    })
+    return () => {
+      vivant = false
+    }
+  }, [onboard, session])
   // `sorties` = TOUTES les sorties en attente (miroir du stockage, lu une fois) ;
   // `attente` = la file de validation ouverte à l'écran. une seule source, deux vues.
   const [sorties, setSorties] = useState<SortieEnAttente[]>([])
@@ -1765,6 +1843,14 @@ export default function App() {
       </div>
     )
   if (!session) return <Auth />
+  // on demande au cloud si ce compte est déjà installé : le tampon respire
+  // plutôt que de faire clignoter un accueil qu'on va peut-être sauter
+  if (onboard === null)
+    return (
+      <div className="attente-auth" aria-busy="true" aria-label="chargement">
+        <div className="tampon-logo attente-auth-logo">Jeudi.</div>
+      </div>
+    )
   if (onboard) return <Onboarding onFini={() => setOnboard(false)} />
 
   return (
@@ -2327,7 +2413,10 @@ export default function App() {
               <span className="mono profil-id-changer">
                 <IAppareil taille={11} /> {t('changer')}
               </span>
-              <input type="file" accept="image/*" capture="user" hidden onChange={changerPhotoProfil} />
+              {/* pas de `capture` : sur téléphone il FORÇAIT l'appareil photo et
+                  supprimait « choisir dans la photothèque ». On laisse le
+                  système proposer les deux — un portrait, ça se choisit. */}
+              <input type="file" accept="image/*" hidden onChange={changerPhotoProfil} />
             </label>
 
             <div className="profil-garde-droite">
@@ -4675,7 +4764,10 @@ function AlbumATrous({
           <span className="album-fenetre">
             <IAppareil taille={19} />
           </span>
-          <input type="file" accept="image/*" capture="environment" hidden onChange={prendre('salle')} />
+          {/* sans `capture` : la galerie redevient possible. La fraîcheur d'une
+              photo ne se garantit pas par l'appareil photo — elle se LIT dans
+              sa date (0010), et une vieille photo entre en souvenir. */}
+          <input type="file" accept="image/*" hidden onChange={prendre('salle')} />
           <span className="hand album-etiquette">{t('sa photo — prends-la ce soir')}</span>
         </label>
       </div>
@@ -4701,13 +4793,8 @@ function AlbumATrous({
                 <span className="album-fenetre">
                   <IAppareil taille={17} />
                 </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  hidden
-                  onChange={prendre(type)}
-                />
+                {/* sans `capture` : appareil photo OU photothèque, au choix */}
+                <input type="file" accept="image/*" hidden onChange={prendre(type)} />
               </label>
             )}
             <span className="hand album-etiquette">{t(etiquette)}</span>
@@ -4804,13 +4891,8 @@ function KitPhotos({
               {prises.length < MAX_PAR_CAT && (
                 <label className="photo-ajout">
                   <IAppareil taille={15} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    hidden
-                    onChange={ajouter(type)}
-                  />
+                  {/* sans `capture` : appareil photo OU photothèque, au choix */}
+                  <input type="file" accept="image/*" hidden onChange={ajouter(type)} />
                 </label>
               )}
             </div>

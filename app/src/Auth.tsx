@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './supabase'
+import { lirePortesConnues } from './db'
 import { t, lireLangue, basculerLangue } from './langue'
 import GuideInstallation from './GuideInstallation'
 
@@ -20,6 +21,10 @@ export default function Auth() {
   const [email, setEmail] = useState('')
   const [etat, setEtat] = useState<'repos' | 'envoi' | 'envoye' | 'erreur'>('repos')
   const [erreur, setErreur] = useState('')
+  // ce téléphone se souvient de qui est entré ici (local, jamais envoyé) :
+  // deux gmail sur le même appareil, c'est comme ça qu'on se trompe de porte
+  // et qu'on croit avoir perdu son carnet.
+  const [portes] = useState(() => lirePortesConnues())
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 
@@ -27,7 +32,14 @@ export default function Auth() {
     setErreur('')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: window.location.origin,
+        // `prompt: 'select_account'` : Google affiche TOUJOURS le choix du
+        // compte. Sans ça il reprend en silence la session ouverte dans le
+        // navigateur — c'est comme ça qu'on entre par la mauvaise porte et
+        // qu'on trouve un carnet vide (le compte fantôme du 18/06).
+        queryParams: { prompt: 'select_account' },
+      },
     })
     // en cas de succès, le navigateur redirige vers Google : pas de suite ici.
     if (error) {
@@ -110,6 +122,32 @@ export default function Auth() {
           </form>
 
           {etat === 'erreur' && <p className="auth-erreur">{erreur}</p>}
+
+          {/* LES PORTES DÉJÀ UTILISÉES ICI (09/08) — pas un raccourci de
+              connexion : un aide-mémoire. Google choisit toujours son compte
+              dans SA fenêtre ; ici on rappelle laquelle prendre, et pour le
+              lien mail on pré-remplit l'adresse. */}
+          {portes.length > 0 && (
+            <div className="auth-portes mono">
+              <span className="auth-portes-titre">{t('déjà entré ici avec')}</span>
+              {portes.map((p) => (
+                <button
+                  key={p.email}
+                  type="button"
+                  className="auth-porte"
+                  onClick={() => setEmail(p.email)}
+                >
+                  <span className="auth-porte-mail">{p.email}</span>
+                  <span className="auth-porte-quoi">
+                    {p.portes.includes('google') ? t('Google') : t('lien mail')} · {p.idCourt}
+                  </span>
+                </button>
+              ))}
+              <span className="auth-portes-note">
+                {t('touche une adresse pour la remettre dans le champ.')}
+              </span>
+            </div>
+          )}
         </div>
       )}
 

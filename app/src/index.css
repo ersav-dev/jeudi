@@ -364,6 +364,53 @@ body::before,
   margin: 0;
 }
 
+/* ── LES PORTES DÉJÀ UTILISÉES ICI (09/08) ──────────────────────────
+   Un aide-mémoire, pas un raccourci : deux gmail sur le même téléphone,
+   c'est comme ça qu'on entre par la mauvaise porte et qu'on croit avoir
+   perdu son carnet. Discret — l'écran d'entrée reste une porte, pas une
+   liste de comptes. */
+.auth-portes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(239, 233, 216, 0.14);
+}
+.auth-portes-titre,
+.auth-portes-note {
+  font-size: 10px;
+  color: var(--ivory-faded);
+  opacity: 0.75;
+  text-align: center;
+}
+.auth-portes-note {
+  margin-top: 2px;
+  opacity: 0.5;
+}
+.auth-porte {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.16);
+  border-radius: var(--rayon);
+  padding: 8px 12px;
+  color: var(--encre);
+  text-align: left;
+  min-height: 44px;
+  justify-content: center;
+}
+.auth-porte-mail {
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+.auth-porte-quoi {
+  font-size: 9.5px;
+  color: var(--ivory-faded);
+  opacity: 0.8;
+}
+
 /* ── la pile derrière la carte du deck : des pages, pas des polaroïds ── */
 .pile {
   position: relative;
@@ -8642,6 +8689,34 @@ button:focus:not(:focus-visible) {
   color: var(--encre-3);
   font-size: 10.5px;
   margin: 4px 0 0;
+}
+
+/* ── LE COMPTE (09/08) : sous quelle porte suis-je entré ? ──────────
+   Deux comptes peuvent porter le même prénom. Le mail, la porte et les
+   huit premiers caractères de l'identifiant sont les seules choses qui
+   les séparent — donc ils s'affichent, en petit mais en clair. */
+.reglages-compte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0 2px;
+}
+.reglages-compte-mail {
+  color: var(--encre);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.reglages-compte-ligne {
+  color: var(--encre-2);
+  font-size: 10.5px;
+}
+.reglages-compte-ligne.estompe {
+  color: var(--encre-3);
+}
+.reglages-compte-note {
+  color: var(--encre-3);
+  font-size: 10.5px;
+  margin: 2px 0 12px;
 }
 
 /* l'anneau élargi : l'aveu honnête au-dessus du deck, au crayon */

@@ -120,6 +120,26 @@ const EN: Record<string, string> = {
   'étiquette :': 'label:',
   'toutes': 'all',
   'se déconnecter': 'sign out',
+  // les portes déjà utilisées sur ce téléphone (09/08)
+  'déjà entré ici avec': 'you’ve been in here as',
+  'Google': 'Google',
+  'lien mail': 'email link',
+  'touche une adresse pour la remettre dans le champ.':
+    'tap an address to drop it back in the field.',
+  // remonter les photos restées locales (09/08)
+  'remonter mes photos locales': 'upload my local photos',
+  'on remonte…': 'uploading…',
+  'rien à remonter : tout est déjà en ligne.': 'nothing to upload: it’s all online already.',
+  'photos remontées, sur': 'photos uploaded, across',
+  'spots.': 'spots.',
+  // le compte connecté (09/08) — savoir par quelle porte on est entré
+  'par Google': 'through Google',
+  'par lien mail': 'through an email link',
+  'et par lien mail': 'and an email link',
+  'spots à moi': 'spots of mine',
+  'compte': 'account',
+  'pour changer de compte : ressors, puis rechoisis ta porte. Tes spots restent sur ce téléphone.':
+    'to switch accounts: step out, then pick your door again. Your spots stay on this phone.',
   'spots archivés': 'archived spots',
   'amis archivés': 'archived friends',
   'notifications': 'notifications',
