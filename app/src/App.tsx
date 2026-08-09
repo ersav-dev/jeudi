@@ -27,6 +27,10 @@ import {
   apercuCritere,
   type TypeCritere,
 } from './criteres'
+// LE critère du membre (son obsession, singulier) — ≠ criteres.ts ci-dessus
+// (une liste de dimensions de jugement) et ≠ Lieu.criterePerso (le verdict
+// sur un lieu). Voir critereMembre.ts pour la distinction complète.
+import { normaliserCritere, CRITERE_MAX } from './critereMembre'
 import {
   lesProches,
   basculerProche,
@@ -1258,10 +1262,15 @@ export default function App() {
     // « depuis » se fige à la 1re sauvegarde (date d'entrée dans le carnet)
     const dep = cur?.depuis ?? depuis ?? new Date().toISOString()
     if (!depuis) setDepuis(dep)
+    // le critère ne reste JAMAIS vide (« Karim EST le bruit ») : un champ
+    // vidé retombe sur ce que le cloud connaît déjà, sinon le défaut d'onboarding
+    const crit = normaliserCritere(critere) || cur?.critere || 'le feeling'
+    if (crit !== critere) setCritere(crit)
     // sauverProfil = MERGE : on n'envoie QUE ce que cet éditeur possède
     await sauverProfil({
       bio: bio.trim(),
       insta: insta.trim().replace(/^@/, ''),
+      critere: crit,
       naissance: naiss || cur?.naissance,
       depuis: dep,
     })
@@ -2347,15 +2356,27 @@ export default function App() {
             </div>
           </div>
 
+          {/* mes infos : LE critère du membre — son obsession, singulier
+              (CONCEPT.md « Les critères »). Se déclare ici, skippable (la
+              valeur d'onboarding suffit tant qu'on n'y touche pas). ≠ la
+              liste « mes critères » juste en dessous (des dimensions de
+              jugement, fonctionnalité distincte) et ≠ `critere_perso` d'un
+              Lieu (le verdict d'un membre SUR un lieu, pas sur lui-même). */}
+          <TitreSection>{t('mes infos')}</TitreSection>
+          <label className="profil-insta mono profil-obsession">
+            {t('ton obsession')}
+            <input
+              value={critere}
+              maxLength={CRITERE_MAX}
+              placeholder={t('le bruit, la lumière, les chaises…')}
+              onChange={(e) => setCritere(e.target.value)}
+              onBlur={() => sauverBioInsta()}
+            />
+          </label>
+
           {/* ② mes critères : des lignes du registre, plus de boîte */}
           <TitreSection>{t('mes critères')}</TitreSection>
           <div className="profil-criteres">
-            <div className="profil-critere-ligne">
-              <span className="profil-critere-nom">
-                {critere.replace(/^(le |la |les |l')/, '')}
-              </span>
-              <span className="mono profil-critere-apercu">{t('ton critère')}</span>
-            </div>
             {criteres.map((c) => (
               <div key={c.id} className="profil-critere-ligne">
                 <span className="profil-critere-nom">{c.nom}</span>

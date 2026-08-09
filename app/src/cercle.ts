@@ -88,3 +88,27 @@ export function basculerProche(id: string): { proches: string[]; pleinAtteint: b
   localStorage.setItem(CLE, JSON.stringify(n))
   return { proches: n, pleinAtteint: false }
 }
+
+// ════════════════════════════════════════════════════════════════
+// LA CURATION — le cap n'est pas un mur (CONCEPT.md « deux anneaux » :
+// « ton cercle est plein. qui tu sors ? » — swipe garder/retirer). Quand
+// l'anneau est plein, basculerProche() ci-dessus refuse SANS écrire — ça
+// évite déjà l'erreur silencieuse, mais ça ne fait toujours rien. Ici,
+// le geste complet : on retire un super pote et on ajoute le nouveau à sa
+// place, EN UNE FOIS. Jamais de message d'erreur, jamais une étape
+// « retire d'abord, reviens ensuite » — le petit nombre se sent par le
+// design (l'écran de curation), jamais par un blocage.
+// ════════════════════════════════════════════════════════════════
+
+/** retire `idASortir` puis ajoute `idAAjouter` — un seul geste atomique.
+ *  Marche même si l'anneau n'était pas plein (retire, puis ajoute) ; si
+ *  `idAAjouter` y est déjà, rien ne change au-delà du retrait. Le
+ *  `.slice` final est un filet de sécurité (jamais censé jouer en usage
+ *  normal, puisqu'on vient de faire de la place) — pas une frontière de
+ *  sécurité, juste une garantie qu'on ne dépasse jamais le cap. */
+export function curerEtRemplacer(idASortir: string, idAAjouter: string): string[] {
+  const sans = lesProches().filter((x) => x !== idASortir)
+  const n = sans.includes(idAAjouter) ? sans : [...sans, idAAjouter].slice(0, CAP_PROCHES)
+  localStorage.setItem(CLE, JSON.stringify(n))
+  return n
+}
