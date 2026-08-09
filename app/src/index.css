@@ -8138,6 +8138,14 @@ button {
 .vg-timbre.repere-vignette .monument-etq {
   height: 9px;
 }
+/* 10/08 — LE CARTOUCHE SE TAIT QUAND LA GRAVURE EST PETITE. Sous 30 px de
+ * vignette, un nom de 13 px est aussi haut que le monument qu'il nomme :
+ * la carte se couvre d'étiquettes qui pèsent plus que leurs dessins. De
+ * loin, une silhouette se reconnaît — elle n'a pas besoin de son nom.
+ * (Deux classes + l'enfant : passe devant les règles du relais.) */
+.monument-repere.vg-nu .monument-etq {
+  opacity: 0;
+}
 /* §6 — rien ne glisse chez qui a demandé le calme : le relais reste, la
  * transition saute */
 @media (prefers-reduced-motion: reduce) {

@@ -40,6 +40,30 @@ const HAUTEUR_M: Record<string, number> = {
   opéra: 56,
   'arc de triomphe': 50,
 }
+
+/** LE PLAFOND = la résolution des vignettes (elles font 128 px de haut).
+ *  Au-delà on n'agrandit plus, on interpole : une gravure fine étirée
+ *  devient une bouillie. Le jour où les planches sont réexportées plus
+ *  grandes, ce nombre monte avec elles — et pas avant. */
+const PLAFOND_VIGN = 128
+/** sous ce seuil un dessin ne dit plus rien : on l'efface plutôt que de
+ *  laisser une miette sur la carte. 14 et non 9 — à 9 px une gravure est
+ *  une tache, elle salit sans situer. */
+const SEUIL_VIGN = 14
+/** LA COMPRESSION (10/08). La hauteur réelle disait le CONTRAIRE de ce
+ *  qu'on voulait : mesuré au pixel, à z11 (tout Paris) AUCUN monument ne
+ *  passait le seuil, à z12 un seul, à z13 deux — et les huit à z15
+ *  seulement. Or un repère sert précisément quand on regarde la ville
+ *  ENTIÈRE ; la règle physique les faisait arriver une fois qu'on est
+ *  dans le quartier, quand on n'a plus rien à situer.
+ *  Un monument n'est pas grand parce qu'il est haut, il est grand parce
+ *  qu'on le reconnaît de loin : l'Arc fait 50 m et tient un axe entier,
+ *  Montparnasse fait 210 m et tout le monde l'ignore.
+ *  On garde donc l'ORDRE (la tour devant Montparnasse devant l'Arc — c'est
+ *  vrai, et ça se voit) mais on COMPRESSE l'écart, comme l'œil compresse
+ *  la lumière : part^0,55 du plafond. La tour ne fait plus 6,6 fois l'Arc
+ *  mais 2,9 fois, et les deux se lisent. */
+const GAMMA_VIGN = 0.55
 import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
 import {
   grouperTas,
@@ -1532,17 +1556,19 @@ export default function Carte({
       const mpp = (156543.03392 * Math.cos((48.8566 * Math.PI) / 180)) / Math.pow(2, z)
       for (const el of vignettes) {
         const vrai = (HAUTEUR_M[el.dataset.mo ?? ''] ?? 60) / mpp
-        // sous ~9 px un dessin ne dit plus rien : on l'efface au lieu de
-        // le laisser saloper la carte. Au-dessus, on borne pour qu'un
-        // monument ne mange jamais tout l'écran.
-        // ⚠ PLAFOND = LA RÉSOLUTION DE LA SOURCE. Les vignettes font 128 px
-        // de haut : au-delà, on ne grandit plus, on interpole — et une
-        // gravure fine étirée ×2,7 devient une bouillie de pixels. Mieux
-        // vaut un monument qui cesse de grandir qu'un monument flou.
-        // Le jour où les planches sont réexportées plus grandes, ce nombre
-        // monte avec elles — et pas avant.
-        el.style.setProperty('--vign-h', `${Math.min(128, Math.max(9, vrai)).toFixed(1)}px`)
-        el.classList.toggle('vg-trop-petit', vrai < 9)
+        // la compression perceptive (voir GAMMA_VIGN) : l'ordre des tailles
+        // reste celui du réel, l'écart se resserre pour que tout se lise.
+        const taille =
+          PLAFOND_VIGN * Math.pow(Math.min(1, vrai / PLAFOND_VIGN), GAMMA_VIGN)
+        el.style.setProperty(
+          '--vign-h',
+          `${Math.min(PLAFOND_VIGN, Math.max(SEUIL_VIGN, taille)).toFixed(1)}px`,
+        )
+        el.classList.toggle('vg-trop-petit', taille < SEUIL_VIGN)
+        // LE CARTOUCHE NE PARLE QUE QUAND LA GRAVURE PORTE. Sous ~30 px, un
+        // nom de 13 px est aussi haut que le monument qu'il nomme : de loin
+        // on reconnaît une silhouette, on ne lit pas une étiquette.
+        el.classList.toggle('vg-nu', taille < 30)
       }
       // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
       // plus à z11 et la ville disparaîtrait sous les stickers
