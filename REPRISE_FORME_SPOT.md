@@ -1,52 +1,92 @@
-# Prompt de reprise — la forme de l'épingle de spot
+# Reprise — la forme de l'épingle de spot
 
-*Colle tout ce qui suit dans une session fraîche. Autonome : il contient
-l'état, les décisions déjà prises, les pièges rencontrés et la suite.*
+*Colle tout ce qui suit dans une session fraîche. Autonome.*
+*Écrit le 9 août 2026 après SEPT planches qui n'ont pas convaincu Ersan.*
 
 ---
 
-Projet **jeudi** : `F:\ErsanMusa-com\Jeudi_App` (app React+Vite+PWA dans
-`app/`, carte MapLibre dans `app/src/Carte.tsx`, backend Supabase).
-Tout est commité et poussé sur `main`, en prod sur https://jeudi-seven.vercel.app
+Projet **jeudi** : `F:\ErsanMusa-com\Jeudi_App` (React+Vite+PWA dans `app/`,
+carte MapLibre dans `app/src/Carte.tsx`). Tout est commité, poussé sur
+`main`, en prod sur https://jeudi-seven.vercel.app — **la forme du spot est
+le SEUL chantier ouvert**, rien d'autre n'est en cours.
 
-## Ce qu'on cherche
+## ⚠️ Lis ça d'abord : sept planches ont échoué
 
-Remplacer le **cercle** de l'épingle de spot par un cercle dont le bas est
-**très légèrement tiré vers le bas**, pour que la forme DÉSIGNE le point
-exact au lieu d'être centrée dessus (aujourd'hui le rond est centré : le
-lieu est « quelque part dessous », c'est l'ambiguïté qu'on lève).
+Ersan a dit **« rien ne va ! »**. N'enchaîne pas une huitième variation du
+même geste. Le problème n'est probablement pas le réglage — c'est la
+méthode. Deux hypothèses à lui soumettre AVANT de dessiner quoi que ce
+soit :
 
-Mots exacts d'Ersan, dans l'ordre où ils sont venus :
-1. « on peut plutôt faire comme des gouttes d'eau… la racine pointe
-   exactement l'endroit du spot… un vrai cercle sauf le bas, qui est un
-   peu en pointe vers le bas »
-2. « je veux que ça ressemble un max à un cercle… sauf la petite pointe en
-   bas. la pointe peut être **douce** ! »
-3. (capture Photoshop du pin « La REcyclerie ») « **c'est subtil** »
-4. « **le logo à l'intérieur en grand** »
+1. **La direction est peut-être mauvaise.** Il n'a jamais validé la
+   prémisse « il faut une pointe ». Peut-être que le rond lui va très bien
+   et que ce qui le gêne est ailleurs (la taille du pin ? le glow ? la
+   densité ?). **Demande-lui ce qui, concrètement, le dérange quand il
+   regarde sa carte** — pas quelle forme il veut.
+2. **Le format des planches ne marche pas pour lui.** Sept fichiers HTML
+   n'ont pas suffi. Propose autre chose : une image PNG unique, ou mieux —
+   **coder la forme directement dans l'app en prod derrière un réglage**
+   pour qu'il la voie sur son téléphone, dans la vraie vie, au lieu de
+   juger des maquettes.
 
-## Les quatre planches déjà faites (design/)
+**Ne relance pas une planche sans son accord explicite.**
 
-| fichier | ce qu'elle montre | verdict |
-|---|---|---|
-| `goutte_spot.html` | 3 gouttes, pointes 6→12 px | trop marqué |
-| `goutte_spot_v2.html` | 6 gouttes, ouverture 8→26° | trop marqué, et rendu fil de fer |
-| `forme_spot_v3.html` | 3 familles (goutte / bec / larme), **vrai rendu néon** | trop marqué |
-| `forme_spot_v4.html` | **5 formes subtiles, 1,6 → 4,6 px**, cercle témoin en pointillés | ← LA BONNE PISTE, en attente du verdict d'Ersan |
+## Ce qui est demandé (ses mots, dans l'ordre)
 
-## Ce qui a été compris (ne pas refaire les erreurs)
+1. « on peut plutôt faire comme des **gouttes d'eau**… la racine pointe
+   exactement l'endroit du spot… un vrai cercle sauf le bas, un peu en
+   pointe »
+2. « que ça ressemble **un max à un cercle**… sauf la petite pointe en bas.
+   la pointe peut être **douce** ! »
+3. (capture du pin « La REcyclerie ») « **c'est subtil** »
+4. « **le logo à l'intérieur en grand** » puis « **fais le glyphe aussi
+   grand que ma capture puree** »
+5. « et ensuite juste **le glyphe avec un point en dessous**… et ensuite le
+   glyphe dans la goutte mais aux **proportions habituelles** »
+6. « **rien ne va !** »
 
-**Le réglage juste est contre-intuitif :** ouverture **LARGE** du cercle
-(34° à 55°) + pointe **MINUSCULE** (1,6 à 4,6 px sur un pin de 30). Une
-ouverture étroite avec une pointe longue donne un *bec* greffé, pas un bas
-tiré — c'est ce que je faisais et c'était faux.
+## L'objectif technique (lui, il tient)
 
-**La formule du raccord** (sinon il fait une bosse) :
+Aujourd'hui le pin est un **rond centré** sur la position : le lieu est
+« quelque part dessous ». Le but est que la forme **désigne** le point
+exact. Ça implique, quelle que soit la forme retenue :
+`maplibregl.Marker({ anchor: 'bottom' })` au lieu du centre.
+
+## Les sept planches (design/) — toutes rejetées
+
+| fichier | contenu |
+|---|---|
+| `goutte_spot.html` | 3 gouttes, pointes 6→12 px |
+| `goutte_spot_v2.html` | 6 gouttes, ouverture 8→26° |
+| `forme_spot_v3.html` | 3 familles (goutte / bec / larme), rendu néon |
+| `forme_spot_v4.html` | 5 formes subtiles 1,6→4,6 px + cercle témoin |
+| `glyphes_dix.html` | les 10 glyphes nus et dans le pin |
+| `formes_trois_pistes.html` | rond / glyphe nu+point / goutte |
+| `formes_sur_carte.html` | **les 4 formes sur de vraies tuiles Carto** ← la plus utile |
+
+## Les trois bugs que j'ai commis (ne pas les refaire)
+
+1. **Le glyphe était à moitié taille pendant six planches.** Je calculais
+   la hauteur de boîte comme `corps + 2·PAD` alors que le corps fait **2R**
+   (le diamètre), pas R. Le glyphe sortait à ~13 px là où l'app le met à
+   25,5. **Géométrie juste** : `H = 2R + L + 2·PAD`, boîte du glyphe de
+   `top:PAD` à `bottom:L+PAD` (hauteur 2R).
+2. **Une planche avec du JavaScript ne s'affiche pas chez lui** — il ne
+   voit que des cadres vides. Calculer les chemins avec node, écrire le SVG
+   **en dur** dans le HTML. Zéro `<script>`.
+3. **Rendu fil de fer au lieu du rendu réel.** Reproduire exactement :
+   anneau `#628ef3` 2 px · lueur `rgba(69,153,232,.6)` floutée 4 px dessous ·
+   fond `rgba(18,20,26,.82)` · glyphe `#33a7ff` avec
+   `drop-shadow(0 0 5px)` · label JetBrains Mono 11 px sur `rgba(20,18,14,.78)`.
+
+## La formule du raccord (si une pointe revient sur la table)
+
 ```js
+// ouverture LARGE (40-55°) + pointe MINUSCULE (2-4 px) = subtil
+// ouverture étroite + pointe longue = un bec greffé (rejeté)
 function tiree(r, phi, L, blunt){
   const p = phi*Math.PI/180
   const xJ = r*Math.sin(p), yJ = r*Math.cos(p), tip = r+L
-  const t = (4/3)*Math.tan(p/2)*r*0.82   // continuité de courbure
+  const t = (4/3)*Math.tan(p/2)*r*0.82   // continuité de courbure, sinon bosse
   const c1x = xJ - t*Math.cos(p), c1y = yJ + t*Math.sin(p)
   const w = blunt, v = L*0.42
   return `M ${-xJ} ${yJ} A ${r} ${r} 0 1 1 ${xJ} ${yJ}
@@ -54,53 +94,39 @@ function tiree(r, phi, L, blunt){
           C ${-w} ${tip-v}, ${-c1x} ${c1y}, ${-xJ} ${yJ} Z`
 }
 ```
-Les cinq de la v4 : S1 φ55° L1,6 · S2 φ50° L2,2 · S3 φ45° L3 ·
-S4 φ40° L3,8 · S5 φ34° L4,6 (blunt 3,4 → 2,6).
 
-**LE BUG À CORRIGER EN PREMIER (demande n°4 d'Ersan) :** dans les planches
-le glyphe est à `width:50%` alors que **l'app le met à `85%`**
-(`.pin-type svg` dans `index.css`). Toutes les planches sous-représentent
-donc le logo. **Refaire la v4 avec le glyphe à 85 %** avant toute autre
-chose — c'est peut-être ce qui manquait pour trancher.
+## Où vit le pin dans le code
 
-**Une planche ne doit contenir AUCUN JavaScript.** Selon la façon dont le
-fichier s'ouvre chez Ersan, les scripts ne tournent pas et il ne voit que
-des cadres vides (ça s'est produit). Calculer les chemins avec un script
-node, puis écrire le SVG en dur dans le HTML.
+- `app/src/index.css` : `.pin` (div ronde, `border-radius:50%`,
+  variables `--pin-taille:30px --pin-fond --pin-contour:#628ef3
+  --pin-contour-ep:2px --pin-glow --pin-glow-blur:16px --pin-glyphe:#33a7ff`
+  — **réglées par Ersan à l'atelier, ne pas y toucher sans demander**),
+  `.pin-type` (le glyphe, `svg` à 85 %), `.pin::before` (label du nom),
+  `.pin::after` (hitbox 44 px), `.pin-allume` `.pin-actif` `.pin-grise`
+  `.pin-curateur` `.pin-douane`.
+- `app/src/Carte.tsx` : construction du pin, `maplibregl.Marker`.
+- `app/src/typesLieu.ts` : `TRAITS` (les 10 glyphes) + `svgTypeLieu()`.
+- Passer en SVG = refaire ces états un par un, plus les grappes/éventails
+  de la pellicule.
 
-**Le vrai rendu à reproduire sur les planches** (sinon la comparaison avec
-sa capture est injuste) : anneau `#628ef3` de 2 px, lueur
-`rgba(69,153,232,.6)` floutée 4 px en dessous, fond `rgba(18,20,26,.82)`,
-glyphe cyan `#33a7ff` avec `drop-shadow(0 0 5px)`, label du nom en
-JetBrains Mono 11 px sur `rgba(20,18,14,.78)`.
+## Conventions du projet
 
-## La suite, dans l'ordre
+Français partout (code et commentaires, voix du carnet) · diffs ciblés,
+jamais réécrire un fichier entier · jamais `git add -A` · toute chaîne UI
+en `t('…')` + entrée EN dans `langue.ts` (le lexique alloco/apéro/resto…
+ne se traduit JAMAIS) · `npx tsc -b --noEmit`, `npx vitest run`,
+`npx vite build` verts avant commit · migrations SQL jamais appliquées
+(Ersan les colle) · déploiement `vercel --prod` dans `app/`, sur son go.
 
-1. **Refaire `forme_spot_v4.html` avec le glyphe à 85 %** (+ éventuellement
-   descendre sous 1,6 px si Ersan trouve S1 encore trop marqué).
-2. Ersan tranche : une forme parmi S1–S5, et répond aux deux questions
-   ouvertes de la planche — *la lueur suit-elle la pointe ou reste-t-elle
-   ronde derrière ?* et *le tampon douane reste-t-il en bas-droite ?*
-3. **Coder** dans l'app :
-   - `Carte.tsx` : le pin devient un SVG (aujourd'hui c'est une div ronde
-     avec `border-radius:50%` — voir `.pin` dans `index.css`) ;
-   - **l'ancrage passe du centre à la pointe** (`maplibregl.Marker`
-     `anchor:'bottom'`) — c'est tout l'intérêt de la forme ;
-   - garder les variables d'atelier `--pin-*` réglées par Ersan (ne pas y
-     toucher sans demander) ;
-   - vérifier les états : `.pin-allume` (plan « je sais pas », contour rose
-     `#cf597c`), `.pin-actif`, `.pin-grise`, `.pin-curateur`, le tampon
-     douane `.pin-douane`, le label `.pin::before`, la hitbox `.pin::after`
-     (44 px), les grappes/éventails de la pellicule ;
-   - `npx tsc -b --noEmit`, `npx vitest run`, `npx vite build` verts ;
-     commit en français dans la voix du carnet ; déployer sur son go.
+## Contexte : ce qui est déjà en prod (ne pas y toucher)
 
-## Contexte utile
+Transports complets sur la carte (plaques stations, lignes aux couleurs
+IDFM officielles, bouches numérotées avec sens d'accès) · recherche locale
+des 581 stations + 8 monuments + 25 points de rendez-vous · vignettes
+carnet des monuments · app bilingue · cycle de vie du lieu · « je sais
+pas » en palette B. L'état complet : `ETAT_2026-08-08.md`.
 
-- Palette « je sais pas » (validée) : plan 1 `#597ccf` · 2 `#cf597c` ·
-  3 `#7ccf59`, **au contour jamais au fond**.
-- Couleurs de lignes : table officielle dans
-  `design/palette_lignes_officielle.md`.
-- L'état des lieux complet : `ETAT_2026-08-08.md`.
-- Conventions : français partout (code et commentaires), diffs ciblés,
-  jamais `git add -A`, migrations jamais appliquées (Ersan les colle).
+## Ce qui attend Ersan (hors ce chantier)
+
+Coller `_enrichissement/fusion_2026-08-08.sql` · la clé Google Places ·
+le test au pouce de la carte · le chantier **push** (`CHANTIER_PUSH.md`).
