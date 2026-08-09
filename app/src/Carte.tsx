@@ -1535,7 +1535,13 @@ export default function Carte({
         // sous ~9 px un dessin ne dit plus rien : on l'efface au lieu de
         // le laisser saloper la carte. Au-dessus, on borne pour qu'un
         // monument ne mange jamais tout l'écran.
-        el.style.setProperty('--vign-h', `${Math.min(340, Math.max(9, vrai)).toFixed(1)}px`)
+        // ⚠ PLAFOND = LA RÉSOLUTION DE LA SOURCE. Les vignettes font 128 px
+        // de haut : au-delà, on ne grandit plus, on interpole — et une
+        // gravure fine étirée ×2,7 devient une bouillie de pixels. Mieux
+        // vaut un monument qui cesse de grandir qu'un monument flou.
+        // Le jour où les planches sont réexportées plus grandes, ce nombre
+        // monte avec elles — et pas avant.
+        el.style.setProperty('--vign-h', `${Math.min(128, Math.max(9, vrai)).toFixed(1)}px`)
         el.classList.toggle('vg-trop-petit', vrai < 9)
       }
       // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
