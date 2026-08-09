@@ -5,6 +5,7 @@ import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
 import { lireATester, CLE_A_TESTER } from './aTester'
 import { extensionClip, normaliserReglages, type ReglagesRendu } from './super8'
+import { dedoublonner } from './doublons'
 // `import type` seulement : takeout.ts traîne fflate (5,5 ko de dézippage)
 // derrière lui, et db.ts est au boot. Le parseur, on va le chercher au
 // moment où on dépose vraiment un fichier (voir importerTakeout).
@@ -1110,7 +1111,21 @@ export async function tousLesLieux(): Promise<Lieu[]> {
   }
   // hors-ligne : mes spots = ce que le miroir IndexedDB a gardé de la dernière sync
   if (!cloudOk && monId) miens = actifs.filter((l) => estAMoi(l))
-  return [...miens, ...duCercle, ...decor].sort((a, b) => b.creeLe.localeCompare(a.creeLe))
+  const tout = [...miens, ...duCercle, ...decor].sort((a, b) =>
+    b.creeLe.localeCompare(a.creeLe),
+  )
+  // ── LE MÊME LIEU DEUX FOIS (09/08) ──
+  // Le filtre par id ci-dessus n'attrape que la même FICHE lue deux fois.
+  // Or le fond versé dans le cloud a été dédoublonné par nom EXACT : « Harry's
+  // Bar Paris » (Google) et « Harry's New York Bar » (curated) sont deux
+  // fiches à 5 m l'une de l'autre, donc deux épingles sur la carte. Même
+  // chose pour tout doublon que l'utilisateur se fabrique (import Google puis
+  // ajout manuel, adoption d'un spot déjà présent). On tranche ici, une
+  // fois, pour toute l'app — voir doublons.ts pour la règle et sa prudence.
+  // Le rang dit qui gagne : MON spot bat celui du cercle, qui bat le décor.
+  return dedoublonner(tout, (l) =>
+    estAMoi(l) ? 2 : l.proprietaire && estUuid(l.proprietaire) ? 1 : 0,
+  )
 }
 
 /** insert LOCAL (IndexedDB) — réservé au seed (le décor). PAS pour tes spots. */

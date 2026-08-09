@@ -8093,17 +8093,27 @@ button {
  * en lettres claires sur un rectangle plein aux couleurs RATP, puis le nom
  * de la station en Caveat encre. Variante « C » de
  * design/etiquettes_transport.html (retenue le 08/08 après B).
- * Opacité 0.42–0.58 : plus présent que le filigrane précédent, mais toujours
- * sous les pins spots (opaques). Jamais tapable. */
+ *
+ * 09/08 (Ersan, sur la vraie carte) : « les noms de métro ne devraient pas
+ * être de la même opacité que le reste… un peu plus caché, moins visible,
+ * plus discret ». La hiérarchie du regard, c'est LES ÉPINGLES D'ABORD :
+ * une station est un repère, pas une destination — on ne la cherche que
+ * quand on se demande « c'est où, ça ? ». Elle doit donc se trouver, pas
+ * s'imposer. On redescend d'un cran net (0.42–0.58 → 0.24–0.38) et d'un
+ * point de corps (13 → 12 px), et on adoucit le halo du nom : c'était lui
+ * qui faisait claquer le texte sur les tuiles claires. Le z-index ne
+ * change pas — les pins étaient déjà au-dessus (pile : 1 contre 2) ;
+ * c'était bien la PRÉSENCE, pas l'ordre, qui les mettait à égalité.
+ * Jamais tapable, sauf une station dont on a demandé les lignes. */
 .repere-transport {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-family: 'Caveat', cursive;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1;
   color: var(--encre);
-  opacity: 0.48;
+  opacity: 0.3;
   white-space: nowrap;
   pointer-events: none;
   /* au-dessus des vignettes de monuments (pile : .monument-repere) */
@@ -8114,7 +8124,7 @@ button {
 .repere-transport-mode {
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-weight: 700;
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.02em;
   color: #EFE9D8;
   padding: 2px 4px 1px;
@@ -8122,18 +8132,23 @@ button {
   line-height: 1;
   min-width: 12px;
   text-align: center;
-  box-shadow: 0 0 0 0.5px rgba(239, 233, 216, 0.35);
+  /* le filet clair décollait la plaque du fond — mais c'est aussi ce qui
+   * la faisait sonner comme un badge : on l'affine avec le reste */
+  box-shadow: 0 0 0 0.5px rgba(239, 233, 216, 0.22);
 }
 /* le nom : Caveat hérité du parent + un halo, sinon il se perd sur les
- * tuiles claires (la plaque, elle, tient toute seule grâce à son fond) */
+ * tuiles claires (la plaque, elle, tient toute seule grâce à son fond).
+ * Halo adouci le 09/08 : à pleine force il redonnait au nom le contraste
+ * que l'opacité venait justement de lui retirer. */
 .repere-transport-nom {
   font: inherit;
-  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.55);
+  text-shadow: 0 0 3px rgba(11, 26, 58, 0.7), 0 0 6px rgba(11, 26, 58, 0.35);
 }
-/* RER : hub structurant, le plus présent */
+/* RER : hub structurant, le plus présent — mais « le plus présent des
+ * repères » reste sous la plus discrète des épingles */
 .repere-transport[data-mode='rer'] {
-  opacity: 0.58;
-  font-size: 14px;
+  opacity: 0.38;
+  font-size: 13px;
 }
 .repere-transport[data-mode='rer'] .repere-transport-mode {
   background: #0055c8;
@@ -8144,16 +8159,16 @@ button {
 }
 /* tram : repère secondaire, un cran en retrait */
 .repere-transport[data-mode='tram'] {
-  opacity: 0.42;
-  font-size: 12px;
+  opacity: 0.24;
+  font-size: 11px;
 }
 .repere-transport[data-mode='tram'] .repere-transport-mode {
   background: #66a933;
 }
 /* batobus : repère secondaire, un cran en retrait */
 .repere-transport[data-mode='batobus'] {
-  opacity: 0.42;
-  font-size: 12px;
+  opacity: 0.24;
+  font-size: 11px;
 }
 .repere-transport[data-mode='batobus'] .repere-transport-mode {
   background: #00a4c4;
@@ -8179,8 +8194,10 @@ button {
   box-shadow: 0 0 0 1px rgba(239, 233, 216, 0.85);
 }
 @media (hover: hover) {
+  /* le survol reste un net « oui, celle-ci est tapable » : c'est un état
+   * transitoire, il n'a pas à obéir à la discrétion du repos */
   .repere-transport--tapable:hover {
-    opacity: 0.8;
+    opacity: 0.75;
   }
 }
 
