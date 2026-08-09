@@ -424,8 +424,13 @@ export default function Carte({
       // pas sur la carte. point rouge = toi · pastille ivoire + initiale = curateur.
       el.className = `pin${sig ? ' pin-curateur' : ''}${valide ? ' pin-valide' : ''}${ferme ? ' pin-ferme' : ''}`
       if (sig) {
-        // une teinte par curateur + son initiale à l'encre (garde-fou : nom vide)
-        el.style.background = teinteCurateur(sig.auteur)
+        // une teinte par curateur. 09/08 : elle ne PEINT PLUS LE FOND — la
+        // boîte du pin est invisible depuis la refonte, un fond y redessinait
+        // le disque qu'on venait d'enlever. On repose la teinte sur
+        // --pin-glyphe : elle descend d'un coup sur le glyphe ET le marqueur
+        // (tous deux tracés à cette encre). L'initiale reste dans le DOM pour
+        // rien de visible (le CSS la masque) — elle vit dans la fiche.
+        el.style.setProperty('--pin-glyphe', teinteCurateur(sig.auteur))
         el.textContent = sig.auteur ? sig.auteur.charAt(0).toUpperCase() : ''
         // recommandé par plusieurs : un badge avec le nombre de voix
         if (nbVoix > 1) {
@@ -912,6 +917,19 @@ export default function Carte({
       if (!l) continue
       if (l.lng < ouest || l.lng > est || l.lat < sud || l.lat > nord) continue
       voulus.add(id)
+    }
+
+    // ── LE DOUBLE POINT (correctif 09/08) ──
+    // La poussière pose un point sur TOUS les lieux, y compris ceux qui ont
+    // un pin. Tant que le pin était une pastille opaque de 30 px posée sur
+    // les coordonnées, elle couvrait son propre grain et personne ne le
+    // voyait. Depuis la refonte, le pin ne pose plus qu'un marqueur de
+    // 3,5 px au même endroit : le grain d'ivoire dépassait tout autour —
+    // un halo gris sous chaque épingle, et deux points pour un seul lieu.
+    // On retire donc de la poussière exactement ce que le DOM raconte déjà.
+    // La texture de la ville reste entière : elle dit les ~700 AUTRES.
+    if (m.getLayer(LAYER_POUSSIERE)) {
+      m.setFilter(LAYER_POUSSIERE, ['!', ['in', ['get', 'id'], ['literal', [...voulus]]]])
     }
 
     // ── pose des entrants (naissance : l'encre se dépose, .pin-depose) ──

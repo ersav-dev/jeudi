@@ -1813,6 +1813,15 @@ button {
      sur le pin pour l'ancrer à la carte. L'écraser le fait "flotter". */
   /* toujours au-dessus des vignettes et des étiquettes (pile : .monument-repere) */
   z-index: 2;
+  /* ⚠ 09/08 — L'ANCRE A DÉMÉNAGÉ, LE PIVOT AUSSI. Depuis la refonte, ce qui
+     désigne le lieu n'est plus le centre de la boîte mais le CENTRE DU
+     MARQUEUR, 26 px plus bas. Or tous les scale() du pin (.pin-actif ×1,3,
+     la dépose, le retrait en fondu) pivotaient encore autour du centre de la
+     boîte : le marqueur glissait alors de ~8 px VERS LE BAS et se décollait
+     du point du lieu — on voyait deux points l'un sous l'autre. On pose donc
+     le pivot sur le marqueur : quoi qu'on fasse grandir, le point ne bouge
+     plus d'un pixel. 30 + 5 + 6 = 41 px du haut de la boîte. */
+  transform-origin: 50% calc(var(--pin-taille) + var(--pin-ecart) + var(--mq-boite) / 2);
 }
 /* zone de tap invisible de 44px+ : on vise un pin avec le pouce, de nuit.
    Elle descend maintenant jusque SOUS le marqueur (le vrai point du lieu). */
@@ -1960,24 +1969,18 @@ button {
      sélectionné → le contenant (le bas tiré)
      déjà vu     → la pâleur
      plan A/B    → l'encre du glyphe
-   Ce bloc vient APRÈS les règles d'origine : il les neutralise sans les
-   supprimer, pour qu'on retrouve l'intention en lisant le fichier. */
-.pin:hover,
-.pin-curateur:hover,
-.pin-valide,
-.carte .pin-actif,
-.carte .pin-allume:not(.pin-actif),
-.carte .pin-acomparer:not(.pin-actif) {
-  box-shadow: none;
-}
-.pin-vu {
-  outline: none;
-}
-/* le plan A/B teinte le GLYPHE (règle plus haut), il ne dessine plus de
-   bordure — la boîte doit rester invisible */
-.carte .pin-allume:not(.pin-actif) {
-  border-color: transparent;
-}
+     à comparer  → l'encre ivoire du glyphe et du marqueur
+     curateur    → la teinte du glyphe
+
+   ⚠ CORRECTIF DU 09/08 (soir). Ce ménage était d'abord écrit ICI, en
+   surcharge, avec la mention « vient APRÈS les règles d'origine ». C'était
+   faux : les règles d'origine (.pin:hover, .pin-valide, .pin-vu,
+   .pin-actif, .pin-allume, .pin-curateur, .pin-acomparer) vivent PLUS BAS
+   dans le fichier — elles gagnaient donc à égalité de spécificité, et tous
+   les anneaux revenaient à l'écran. On ne neutralise plus : on a retiré la
+   déclaration fautive DANS chaque règle d'origine, là où elle était, avec
+   la note qui explique où son sens est parti. Une surcharge peut se faire
+   battre ; une déclaration supprimée, jamais. */
 /* le curateur : sa pastille ivoire était un cercle de plus. C'est la
    COULEUR qui dit qui te l'a dit — le glyphe prend sa teinte, et son
    initiale revient dans la fiche. */
@@ -2045,15 +2048,17 @@ button {
     animation: inkIn 150ms var(--pose) backwards;
   }
 }
-/* feedback au survol : le glow s'intensifie, sans bouger l'ancre du pin */
-.pin:hover {
-  box-shadow:
-    0 0 0 5px color-mix(in srgb, var(--pin-contour) 25%, transparent),
-    0 0 var(--pin-glow-blur) var(--pin-glow),
-    0 1px 0 rgba(0, 0, 0, 0.5);
+/* feedback au survol : c'était un anneau de glow autour de la pastille.
+   La pastille n'existe plus → l'anneau flottait autour du vide. Le survol
+   souffle maintenant sur ce qui est DESSINÉ : le glyphe et le marqueur
+   brillent un cran de plus. (Survol = souris seulement ; au doigt, c'est
+   la sélection qui fait le retour.) */
+.pin:hover .pin-type svg,
+.pin:hover .pin-mq svg {
+  filter: drop-shadow(0 0 8px var(--pin-glow));
 }
-.pin-curateur:hover {
-  box-shadow: 0 0 0 6px rgba(239, 233, 216, 0.25);
+.pin:hover .pin-mq i {
+  box-shadow: 0 0 11px var(--pin-glow);
 }
 /* lieu fermé maintenant : discret, on met en avant ce qui est ouvert */
 /* fermé maintenant : depuis le 09/08 ça ne touche QUE le glyphe (le cran
@@ -2067,20 +2072,12 @@ button {
 .pin-ferme::before {
   opacity: 0.6;
 }
-/* spot d'un curateur : pastille ivoire avec son initiale à l'encre */
-.pin-curateur {
-  width: 22px;
-  height: 22px;
-  background: var(--print-white);
-  color: var(--nuit);
-  border-color: var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-}
+/* SUPPRIMÉ le 09/08 — « spot d'un curateur : pastille ivoire avec son
+   initiale à l'encre ». C'était le plus gros cercle parasite de la carte :
+   un disque ivoire plein de 22 px, redéclaré ici APRÈS le ménage, qui le
+   battait à égalité de spécificité. La seule définition de .pin-curateur
+   est désormais celle du ménage (plus haut) : boîte transparente, glyphe
+   à la teinte du curateur, initiale renvoyée dans la fiche. */
 /* recommandé par plusieurs : badge compteur de voix sur le pin */
 .pin-badge {
   position: absolute;
@@ -2125,24 +2122,30 @@ button {
   line-height: 1;
   transform: rotate(-4deg);
 }
-/* le plan choisi S'ÉCLAIRE : PROPOSÉ (planche jsp_palette_nuit, 08/08) — le
-   corps du pin garde son fond neutre habituel, c'est le CONTOUR (+ le glow)
-   qui prend l'encre du plan. Jamais le fond — un sursaut à l'allumage —
-   l'ajout de .pin-allume rejoue l'animation. Bat le grisé, sous l'actif. */
+/* le plan choisi S'ÉCLAIRE : PROPOSÉ (planche jsp_palette_nuit, 08/08).
+   09/08 — le contour et son halo sont retirés : ils dessinaient l'ancienne
+   pastille, qui n'existe plus. C'est l'ENCRE DU PLAN qui dit tout
+   maintenant (glyphe + marqueur, juste dessous), plus le sursaut à
+   l'allumage. Bat le grisé, reste sous l'actif. */
 .carte .pin-allume:not(.pin-actif) {
-  border-color: var(--encre-plan, var(--pin-contour));
   opacity: 1 !important;
   filter: none !important;
   z-index: 4 !important;
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--encre-plan, var(--pin-contour)) 22%, transparent),
-    0 0 var(--pin-glow-blur) color-mix(in srgb, var(--encre-plan, var(--pin-contour)) 60%, transparent),
-    0 1px 0 rgba(0, 0, 0, 0.5);
   animation: pin-eclaire 320ms var(--frappe);
 }
 /* le glyphe de type suit la même encre — le symbole reste lisible, teinté */
 .carte .pin-allume:not(.pin-actif) .pin-type svg {
   stroke: var(--encre-plan, var(--pin-glyphe));
+}
+/* …et le marqueur avec lui : sans le contour, c'est la seule chose qui
+   reste pour distinguer le plan A du plan B à l'œil */
+.carte .pin-allume:not(.pin-actif) .pin-mq svg {
+  stroke: var(--encre-plan, var(--pin-glyphe));
+}
+.carte .pin-allume:not(.pin-actif) .pin-mq i,
+.carte .pin-allume:not(.pin-actif) .pin-mq svg .pu {
+  background: var(--encre-plan, var(--pin-glyphe));
+  fill: var(--encre-plan, var(--pin-glyphe));
 }
 @keyframes pin-eclaire {
   0% { transform: scale(1); }
@@ -2170,29 +2173,26 @@ button {
   width: 13px;
   height: 13px;
 }
-/* déjà consulté : un halo cyan + légère atténuation, pour le reconnaître
-   (distinct du rouge "validé" et du gris "fermé"). outline = ne touche pas au
-   box-shadow de l'anneau validé. */
+/* déjà consulté : c'était un liseré cyan (outline) autour de la pastille —
+   un anneau de plus depuis qu'elle est invisible. Il ne reste que LA
+   PÂLEUR, qui est ce que le ménage avait décidé : « déjà vu → la pâleur ». */
 .pin-vu {
-  outline: 2px solid var(--vu);
-  outline-offset: 2px;
   opacity: 0.8;
 }
-/* spot validé : un anneau rouge autour du pin */
-.pin-valide {
-  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--red), 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-/* le pin sélectionné grandit (feedback de sélection, façon Airbnb) */
+/* spot validé : c'était un anneau rouge autour du pin. RETIRÉ — ce qu'il
+   disait est passé au marqueur, qui devient un point CERCLÉ (le tampon,
+   .pin-mq-cercle). Deux façons de dire « validé » = un cercle en trop. */
+/* le pin sélectionné grandit (feedback de sélection, façon Airbnb).
+   L'anneau rouge est retiré : le sélectionné se dit par le CONTENANT (la
+   goutte, .pin-ct) — et l'anneau flottait de toute façon autour du vide.
+   Le pivot du scale est posé sur .pin (transform-origin) : le marqueur ne
+   quitte pas les coordonnées quand le pin grandit. */
 .carte .pin-actif {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--red) 30%, transparent), 0 1px 0 rgba(0, 0, 0, 0.5);
   z-index: 5 !important;
   transform: scale(1.3);
   /* on sature et on éclaire le sélectionné pour qu'il claque au milieu des effacés */
   filter: saturate(1.7) brightness(1.12) !important;
   opacity: 1 !important;
-}
-.pin-curateur.pin-actif {
-  box-shadow: 0 0 0 4px rgba(239, 233, 216, 0.35), 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 /* #11 : quand un lieu est sélectionné, les autres pins s'effacent presque
    (transparents) pour faire ressortir le sélectionné */
@@ -2562,12 +2562,22 @@ button {
 
 /* chantier 1 : pins « à comparer » = encrés à l'ivoire, moins transparents.
    le pin ACTIF reste tel quel (d'où le :not(.pin-actif)) ; on bat .pin-grise/.pin-vu.
-   ombre de CONTACT uniquement (§4 : jamais un halo). */
+   09/08 — le fond ivoire remplissait la boîte ronde : un disque plein de
+   30 px, exactement le cercle qu'on venait de supprimer. « Encré à
+   l'ivoire » veut dire la même chose sur le GLYPHE et le MARQUEUR, sans
+   remplir quoi que ce soit. */
 .carte .pin-acomparer:not(.pin-actif) {
-  background: var(--encre) !important;
   opacity: 0.95 !important;
   filter: none !important;
-  box-shadow: 0 0 0 2px var(--nuit), 0 1px 0 rgba(0, 0, 0, 0.5) !important;
+}
+.carte .pin-acomparer:not(.pin-actif) .pin-type svg,
+.carte .pin-acomparer:not(.pin-actif) .pin-mq svg {
+  stroke: var(--encre);
+}
+.carte .pin-acomparer:not(.pin-actif) .pin-mq i,
+.carte .pin-acomparer:not(.pin-actif) .pin-mq svg .pu {
+  background: var(--encre);
+  fill: var(--encre);
 }
 
 /* chantier 1 : incitation à passer en paysage — cachée par défaut,
@@ -7942,28 +7952,13 @@ button {
   stroke: var(--pin-glyphe);
   filter: drop-shadow(0 0 4px var(--pin-glow));
 }
-/* le pin CURATEUR garde son initiale au centre : son glyphe redevient
-   un petit satellite en haut à gauche, à l'encre sombre sur papier */
-.pin-curateur .pin-type {
-  inset: auto;
-  top: -8px;
-  left: -8px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--ivory);
-  border: 1px solid var(--paper);
-  display: none;
-}
-.pin-curateur .pin-type svg {
-  width: 11px;
-  height: 11px;
-  stroke: #15130f;
-  filter: none;
-}
-.pin-curateur.label-on .pin-type {
-  display: flex;
-}
+/* SUPPRIMÉ le 09/08 — « le pin CURATEUR garde son initiale au centre : son
+   glyphe redevient un petit satellite en haut à gauche ». Ce satellite
+   était une pastille ivoire ronde de 16 px : encore un cercle. Et comme ce
+   bloc vivait après le ménage, il rendait aussi le glyphe du curateur noir
+   (#15130f) sur fond de nuit — invisible. Le curateur suit désormais la
+   règle commune (bloc « le curateur » près de .pin) : un glyphe centré,
+   nu, à la teinte de celui qui te l'a dit. Son initiale vit dans la fiche. */
 
 /* ── les monuments-repères : le croquis s'oriente ──
    silhouettes graphite, jamais tapables, sous les pins — des repères
