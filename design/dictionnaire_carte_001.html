@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — le dictionnaire de la carte</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   LE DICTIONNAIRE DE LA CARTE — récapitulatif du 09/08/2026.
+   Aucun <script> : tout est dessiné en dur, la page s'ouvre partout.
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --encre:#EFE9D8; --papier:#14120e; --nuit:#0e1015;
+  --moi:oklch(72% .17 262); --pote:oklch(72% .17 150); --maison:oklch(76% .15 32);
+  --mort:#6f6f68;
+  --g:26px; --g-ep:1.8;
+  --pt:3.5px; --cercle:10px; --oeil:11px; --coeur:8px; --diam:9px; --croix:9px;
+}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+ padding:0 14px 90px;max-width:460px;margin:0 auto;line-height:1.5}
+h1{font-family:'Caveat',cursive;font-size:34px;font-weight:600;padding-top:26px}
+.sous{opacity:.6;font-size:13.5px;margin-top:6px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.14em;opacity:.5;
+ margin:34px 0 10px;border-top:1px solid rgba(239,233,216,.1);padding-top:16px}
+h3{font-size:12.5px;opacity:.8;margin:18px 0 6px;color:#dfe9ff}
+p{font-size:13px;opacity:.62;margin-top:8px}
+b{color:#dfe9ff;font-weight:600;opacity:1}
+.mono{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.65}
+.cle{background:var(--nuit);border-left:2px solid var(--moi);border-radius:0 8px 8px 0;
+ padding:12px 14px;margin-top:14px;font-size:13.5px;opacity:.9}
+.cle b{display:block;margin-bottom:3px}
+
+/* ── les lignes de signe ── */
+.d{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:6px 14px;margin-top:8px}
+.l{display:flex;align-items:center;gap:14px;padding:11px 0;
+ border-bottom:1px solid rgba(239,233,216,.06)}
+.l:last-child{border-bottom:none}
+.v{width:46px;height:34px;flex:none;position:relative;display:flex;
+ align-items:center;justify-content:center}
+.t{font-size:12.5px}
+.t em{font-style:normal;opacity:.5;font-size:11.5px;display:block;margin-top:1px}
+.rang{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.35;width:14px;flex:none}
+
+/* ── les marqueurs, dessinés ── */
+.m{display:flex;--e:var(--moi)}
+.m svg{width:100%;height:100%;fill:var(--e);stroke:none;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--e) 60%, transparent))}
+.m.creux svg{fill:none;stroke:var(--e);stroke-width:2.5;stroke-linejoin:round;filter:none}
+.m.rond{border-radius:50%;background:var(--e);
+ box-shadow:0 0 5px color-mix(in srgb, var(--e) 70%, transparent)}
+.m .pu{fill:var(--e);stroke:none}
+.m .tr{fill:none;stroke:var(--e);stroke-width:2.4;stroke-linejoin:round}
+.m .cx{fill:none;stroke:var(--e);stroke-width:3;stroke-linecap:round}
+.m .an{fill:none;stroke:var(--e);stroke-width:2.2}
+.pote{--e:var(--pote)} .maison{--e:var(--maison)}
+
+/* ── les glyphes, dessinés ── */
+.gl{width:var(--g);height:var(--g);fill:none;stroke:var(--moi);stroke-width:var(--g-ep);
+ stroke-linecap:round;stroke-linejoin:round;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--moi) 55%, transparent))}
+.gl.su{opacity:.62} .gl.pa{opacity:.3}
+.gl.fini{stroke:var(--mort);stroke-dasharray:2.6 2.4;filter:none;opacity:.75}
+.gl.pote{stroke:var(--pote)} .gl.maison{stroke:var(--maison)}
+.halo{box-shadow:0 0 5px color-mix(in srgb, var(--e) 70%, transparent),
+ 0 0 0 3.5px color-mix(in srgb, var(--e) 30%, transparent)}
+@keyframes bat{0%,100%{transform:scale(1)}50%{transform:scale(1.7)}}
+.bat{animation:bat 1.6s ease-in-out infinite}
+.ct{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;
+ border-radius:50%;border:2px solid var(--moi);background:rgba(18,20,26,.82)}
+.ct::after{content:'';position:absolute;left:50%;top:calc(100% - 2px);width:6px;height:3px;
+ margin-left:-3px;background:var(--moi);clip-path:polygon(0 0,100% 0,50% 100%)}
+.gl.z{position:relative;z-index:1}
+.tp{padding:1px 4px;border-radius:3px;background:#161816;border:1px solid #bde2ff;
+ color:#fe5da3;font-size:10px;font-weight:700;transform:rotate(-15deg)}
+.chif{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--moi)}
+
+/* ── la carte de démonstration ── */
+.carte{position:relative;width:100%;max-width:432px;height:250px;border-radius:12px;
+ overflow:hidden;border:1px solid rgba(239,233,216,.09);background:var(--nuit);margin-top:10px}
+.tuiles{position:absolute;inset:0}
+.tuiles img{position:absolute;width:256px;height:256px}
+.pin{position:absolute;display:flex;flex-direction:column;align-items:center;
+ transform:translate(-50%,calc(-100% + var(--h,3.5px) / 2))}
+.pin .gl{margin-bottom:5px}
+.pin .m, .pin .rond{width:var(--h);height:var(--h)}
+
+/* ── les lois ── */
+ol{margin:10px 0 0 18px;font-size:13px;opacity:.75}
+ol li{margin-bottom:9px;padding-left:4px}
+ol li b{opacity:1}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+td{padding:7px 6px;border-bottom:1px solid rgba(239,233,216,.07);vertical-align:top}
+td:first-child{color:#dfe9ff;white-space:nowrap;width:38%}
+.ouv{color:#8fe0a8}
+</style></head><body>
+
+<h1>le dictionnaire de la carte</h1>
+<p class="sous">Tout ce qu'on a décidé le 9 août. Quatre canaux, jamais douze signes.
+Chaque signe est dessiné ici à sa vraie taille.</p>
+
+<div class="cle"><b>Le principe</b>
+L'encre s'ajoute, elle ne s'enlève jamais. Plus un lieu a vécu avec toi,
+plus il porte d'encre.</div>
+
+<h2>les quatre canaux</h2>
+<table>
+<tr><td>le glyphe</td><td>ce que c'est — et si c'est ouvert</td></tr>
+<tr><td>la couleur</td><td>qui te l'a dit</td></tr>
+<tr><td>le marqueur</td><td>ta relation au lieu</td></tr>
+<tr><td>ce qui se superpose</td><td>le temps, et ton regard</td></tr>
+</table>
+
+<h2>le marqueur — six signes</h2>
+<p>Un seul à la fois. C'est une <b>échelle</b> : le plus haut qui est vrai gagne.
+Les deux extrêmes sont les plus rares — ce sont les seuls qui engagent quelqu'un.</p>
+<div class="d">
+  <div class="l"><div class="rang">1</div><div class="v"><i class="m" style="width:var(--diam);height:var(--diam)"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i></div>
+    <div class="t"><b>le diamant</b> — la pépite<em>je la sors du carnet pour la donner à mon cercle</em></div></div>
+  <div class="l"><div class="rang">2</div><div class="v"><i class="m" style="width:var(--coeur);height:var(--coeur)"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+    <div class="t"><b>le cœur plein</b> — favori, et j'y suis allé<em>celui-là, c'est pour moi</em></div></div>
+  <div class="l"><div class="rang">2</div><div class="v"><i class="m creux" style="width:var(--coeur);height:var(--coeur)"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+    <div class="t"><b>le cœur creux</b> — favori, pas encore fait<em>une envie</em></div></div>
+  <div class="l"><div class="rang">3</div><div class="v"><i class="m" style="width:var(--oeil);height:var(--oeil)"><svg viewBox="0 0 24 24"><path class="tr" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+    <div class="t"><b>l'œil</b> — recommandé, dans le viseur<em>on me l'a dit, je compte y aller</em></div></div>
+  <div class="l"><div class="rang">4</div><div class="v"><i class="m" style="width:var(--cercle);height:var(--cercle)"><svg viewBox="0 0 24 24"><circle class="an" cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg></i></div>
+    <div class="t"><b>le point cerclé</b> — j'y étais<em>le tampon : on pose un rond autour de ce qui était là</em></div></div>
+  <div class="l"><div class="rang">5</div><div class="v"><i class="m rond" style="width:var(--pt);height:var(--pt)"></i></div>
+    <div class="t"><b>le point</b> — rien dit<em>le degré zéro, et la majorité de la carte</em></div></div>
+  <div class="l"><div class="rang">✕</div><div class="v"><i class="m" style="width:var(--croix);height:var(--croix)"><svg viewBox="0 0 24 24"><path class="cx" d="M5 5l14 14M19 5L5 19"/></svg></i></div>
+    <div class="t"><b>la croix</b> — rayé<em>j'ai été déçu, je préviens mon cercle · tient jusqu'au jeudi suivant</em></div></div>
+</div>
+<p>Sur <b>ta</b> carte, le cœur passe devant le diamant : elle raconte ta relation.
+Sur celle de tes potes, c'est le diamant qui gagne : c'est ce que tu leur donnes.</p>
+
+<h2>le glyphe — ce que c'est, et s'il est ouvert</h2>
+<p>Trois crans d'encre, comme les critères gradués de la lentille. Le quatrième
+état n'est pas un cran : c'est un autre trait.</p>
+<div class="d">
+  <div class="l"><div class="v"><svg class="gl" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>l'encre pleine</b><em>on sait que c'est ouvert</em></div></div>
+  <div class="l"><div class="v"><svg class="gl su" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>la mi-encre</b><em>on ne sait pas — et c'est le cas le plus fréquent</em></div></div>
+  <div class="l"><div class="v"><svg class="gl pa" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>l'encre pâle</b><em>fermé là — il rouvre demain</em></div></div>
+  <div class="l"><div class="v"><svg class="gl fini" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>le pointillé gris</b> — fermé pour de bon<em>en cartographie, le pointillé dit « ce n'était plus là » · pas de barre, pas de flou</em></div></div>
+</div>
+
+<h2>la couleur — qui te l'a dit</h2>
+<div class="d">
+  <div class="l"><div class="v"><svg class="gl" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>l'encre bleue</b> — toi</div></div>
+  <div class="l"><div class="v"><svg class="gl pote" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>l'encre verte</b> — un pote de ton cercle</div></div>
+  <div class="l"><div class="v"><svg class="gl maison" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>l'encre orange</b> — la maison, un curateur</div></div>
+</div>
+<p>Le marqueur prend la même encre que son glyphe. Un <b>œil vert</b>, c'est un pote
+qui te recommande. Une <b>croix verte</b>, c'est un pote qui a été déçu — et ça
+compte plus qu'un inconnu.</p>
+
+<h2>ce qui se superpose</h2>
+<p>Trois signes qui ne prennent la place de personne : ce sont de la lumière,
+du temps, et ton regard.</p>
+<div class="d">
+  <div class="l"><div class="v"><i class="m rond halo" style="width:var(--pt);height:var(--pt);--e:var(--moi)"></i></div>
+    <div class="t"><b>le halo large</b> — tendance</div></div>
+  <div class="l"><div class="v"><i class="m rond bat" style="width:var(--pt);height:var(--pt);--e:var(--moi)"></i></div>
+    <div class="t"><b>ça bat</b> — fraîchement posé</div></div>
+  <div class="l"><div class="v"><i class="ct"></i><svg class="gl z" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="t"><b>le cercle à pointe</b> — celui que tu regardes<em>l'exception : le seul cercle de la carte</em></div></div>
+</div>
+
+<h2>à côté du glyphe, et seulement de près</h2>
+<div class="d">
+  <div class="l"><div class="v"><span class="chif">3</span></div>
+    <div class="t"><b>le chiffre</b> — combien te l'ont dit<em>du côté opposé au tampon, sinon ils se marchent dessus</em></div></div>
+  <div class="l"><div class="v"><span class="tp">ITA</span></div>
+    <div class="t"><b>le tampon de douane</b> — la cuisine<em>jamais un drapeau · on ne tamponne pas son propre passeport</em></div></div>
+</div>
+
+<h2>tout ensemble</h2>
+<div class="carte">
+  <div class="tuiles">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11270.png" style="left:-132px;top:-112px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11270.png" style="left:124px;top:-112px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11270.png" style="left:380px;top:-112px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11271.png" style="left:-132px;top:144px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11271.png" style="left:124px;top:144px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11271.png" style="left:380px;top:144px">
+  </div>
+  <div class="pin" style="left:40px;top:44px;--h:var(--pt)"><svg class="gl su" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i class="m rond"></i></div>
+  <div class="pin" style="left:104px;top:36px;--h:var(--cercle)"><svg class="gl" viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg><i class="m" style="width:var(--cercle);height:var(--cercle)"><svg viewBox="0 0 24 24"><circle class="an" cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg></i></div>
+  <div class="pin pote" style="left:176px;top:48px;--h:var(--oeil)"><svg class="gl pote" viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg><i class="m" style="width:var(--oeil);height:var(--oeil)"><svg viewBox="0 0 24 24"><path class="tr" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <div class="pin" style="left:252px;top:38px;--h:var(--coeur)"><svg class="gl" viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg><i class="m" style="width:var(--coeur);height:var(--coeur)"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+  <div class="pin maison" style="left:330px;top:52px;--h:var(--diam)"><svg class="gl maison" viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg><i class="m" style="width:var(--diam);height:var(--diam)"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i></div>
+  <div class="pin" style="left:56px;top:140px;--h:var(--pt)"><svg class="gl pa" viewBox="0 0 24 24"><path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/></svg><i class="m rond"></i></div>
+  <div class="pin pote" style="left:130px;top:152px;--h:var(--pt)"><svg class="gl pote" viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg><i class="m rond halo"></i></div>
+  <div class="pin" style="left:206px;top:144px;--h:var(--pt)"><svg class="gl fini" viewBox="0 0 24 24"><path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/></svg><i class="m rond" style="--e:var(--mort)"></i></div>
+  <div class="pin pote" style="left:280px;top:156px;--h:var(--croix)"><svg class="gl pote pa" viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg><i class="m" style="width:var(--croix);height:var(--croix)"><svg viewBox="0 0 24 24"><path class="cx" d="M5 5l14 14M19 5L5 19"/></svg></i></div>
+  <div class="pin" style="left:352px;top:148px;--h:var(--pt)"><svg class="gl su" viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg><i class="m rond bat"></i></div>
+</div>
+<p>Une carte ordinaire : surtout des points, quelques anneaux, un œil, un cœur.
+Le cornet en pointillé gris a fermé pour de bon. Le burger vert porte la croix
+d'un pote déçu.</p>
+
+<h2>les huit lois</h2>
+<ol>
+<li><b>L'encre s'ajoute, jamais elle ne s'enlève.</b> Quand tu hésites entre deux signes, celui qui a le plus vécu porte le plus d'encre.</li>
+<li><b>Un filtre peut être généreux ; un signe doit être rare.</b> Ce ne sont pas les mêmes objets, ils n'ont pas les mêmes devoirs.</li>
+<li><b>Seule la silhouette survit.</b> À 10 px il n'y a plus de détail intérieur — la pupille d'un œil, les facettes d'un diamant, les branches d'une étoile.</li>
+<li><b>Le remplissage n'a qu'un seul sens</b> partout : plein = c'est fait.</li>
+<li><b>Six marqueurs, c'est le plafond.</b> Pour en ajouter un, il faudra en tuer un.</li>
+<li><b>Jamais d'étoiles.</b> Une étoile veut dire « note » pour tout le monde.</li>
+<li><b>Un signal négatif doit coûter quelque chose.</b> Pour rayer, tu supprimes le lieu. Et une rayure ne se compte jamais.</li>
+<li><b>Le vocabulaire vient du papier</b> — carnet, typographie, passeport, relevé de carte. Jamais des apps de carte : c'est là qu'on leur ressemblerait.</li>
+</ol>
+
+<h2>d'où viennent les signes</h2>
+<table>
+<tr><td>le bullet journal</td><td><b>•</b> la tâche pas faite · <b>×</b> la tâche faite</td></tr>
+<tr><td>le passeport</td><td>le tampon, le code pays en trois lettres</td></tr>
+<tr><td>le balisage marin</td><td>la croix = l'épave, le danger</td></tr>
+<tr><td>la cartographie</td><td>le pointillé = ce qui n'est plus là</td></tr>
+<tr><td>le tampon encreur</td><td>on pose un rond autour de ce qui existait</td></tr>
+<tr><td>la pellicule</td><td>l'amorce, la perforation, la pastille de fin</td></tr>
+</table>
+
+<h2>ce qui reste ouvert</h2>
+<table>
+<tr><td class="ouv">valide / bof</td><td>un seul signe sur la carte, le jugement dans la fiche — à confirmer</td></tr>
+<tr><td class="ouv">le diamant</td><td>avec ou sans la ligne de table · plein ou creux selon donnée ou reçue</td></tr>
+<tr><td class="ouv">« fermé pour de bon »</td><td><b>n'existe pas en base</b> — <span class="mono">Statut</span> ne connaît que actif et archive</td></tr>
+<tr><td class="ouv">« rayé »</td><td>demande trois champs : qui, quand ça expire, la ligne de motif</td></tr>
+<tr><td class="ouv">le tampon déduit</td><td>le déduire de la pellicule et des sorties, laisser raturer</td></tr>
+<tr><td class="ouv">la chope</td><td>onzième type, ou elle remplace le cocktail pour « bar »</td></tr>
+<tr><td class="ouv">les glyphes</td><td>vin V1/V2/V3 · thé T1/T2/T3 · glace G1/G2/G3</td></tr>
+</table>
+<p class="mono" style="margin-top:22px;opacity:.4">jeudi — dictionnaire de la carte, 9 août 2026.
+Les planches de travail : atelier_grammaire_001 · atelier_glyphes_001 · banc_forme_001</p>
+</body></html>

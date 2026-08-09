@@ -46,6 +46,33 @@ window.addEventListener('jeudi:applique-maj', () => {
   void majSW(true)
 })
 
+// FORCER LA MISE À JOUR (réglages) — le filet quand le service worker s'entête
+// à resservir une vieille version : ça arrive surtout sur iOS depuis l'écran
+// d'accueil, où la webview garde son cache très longtemps.
+// On désinscrit le SW, on vide le cache des FICHIERS, et on recharge avec un
+// cache-buster (sans lui, iOS peut resservir le même index.html).
+// ⚠ Ça ne touche NI IndexedDB (tes lieux, tes photos) NI localStorage (tes
+// réglages, tes marques, ta pile à tester) : seulement les fichiers de l'app.
+window.addEventListener('jeudi:forcer-maj', () => {
+  void (async () => {
+    try {
+      const regs = (await navigator.serviceWorker?.getRegistrations?.()) ?? []
+      await Promise.all(regs.map((r) => r.unregister()))
+    } catch {
+      /* pas de SW (navigateur privé, http) : on recharge quand même */
+    }
+    try {
+      if ('caches' in window) {
+        const noms = await caches.keys()
+        await Promise.all(noms.map((n) => caches.delete(n)))
+      }
+    } catch {
+      /* cache inaccessible : idem, le rechargement suffira souvent */
+    }
+    location.replace(`${location.pathname}?maj=${Date.now()}`)
+  })()
+})
+
 // filet de sécurité : une exception ne doit jamais faire un écran blanc.
 // on AFFICHE le détail de l'erreur (petit, discret) : sur téléphone, sans
 // console, c'est le seul moyen de savoir ce qui a cassé.

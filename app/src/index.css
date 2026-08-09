@@ -1778,16 +1778,32 @@ button {
   --pin-glow-blur: 16px;
   --pin-glyphe: #33a7ff;
 }
+/* ── REFONTE DU 09/08 — design/dictionnaire_carte_001.html ──
+   Le pin devient un GLYPHE NU avec un MARQUEUR dessous, et c'est le
+   marqueur qui désigne le lieu.
+   ⚠ LA BOÎTE RESTE RONDE (idée d'Ersan) : on ne fait que la rendre
+   transparente. Du coup TOUT ce qui s'y accrochait garde sa géométrie —
+   les anneaux (.pin-valide, .pin-vu, .pin-actif) restent ronds au lieu
+   de devenir des rectangles, et les badges gardent leurs ancrages.
+   Le contenant redevient visible sur le sélectionné (le bas tiré). */
+:root {
+  --mq-boite: 12px; /* boîte commune à tous les marqueurs : l'ancre est
+                       un décalage CONSTANT quelle que soit la forme */
+  --mq-point: 3.5px;
+  --mq-cercle: 10px;
+  --mq-oeil: 11px;
+  --mq-coeur: 8px;
+  --mq-diamant: 11px; /* creux → il lui faut plus de place */
+  --mq-croix: 9px;
+  --pin-ecart: 5px; /* du bas de la boîte au haut du marqueur */
+}
 .pin {
   width: var(--pin-taille);
   height: var(--pin-taille);
   /* pas de pseudo ici : ::before = le label du nom, ::after = la zone de tap. */
-  background: var(--pin-fond);
-  border: var(--pin-contour-ep) solid var(--pin-contour);
+  background: transparent;
+  border: var(--pin-contour-ep) solid transparent;
   border-radius: 50%;
-  box-shadow:
-    0 0 var(--pin-glow-blur) var(--pin-glow),
-    0 1px 0 rgba(0, 0, 0, 0.5);
   cursor: pointer;
   /* appui long (panneau de marque) : pas de sélection/loupe iOS pendant les 450 ms */
   user-select: none;
@@ -1798,18 +1814,211 @@ button {
   /* toujours au-dessus des vignettes et des étiquettes (pile : .monument-repere) */
   z-index: 2;
 }
-/* zone de tap invisible de 44px+ : on vise un pin avec le pouce, de nuit */
+/* zone de tap invisible de 44px+ : on vise un pin avec le pouce, de nuit.
+   Elle descend maintenant jusque SOUS le marqueur (le vrai point du lieu). */
 .pin::after {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -7px -7px -24px -7px;
+  border-radius: 22px;
+}
+
+/* ── LE MARQUEUR : ce qui désigne le lieu ──
+   Boîte fixe de --mq-boite, dessin centré dedans. Le Marker de maplibre
+   est décalé de -(15 + ecart + boite/2) : le CENTRE du marqueur tombe
+   donc pile sur les coordonnées, quelle que soit sa forme. */
+.pin-mq {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--pin-taille) + var(--pin-ecart));
+  width: var(--mq-boite);
+  height: var(--mq-boite);
+  margin-left: calc(var(--mq-boite) / -2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* le point nu — « rien dit », le degré zéro et la majorité de la carte */
+.pin-mq i {
+  width: var(--mq-point);
+  height: var(--mq-point);
   border-radius: 50%;
+  background: var(--pin-glyphe);
+  box-shadow: 0 0 6px var(--pin-glow);
+}
+.pin-mq svg {
+  fill: none;
+  stroke: var(--pin-glyphe);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px var(--pin-glow));
+}
+.pin-mq svg .pu {
+  fill: var(--pin-glyphe);
+  stroke: none;
+}
+/* j'y étais : le tampon — un anneau posé autour du point qui existait déjà */
+.pin-mq-cercle svg {
+  width: var(--mq-cercle);
+  height: var(--mq-cercle);
+}
+/* recommandé, dans le viseur : l'œil (contour + pupille pleine) */
+.pin-mq-oeil svg {
+  width: var(--mq-oeil);
+  height: var(--mq-oeil);
+}
+
+/* ── ⚠ LES TROIS SIGNES SANS DONNÉE (09/08) ──
+   Dessinés et prêts, mais rien ne les écrit encore : cf. le pavé sur
+   `favori` / `pepite` / `raye` dans db.ts. Ils ne s'afficheront jamais
+   tant que le geste qui les pose n'existe pas. */
+.pin-mq-coeur svg {
+  width: var(--mq-coeur);
+  height: var(--mq-coeur);
+}
+/* favori où tu es allé : le cœur se remplit (la loi du remplissage —
+   plein = c'est fait). Sinon il reste au trait : une envie. */
+.pin-mq-coeur.mq-plein svg {
+  fill: var(--pin-glyphe);
+  stroke: none;
+}
+/* la pépite : TOUJOURS creuse — l'identité du diamant est dans ses
+   angles, pas dans sa masse. Une seule version, donc elle ne dit rien
+   avec son remplissage et la loi reste vraie. Il lui faut 11 px : une
+   forme vide a besoin de plus de place qu'une forme pleine. */
+.pin-mq-diamant svg {
+  width: var(--mq-diamant);
+  height: var(--mq-diamant);
+}
+/* rayé : deux traits, la seule forme OUVERTE de la famille — un signal
+   négatif doit être étranger aux autres. Garde l'encre de qui l'a rayé. */
+.pin-mq-croix svg {
+  width: var(--mq-croix);
+  height: var(--mq-croix);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+/* fraîchement posé : ça bat. Se superpose à n'importe quelle forme. */
+@keyframes mq-bat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.7);
+  }
+}
+.pin-frais .pin-mq i {
+  animation: mq-bat 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pin-frais .pin-mq i {
+    animation: none;
+  }
+}
+
+/* ── LE CONTENANT : le bas tiré (45° · 3 px), l'EXCEPTION ──
+   Il ne revient que sur le lieu sélectionné. Tracé calculé pour r=15,
+   donc il coiffe exactement la boîte ronde de 30 px. */
+.pin-ct {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 57px;
+  margin: -27px 0 0 -27px;
+  display: none;
+  pointer-events: none;
+  z-index: -1;
+}
+.pin-ct svg {
+  display: block;
+  overflow: visible;
+}
+.pin-ct .corps {
+  fill: rgba(18, 20, 26, 0.82);
+  stroke: var(--pin-contour);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pin-ct .lueur {
+  fill: none;
+  stroke: var(--pin-glow);
+  stroke-width: 6;
+  filter: blur(4px);
+}
+.carte .pin-actif .pin-ct {
+  display: block;
+}
+
+/* ══ 09/08 · LE MÉNAGE : plus un seul cercle résiduel ══
+   Tous ces anneaux dessinaient le contour de l'ancienne pastille. Depuis
+   que la boîte est invisible, ils flottaient tout seuls autour du glyphe.
+   Ce qu'ils disaient est passé ailleurs :
+     validé      → le marqueur (le point cerclé)
+     sélectionné → le contenant (le bas tiré)
+     déjà vu     → la pâleur
+     plan A/B    → l'encre du glyphe
+   Ce bloc vient APRÈS les règles d'origine : il les neutralise sans les
+   supprimer, pour qu'on retrouve l'intention en lisant le fichier. */
+.pin:hover,
+.pin-curateur:hover,
+.pin-valide,
+.carte .pin-actif,
+.carte .pin-allume:not(.pin-actif),
+.carte .pin-acomparer:not(.pin-actif) {
+  box-shadow: none;
+}
+.pin-vu {
+  outline: none;
+}
+/* le plan A/B teinte le GLYPHE (règle plus haut), il ne dessine plus de
+   bordure — la boîte doit rester invisible */
+.carte .pin-allume:not(.pin-actif) {
+  border-color: transparent;
+}
+/* le curateur : sa pastille ivoire était un cercle de plus. C'est la
+   COULEUR qui dit qui te l'a dit — le glyphe prend sa teinte, et son
+   initiale revient dans la fiche. */
+.pin-curateur {
+  width: var(--pin-taille);
+  height: var(--pin-taille);
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+  font-size: 0;
+}
+.pin-curateur .pin-type {
+  inset: 0;
+  display: flex;
+  width: auto;
+  height: auto;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+.pin-curateur .pin-type svg {
+  width: 85%;
+  height: 85%;
+  stroke: var(--pin-glyphe);
+}
+
+/* ── LES TROIS CRANS D'ENCRE : ce qu'on sait de son ouverture ──
+   pleine = on sait que c'est ouvert · mi-encre = on ne sait pas ·
+   pâle = on sait que c'est fermé. Ça ne touche QUE le glyphe. */
+.pin-inconnu .pin-type svg {
+  opacity: 0.62;
+}
+.pin-ferme .pin-type svg {
+  opacity: 0.34;
 }
 /* le nom du spot, en label sous le pin (carnet annoté) */
 .pin::before {
   content: attr(data-nom);
   position: absolute;
-  top: 130%;
+  /* le label passe SOUS le marqueur depuis la refonte du 09/08 */
+  top: calc(var(--pin-taille) + var(--pin-ecart) + var(--mq-boite) + 2px);
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
@@ -1847,8 +2056,12 @@ button {
   box-shadow: 0 0 0 6px rgba(239, 233, 216, 0.25);
 }
 /* lieu fermé maintenant : discret, on met en avant ce qui est ouvert */
-.pin-ferme {
-  opacity: 0.4;
+/* fermé maintenant : depuis le 09/08 ça ne touche QUE le glyphe (le cran
+   d'encre pâle, plus haut) — le marqueur, lui, continue de désigner le
+   lieu à pleine encre. Le pin MARQUÉ n'a pas de glyphe : il garde son
+   ancien traitement d'ensemble. */
+.pin-marque.pin-ferme {
+  opacity: 0.5;
   filter: grayscale(0.7);
 }
 .pin-ferme::before {
@@ -7796,18 +8009,21 @@ button {
 /* TEST (08/08) — les vignettes carnet des planches GPT : le monument en
  * gravure vieillie à la place du trait monoline. Une ombre douce pour
  * décoller du fond nuit ; l'opacité reste sous les pins de spots. */
+/* 09/08 — LA VIGNETTE GRANDIT AVEC LE ZOOM. Un monument est un objet posé
+ * au sol : plus tu t'approches, plus il est grand. La hauteur vient de
+ * --vign-h, calculée en continu par relaisVignettes() (Carte.tsx).
+ * Pas de transition sur la hauteur : elle change à chaque frame du zoom,
+ * une transition la ferait traîner derrière la carte. */
 .monument-vignette {
-  height: 52px;
+  height: var(--vign-h, 52px);
   width: auto;
   opacity: 0.92;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   pointer-events: none;
-  transition:
-    height 240ms ease,
-    opacity 240ms ease;
+  transition: opacity 240ms ease;
 }
 .monument-vignette.petite {
-  height: 42px;
+  height: calc(var(--vign-h, 52px) * 0.8);
 }
 /* les vignettes de points de rdv se voilent sous z12.5 (Carte.tsx) */
 .repere-vignette {
@@ -7820,19 +8036,15 @@ button {
  * De loin elle EST le repère ; de près on ne cherche plus la ville, on
  * cherche un spot. Trois paliers posés en classes sur zoomend (Carte.tsx),
  * la transition ci-dessus fait le glissé. */
-.vg-retrait .monument-vignette {
-  height: 40px;
-  opacity: 0.7;
-}
-.vg-retrait .monument-vignette.petite {
-  height: 34px;
-}
+/* 09/08 — les paliers ne rapetissent plus et ne voilent plus non plus.
+ * Un monument garde sa présence pleine : ce qui le met à sa place, c'est
+ * L'ORDRE DES PLANS, pas la transparence. Il est le fond du carnet, les
+ * épingles passent dessus (z-index 0 contre 2, cf. la pile plus bas).
+ * Ces deux classes ne servent donc plus qu'à un voile très léger, pour
+ * que le trait des épingles reste lisible par-dessus une gravure dense. */
+.vg-retrait .monument-vignette,
 .vg-timbre .monument-vignette {
-  height: 34px;
-  opacity: 0.5;
-}
-.vg-timbre .monument-vignette.petite {
-  height: 28px;
+  opacity: 0.92;
 }
 /* le cartouche : l'étiquette parchemin au texte rouge, sous la vignette —
  * c'est LUI qui nomme (le Caveat se retire quand la vignette est là) */

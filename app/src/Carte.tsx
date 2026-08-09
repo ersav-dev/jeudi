@@ -16,6 +16,13 @@ import {
   type Lieu,
 } from './db'
 import { lireMarques, poserMarque, retirerMarque, sAbonnerMarques } from './marques'
+import { lireATester } from './aTester'
+
+/** REFONTE 09/08 — de combien le pin remonte pour que le CENTRE de son
+ *  marqueur tombe sur les coordonnées : rayon (15) + écart (5) + demi-boîte
+ *  du marqueur (6). Doit rester d'accord avec --pin-taille / --pin-ecart /
+ *  --mq-boite dans index.css. */
+const DECALAGE_MARQUEUR = 26
 import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
 import {
   grouperTas,
@@ -381,7 +388,11 @@ export default function Carte({
     const sig = estAMoi(l) ? undefined : l.tipsCercle?.[0]
     const nbVoix = (l.note ? 1 : 0) + (l.tipsCercle?.length ?? 0)
     const valide = l.tampon?.v === 'valide'
-    const ferme = etatHoraire(l.horaires)?.ouvert === false
+    const etatH = etatHoraire(l.horaires)
+    const ferme = etatH?.ouvert === false
+    // « on ne sait pas » : horaires absents ou borne à null. Avant le 09/08 ce
+    // cas se présentait exactement comme un lieu ouvert — un petit mensonge.
+    const inconnu = !etatH || etatH.ouvert === null
     const marque = marquesRef.current[l.id]
     const el = document.createElement('div')
     if (marque) {
@@ -439,6 +450,59 @@ export default function Carte({
         el.appendChild(ballon)
       }
     }
+    // ── REFONTE DU 09/08 : LE MARQUEUR, ce qui désigne vraiment le lieu ──
+    // Échelle de priorité (dictionnaire_carte_001.html) : le plus haut qui
+    // est vrai gagne. L'œil suit la PILE explicite (aTester = 'oui'), jamais
+    // la règle passive « pas de tampon » — sinon il se poserait sur les 300.
+    const aTester = lireATester()[l.id] === 'oui'
+    const mq = document.createElement('span')
+    if (l.raye) {
+      // ⚠ SANS DONNÉE (cf. db.ts) — la croix bat tout : le lieu est mort
+      // pour toi, le reste de ta relation ne compte plus.
+      mq.className = 'pin-mq pin-mq-croix'
+      mq.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>'
+    } else if (l.favori) {
+      // ⚠ SANS DONNÉE — le cœur passe devant la pépite SUR TA CARTE : elle
+      // raconte ta relation. Chez tes potes, c'est le diamant qui gagnera.
+      // Plein si tu y es allé (le tampon), creux sinon : une envie.
+      mq.className = `pin-mq pin-mq-coeur${l.tampon ? ' mq-plein' : ''}`
+      mq.innerHTML =
+        '<svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg>'
+    } else if (l.pepite) {
+      // ⚠ SANS DONNÉE — la pépite, toujours au trait (taille brillant D1 :
+      // un tiers de couronne, deux tiers de pavillon, plus large que haute)
+      mq.className = 'pin-mq pin-mq-diamant'
+      mq.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg>'
+    } else if (aTester) {
+      // l'œil : on me l'a recommandé, je compte y aller
+      mq.className = 'pin-mq pin-mq-oeil'
+      mq.innerHTML =
+        '<svg viewBox="0 0 24 24"><path d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg>'
+    } else if (l.tampon) {
+      // le tampon : on pose un anneau autour du point qui existait déjà
+      mq.className = 'pin-mq pin-mq-cercle'
+      mq.innerHTML =
+        '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg>'
+    } else {
+      // le point nu : rien dit — le degré zéro, et la majorité de la carte
+      mq.className = 'pin-mq'
+      mq.appendChild(document.createElement('i'))
+    }
+    el.appendChild(mq)
+    // les trois crans d'encre du glyphe : on ne dit que ce qu'on SAIT
+    if (inconnu) el.classList.add('pin-inconnu')
+    // fraîchement posé : ça bat pendant trois jours
+    if (Date.now() - Date.parse(l.creeLe) < 3 * 864e5) el.classList.add('pin-frais')
+    // le contenant (bas tiré 45° · 3 px) — l'exception, il ne revient que
+    // sur le lieu sélectionné. Tracé pour r=15 : il coiffe la boîte de 30 px.
+    const ct = document.createElement('span')
+    ct.className = 'pin-ct'
+    ct.innerHTML =
+      '<svg width="54" height="57" viewBox="-27 -27 54 57">' +
+      '<path class="lueur" d="M -10.61 10.61 A 15 15 0 1 1 10.61 10.61 C 5.80 15.41, 3.00 16.74, 0 18.00 C -3.00 16.74, -5.80 15.41, -10.61 10.61 Z"/>' +
+      '<path class="corps" d="M -10.61 10.61 A 15 15 0 1 1 10.61 10.61 C 5.80 15.41, 3.00 16.74, 0 18.00 C -3.00 16.74, -5.80 15.41, -10.61 10.61 Z"/>' +
+      '</svg>'
+    el.appendChild(ct)
     // « je sais pas » : le rôle du lieu dans sa proposition — le A (le spot)
     // porte le jeton numéroté à l'encre du plan, le B (le plan B) porte un
     // « B » de la même encre désaturée. La classe pin-pN pose l'encre (CSS).
@@ -619,8 +683,9 @@ export default function Carte({
       const pt = m.project([l.lng, l.lat])
       const nom = l.nom.slice(0, 16)
       const w = nom.length * 5.5 + 12
-      // le pin fait 18px ancré au centre : le label naît ~2px sous son bord bas
-      const boite: Boite = { x: pt.x - w / 2, y: pt.y + 11, w, h: 14 }
+      // depuis le 09/08 le marqueur tombe SUR les coordonnées et le label
+      // naît juste dessous — d'où un simple +9 au lieu de l'ancien +11.
+      const boite: Boite = { x: pt.x - w / 2, y: pt.y + 9, w, h: 14 }
       const estActif = el.classList.contains('pin-actif')
       candidats.push({
         el,
@@ -846,6 +911,11 @@ export default function Carte({
           // le tas est ANCRÉ par le bas : l'épingle graphite (::after)
           // pointe la position géographique exacte (chantier §1.2)
           anchor: el.classList.contains('tas') ? 'bottom' : 'center',
+          // REFONTE 09/08 : le pin remonte de (rayon + écart + demi-marqueur)
+          // pour que le CENTRE DU MARQUEUR tombe pile sur les coordonnées.
+          // 15 + 5 + 6 = 26. Constante, parce que tous les marqueurs
+          // partagent la même boîte de 12 px (cf. .pin-mq dans index.css).
+          offset: el.classList.contains('tas') ? [0, 0] : [0, -DECALAGE_MARQUEUR],
         })
           .setLngLat([l.lng, l.lat])
           .addTo(m),
@@ -1393,6 +1463,12 @@ export default function Carte({
     // zoom se lit par crans, et la transition CSS fait le glissé.
     const relaisVignettes = () => {
       const z = carte.current?.getZoom() ?? 0
+      // 09/08 — LA TAILLE DES MONUMENTS SUIT LE ZOOM : un monument est un
+      // objet posé au sol, on doit le voir grandir quand on s'approche.
+      // Pas la loi du terrain (×2 par niveau : la tour ferait 3000 px à
+      // z19) mais une croissance tempérée, ×2 tous les ~2 niveaux, bornée.
+      const h = Math.min(200, Math.max(34, 52 * Math.pow(2, (z - 13) * 0.55)))
+      carte.current?.getContainer().style.setProperty('--vign-h', `${h.toFixed(1)}px`)
       // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
       // plus à z11 et la ville disparaîtrait sous les stickers
       for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', z < 12.5)
@@ -1403,6 +1479,9 @@ export default function Carte({
       }
     }
     relaisVignettes()
+    // 'zoom' (et pas seulement 'zoomend') : la taille doit suivre le geste,
+    // sinon le monument saute d'un coup quand on lâche.
+    carte.current.on('zoom', relaisVignettes)
     carte.current.on('zoomend', relaisVignettes)
 
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — l'atelier des glyphes</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#EFE9D8; --papier:#14120e; --nuit:#0e1015;
+  --g: 26px;        /* le glyphe à sa taille de carte */
+  --g-ep: 1.8;      /* l'épaisseur du trait */
+  --lueur: 5px;     /* la lueur */
+  --lueur-op: .65;
+  --pt: 3.5px;      /* le point sous le glyphe */
+  --c: oklch(72% .17 262);
+}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+ padding:0 12px 90px;max-width:440px;margin:0 auto}
+h1{font-family:'Caveat',cursive;font-size:30px;font-weight:600;padding-top:22px}
+.sous{opacity:.55;font-size:13px;line-height:1.55;margin-top:4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.55;margin:28px 0 8px}
+.note{font-size:12.5px;opacity:.55;margin:9px 2px 0;line-height:1.55}
+.mono{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.7}
+b{color:#dfe9ff;font-weight:600}
+.neuf{color:#8fe0a8}
+
+.bande{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:var(--nuit);
+ border:1px solid rgba(239,233,216,.08);border-radius:10px;padding:16px 8px 10px}
+.gc{width:100px;display:flex;flex-direction:column;align-items:center;gap:9px;
+ padding-bottom:10px}
+.gz{width:58px;height:58px;display:flex}
+.gr{height:var(--g);display:flex;align-items:center;justify-content:center;
+ padding:0 10px;border-radius:6px;background:rgba(239,233,216,.04)}
+.gr .g8{width:var(--g);height:var(--g);display:flex}
+.gz svg, .gr svg{width:100%;height:100%;fill:none;stroke:var(--c);
+ stroke-linecap:round;stroke-linejoin:round;
+ filter:drop-shadow(0 0 var(--lueur) color-mix(in srgb, var(--c) calc(var(--lueur-op) * 100%), transparent))}
+.gz svg{stroke-width:calc(var(--g-ep) * .78)}
+.gr svg{stroke-width:var(--g-ep)}
+.gn{font-size:10.5px;opacity:.75;text-align:center;line-height:1.35}
+.gn i{font-style:normal;opacity:.5;font-size:9.5px;display:block}
+
+/* la carte, pour juger en situation */
+.carte{position:relative;width:344px;height:180px;border-radius:12px;overflow:hidden;
+ border:1px solid rgba(239,233,216,.09);background:var(--nuit);max-width:100%}
+.tuiles{position:absolute;inset:0}
+.tuiles img{position:absolute;width:256px;height:256px}
+.pin{position:absolute;display:flex;flex-direction:column;align-items:center;
+ transform:translate(-50%, calc(-100% + var(--pt) / 2))}
+.pin svg{width:var(--g);height:var(--g);fill:none;stroke:var(--c);stroke-width:var(--g-ep);
+ stroke-linecap:round;stroke-linejoin:round;
+ filter:drop-shadow(0 0 var(--lueur) color-mix(in srgb, var(--c) calc(var(--lueur-op) * 100%), transparent))}
+.pin i{width:var(--pt);height:var(--pt);border-radius:50%;background:var(--c);
+ margin-top:5px;box-shadow:0 0 6px color-mix(in srgb, var(--c) 75%, transparent)}
+
+.bloc{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:12px 12px 6px;margin-top:10px}
+.ligne{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.ligne label{font-size:12px;width:88px;flex:none;opacity:.8}
+.ligne input[type=range]{flex:1;accent-color:#628ef3;min-width:0}
+.val{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.6;width:46px;
+ flex:none;text-align:right}
+</style></head><body>
+
+<h1>l'atelier des glyphes</h1>
+<p class="sous">En haut de chaque case : la loupe. <b>En bas : la vraie taille</b>,
+celle de la carte. Un glyphe se juge en bas, jamais en haut.</p>
+
+<h2>les dix d'aujourd'hui</h2>
+<div class="bande">
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></i></div>
+    <div class="gn">bar<i>le verre à pied</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/></svg></i></div>
+    <div class="gn">vin<i>la bouteille</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg></i></div>
+    <div class="gn">club<i>la note</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg></i></div>
+    <div class="gn">café<i>la tasse</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/></svg></i></div>
+    <div class="gn">thé<i>la théière — illisible</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg></i></div>
+    <div class="gn">glace<i>le cornet</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/></svg></i></div>
+    <div class="gn">pâtisserie<i>le cupcake</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg></i></div>
+    <div class="gn">street<i>le burger</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg></i></div>
+    <div class="gn">gastro<i>la cloche</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg></i></div>
+    <div class="gn">resto<i>les couverts</i></div></div>
+</div>
+
+<h2>le vin — trois verres <span class="neuf">✳</span></h2>
+<div class="bande">
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7.6 4.6h8.8v3.2a4.4 4.4 0 0 1-8.8 0z"/><path d="M12 12.2v5.8"/><path d="M8.8 19.6h6.4"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7.6 4.6h8.8v3.2a4.4 4.4 0 0 1-8.8 0z"/><path d="M12 12.2v5.8"/><path d="M8.8 19.6h6.4"/></svg></i></div>
+    <div class="gn">V1 · le verre<i>sobre, droit</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M6.6 4.6h10.8v2a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 12v6"/><path d="M8.4 19.6h7.2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M6.6 4.6h10.8v2a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 12v6"/><path d="M8.4 19.6h7.2"/></svg></i></div>
+    <div class="gn">V2 · le ballon<i>large et rond</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M8.4 4.6h7.2c.6 2.4.9 4 .3 5.4a4.6 4.6 0 0 1-7.8 0c-.6-1.4-.3-3 .3-5.4z"/><path d="M12 12.4v5.6"/><path d="M8.8 19.6h6.4"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M8.4 4.6h7.2c.6 2.4.9 4 .3 5.4a4.6 4.6 0 0 1-7.8 0c-.6-1.4-.3-3 .3-5.4z"/><path d="M12 12.4v5.6"/><path d="M8.8 19.6h6.4"/></svg></i></div>
+    <div class="gn">V3 · la tulipe<i>resserrée en haut</i></div></div>
+</div>
+<p class="note">Attention : à 26 px, <b>V1 et le verre du bar se ressemblent</b> —
+même jambe, même socle, seul le bol change (cône contre U). Si le vin devient un
+verre, il faudra peut-être que le bar devienne autre chose. La chope, tiens.</p>
+
+<h2>la bière — la chope <span class="neuf">✳</span></h2>
+<div class="bande">
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M6 9.4h8.6V19a1.6 1.6 0 0 1-1.6 1.6H7.6A1.6 1.6 0 0 1 6 19z"/><path d="M14.6 11.6h1.8a2.3 2.3 0 0 1 0 4.6h-1.8"/><path d="M6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1 2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M6 9.4h8.6V19a1.6 1.6 0 0 1-1.6 1.6H7.6A1.6 1.6 0 0 1 6 19z"/><path d="M14.6 11.6h1.8a2.3 2.3 0 0 1 0 4.6h-1.8"/><path d="M6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1 2"/></svg></i></div>
+    <div class="gn">B1 · la chope<i>anse + mousse</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7.6 9.4h8.8l-1.2 9.8a1.6 1.6 0 0 1-1.6 1.4h-3.2a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M7.6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1.2 2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7.6 9.4h8.8l-1.2 9.8a1.6 1.6 0 0 1-1.6 1.4h-3.2a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M7.6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1.2 2"/></svg></i></div>
+    <div class="gn">B2 · la pinte<i>sans anse</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M6.4 9.6h8.2V19a1.6 1.6 0 0 1-1.6 1.6H8A1.6 1.6 0 0 1 6.4 19z"/><path d="M14.6 11.8h1.8a2.3 2.3 0 0 1 0 4.6h-1.8"/><path d="M6.4 9.6h8.2"/><path d="M8.4 6.6a1.7 1.7 0 0 1 2.6-1.5 2.2 2.2 0 0 1 3.6 1.1"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M6.4 9.6h8.2V19a1.6 1.6 0 0 1-1.6 1.6H8A1.6 1.6 0 0 1 6.4 19z"/><path d="M14.6 11.8h1.8a2.3 2.3 0 0 1 0 4.6h-1.8"/><path d="M6.4 9.6h8.2"/><path d="M8.4 6.6a1.7 1.7 0 0 1 2.6-1.5 2.2 2.2 0 0 1 3.6 1.1"/></svg></i></div>
+    <div class="gn">B3 · la chope<i>mousse détachée</i></div></div>
+</div>
+<p class="note">B3 sépare la mousse du verre par un trait — c'est plus lisible à
+la loupe, mais à 26 px la mousse se décolle et flotte. B1 la garde soudée.</p>
+
+<h2>le thé — trois pistes <span class="neuf">✳</span></h2>
+<div class="bande">
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7.6 8.4h8.8l-1.4 10.4a1.6 1.6 0 0 1-1.6 1.4h-2.8a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M14.8 8.4V5.6h2.4"/><path d="M16 3.4h3.2v3.2H16z"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7.6 8.4h8.8l-1.4 10.4a1.6 1.6 0 0 1-1.6 1.4h-2.8a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M14.8 8.4V5.6h2.4"/><path d="M16 3.4h3.2v3.2H16z"/></svg></i></div>
+    <div class="gn">T1 · le sachet<i>l'étiquette qui pend</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M12 20.4c-.4-6.4 2.4-10 8-11 .6 6.6-2.6 10.2-8 11z"/><path d="M12 20.4c.8-3.2 2.6-5.4 4.6-6.8"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M12 20.4c-.4-6.4 2.4-10 8-11 .6 6.6-2.6 10.2-8 11z"/><path d="M12 20.4c.8-3.2 2.6-5.4 4.6-6.8"/></svg></i></div>
+    <div class="gn">T2 · la feuille<i>simple, mais végétale</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M7.4 10.4h9.2l-1.2 8.6a1.6 1.6 0 0 1-1.6 1.4h-3.6a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M10.4 7.4c-1-1.2-.6-2.2.2-3.2"/><path d="M13.6 7.4c-1-1.2-.6-2.2.2-3.2"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M7.4 10.4h9.2l-1.2 8.6a1.6 1.6 0 0 1-1.6 1.4h-3.6a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M10.4 7.4c-1-1.2-.6-2.2.2-3.2"/><path d="M13.6 7.4c-1-1.2-.6-2.2.2-3.2"/></svg></i></div>
+    <div class="gn">T3 · le verre fumant<i>deux volutes</i></div></div>
+</div>
+<p class="note">T1 est le seul qui ne ressemble à rien d'autre sur la carte :
+l'étiquette carrée au bout de son fil n'existe nulle part ailleurs. T3 est joli
+mais ses volutes sont les premières à mourir quand tu descends en taille.</p>
+
+<h2>la glace — deux boules <span class="neuf">✳</span></h2>
+<div class="bande">
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg></i></div>
+    <div class="gn">G0 · aujourd'hui<i>une boule</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M8.2 11.4h7.6L12 20.6z"/><path d="M8.2 11.4a1.95 1.95 0 0 1 3.8 0a1.95 1.95 0 0 1 3.8 0"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M8.2 11.4h7.6L12 20.6z"/><path d="M8.2 11.4a1.95 1.95 0 0 1 3.8 0a1.95 1.95 0 0 1 3.8 0"/></svg></i></div>
+    <div class="gn">G1 · côte à côte<i>deux bosses</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M8.6 12.6h6.8L12 20.8z"/><path d="M8.6 12.6a3.47 3.47 0 0 1 6.8 0"/><path d="M9.7 9.4a2.35 2.35 0 0 1 4.6 0"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M8.6 12.6h6.8L12 20.8z"/><path d="M8.6 12.6a3.47 3.47 0 0 1 6.8 0"/><path d="M9.7 9.4a2.35 2.35 0 0 1 4.6 0"/></svg></i></div>
+    <div class="gn">G2 · empilées<i>l'une sur l'autre</i></div></div>
+  <div class="gc">
+    <div class="gz"><svg viewBox="0 0 24 24"><path d="M9 12.6h6L12 20.8z"/><path d="M7.8 12.6a2.15 2.15 0 0 1 4.2 0a2.15 2.15 0 0 1 4.2 0"/></svg></div>
+    <div class="gr"><i class="g8"><svg viewBox="0 0 24 24"><path d="M9 12.6h6L12 20.8z"/><path d="M7.8 12.6a2.15 2.15 0 0 1 4.2 0a2.15 2.15 0 0 1 4.2 0"/></svg></i></div>
+    <div class="gn">G3 · débordantes<i>plus larges que le cornet</i></div></div>
+</div>
+<p class="note">G2 (empilées) garde une silhouette étroite — c'est celle qui gêne
+le moins ses voisines sur une carte dense. G1 et G3 s'étalent en largeur : plus
+gourmandes, mais elles prennent de la place. Et à 18 px, regarde si le creux
+entre les deux boules tient encore.</p>
+
+<h2>en situation, sur la carte</h2>
+<div class="carte">
+  <div class="tuiles">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11270.png" style="left:-132.1px;top:-92.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11270.png" style="left:123.9px;top:-92.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11270.png" style="left:379.9px;top:-92.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11271.png" style="left:-132.1px;top:163.9px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11271.png" style="left:123.9px;top:163.9px">
+  </div>
+  <div class="pin" style="left:44px;top:52px"><svg viewBox="0 0 24 24"><path d="M7.6 4.6h8.8v3.2a4.4 4.4 0 0 1-8.8 0z"/><path d="M12 12.2v5.8"/><path d="M8.8 19.6h6.4"/></svg><i></i></div>
+  <div class="pin" style="left:112px;top:38px"><svg viewBox="0 0 24 24"><path d="M6.6 4.6h10.8v2a5.4 5.4 0 0 1-10.8 0z"/><path d="M12 12v6"/><path d="M8.4 19.6h7.2"/></svg><i></i></div>
+  <div class="pin" style="left:180px;top:56px"><svg viewBox="0 0 24 24"><path d="M8.4 4.6h7.2c.6 2.4.9 4 .3 5.4a4.6 4.6 0 0 1-7.8 0c-.6-1.4-.3-3 .3-5.4z"/><path d="M12 12.4v5.6"/><path d="M8.8 19.6h6.4"/></svg><i></i></div>
+  <div class="pin" style="left:250px;top:40px"><svg viewBox="0 0 24 24"><path d="M6 9.4h8.6V19a1.6 1.6 0 0 1-1.6 1.6H7.6A1.6 1.6 0 0 1 6 19z"/><path d="M14.6 11.6h1.8a2.3 2.3 0 0 1 0 4.6h-1.8"/><path d="M6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1 2"/></svg><i></i></div>
+  <div class="pin" style="left:312px;top:60px"><svg viewBox="0 0 24 24"><path d="M7.6 9.4h8.8l-1.2 9.8a1.6 1.6 0 0 1-1.6 1.4h-3.2a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M7.6 9.4a2 2 0 0 1 3-1.8 2.6 2.6 0 0 1 4.6-.2 2 2 0 0 1 1.2 2"/></svg><i></i></div>
+  <div class="pin" style="left:70px;top:140px"><svg viewBox="0 0 24 24"><path d="M7.6 8.4h8.8l-1.4 10.4a1.6 1.6 0 0 1-1.6 1.4h-2.8a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M14.8 8.4V5.6h2.4"/><path d="M16 3.4h3.2v3.2H16z"/></svg><i></i></div>
+  <div class="pin" style="left:150px;top:158px"><svg viewBox="0 0 24 24"><path d="M12 20.4c-.4-6.4 2.4-10 8-11 .6 6.6-2.6 10.2-8 11z"/><path d="M12 20.4c.8-3.2 2.6-5.4 4.6-6.8"/></svg><i></i></div>
+  <div class="pin" style="left:228px;top:146px"><svg viewBox="0 0 24 24"><path d="M7.4 10.4h9.2l-1.2 8.6a1.6 1.6 0 0 1-1.6 1.4h-3.6a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M10.4 7.4c-1-1.2-.6-2.2.2-3.2"/><path d="M13.6 7.4c-1-1.2-.6-2.2.2-3.2"/></svg><i></i></div>
+  <div class="pin" style="left:300px;top:160px"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i></i></div>
+  <div class="pin" style="left:44px;top:104px"><svg viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg><i></i></div>
+  <div class="pin" style="left:118px;top:110px"><svg viewBox="0 0 24 24"><path d="M8.2 11.4h7.6L12 20.6z"/><path d="M8.2 11.4a1.95 1.95 0 0 1 3.8 0a1.95 1.95 0 0 1 3.8 0"/></svg><i></i></div>
+  <div class="pin" style="left:194px;top:104px"><svg viewBox="0 0 24 24"><path d="M8.6 12.6h6.8L12 20.8z"/><path d="M8.6 12.6a3.47 3.47 0 0 1 6.8 0"/><path d="M9.7 9.4a2.35 2.35 0 0 1 4.6 0"/></svg><i></i></div>
+  <div class="pin" style="left:268px;top:112px"><svg viewBox="0 0 24 24"><path d="M9 12.6h6L12 20.8z"/><path d="M7.8 12.6a2.15 2.15 0 0 1 4.2 0a2.15 2.15 0 0 1 4.2 0"/></svg><i></i></div>
+</div>
+<p class="note">Rangée du haut : V1, V2, V3, B1, B2. Rangée du milieu : les
+glaces — G0 (aujourd'hui), G1, G2, G3. Rangée du bas : T1, T2, T3, et le verre
+du bar d'aujourd'hui, pour comparer.</p>
+
+<h2>les réglages</h2>
+<div class="bloc">
+  <div class="ligne"><label>taille</label><input type="range" id="g" data-var="--g" data-u="px" min="14" max="44" step="1" value="26"><span class="val" id="v-g"></span></div>
+  <div class="ligne"><label>épaisseur</label><input type="range" id="g-ep" data-var="--g-ep" data-u="" min="1" max="3" step=".1" value="1.8"><span class="val" id="v-g-ep"></span></div>
+  <div class="ligne"><label>lueur</label><input type="range" id="lueur" data-var="--lueur" data-u="px" min="0" max="14" step="1" value="5"><span class="val" id="v-lueur"></span></div>
+  <div class="ligne"><label>force lueur</label><input type="range" id="lueur-op" data-var="--lueur-op" data-u="" min="0" max="1" step=".05" value=".65"><span class="val" id="v-lueur-op"></span></div>
+</div>
+<p class="note"><b>Descends la taille à 18 px</b> et regarde qui survit. C'est le
+seul test qui compte : la carte dézoomée, c'est là que les glyphes se battent.</p>
+
+<script>
+// Le script ne pose que des variables CSS. La page est complète sans lui.
+try {
+  var racine = document.documentElement
+  var gl = [].slice.call(document.querySelectorAll('input[type=range]'))
+  gl.forEach(function (e) {
+    function poser () {
+      racine.style.setProperty(e.dataset.var, e.value + e.dataset.u)
+      var lu = document.getElementById('v-' + e.id)
+      if (lu) lu.textContent = e.value + (e.dataset.u || '')
+    }
+    poser(); e.addEventListener('input', poser)
+  })
+} catch (err) {}
+</script>
+</body></html>

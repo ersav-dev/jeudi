@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — l'atelier de la grammaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#EFE9D8; --papier:#14120e; --nuit:#0e1015;
+
+  /* ═══ LES RÉGLAGES — ce sont EUX que les glissières bougent ═══
+     Les valeurs ci-dessous sont celles de départ. La page est complète
+     SANS JavaScript : si le script ne tourne pas, tu vois quand même
+     tout, simplement figé. */
+  --g: 26px;          /* le glyphe : sa taille */
+  --g-ep: 1.8;        /* le glyphe : l'épaisseur du trait */
+  --ecart: 5px;       /* l'écart entre le glyphe et le marqueur */
+  --lueur: 5px;       /* la lueur du glyphe */
+  --lueur-op: .65;    /* la lueur du glyphe : sa force */
+
+  --pt: 3.5px;        /* le marqueur ROND — à tester */
+  --fav: 8px;         /* le marqueur CŒUR — favori */
+  --oeil: 11px;       /* le marqueur ŒIL — contour au trait + pupille pleine */
+  --oeil-ep: 2.4;     /* l'œil : l'épaisseur de son contour */
+  --los: 7px;         /* le marqueur LOSANGE — tamponné */
+  --los-ep: 2.6;      /* le losange creux (bof) : l'épaisseur */
+  --halo: 6px;        /* le halo du marqueur */
+  --halo-op: .75;     /* le halo du marqueur : sa force */
+
+  --puls: 1.7;        /* la pulsation « tendance » : son amplitude */
+  --puls-t: 1.6s;     /* la pulsation : sa durée */
+
+  --pale: .38;        /* fermé maintenant : ce qui reste du glyphe */
+  --barre-ep: 2px;    /* archivé : l'épaisseur de la barre */
+  --barre-a: -22deg;  /* archivé : l'angle de la barre */
+
+  --cd: 34px;         /* le cercle (sélectionné) : son diamètre */
+  --c-ep: 2px;        /* le cercle : l'épaisseur du trait */
+  --c-fond: .82;      /* le cercle : l'opacité de son fond */
+  --pointe: 3px;      /* la pointe sous le cercle */
+
+  --tp: 12px;         /* le tampon de douane : sa taille */
+  --tp-angle: -15deg; /* le tampon : son inclinaison */
+
+  /* les trois encres — QUI te l'a dit */
+  --h-moi: 262;   --h-pote: 150;   --h-maison: 32;
+  --c-moi: oklch(72% .17 var(--h-moi));
+  --c-pote: oklch(72% .17 var(--h-pote));
+  --c-maison: oklch(76% .15 var(--h-maison));
+}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+ padding:0 12px 90px;max-width:440px;margin:0 auto}
+h1{font-family:'Caveat',cursive;font-size:30px;font-weight:600;padding-top:22px}
+.sous{opacity:.55;font-size:13px;line-height:1.55;margin-top:4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.55;margin:26px 0 8px}
+h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;opacity:.4;
+ margin:16px 0 2px;font-weight:400}
+.note{font-size:12.5px;opacity:.55;margin:9px 2px 0;line-height:1.55}
+.mono{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.7}
+b{color:#dfe9ff;font-weight:600}
+.neuf{color:#8fe0a8}
+
+/* ── LES TABLEAUX ── */
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+th,td{text-align:left;padding:6px 6px;border-bottom:1px solid rgba(239,233,216,.08);
+ vertical-align:top;line-height:1.4}
+th{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;opacity:.45;font-weight:400}
+td.n{width:20px;opacity:.3;font-family:'JetBrains Mono',monospace;font-size:10px}
+td.k{color:#dfe9ff}
+td.f{opacity:.55}
+
+/* ── LA SCÈNE ── */
+.colle{position:sticky;top:0;z-index:30;background:var(--papier);
+ margin:0 -12px;padding:8px 12px 10px}
+.carte{position:relative;width:344px;height:270px;border-radius:12px;overflow:hidden;
+ border:1px solid rgba(239,233,216,.09);background:var(--nuit);max-width:100%}
+.tuiles{position:absolute;inset:0}
+.tuiles img{position:absolute;width:256px;height:256px}
+.cx{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;z-index:9;display:none}
+.croix-on .cx{display:block}
+.cx::before,.cx::after{content:'';position:absolute;background:rgba(224,90,58,.95)}
+.cx::before{left:4px;top:0;width:1px;height:9px}
+.cx::after{top:4px;left:0;height:1px;width:9px}
+
+/* ══ L'ÉPINGLE ══
+   glyphe nu + UN marqueur dessous. Le marqueur est l'ancre : quelle que
+   soit sa forme, son centre tombe sur le lieu. --m = sa taille courante. */
+.pin{position:absolute;display:flex;flex-direction:column;align-items:center;
+ --m:var(--pt); --encre-pin:var(--c-moi);
+ transform:translate(-50%, calc(-100% + var(--m) / 2))}
+.pin .gl{width:var(--g);height:var(--g);fill:none;stroke:var(--encre-pin);
+ stroke-width:var(--g-ep);stroke-linecap:round;stroke-linejoin:round;
+ filter:drop-shadow(0 0 var(--lueur) color-mix(in srgb, var(--encre-pin) calc(var(--lueur-op) * 100%), transparent));
+ position:relative;z-index:2}
+
+/* le marqueur : une boîte de --m, ronde par défaut */
+.pin .mq{width:var(--m);height:var(--m);border-radius:50%;margin-top:var(--ecart);
+ background:var(--encre-pin);position:relative;z-index:2;
+ box-shadow:0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent)}
+/* … ou un dessin (cœur, losange) : là c'est le SVG qui porte la forme,
+   et le halo passe par drop-shadow — qui suit le DESSIN, pas la boîte */
+.pin .mq svg{display:block;width:100%;height:100%;fill:var(--encre-pin);stroke:none;
+ filter:drop-shadow(0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent))}
+.m-coeur .mq, .m-los .mq{background:none;box-shadow:none}
+.m-coeur{--m:var(--fav)}
+.m-los{--m:var(--los)}
+/* « bof » : le losange se vide */
+.m-los.bof .mq svg{fill:none;stroke:var(--encre-pin);stroke-width:var(--los-ep);
+ stroke-linejoin:round;filter:none}
+/* … sauf si tu ne veux pas distinguer valide de bof */
+body:not(.bof-on) .m-los.bof .mq svg{fill:var(--encre-pin);stroke:none;
+ filter:drop-shadow(0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent))}
+/* et si tu ne veux pas du cœur : le favori redevient un rond */
+body:not(.coeur-on) .m-coeur{--m:var(--pt)}
+body:not(.coeur-on) .m-coeur .mq{background:var(--encre-pin);
+ box-shadow:0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent)}
+body:not(.coeur-on) .m-coeur .mq svg{display:none}
+
+/* ── L'ŒIL : « à tester ». L'amande, pas l'œil complet — à 7 px la
+      pupille se referme. Deux lectures possibles, l'interrupteur tranche :
+      · l'œil sur TOUS les à tester (le défaut passif)
+      · l'œil seulement sur ceux que tu as mis à l'œil à la main (.vise) */
+/* ⚠ il faut .pin devant : sinon `.pin .mq svg` (plus spécifique) rallume
+   l'amande sur TOUS les à tester, même ceux qu'on n'a pas visés */
+.pin .mq .amande{display:none}
+
+/* ── L'ŒIL, deux façons de le dessiner ──
+   par défaut : le contour AU TRAIT + la pupille pleine (le dessin classique)
+   l'autre    : la forme pleine avec la pupille PERCÉE (la carte au travers)
+   --encre-loc laisse chaque contexte (carte, légende) donner sa couleur. */
+.pin{--encre-loc:var(--encre-pin)}
+.lm, .mz, .m8{--encre-loc:var(--c-moi)}
+svg .perce{display:none}
+svg .trait{fill:none;stroke:var(--encre-loc);stroke-width:var(--oeil-ep);
+ stroke-linejoin:round}
+svg .pu{fill:var(--encre-loc);stroke:none}
+body.perce-on svg .perce{display:block;fill:var(--encre-loc);stroke:none}
+body.perce-on svg .trait, body.perce-on svg .pu{display:none}
+.a-tester.vise, body.oeil-tous .a-tester{--m:var(--oeil)}
+.a-tester.vise .mq, body.oeil-tous .a-tester .mq{background:none;box-shadow:none}
+.a-tester.vise .mq .amande, body.oeil-tous .a-tester .mq .amande{display:block}
+
+/* ── QUI te l'a dit : la couleur, rien d'autre ── */
+.pote{--encre-pin:var(--c-pote)}
+.maison{--encre-pin:var(--c-maison)}
+
+/* ── TENDANCE / fraîchement posé : ça PULSE, donc ça se superpose
+      à n'importe quelle forme de marqueur (un cœur garde son cœur) ── */
+@keyframes battre{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(var(--puls))}
+}
+.frais .mq{animation:battre var(--puls-t) ease-in-out infinite}
+/* ta version : le cercle-à-pointe pour la tendance (à comparer) */
+.pointe-on .frais .mq{animation:none}
+.pointe-on .frais .ct{display:block}
+
+/* ── OUVERT / FERMÉ : sur le glyphe ── */
+.ferme .gl{opacity:var(--pale)}
+.ferme .mq{opacity:var(--pale)}
+/* fermé POUR DE BON : on le barre */
+.archive .gl{opacity:.55}
+.archive .mq{opacity:.55}
+.barre{position:absolute;left:50%;top:calc(var(--g) / 2 - var(--barre-ep) / 2);
+ width:calc(var(--g) * 1.2);height:var(--barre-ep);margin-left:calc(var(--g) * -.6);
+ background:var(--encre-pin);border-radius:2px;transform:rotate(var(--barre-a));
+ z-index:3;display:none}
+.archive .barre{display:block}
+
+/* ── LE CERCLE À POINTE : le sélectionné (et la tendance, si tu l'y mets) ── */
+.sel .ct{display:block}
+.ct{display:none;position:absolute;left:50%;top:calc(var(--g) / 2 - var(--cd) / 2);
+ width:var(--cd);height:var(--cd);margin-left:calc(var(--cd) / -2);border-radius:50%;
+ background:rgba(18,20,26,var(--c-fond));border:var(--c-ep) solid var(--encre-pin);
+ box-shadow:0 0 16px color-mix(in srgb, var(--encre-pin) 45%, transparent);z-index:1}
+.ct::after{content:'';position:absolute;left:50%;top:calc(100% - var(--c-ep));
+ width:calc(var(--pointe) * 2);height:var(--pointe);margin-left:calc(var(--pointe) * -1);
+ background:var(--encre-pin);clip-path:polygon(0 0, 100% 0, 50% 100%)}
+
+/* ── PLUSIEURS L'ONT DIT ── */
+.voix .mq{box-shadow:0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent),
+ 0 0 0 calc(var(--m) * .55) color-mix(in srgb, var(--encre-pin) 30%, transparent)}
+.chiffre .voix::after{content:attr(data-n);position:absolute;left:calc(50% + var(--g) * .42);
+ top:calc(var(--g) * .05);font-family:'JetBrains Mono',monospace;font-size:10px;
+ font-weight:700;color:var(--encre-pin);z-index:3}
+.chiffre .voix .mq{box-shadow:0 0 var(--halo) color-mix(in srgb, var(--encre-pin) calc(var(--halo-op) * 100%), transparent)}
+
+/* ── LE TAMPON DE DOUANE — la suite du glyphe, pas un état ── */
+.tp{position:absolute;left:calc(50% + var(--g) * .34);top:calc(var(--g) * .52);
+ padding:1px 4px;border-radius:3px;background:#161816;border:1px solid #bde2ff;
+ color:#fe5da3;font-family:system-ui,sans-serif;font-size:var(--tp);font-weight:700;
+ letter-spacing:.4px;line-height:1.25;transform:rotate(var(--tp-angle));
+ white-space:nowrap;z-index:3;display:none}
+.tampon-on .tp{display:block}
+
+@media (prefers-reduced-motion:reduce){ .frais .mq{animation:none} }
+
+/* ── LA LÉGENDE : tous les signes visibles d'un coup, à leur vraie taille,
+      sans avoir à toucher un interrupteur ── */
+.leg{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:12px 12px 10px;margin-top:6px}
+.li{display:flex;align-items:center;gap:10px;font-size:11.5px;line-height:1.3;
+ min-height:31px;border-bottom:1px solid rgba(239,233,216,.05)}
+.li:last-child{border-bottom:none}
+.lv{width:40px;height:31px;flex:none;position:relative;display:flex;
+ align-items:center;justify-content:center}
+.lm{display:flex}
+.lm svg{width:100%;height:100%;fill:var(--c-moi);stroke:none;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c-moi) 60%, transparent))}
+.lm.creux svg{fill:none;stroke:var(--c-moi);stroke-width:2.6;stroke-linejoin:round;
+ filter:none}
+.lm.rond{border-radius:50%;background:var(--c-moi);
+ box-shadow:0 0 5px color-mix(in srgb, var(--c-moi) 70%, transparent)}
+.lm.large{box-shadow:0 0 5px color-mix(in srgb, var(--c-moi) 70%, transparent),
+ 0 0 0 3px color-mix(in srgb, var(--c-moi) 30%, transparent)}
+.lm.bat{animation:battre var(--puls-t) ease-in-out infinite}
+.lg{width:21px;height:21px;fill:none;stroke:var(--c-moi);stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c-moi) 60%, transparent))}
+.lg.pote{stroke:var(--c-pote)} .lg.maison{stroke:var(--c-maison)}
+.lbar{position:absolute;left:50%;top:50%;width:25px;height:2px;margin:-1px 0 0 -12.5px;
+ background:var(--c-moi);transform:rotate(-22deg);border-radius:2px;z-index:2}
+.lcer{position:absolute;left:50%;top:50%;width:29px;height:29px;margin:-14.5px 0 0 -14.5px;
+ border-radius:50%;border:2px solid var(--c-moi);background:rgba(18,20,26,.82)}
+.lcer::after{content:'';position:absolute;left:50%;top:calc(100% - 2px);width:6px;height:3px;
+ margin-left:-3px;background:var(--c-moi);clip-path:polygon(0 0, 100% 0, 50% 100%)}
+.lt{padding:1px 4px;border-radius:3px;background:#161816;border:1px solid #bde2ff;
+ color:#fe5da3;font-size:10px;font-weight:700;transform:rotate(-15deg)}
+
+/* ── LA PLANCHE DES MARQUEURS : chaque silhouette à la loupe, puis à sa
+      vraie taille, pleine et creuse. C'est la ligne du bas qui décide. ── */
+.marq{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;background:var(--nuit);
+ border:1px solid rgba(239,233,216,.08);border-radius:10px;padding:16px 8px 10px}
+.mc{width:98px;display:flex;flex-direction:column;align-items:center;gap:8px;
+ padding-bottom:8px}
+.mz{width:42px;height:42px;display:flex}
+.mz svg{width:100%;height:100%;fill:var(--c-moi);stroke:none;
+ filter:drop-shadow(0 0 5px color-mix(in srgb, var(--c-moi) 55%, transparent))}
+.mz.creux svg{fill:none;stroke:var(--c-moi);stroke-width:2.2;stroke-linejoin:round;
+ stroke-linecap:round;filter:none}
+.mz .oeil{fill:var(--c-moi);stroke:none}
+.mr{display:flex;gap:12px;align-items:center;justify-content:center;height:16px;
+ padding:3px 8px;border-radius:6px;background:rgba(239,233,216,.04)}
+.mr .m8{width:var(--los);height:var(--los);display:flex}
+.mr .m8 svg{width:100%;height:100%;fill:var(--c-moi);stroke:none;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c-moi) 60%, transparent))}
+.mr .m8.creux svg{fill:none;stroke:var(--c-moi);stroke-width:var(--los-ep);
+ stroke-linejoin:round;stroke-linecap:round;filter:none}
+.mr .m8 .oeil{fill:var(--c-moi);stroke:none}
+.mn{font-size:10.5px;opacity:.72;text-align:center;line-height:1.35}
+.mn i{font-style:normal;opacity:.55;font-size:9.5px}
+
+/* ── LE PANNEAU DE RÉGLAGES ── */
+.bloc{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:12px 12px 6px;margin-top:10px}
+.ligne{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.ligne label{font-size:12px;width:96px;flex:none;opacity:.8}
+.ligne input[type=range]{flex:1;accent-color:#628ef3;min-width:0}
+.val{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.6;width:48px;
+ flex:none;text-align:right}
+.inters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.inters label{font-size:11.5px;padding:5px 9px;border-radius:999px;cursor:pointer;
+ border:1px solid rgba(239,233,216,.16);color:rgba(239,233,216,.62);user-select:none}
+.inters input{position:absolute;opacity:0;pointer-events:none}
+.inters input:checked + label{background:rgba(98,142,243,.22);border-color:#628ef3;color:#dfe9ff}
+.copier{width:100%;margin-top:12px;background:var(--encre);color:var(--papier);border:none;
+ border-radius:8px;padding:11px;font-size:13px;font-weight:600;cursor:pointer}
+.sortie{width:100%;margin-top:8px;height:130px;background:#0b0c10;color:#9fd0ff;
+ border:1px solid rgba(239,233,216,.12);border-radius:8px;padding:9px;
+ font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.5;resize:vertical}
+</style></head><body class="coeur-on bof-on tampon-on">
+
+<h1>l'atelier de la grammaire</h1>
+<p class="sous">Les 21 états, et ce que chacun devient. <b>Bouge les glissières</b>,
+la carte change au-dessus. Quand ça te plaît : « copier mes réglages ».</p>
+
+<h2>les 21 états</h2>
+
+<h3>A · ce que le lieu est</h3>
+<table>
+<tr><td class="n">1</td><td class="k">le type — bar, resto, café</td><td class="f">le glyphe</td></tr>
+<tr><td class="n">2</td><td class="k">la cuisine — ITA, JPN</td><td class="f">le tampon, de près</td></tr>
+</table>
+
+<h3>B · ta relation au lieu</h3>
+<table>
+<tr><td class="n">3</td><td class="k">favori <span class="neuf">✳</span></td><td class="f">le marqueur devient un <b>cœur</b></td></tr>
+<tr><td class="n">4</td><td class="k">à tester — jamais fait</td><td class="f">le marqueur reste <b>rond</b> <i>(le défaut passif)</i></td></tr>
+<tr><td class="n">4b</td><td class="k">mis à l'œil <span class="neuf">✳</span></td><td class="f">l'<b>œil</b> — tu l'as rangé dans ta pile à la main</td></tr>
+<tr><td class="n">5</td><td class="k">tamponné « valide »</td><td class="f">un <b>losange plein</b></td></tr>
+<tr><td class="n">6</td><td class="k">tamponné « bof »</td><td class="f">un <b>losange creux</b></td></tr>
+<tr><td class="n">7</td><td class="k">vu / pas vu dans l'app</td><td class="f">rien sur la carte — ça vit dans le tirage</td></tr>
+<tr><td class="n">8</td><td class="k">ta marque perso</td><td class="f">ton émoji remplace tout</td></tr>
+</table>
+
+<h3>C · ce qui est vrai maintenant</h3>
+<table>
+<tr><td class="n">9</td><td class="k">fermé maintenant</td><td class="f">le glyphe <b>pâlit</b></td></tr>
+<tr><td class="n">10</td><td class="k">fermé pour de bon</td><td class="f">le glyphe est <b>barré</b></td></tr>
+<tr><td class="n">11</td><td class="k">tendance / frais <span class="neuf">✳</span></td><td class="f">le marqueur <b>pulse</b></td></tr>
+<tr><td class="n">12</td><td class="k">événement en cours</td><td class="f">le glyphe devient le ballon</td></tr>
+</table>
+
+<h3>D · qui te l'a dit</h3>
+<table>
+<tr><td class="n">13</td><td class="k">toi</td><td class="f">l'encre « moi »</td></tr>
+<tr><td class="n">14</td><td class="k">un pote</td><td class="f">l'encre « pote »</td></tr>
+<tr><td class="n">15</td><td class="k">un curateur</td><td class="f">l'encre « maison »</td></tr>
+<tr><td class="n">16</td><td class="k">plusieurs l'ont dit</td><td class="f">un halo large <span class="f">(ou le chiffre)</span></td></tr>
+</table>
+
+<h3>E · l'état de ton regard</h3>
+<table>
+<tr><td class="n">17</td><td class="k">sélectionné</td><td class="f">le <b>cercle à pointe</b></td></tr>
+<tr><td class="n">18</td><td class="k">les autres, pendant</td><td class="f">ils s'effacent</td></tr>
+<tr><td class="n">19</td><td class="k">à comparer</td><td class="f">ils restent nets</td></tr>
+<tr><td class="n">20</td><td class="k">plan A / plan B</td><td class="f">l'encre du plan</td></tr>
+<tr><td class="n">21</td><td class="k">qui vient d'être posé</td><td class="f">l'encre se dépose (animation)</td></tr>
+</table>
+
+<h2>la carte</h2>
+<div class="colle">
+<div class="carte croix-on" id="scene">
+  <div class="tuiles">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11270.png" style="left:-132.1px;top:-132.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11271.png" style="left:-132.1px;top:123.9px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11270.png" style="left:123.9px;top:-132.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11271.png" style="left:123.9px;top:123.9px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11270.png" style="left:379.9px;top:-132.1px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11271.png" style="left:379.9px;top:123.9px">
+  </div>
+
+  <!-- 4 · à tester (le défaut passif) -->
+  <div class="pin a-tester" style="left:56px;top:46px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:56px;top:46px"></i>
+
+  <!-- 3 · favori -->
+  <div class="pin m-coeur" style="left:140px;top:36px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg>
+    <i class="mq"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+  <i class="cx" style="left:140px;top:36px"></i>
+
+  <!-- 5 · tamponné « valide » -->
+  <div class="pin m-los" style="left:232px;top:52px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg>
+    <span class="tp">ITA</span>
+    <i class="mq"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+  <i class="cx" style="left:232px;top:52px"></i>
+
+  <!-- 6 · tamponné « bof » -->
+  <div class="pin m-los bof" style="left:308px;top:38px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg>
+    <i class="mq"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+  <i class="cx" style="left:308px;top:38px"></i>
+
+  <!-- 11 · tendance, chez un pote -->
+  <div class="pin pote frais a-tester" style="left:78px;top:126px">
+    <svg class="gl" viewBox="0 0 24 24"><circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/></svg>
+    <div class="ct"></div>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:78px;top:126px"></i>
+
+  <!-- 3 + 11 · LE CAS QUI TRANCHE : favori ET tendance -->
+  <div class="pin pote m-coeur frais" style="left:172px;top:112px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/></svg>
+    <div class="ct"></div>
+    <i class="mq"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+  <i class="cx" style="left:172px;top:112px"></i>
+
+  <!-- 17 · sélectionné -->
+  <div class="pin sel a-tester" style="left:266px;top:140px">
+    <div class="ct"></div>
+    <svg class="gl" viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:266px;top:140px"></i>
+
+  <!-- 9 · fermé maintenant -->
+  <div class="pin ferme a-tester" style="left:44px;top:200px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/></svg>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:44px;top:200px"></i>
+
+  <!-- 10 · fermé pour de bon -->
+  <div class="pin archive a-tester" style="left:126px;top:224px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/></svg>
+    <i class="barre"></i>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:126px;top:224px"></i>
+
+  <!-- 16 · plusieurs l'ont dit, chez un pote -->
+  <div class="pin pote voix a-tester" data-n="3" style="left:206px;top:236px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/></svg>
+    <span class="tp">JPN</span>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:206px;top:236px"></i>
+
+  <!-- 15 · la maison, tamponné valide -->
+  <div class="pin maison m-los" style="left:296px;top:216px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg>
+    <i class="mq"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+  <i class="cx" style="left:296px;top:216px"></i>
+
+  <!-- 15 + 4 · la maison, et celui-là tu l'as MIS À L'ŒIL à la main -->
+  <div class="pin maison a-tester vise" style="left:318px;top:118px">
+    <svg class="gl" viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg>
+    <i class="mq"><svg class="amande" viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+  <i class="cx" style="left:318px;top:118px"></i>
+</div>
+</div>
+<p class="note">L'épingle du milieu à gauche est <b>favorite ET tendance</b> —
+c'est elle qui tranche. Avec la pulsation elle garde son cœur ; bascule
+« la tendance en cercle » et regarde ce que tu perds.</p>
+
+<h2>la légende — tout, d'un coup</h2>
+<div class="leg">
+  <div class="li"><div class="lv"><i class="lm rond" style="width:3.5px;height:3.5px"></i></div>
+    <div>le rond — <b>à tester</b>, tu n'as rien dit</div></div>
+
+  <div class="li"><div class="lv"><i class="lm" style="width:var(--oeil);height:var(--oeil)"><svg viewBox="0 0 24 24"><path class="perce" fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/><path class="trait" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="pu" cx="12" cy="12" r="3.4"/></svg></i></div>
+    <div>l'œil — tu l'as <b>mis à l'œil</b> <span class="mono">contour + pupille</span></div></div>
+
+  <div class="li"><div class="lv"><i class="lm" style="width:var(--fav);height:var(--fav)"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+    <div>le cœur plein — <b>favori</b>, et tu y es allé</div></div>
+
+  <div class="li"><div class="lv"><i class="lm creux" style="width:var(--fav);height:var(--fav)"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+    <div>le cœur creux — <b>favori</b>, pas encore fait <span class="mono">une envie</span></div></div>
+
+  <div class="li"><div class="lv"><i class="lm" style="width:var(--los);height:var(--los)"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+    <div>le losange plein — tamponné <b>valide</b></div></div>
+
+  <div class="li"><div class="lv"><i class="lm creux" style="width:var(--los);height:var(--los)"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+    <div>le losange creux — tamponné <b>bof</b></div></div>
+
+  <div class="li"><div class="lv"><i class="lm rond large" style="width:3.5px;height:3.5px"></i></div>
+    <div>le halo large — <b>plusieurs</b> te l'ont dit</div></div>
+
+  <div class="li"><div class="lv"><i class="lm rond bat" style="width:3.5px;height:3.5px"></i></div>
+    <div>ça bat — <b>tendance</b>, ou fraîchement posé</div></div>
+
+  <div class="li"><div class="lv"><svg class="lg" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>le glyphe — <b>ouvert</b> maintenant</div></div>
+
+  <div class="li"><div class="lv"><svg class="lg" style="opacity:.38" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>le glyphe pâle — <b>fermé</b> ce soir</div></div>
+
+  <div class="li"><div class="lv"><svg class="lg" style="opacity:.55" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i class="lbar"></i></div>
+    <div>le glyphe barré — <b>fermé pour de bon</b></div></div>
+
+  <div class="li"><div class="lv"><i class="lcer"></i><svg class="lg" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>le cercle à pointe — <b>celui que tu regardes</b></div></div>
+
+  <div class="li"><div class="lv"><svg class="lg" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>l'encre bleue — c'est <b>toi</b> qui l'as posé</div></div>
+
+  <div class="li"><div class="lv"><svg class="lg pote" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>l'encre verte — <b>un pote</b> de ton cercle</div></div>
+
+  <div class="li"><div class="lv"><svg class="lg maison" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    <div>l'encre orange — <b>la maison</b>, un curateur</div></div>
+
+  <div class="li"><div class="lv"><span class="lt">ITA</span></div>
+    <div>le tampon — <b>la cuisine</b>, seulement de près</div></div>
+</div>
+<p class="note">Ces tailles suivent les glissières : bouge « œil », « cœur » ou
+« losange » et la légende bouge avec la carte.</p>
+
+<h2>les silhouettes possibles</h2>
+<p class="note">En haut, la loupe. <b>En bas, la vraie taille</b> — plein puis
+creux. C'est la ligne du bas qui décide : si deux silhouettes se ressemblent
+là, elles se ressembleront sur la carte. Les glissières « losange » et
+« losange creux » règlent aussi cette ligne.</p>
+<div class="marq">
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></i></div>
+    <div class="mn">le rond<br><i>à tester</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+    <div class="mn">le cœur<br><i>favori</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></svg></i></div>
+    <div class="mn">le losange<br><i>tamponné</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/></svg></i></div>
+    <div class="mn">l'amande<br><i>l'œil, sans pupille</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/></svg></div>
+    <div class="mr"><i class="m8" style="--los:var(--oeil)"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5zM12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 1 0 0-7.4z"/></svg></i><i class="m8 creux" style="--los:var(--oeil)"><svg viewBox="0 0 24 24"><path d="M12 4.5c5.5 0 10 7.5 10 7.5s-4.5 7.5-10 7.5S2 12 2 12s4.5-7.5 10-7.5z"/><circle class="oeil" cx="12" cy="12" r="3.4"/></svg></i></div>
+    <div class="mn">l'œil<br><i>percé · puis au trait</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M12 21.5c-5.2-5-8.2-7.7-8.2-11.3a8.2 8.2 0 1 1 16.4 0c0 3.6-3 6.3-8.2 11.3z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M12 21.5c-5.2-5-8.2-7.7-8.2-11.3a8.2 8.2 0 1 1 16.4 0c0 3.6-3 6.3-8.2 11.3z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 21.5c-5.2-5-8.2-7.7-8.2-11.3a8.2 8.2 0 1 1 16.4 0c0 3.6-3 6.3-8.2 11.3z"/></svg></i></div>
+    <div class="mn">la goutte<br><i>elle désigne</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M12 21.2 2.8 5.6h18.4z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M12 21.2 2.8 5.6h18.4z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 21.2 2.8 5.6h18.4z"/></svg></i></div>
+    <div class="mn">le triangle<br><i>pointe en bas</i></div></div>
+
+  <div class="mc">
+    <div class="mz"><svg viewBox="0 0 24 24"><path d="M3.8 3.8h16.4v16.4H3.8z"/></svg></div>
+    <div class="mr"><i class="m8"><svg viewBox="0 0 24 24"><path d="M3.8 3.8h16.4v16.4H3.8z"/></svg></i><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M3.8 3.8h16.4v16.4H3.8z"/></svg></i></div>
+    <div class="mn">le carré<br><i>se confond de loin</i></div></div>
+
+  <div class="mc">
+    <div class="mz creux"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg></div>
+    <div class="mr"><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg></i></div>
+    <div class="mn">la croix<br><i>toujours lisible</i></div></div>
+
+  <div class="mc">
+    <div class="mz creux"><svg viewBox="0 0 24 24"><path d="M3 12h18"/></svg></div>
+    <div class="mr"><i class="m8 creux"><svg viewBox="0 0 24 24"><path d="M3 12h18"/></svg></i></div>
+    <div class="mn">la barre<br><i>rayé, écarté</i></div></div>
+
+</div>
+<p class="note"><b>L'étoile n'est pas là</b>, et pour deux raisons : à 7 px ses
+branches se referment en pastille, et tu as posé toi-même la règle
+« jamais d'étoiles » sur la lentille — une étoile, tout le monde lit « note ».</p>
+
+<h2>les interrupteurs</h2>
+<div class="bloc"><div class="inters">
+  <input type="checkbox" id="i-coeur" data-cls="coeur-on" data-cible="body" checked><label for="i-coeur">le cœur pour les favoris</label>
+  <input type="checkbox" id="i-oeil" data-cls="oeil-tous" data-cible="body" checked><label for="i-oeil">l'œil sur TOUS les à tester</label>
+  <input type="checkbox" id="i-perce" data-cls="perce-on" data-cible="body"><label for="i-perce">l'œil plein, pupille percée</label>
+  <input type="checkbox" id="i-bof" data-cls="bof-on" data-cible="body" checked><label for="i-bof">distinguer valide / bof</label>
+  <input type="checkbox" id="i-pointe" data-cls="pointe-on"><label for="i-pointe">la tendance en cercle (ta version)</label>
+  <input type="checkbox" id="i-chiffre" data-cls="chiffre"><label for="i-chiffre">le chiffre au lieu du halo</label>
+  <input type="checkbox" id="i-tampon" data-cls="tampon-on" data-cible="body" checked><label for="i-tampon">les tampons de douane</label>
+  <input type="checkbox" id="i-croix" data-cls="croix-on" checked><label for="i-croix">la croix (la vraie position)</label>
+</div></div>
+
+<h2>le glyphe — <span class="mono">quoi</span></h2>
+<div class="bloc">
+  <div class="ligne"><label>taille</label><input type="range" id="g" data-var="--g" data-u="px" min="16" max="40" step="1" value="26"><span class="val" id="v-g"></span></div>
+  <div class="ligne"><label>épaisseur</label><input type="range" id="g-ep" data-var="--g-ep" data-u="" min="1" max="3" step=".1" value="1.8"><span class="val" id="v-g-ep"></span></div>
+  <div class="ligne"><label>lueur</label><input type="range" id="lueur" data-var="--lueur" data-u="px" min="0" max="14" step="1" value="5"><span class="val" id="v-lueur"></span></div>
+  <div class="ligne"><label>force lueur</label><input type="range" id="lueur-op" data-var="--lueur-op" data-u="" min="0" max="1" step=".05" value=".65"><span class="val" id="v-lueur-op"></span></div>
+</div>
+
+<h2>le marqueur — <span class="mono">ta relation</span></h2>
+<div class="bloc">
+  <div class="ligne"><label>rond</label><input type="range" id="pt" data-var="--pt" data-u="px" min="2" max="9" step=".5" value="3.5"><span class="val" id="v-pt"></span></div>
+  <div class="ligne"><label>cœur</label><input type="range" id="fav" data-var="--fav" data-u="px" min="4" max="16" step=".5" value="8"><span class="val" id="v-fav"></span></div>
+  <div class="ligne"><label>œil</label><input type="range" id="oeil" data-var="--oeil" data-u="px" min="4" max="20" step=".5" value="11"><span class="val" id="v-oeil"></span></div>
+  <div class="ligne"><label>œil, contour</label><input type="range" id="oeil-ep" data-var="--oeil-ep" data-u="" min="1.2" max="4" step=".2" value="2.4"><span class="val" id="v-oeil-ep"></span></div>
+  <div class="ligne"><label>losange</label><input type="range" id="los" data-var="--los" data-u="px" min="4" max="16" step=".5" value="7"><span class="val" id="v-los"></span></div>
+  <div class="ligne"><label>losange creux</label><input type="range" id="los-ep" data-var="--los-ep" data-u="" min="1.4" max="4" step=".2" value="2.6"><span class="val" id="v-los-ep"></span></div>
+  <div class="ligne"><label>écart</label><input type="range" id="ecart" data-var="--ecart" data-u="px" min="0" max="14" step="1" value="5"><span class="val" id="v-ecart"></span></div>
+  <div class="ligne"><label>halo</label><input type="range" id="halo" data-var="--halo" data-u="px" min="0" max="14" step="1" value="6"><span class="val" id="v-halo"></span></div>
+  <div class="ligne"><label>force halo</label><input type="range" id="halo-op" data-var="--halo-op" data-u="" min="0" max="1" step=".05" value=".75"><span class="val" id="v-halo-op"></span></div>
+</div>
+
+<h2>la tendance — <span class="mono">la pulsation</span></h2>
+<div class="bloc">
+  <div class="ligne"><label>amplitude</label><input type="range" id="puls" data-var="--puls" data-u="" min="1" max="3" step=".05" value="1.7"><span class="val" id="v-puls"></span></div>
+  <div class="ligne"><label>durée</label><input type="range" id="puls-t" data-var="--puls-t" data-u="s" min=".6" max="4" step=".1" value="1.6"><span class="val" id="v-puls-t"></span></div>
+</div>
+
+<h2>ouvert / fermé</h2>
+<div class="bloc">
+  <div class="ligne"><label>fermé (pâleur)</label><input type="range" id="pale" data-var="--pale" data-u="" min=".1" max="1" step=".02" value=".38"><span class="val" id="v-pale"></span></div>
+  <div class="ligne"><label>barre</label><input type="range" id="barre-ep" data-var="--barre-ep" data-u="px" min="1" max="5" step=".5" value="2"><span class="val" id="v-barre-ep"></span></div>
+  <div class="ligne"><label>angle barre</label><input type="range" id="barre-a" data-var="--barre-a" data-u="deg" min="-90" max="0" step="1" value="-22"><span class="val" id="v-barre-a"></span></div>
+</div>
+
+<h2>le cercle — <span class="mono">le sélectionné</span></h2>
+<div class="bloc">
+  <div class="ligne"><label>diamètre</label><input type="range" id="cd" data-var="--cd" data-u="px" min="24" max="52" step="1" value="34"><span class="val" id="v-cd"></span></div>
+  <div class="ligne"><label>épaisseur</label><input type="range" id="c-ep" data-var="--c-ep" data-u="px" min="1" max="4" step=".5" value="2"><span class="val" id="v-c-ep"></span></div>
+  <div class="ligne"><label>fond</label><input type="range" id="c-fond" data-var="--c-fond" data-u="" min="0" max="1" step=".02" value=".82"><span class="val" id="v-c-fond"></span></div>
+  <div class="ligne"><label>la pointe</label><input type="range" id="pointe" data-var="--pointe" data-u="px" min="0" max="9" step=".5" value="3"><span class="val" id="v-pointe"></span></div>
+</div>
+
+<h2>les encres — <span class="mono">qui</span></h2>
+<div class="bloc">
+  <div class="ligne"><label>moi</label><input type="range" id="h-moi" data-var="--h-moi" data-u="" min="0" max="360" step="1" value="262"><span class="val" id="v-h-moi"></span></div>
+  <div class="ligne"><label>un pote</label><input type="range" id="h-pote" data-var="--h-pote" data-u="" min="0" max="360" step="1" value="150"><span class="val" id="v-h-pote"></span></div>
+  <div class="ligne"><label>la maison</label><input type="range" id="h-maison" data-var="--h-maison" data-u="" min="0" max="360" step="1" value="32"><span class="val" id="v-h-maison"></span></div>
+</div>
+
+<h2>le tampon de douane</h2>
+<div class="bloc">
+  <div class="ligne"><label>taille</label><input type="range" id="tp" data-var="--tp" data-u="px" min="8" max="16" step=".5" value="12"><span class="val" id="v-tp"></span></div>
+  <div class="ligne"><label>inclinaison</label><input type="range" id="tp-angle" data-var="--tp-angle" data-u="deg" min="-30" max="0" step="1" value="-15"><span class="val" id="v-tp-angle"></span></div>
+</div>
+
+<button class="copier" id="copier">copier mes réglages</button>
+<textarea class="sortie" id="sortie" readonly placeholder="tes réglages apparaîtront ici — colle-les moi tels quels"></textarea>
+<p class="note">Il me reste trois questions : <b>« déjà vu » = le tampon ou vu-dans-l'app</b> ·
+<b>valide et bof, deux signes ou un seul</b> · <b>la tendance, pulsation ou cercle</b>.
+Les interrupteurs sont là pour que tu répondes en regardant.</p>
+
+<script>
+// Le script ne fait qu'UNE chose : recopier la valeur des glissières dans les
+// variables CSS. Si jamais il ne tourne pas, la page reste entièrement
+// dessinée — avec les valeurs de départ du :root et les classes du <body>.
+try {
+  var scene = document.getElementById('scene')
+  // on écrit sur la RACINE, pas sur la scène : comme ça la légende et la
+  // planche des silhouettes bougent en même temps que la carte.
+  var racine = document.documentElement
+  var glissieres = [].slice.call(document.querySelectorAll('input[type=range]'))
+  var inters = [].slice.call(document.querySelectorAll('input[type=checkbox]'))
+
+  function poser (e) {
+    racine.style.setProperty(e.dataset.var, e.value + e.dataset.u)
+    var lu = document.getElementById('v-' + e.id)
+    if (lu) lu.textContent = e.value + (e.dataset.u || '')
+  }
+  function basculer (i) {
+    var cible = i.dataset.cible === 'body' ? document.body : scene
+    cible.classList.toggle(i.dataset.cls, i.checked)
+  }
+
+  glissieres.forEach(function (e) { poser(e); e.addEventListener('input', function () { poser(e) }) })
+  inters.forEach(function (i) { basculer(i); i.addEventListener('change', function () { basculer(i) }) })
+
+  document.getElementById('copier').addEventListener('click', function () {
+    var l = ['/* mes réglages — atelier de la grammaire */']
+    glissieres.forEach(function (e) { l.push('  ' + e.dataset.var + ': ' + e.value + (e.dataset.u || '') + ';') })
+    inters.forEach(function (i) { l.push('  /* ' + i.dataset.cls + ' : ' + (i.checked ? 'oui' : 'non') + ' */') })
+    var t = document.getElementById('sortie')
+    t.value = l.join('\n')
+    t.select()
+    try { document.execCommand('copy') } catch (err) {}
+  })
+} catch (err) {
+  // tant pis pour les glissières : la carte, elle, est déjà dessinée
+}
+</script>
+</body></html>

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — la taille du diamant</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#EFE9D8; --papier:#14120e; --nuit:#0e1015;
+  --c:oklch(72% .17 262); --pote:oklch(72% .17 150);
+  --d:11px;       /* la taille du diamant sur la carte — creux, il lui faut 11 */
+  --ep:2.2;       /* l'épaisseur du trait */
+  --gl:2.5px;     /* sa lueur — courte, sinon elle remplit le vide */
+  --gl-op:.55;    /* la force de sa lueur */
+}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+ padding:0 12px 90px;max-width:440px;margin:0 auto}
+h1{font-family:'Caveat',cursive;font-size:30px;font-weight:600;padding-top:22px}
+.sous{opacity:.55;font-size:13px;line-height:1.55;margin-top:4px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.55;margin:28px 0 8px}
+.note{font-size:12.5px;opacity:.55;margin:9px 2px 0;line-height:1.55}
+.mono{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.7}
+b{color:#dfe9ff;font-weight:600}
+
+.bande{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:14px 10px 8px}
+.li{display:flex;align-items:center;gap:12px;padding:12px 4px;
+ border-bottom:1px solid rgba(239,233,216,.06)}
+.li:last-child{border-bottom:none}
+.zo{width:58px;height:58px;flex:none;display:flex}
+.ec{display:flex;align-items:flex-end;gap:11px;flex:1}
+.s{display:flex}
+.nom{width:88px;flex:none;font-size:11.5px;line-height:1.35}
+.nom em{font-style:normal;opacity:.5;font-size:10px;display:block}
+svg{width:100%;height:100%;fill:var(--c);stroke:none;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c) 60%, transparent))}
+/* creux : la lueur est COURTE. Sur une forme vide, un halo long déborde vers
+   l'intérieur et rebouche le trou — c'est-à-dire tout ce qui fait sa beauté. */
+.creux svg{fill:none;stroke:var(--c);stroke-width:var(--ep);stroke-linejoin:round;
+ filter:drop-shadow(0 0 var(--gl) color-mix(in srgb, var(--c) calc(var(--gl-op) * 100%), transparent))}
+.creux.eteint svg{filter:none}
+.tr{fill:none;stroke:var(--c);stroke-width:1.6}
+.creux .tr{stroke-width:var(--ep)}
+
+.rg{display:flex;gap:16px;align-items:flex-end;justify-content:center;
+ background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:18px 10px 12px;flex-wrap:wrap}
+.cel{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cel .lb{font-size:10px;opacity:.55;font-family:'JetBrains Mono',monospace}
+
+.carte{position:relative;width:344px;height:150px;border-radius:12px;overflow:hidden;
+ border:1px solid rgba(239,233,216,.09);background:var(--nuit);max-width:100%;margin-top:10px}
+.tuiles{position:absolute;inset:0}
+.tuiles img{position:absolute;width:256px;height:256px}
+.pin{position:absolute;display:flex;flex-direction:column;align-items:center;
+ transform:translate(-50%,calc(-100% + var(--h) / 2))}
+.pin .gl{width:26px;height:26px;fill:none;stroke:var(--c);stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round;margin-bottom:5px;
+ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--c) 55%, transparent))}
+.pin .mk{width:var(--h);height:var(--h);display:flex}
+.pin .rond{width:3.5px;height:3.5px;border-radius:50%;background:var(--c);
+ box-shadow:0 0 5px color-mix(in srgb, var(--c) 70%, transparent)}
+.pin.p2{--c:var(--pote)}
+
+.bloc{background:var(--nuit);border:1px solid rgba(239,233,216,.08);border-radius:10px;
+ padding:12px 12px 6px;margin-top:10px}
+.ligne{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.ligne label{font-size:12px;width:84px;flex:none;opacity:.8}
+.ligne input[type=range]{flex:1;accent-color:#628ef3;min-width:0}
+.val{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.6;width:44px;
+ flex:none;text-align:right}
+</style></head><body>
+
+<h1>la taille du diamant</h1>
+<p class="sous">Cinq tailles, au sens du joaillier. À gauche la loupe, à droite
+<b>la vraie taille — 7, 9, 11, 13 px</b>. Un diamant se juge à 9.</p>
+
+<h2>les cinq tailles</h2>
+<div class="bande">
+
+  <div class="li"><div class="zo"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></div>
+    <div class="ec">
+      <i class="s" style="width:7px;height:7px"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i>
+      <i class="s" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i>
+      <i class="s" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i>
+      <i class="s" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h9L19 9l-7 11L5 9z"/></svg></i>
+    </div>
+    <div class="nom">D0 · hier<em>trop pointu</em></div></div>
+
+  <div class="li"><div class="zo"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></div>
+    <div class="ec">
+      <i class="s" style="width:7px;height:7px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i>
+      <i class="s" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i>
+      <i class="s" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i>
+      <i class="s" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i>
+    </div>
+    <div class="nom">D1 · le brillant<em>large, un tiers / deux tiers</em></div></div>
+
+  <div class="li"><div class="zo"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/><path class="tr" d="M3.4 10.2h17.2"/></svg></div>
+    <div class="ec">
+      <i class="s" style="width:7px;height:7px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/><path class="tr" d="M3.4 10.2h17.2"/></svg></i>
+      <i class="s" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/><path class="tr" d="M3.4 10.2h17.2"/></svg></i>
+      <i class="s" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/><path class="tr" d="M3.4 10.2h17.2"/></svg></i>
+      <i class="s" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/><path class="tr" d="M3.4 10.2h17.2"/></svg></i>
+    </div>
+    <div class="nom">D2 · le brillant<em>+ la ligne de rondiste</em></div></div>
+
+  <div class="li"><div class="zo"><svg viewBox="0 0 24 24"><path d="M9 4.4h6l4 4.6-7 12L5 9z"/></svg></div>
+    <div class="ec">
+      <i class="s" style="width:7px;height:7px"><svg viewBox="0 0 24 24"><path d="M9 4.4h6l4 4.6-7 12L5 9z"/></svg></i>
+      <i class="s" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M9 4.4h6l4 4.6-7 12L5 9z"/></svg></i>
+      <i class="s" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M9 4.4h6l4 4.6-7 12L5 9z"/></svg></i>
+      <i class="s" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M9 4.4h6l4 4.6-7 12L5 9z"/></svg></i>
+    </div>
+    <div class="nom">D3 · le taillé haut<em>élégant, mais proche du losange</em></div></div>
+
+  <div class="li"><div class="zo"><svg viewBox="0 0 24 24"><path d="M8.6 3.6h6.8l4.6 4.6v7.6l-4.6 4.6H8.6L4 15.8V8.2z"/></svg></div>
+    <div class="ec">
+      <i class="s" style="width:7px;height:7px"><svg viewBox="0 0 24 24"><path d="M8.6 3.6h6.8l4.6 4.6v7.6l-4.6 4.6H8.6L4 15.8V8.2z"/></svg></i>
+      <i class="s" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M8.6 3.6h6.8l4.6 4.6v7.6l-4.6 4.6H8.6L4 15.8V8.2z"/></svg></i>
+      <i class="s" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M8.6 3.6h6.8l4.6 4.6v7.6l-4.6 4.6H8.6L4 15.8V8.2z"/></svg></i>
+      <i class="s" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M8.6 3.6h6.8l4.6 4.6v7.6l-4.6 4.6H8.6L4 15.8V8.2z"/></svg></i>
+    </div>
+    <div class="nom">D4 · l'émeraude<em>à pans coupés, aucune confusion</em></div></div>
+
+</div>
+<p class="note"><b>D0 est trop pointu</b> : sa pointe fait les deux tiers de sa
+hauteur, il se lit « flèche » avant de se lire « pierre ». D1 remet les
+proportions du joaillier — un tiers de couronne, deux tiers de pavillon — et
+c'est ce tiers/deux-tiers qui fait la pierre.<br>
+<b>D2 ajoute la ligne de rondiste</b>, la seule ligne interne qui vaille : elle
+sépare le haut du bas. Regarde à 7 px si elle tient ou si elle bave.</p>
+
+<h2>creux — et sa lueur</h2>
+<p class="note">Le creux est plus beau parce que l'identité du diamant est dans
+ses <b>angles</b>, pas dans sa masse. Mais la lueur déborde vers l'intérieur :
+trop longue, elle rebouche le vide. Cherche la limite avec les curseurs.</p>
+<div class="rg">
+  <div class="cel"><i class="s creux eteint" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">éteint</span></div>
+  <div class="cel"><i class="s creux" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">réglé</span></div>
+  <div class="cel"><i class="s" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">plein</span></div>
+</div>
+<div class="rg" style="margin-top:8px">
+  <div class="cel"><i class="s creux eteint" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">9 éteint</span></div>
+  <div class="cel"><i class="s creux" style="width:9px;height:9px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">9 réglé</span></div>
+  <div class="cel"><i class="s creux eteint" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">11 éteint</span></div>
+  <div class="cel"><i class="s creux" style="width:11px;height:11px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">11 réglé</span></div>
+  <div class="cel"><i class="s creux" style="width:13px;height:13px"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">13 réglé</span></div>
+</div>
+<p class="note">À <b>9 px le creux se referme</b> — regarde, il n'y a presque
+plus de vide au milieu. À 11 il respire. C'est le prix du creux : une forme vide
+a toujours besoin de plus de place qu'une forme pleine.</p>
+
+<h2>face à ses voisins</h2>
+<div class="rg">
+  <div class="cel"><i class="s creux" style="width:var(--d);height:var(--d)"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i><span class="lb">diamant</span></div>
+  <div class="cel"><i class="s" style="width:8px;height:8px"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i><span class="lb">cœur</span></div>
+  <div class="cel"><i class="s" style="width:10px;height:10px"><svg viewBox="0 0 24 24"><path class="tr" style="stroke-width:2.2" d="M12 3.6a8.4 8.4 0 1 0 0 16.8 8.4 8.4 0 1 0 0-16.8z"/><circle cx="12" cy="12" r="3.4"/></svg></i><span class="lb">cerclé</span></div>
+  <div class="cel"><i class="s" style="width:3.5px;height:3.5px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12"/></svg></i><span class="lb">point</span></div>
+</div>
+<p class="note">C'est ce test qui compte vraiment : est-ce que le diamant se
+distingue du cœur à un mètre ? Ils ont tous les deux une pointe en bas.</p>
+
+<h2>sur la carte</h2>
+<div class="carte">
+  <div class="tuiles">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16598/11270.png" style="left:-132px;top:-72px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16599/11270.png" style="left:124px;top:-72px">
+    <img src="https://a.basemaps.cartocdn.com/dark_all/15/16600/11270.png" style="left:380px;top:-72px">
+  </div>
+  <div class="pin" style="left:52px;top:56px;--h:var(--d)"><svg class="gl" viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i class="mk creux"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i></div>
+  <div class="pin" style="left:122px;top:44px;--h:3.5px"><svg class="gl" viewBox="0 0 24 24"><path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/></svg><i class="rond"></i></div>
+  <div class="pin p2" style="left:190px;top:62px;--h:var(--d)"><svg class="gl" viewBox="0 0 24 24"><path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/></svg><i class="mk creux"><svg viewBox="0 0 24 24"><path d="M8.4 5h7.2l5 5.2-8.6 10.6L3.4 10.2z"/></svg></i></div>
+  <div class="pin" style="left:258px;top:48px;--h:8px"><svg class="gl" viewBox="0 0 24 24"><path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/></svg><i class="mk" style="width:8px;height:8px"><svg viewBox="0 0 24 24"><path d="M12 20.8C12 20.8 3 15.2 3 9.4 3 6.4 5.2 4.4 7.7 4.4c1.9 0 3.5 1.2 4.3 2.6.8-1.4 2.4-2.6 4.3-2.6C18.8 4.4 21 6.4 21 9.4c0 5.8-9 11.4-9 11.4z"/></svg></i></div>
+  <div class="pin" style="left:314px;top:70px;--h:3.5px"><svg class="gl" viewBox="0 0 24 24"><path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/></svg><i class="rond"></i></div>
+</div>
+<p class="note">Deux pépites — une à toi, une d'un pote — au milieu de points et
+d'un cœur.</p>
+
+<h2>les réglages</h2>
+<div class="bloc">
+  <div class="ligne"><label>le diamant</label><input type="range" id="d" data-var="--d" data-u="px" min="5" max="18" step=".5" value="11"><span class="val" id="v-d"></span></div>
+  <div class="ligne"><label>trait</label><input type="range" id="ep" data-var="--ep" data-u="" min="1.2" max="4" step=".2" value="2.2"><span class="val" id="v-ep"></span></div>
+  <div class="ligne"><label>lueur</label><input type="range" id="gl" data-var="--gl" data-u="px" min="0" max="8" step=".5" value="2.5"><span class="val" id="v-gl"></span></div>
+  <div class="ligne"><label>force</label><input type="range" id="gl-op" data-var="--gl-op" data-u="" min="0" max="1" step=".05" value=".55"><span class="val" id="v-gl-op"></span></div>
+</div>
+
+<script>
+// ne pose que des variables CSS — la page est complète sans lui
+try {
+  var r = document.documentElement
+  ;[].slice.call(document.querySelectorAll('input[type=range]')).forEach(function (e) {
+    function p () {
+      r.style.setProperty(e.dataset.var, e.value + e.dataset.u)
+      var l = document.getElementById('v-' + e.id); if (l) l.textContent = e.value + (e.dataset.u || '')
+    }
+    p(); e.addEventListener('input', p)
+  })
+} catch (err) {}
+</script>
+</body></html>

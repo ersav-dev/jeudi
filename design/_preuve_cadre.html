@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>preuve — l'anneau suit la forme de la boîte</title>
+<style>
+/* ═══ RÈGLES COPIÉES MOT POUR MOT DE app/src/index.css ═══ */
+:root{
+  --paper:#14120e; --red:#E05A3A; --vu:#8fb98a;
+  --pin-taille:30px;
+  --pin-fond:rgba(115,115,115,.1);
+  --pin-contour:#628ef3;
+  --pin-contour-ep:2px;
+  --pin-glow:rgba(69,153,232,.6);
+  --pin-glow-blur:16px;
+  --pin-glyphe:#33a7ff;
+}
+/* index.css:1781 — l'épingle d'aujourd'hui */
+.pin{
+  width:var(--pin-taille);
+  height:var(--pin-taille);
+  border-radius:50%;                        /* ← LE ROND EST ICI */
+  background:var(--pin-fond);
+  border:var(--pin-contour-ep) solid var(--pin-contour);
+  box-shadow:0 0 var(--pin-glow-blur) var(--pin-glow);
+}
+/* index.css:1969 — spot validé : un anneau rouge autour du pin */
+.pin-valide{
+  box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--red), 0 1px 0 rgba(0,0,0,.5);
+}
+/* index.css:1963 — spot déjà vu */
+.pin-vu{
+  outline:2px solid var(--vu);
+  outline-offset:2px;
+  opacity:.8;
+}
+/* index.css:1973 — le pin sélectionné */
+.pin-actif{
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--red) 30%, transparent), 0 1px 0 rgba(0,0,0,.5);
+}
+/* index.css:1872 — badge compteur de voix */
+.pin-badge{
+  position:absolute; top:-7px; right:-7px;
+  min-width:15px; height:15px; padding:0 3px;
+  border-radius:3px; background:var(--red); color:#fff;
+  font-family:monospace; font-size:11px; font-weight:700;
+  line-height:15px; text-align:center; border:1px solid var(--paper);
+}
+/* ═══ FIN DES RÈGLES COPIÉES ═══ */
+
+/* la SEULE différence : on enlève le rond (pas de fond, pas de bordure,
+   pas de border-radius) — exactement ce que fait le « glyphe nu » */
+.nu{ border-radius:0; background:none; border:none; width:26px; height:26px }
+
+*{margin:0;box-sizing:border-box}
+body{background:#14120e;color:#EFE9D8;font-family:system-ui,sans-serif;
+ padding:26px 16px 60px;max-width:460px;margin:0 auto}
+h1{font-size:19px;font-weight:600}
+p{font-size:13px;opacity:.6;line-height:1.55;margin-top:6px}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.col{background:#0e1015;border:1px solid rgba(239,233,216,.09);border-radius:12px;
+ padding:16px 10px 12px;text-align:center}
+.tt{font-size:12px;text-transform:uppercase;letter-spacing:.1em;opacity:.5;
+ margin-bottom:18px}
+.cel{display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:26px}
+.zn{height:52px;display:flex;align-items:center;justify-content:center}
+.et{font-size:11.5px;opacity:.75}
+.pin{position:relative;display:flex;align-items:center;justify-content:center;flex:none}
+.pin svg{width:85%;height:85%;fill:none;stroke:var(--pin-glyphe);stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round;
+ filter:drop-shadow(0 0 5px rgba(51,167,255,.65))}
+.nu svg{width:100%;height:100%}
+</style></head><body>
+<h1>La preuve, en direct</h1>
+<p>Les règles CSS ci-dessous sont <b>copiées mot pour mot</b> de
+<code>app/src/index.css</code> (lignes 1781, 1963, 1969, 1973, 1872).
+La colonne de droite est identique — <b>on a juste enlevé le rond</b>
+(pas de fond, pas de bordure, pas de <code>border-radius</code>).
+Personne n'a dessiné de carré : c'est le navigateur qui trace le contour
+autour de la boîte de l'élément.</p>
+
+<div class="grille">
+  <div class="col">
+    <div class="tt">avec le rond</div>
+    <div class="cel"><div class="zn">
+      <div class="pin pin-valide"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">validé</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin pin-vu"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">déjà vu</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin pin-actif"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">sélectionné</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i class="pin-badge">3</i></div>
+    </div><div class="et">3 voix</div></div>
+  </div>
+
+  <div class="col">
+    <div class="tt">sans le rond</div>
+    <div class="cel"><div class="zn">
+      <div class="pin nu pin-valide"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">validé</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin nu pin-vu"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">déjà vu</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin nu pin-actif"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg></div>
+    </div><div class="et">sélectionné</div></div>
+    <div class="cel"><div class="zn">
+      <div class="pin nu"><svg viewBox="0 0 24 24"><path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/></svg><i class="pin-badge">3</i></div>
+    </div><div class="et">3 voix</div></div>
+  </div>
+</div>
+</body></html>

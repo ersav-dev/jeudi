@@ -661,6 +661,9 @@ const EN: Record<string, string> = {
 
   // Toasts / communs
   'nouvelle version.': 'new version.',
+  'forcer la mise à jour': 'force the update',
+  'vide le cache des fichiers — tes lieux ne bougent pas':
+    'clears the file cache — your places stay put',
   'recharger': 'reload',
   'archivé.': 'archived.',
   'annuler': 'undo',

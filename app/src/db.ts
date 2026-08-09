@@ -176,6 +176,28 @@ export interface Lieu {
   /** la propreté des WC, de 1 à 3. LE SEUL "score" chiffré autorisé par le
    *  concept (on juge un lieu à ses toilettes). jamais d'étoiles sur le reste. */
   propreteWc?: 1 | 2 | 3
+
+  // ════════════════════════════════════════════════════════════════
+  // ⚠ LES TROIS SIGNES QUI NE SONT ENCORE RELIÉS À RIEN (09/08/2026)
+  //
+  // La grammaire de la carte (design/dictionnaire_carte_001.html) prévoit
+  // six marqueurs. Trois sont dessinés dans Carte.tsx et stylés dans
+  // index.css, mais AUCUN GESTE NE LES ÉCRIT : pas d'UI pour les poser,
+  // pas de colonne en base, pas de synchro Supabase. Ils restent donc
+  // toujours undefined, et les signes ne s'allument jamais.
+  //
+  // C'est volontaire : le dessin est prêt, le geste viendra. Le jour où
+  // on fait leur écran + leur migration, ils s'allument tout seuls.
+  //
+  //   favori  ♥/♡  pour toi — plein si tu y es allé (tampon), creux sinon
+  //   pepite  ◇    pour les autres — la trouvaille que tu donnes au cercle
+  //   raye    ✕    tu as été déçu et tu préviens ton cercle. Coûte la
+  //                suppression du lieu. Ne se compte JAMAIS. Tient
+  //                jusqu'au jeudi suivant (d'où `expire`).
+  // ════════════════════════════════════════════════════════════════
+  favori?: boolean
+  pepite?: boolean
+  raye?: { qui: string; expire: string; motif?: string }
 }
 
 export interface Profil {

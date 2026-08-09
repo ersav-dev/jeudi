@@ -669,6 +669,19 @@ function Reglages({
         <span className="reglages-chevron">{lireLangue() === 'fr' ? 'EN' : 'FR'}</span>
       </button>
 
+      {/* FORCER LA MISE À JOUR — le filet quand l'app s'entête à resservir une
+          vieille version (surtout sur iOS depuis l'écran d'accueil). Vide le
+          cache des FICHIERS et recharge ; tes lieux et tes réglages ne bougent
+          pas (cf. le détail dans main.tsx). */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        onClick={() => window.dispatchEvent(new Event('jeudi:forcer-maj'))}
+        title={t('vide le cache des fichiers — tes lieux ne bougent pas')}
+      >
+        {t('forcer la mise à jour')}
+        <span className="reglages-chevron">↻</span>
+      </button>
+
       {/* OÙ TU ES (location-native : le centre suit ton GPS) */}
       <button
         className="mono reglages-section reglages-toggle"
