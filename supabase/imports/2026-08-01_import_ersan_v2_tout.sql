@@ -3,10 +3,74 @@
 -- vrai compte d'Ersan : ses 81 spots Google + 129 curated + 96 extra
 -- + le décor public — visibilité PUBLIQUE (la RLS les sert à tous les
 -- inscrits, signés du fondateur). Les fausses voix (« Karim, éclaireur
--- du 10e »…) ne sont PAS reprises. Dédoublonné par nom. Remplace
--- l'import v1 (les spots posés en 'cercle' par v1 passent en 'public').
+-- du 10e »…) ne sont PAS reprises. Remplace l'import v1 (les spots
+-- posés en 'cercle' par v1 passent en 'public').
 -- À coller dans Supabase → SQL Editor → Run.
+--
+-- ── CORRIGÉ LE 09/08/2026 (voir supabase/migrations/0016_purge_doublons.sql
+-- pour le nettoyage des doublons déjà versés) : le dédoublonnage se
+-- faisait par nom EXACT (`lower(nom) = lower(nom)`), ce qui a laissé
+-- passer 8 doublons (« Harry's Bar Paris » / « Harry's New York Bar »,
+-- « Bisou. » / « Bisou »…). On dédoublonne désormais par la MÊME règle
+-- que la lecture côté app (app/src/doublons.ts, memeLieu()) : nom
+-- normalisé (accents/ponctuation/casse ignorés) + garde de distance —
+-- jamais sur la seule proximité (deux péniches voisines au même point
+-- géocodé restent deux lieux si leurs noms ne se répondent pas).
 -- ════════════════════════════════════════════════════════════════
+
+-- ── copie fidèle de app/src/doublons.ts, scoped à la session ───────
+create or replace function pg_temp.normaliser_nom(p text) returns text
+language sql immutable as $$
+  select trim(regexp_replace(
+    translate(lower(coalesce(p, '')),
+      'àâäáãåèéêëìíîïòóôöõùúûüçñýÿ',
+      'aaaaaaeeeeiiiiooooouuuucnyy'),
+    '[^a-z0-9]+', ' ', 'g'
+  ))
+$$;
+
+create or replace function pg_temp.distance_m(
+  lat1 double precision, lng1 double precision,
+  lat2 double precision, lng2 double precision
+) returns double precision
+language sql immutable as $$
+  select 2 * 6371000 * asin(least(1, sqrt(
+    sin(radians(lat2 - lat1) / 2) ^ 2 +
+    cos(radians(lat1)) * cos(radians(lat2)) * sin(radians(lng2 - lng1) / 2) ^ 2
+  )))
+$$;
+
+create or replace function pg_temp.mots_forts(p text) returns text[]
+language sql immutable as $$
+  select coalesce(array_agg(distinct mot), '{}')
+  from unnest(string_to_array(p, ' ')) as mot
+  where length(mot) >= 4
+    and mot not in ('paris','bar','club','cafe','restaurant','resto','brasserie',
+                     'bistro','bistrot','chez','maison','grand','grande','petit',
+                     'petite','nouveau','nouvelle','france','french','house')
+$$;
+
+-- même nom normalisé (≤200 m) OU quasi même point + mot fort commun
+-- (≤15 m) — jamais la seule proximité (voir doublons.ts pour le détail)
+create or replace function pg_temp.meme_lieu(
+  nom_a text, lat_a double precision, lng_a double precision,
+  nom_b text, lat_b double precision, lng_b double precision
+) returns boolean
+language sql immutable as $$
+  select case
+    when lat_a is null or lng_a is null or lat_b is null or lng_b is null then false
+    when pg_temp.distance_m(lat_a, lng_a, lat_b, lng_b) > 200 then false
+    when pg_temp.normaliser_nom(nom_a) = '' or pg_temp.normaliser_nom(nom_b) = '' then false
+    when pg_temp.normaliser_nom(nom_a) = pg_temp.normaliser_nom(nom_b) then true
+    when pg_temp.distance_m(lat_a, lng_a, lat_b, lng_b) > 15 then false
+    else exists (
+      select 1
+      from unnest(pg_temp.mots_forts(pg_temp.normaliser_nom(nom_a))) fa
+      where fa = any(pg_temp.mots_forts(pg_temp.normaliser_nom(nom_b)))
+    )
+  end
+$$;
+
 with moi as (
   select id from public.profils
   where lower(prenom) = 'ersan'
@@ -330,16 +394,18 @@ inseres as (
   where not exists (
     select 1 from public.lieux l
     where l.owner_id = (select id from moi)
-      and lower(l.nom) = lower(d.nom)
+      and pg_temp.meme_lieu(l.nom, l.lat, l.lng, d.nom, d.lat, d.lng)
   )
   returning id
 )
 -- v1 -> v2 : les spots du fond deja importes en 'cercle' passent publics
+-- (même règle memeLieu : elle inclut l'égalité de nom normalisé, donc
+-- couvre toujours le cas exact d'origine, en plus des quasi-doublons)
 update public.lieux l
 set visibilite = 'public'
 from donnees d, moi
 where l.owner_id = moi.id
-  and lower(l.nom) = lower(d.nom)
+  and pg_temp.meme_lieu(l.nom, l.lat, l.lng, d.nom, d.lat, d.lng)
   and l.visibilite = 'cercle';
 
 -- controle : le total du carnet d'ersan

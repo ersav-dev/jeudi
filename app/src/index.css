@@ -4496,6 +4496,17 @@ button {
   letter-spacing: 0.3px;
   margin: 12px 2px 0;
 }
+/* la rayure, dite sur la fiche : une croix, un nom, une phrase. Jamais un
+   compteur — la cire suffit à dire que ça compte. */
+.fiche-raye {
+  margin: 10px 2px 0;
+  color: var(--cire-claire);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.fiche-raye-croix {
+  font-weight: 700;
+}
 /* signe « agrandir » (sans texte) posé en bas-droite du tirage, sur le blanc */
 .photo-agrandir {
   position: absolute;
@@ -8066,14 +8077,15 @@ button {
   height: 11px;
 }
 /* le cartouche suit sa vignette dans le relais — un nom en pleine encre
- * sous un timbre effacé se lirait comme une étiquette orpheline */
-.vg-retrait .monument-etq {
-  height: 11px;
-  opacity: 0.7;
-}
+ * sous un timbre effacé se lirait comme une étiquette orpheline.
+ * Depuis 09/08, le cartouche reste À PRÉSENCE CONSTANTE : c'est la gravure
+ * qui monte quand on s'approche, le texte ne pâlit pas durant le zoom. */
+/* …et il ne rapetisse pas non plus : la hauteur reste celle de la base.
+ * L'opacite figee ne suffisait pas — un nom qui retrecit pendant que sa
+ * gravure grandit, c'est la meme incoherence, dite autrement. */
+.vg-retrait .monument-etq,
 .vg-timbre .monument-etq {
-  height: 10px;
-  opacity: 0.5;
+  opacity: 0.92;
 }
 .vg-retrait.repere-vignette .monument-etq,
 .vg-timbre.repere-vignette .monument-etq {
@@ -8217,10 +8229,16 @@ button {
   gap: 1px;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--encre);
+  /* Discrétion : redescendue au niveau des noms de station en filigrane.
+     Avant d'être crayonnées, les bouches devaient attirer l'œil ; désormais
+     c'est l'épingle (nue) qui lit EN PREMIER, les repères suivent. */
+  opacity: 0.3;
   pointer-events: none;
   /* même étage que les étiquettes de station (pile : .monument-repere) */
   z-index: 1;
-  text-shadow: 0 0 3px rgba(11, 26, 58, 0.9), 0 0 6px rgba(11, 26, 58, 0.55);
+  /* Halo adouci : les bouches du métro ne sont pas le texte de station,
+     mais relèvent du même étage discret. Quand on les cherche, on les voit. */
+  text-shadow: 0 0 3px rgba(11, 26, 58, 0.7), 0 0 6px rgba(11, 26, 58, 0.35);
 }
 .bouche-metro-tete {
   display: inline-flex;
@@ -9362,6 +9380,50 @@ button:focus:not(:focus-visible) {
   color: var(--encre-2);
 }
 .corriger-arracher .corriger-actions {
+  margin-top: 8px;
+}
+/* les heures : deux molettes natives côte à côte (sur téléphone, la roue du
+   système — 48 crans au pouce sans une ligne de JS) */
+.corriger-heures {
+  display: flex;
+  gap: 8px;
+}
+.corriger-heure {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--encre-3);
+}
+.corriger-heure-mot {
+  font-size: 10px;
+}
+.corriger-molette {
+  width: 100%;
+  color-scheme: dark;
+  background: rgba(239, 233, 216, 0.06);
+  border: 1px solid color-mix(in srgb, var(--graphite) 34%, transparent);
+  border-radius: var(--rayon);
+  color: var(--encre);
+  font-size: 12px;
+  padding: 7px 8px;
+}
+/* RAYER : sous « arracher la page », son propre filet. Même cire — les deux
+   seuls gestes du panneau qui coûtent quelque chose. */
+.corriger-rayer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--graphite) 30%, transparent);
+}
+.corriger-raye-etat {
+  margin: 0;
+  color: var(--cire-claire);
+}
+.corriger-raye-motif {
+  margin: 4px 0 6px;
+  color: var(--encre-2);
+}
+.corriger-motif {
   margin-top: 8px;
 }
 /* « à la main » : la troisième voie, sous les deux imports. Même page que

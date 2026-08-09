@@ -102,7 +102,12 @@ import {
   ecrireComparer,
   viderComparer,
   lireFavoris,
-  basculerFavori,
+  basculerFavoriLieu,
+  // la rayure (0015) : le serment, son repentir, et le balayage du jeudi
+  lireRayures,
+  rayerLieu,
+  deRayerLieu,
+  balayerRayures,
   ageDepuis,
   nouvelId,
   sortiesEnAttente,
@@ -1349,7 +1354,15 @@ export default function App() {
       chargerCercle()
     importerSeed().then(() => {
       jalonner('seed')
-      recharger().then(() => jalonner('spots'))
+      // le prix de la rayure, payé au réveil : les serments dont le jeudi est
+      // tombé emportent leur lieu. Une fois par lancement, jamais en
+      // minuterie — jeudi bat une fois par semaine, pas à la seconde.
+      balayerRayures()
+        .catch(() => {
+          /* balayage impossible (hors-ligne…) : le prochain lancement réessaie */
+        })
+        .then(() => recharger())
+        .then(() => jalonner('spots'))
       // UNE lecture du stockage : ensuite l'état fait foi (sorties = la cloche,
       // attente = la file de validation ouverte)
       const a = sortiesEnAttente()
@@ -1501,14 +1514,49 @@ export default function App() {
     setFlash(`${l.nom} ajouté à ta carte. à toi de le tamponner.`)
   }
 
-  // poser/retirer le signet (favori) — pas une note, juste « je le garde »
-  const basculerFav = (l: Lieu) => {
-    setFavoris(basculerFavori(l.id))
+  // ── LA CARTE SUIT LES GESTES (09/08) ──
+  // Carte.tsx refait tous ses pins dès que le tableau `lieux` change
+  // d'identité (effet `[lieux]`). Un geste posé depuis la fiche doit donc
+  // remplacer le lieu touché dans l'état — pas relire tout le cloud pour un
+  // cœur : la donnée est déjà là, on la corrige sur place et le marqueur
+  // s'allume à la fermeture de la fiche.
+  const rafraichirCarte = (id: string, patch: (l: Lieu) => Lieu = (l) => ({ ...l })) => {
+    setLieux((ls) => ls.map((x) => (x.id === id ? patch(x) : x)))
   }
 
-  // poser/retirer le spot de la pile « à tester » (rature de la règle)
+  // poser/retirer le signet (favori) — pas une note, juste « je le garde ».
+  // Local d'abord (la liste), puis la colonne `favori` de MES spots (0015) :
+  // c'est elle que la carte lit pour dessiner son cœur.
+  const basculerFav = (l: Lieu) => {
+    const pose = !favoris.includes(l.id)
+    setFavoris(pose ? [...favoris, l.id] : favoris.filter((x) => x !== l.id))
+    rafraichirCarte(l.id, (x) => ({ ...x, favori: pose || undefined }))
+    void basculerFavoriLieu(l).then(setFavoris)
+  }
+
+  // poser/retirer le spot de la pile « à tester » (rature de la règle).
+  // L'œil de la carte se lit directement dans `jeudi-a-tester` (Carte.tsx) :
+  // il suffit que le pin soit refait, d'où le coup de rafraîchirCarte.
   const basculerPile = (l: Lieu) => {
     setRatures(basculerATester(l))
+    rafraichirCarte(l.id)
+  }
+
+  // ── RAYER : le serment (0015). On signe de son prénom, la date tombe au
+  // jeudi suivant (rayure.ts), la croix s'allume tout de suite sur la carte
+  // et la ligne part vers le cercle — ou attend le réseau dans la file.
+  const rayerDepuisFiche = async (l: Lieu, motif: string) => {
+    const r = await rayerLieu(l.id, prenom || 'toi', motif)
+    rafraichirCarte(l.id, (x) => ({ ...x, raye: r }))
+    setFlash('rayé. il part de ton carnet jeudi — tu peux te dédire d’ici là.')
+    return r
+  }
+
+  // se dédire avant le jeudi : le lieu revient intact, la ligne s'efface
+  const deRayerDepuisFiche = async (l: Lieu) => {
+    await deRayerLieu(l.id)
+    rafraichirCarte(l.id, (x) => ({ ...x, raye: undefined }))
+    setFlash('rayure effacée. il reste dans ton carnet.')
   }
 
   const signaler = async (l: Lieu) => {
@@ -2697,6 +2745,8 @@ export default function App() {
           aTester={estATester(fiche, ratures)}
           onATester={() => basculerPile(fiche)}
           onSupprimer={supprimerDepuisFiche}
+          onRayer={rayerDepuisFiche}
+          onDeRayer={deRayerDepuisFiche}
           onNaviguer={naviguerFiche}
           onFermer={() => {
             setFiche(null)
@@ -3477,6 +3527,8 @@ function Fiche({
   aTester,
   onATester,
   onSupprimer,
+  onRayer,
+  onDeRayer,
 }: {
   lieu: Lieu
   liste: Lieu[]
@@ -3501,6 +3553,10 @@ function Fiche({
   onATester: () => void
   /** arracher la page : l'écran efface, refait l'index et referme la fiche */
   onSupprimer: (l: Lieu) => Promise<void>
+  /** rayer / se dédire : l'écran écrit (local + cercle) et rallume la carte ;
+   *  la fiche récupère la rayure posée pour se remettre à jour sans relire */
+  onRayer: (l: Lieu, motif: string) => Promise<Lieu['raye']>
+  onDeRayer: (l: Lieu) => Promise<void>
 }) {
   const [lieu, setLieu] = useState(lieuInitial)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -3550,6 +3606,10 @@ function Fiche({
   const [correction, setCorrection] = useState(false)
   const dist = distanceM(lieu)
   const horaire = etatHoraire(lieu.horaires)
+  // la croix posée sur ce lieu est-elle LA MIENNE ? Le carnet local ne tient
+  // que mes serments ; celle d'un pote arrive du cloud et ne s'y trouve pas —
+  // elle se lit, elle ne se décroche pas.
+  const maRayure = useMemo(() => !!lieu.raye && !!lireRayures()[lieu.id], [lieu.id, lieu.raye])
   // la date gravée sur la couverture : celle de la PHOTO regardée (prise_le,
   // migration 0010) — sinon la dernière validation du lieu, sinon rien
   const dateGravee = (() => {
@@ -3988,6 +4048,20 @@ function Fiche({
         </p>
       )}
 
+      {/* LA CROIX, dite en toutes lettres (09/08) — jamais un compteur, jamais
+          un anonyme : un nom, et la phrase qui explique. C'est tout le signal.
+          Elle vaut aussi pour la rayure d'un pote (elle arrive du cercle). */}
+      {lieu.raye && (
+        <p className="mono fiche-raye">
+          <span className="fiche-raye-croix" aria-hidden>
+            ✕
+          </span>{' '}
+          {t('rayé par')} {lieu.raye.qui.toLowerCase()}
+          {lieu.raye.motif ? ` — « ${lieu.raye.motif} »` : ''}
+          {maRayure ? ` · ${t('il part de ton carnet jeudi.')}` : ''}
+        </p>
+      )}
+
       {/* le crayon (08/08) : mon spot, mon écriture — l'import a pu se
           tromper de nom, de rue, de famille. On reprend, on ne subit pas. */}
       {mien && !correction && (
@@ -4007,6 +4081,14 @@ function Fiche({
           archive={lieu.statut === 'archive'}
           onArchive={() => void basculerArchive()}
           onSupprimer={() => onSupprimer(lieu)}
+          onRayer={async (motif) => {
+            setLieu({ ...lieu, raye: await onRayer(lieu, motif) })
+          }}
+          onDeRayer={async () => {
+            await onDeRayer(lieu)
+            setLieu({ ...lieu, raye: undefined })
+          }}
+          maRayure={maRayure}
         />
       )}
 

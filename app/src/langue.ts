@@ -380,6 +380,39 @@ const EN: Record<string, string> = {
   'effacé ici — on finit le ménage au retour du réseau.':
     'gone from here — we’ll finish tidying when you’re back online.',
 
+  // les heures d'ouverture (09/08) — le champ qui fait parler la carte
+  'ça ouvre quand ?': 'when is it open?',
+  'ouvre à': 'opens at',
+  'ferme à': 'closes at',
+  'heure d’ouverture': 'opening time',
+  'heure de fermeture': 'closing time',
+  'je sais pas': 'no idea',
+  'minuit': 'midnight',
+  '(après minuit)': '(after midnight)',
+  'la carte le laissera en demi-encre : elle ne peut pas trancher.':
+    'the map will leave it half-inked: it can’t tell either way.',
+  'la carte saura l’encrer : plein quand c’est ouvert, pâle quand c’est fermé.':
+    'the map will know how to ink it: full when open, pale when closed.',
+  'sans heures, il restera en demi-encre sur la carte — ni ouvert, ni fermé.':
+    'with no hours it stays half-inked on the map — neither open nor closed.',
+
+  // rayer (09/08) — le seul signal négatif, et le plus cher
+  'rayer — et le dire à ton cercle': 'cross it out — and tell your circle',
+  'rayer, c’est un serment : il quitte ton carnet jeudi. jusque-là tu peux te dédire.':
+    'crossing out is an oath: it leaves your notebook on Thursday. until then you can take it back.',
+  'ça reste dans ton cercle, signé de ton nom. ça ne se compte jamais.':
+    'it stays in your circle, signed with your name. it is never counted.',
+  'trois quarts d’heure pour deux bières': 'forty-five minutes for two beers',
+  'pourquoi ?': 'why?',
+  'non, laisse': 'no, leave it',
+  'on raye…': 'crossing out…',
+  'oui, je raye': 'yes, cross it out',
+  'rayé par': 'crossed out by',
+  'il part jeudi.': 'it goes on Thursday.',
+  'il part de ton carnet jeudi.': 'it leaves your notebook on Thursday.',
+  'j’ai changé d’avis': 'I changed my mind',
+  'on efface…': 'erasing…',
+
   // La carte de membre
   'partage ton carnet en story →': 'share your notebook as a story →',
   'ton lien d’invitation est copié — colle-le en sticker sur ta story.': 'your invite link is copied — paste it as a sticker on your story.',

@@ -4,6 +4,16 @@ import { adresseDepuis } from './nominatim'
 import { fusionnerTips } from './tips'
 import { lireMarques } from './marques'
 import { lireATester, CLE_A_TESTER } from './aTester'
+import { lireFavoris, basculerFavori, marquerFavoris, CLE_FAVORIS } from './favoris'
+import {
+  rayer,
+  deRayer,
+  lireRayures,
+  marquerRayures,
+  rayuresExpirees,
+  CLE_RAYURES,
+  type Rayure,
+} from './rayure'
 import { extensionClip, normaliserReglages, type ReglagesRendu } from './super8'
 import { dedoublonner } from './doublons'
 // `import type` seulement : takeout.ts traîne fflate (5,5 ko de dézippage)
@@ -332,6 +342,12 @@ interface LigneLieu {
   derniere_validation: string | null
   recos?: string[] | null
   etiquettes?: string[] | null
+  /** migration 0015 : les deux drapeaux de la carte. `favori` est pour TOI
+   *  (le cœur sur ta propre carte), `pepite` est pour les AUTRES (le diamant
+   *  que tu tends à ton cercle). Optionnels ici comme recos : une base pas
+   *  encore migrée ne doit pas casser l'écriture. */
+  favori?: boolean | null
+  pepite?: boolean | null
   cree_le: string
 }
 function ligneVersLieu(r: LigneLieu): Lieu {
@@ -367,6 +383,11 @@ function ligneVersLieu(r: LigneLieu): Lieu {
     recos: Array.isArray(r.recos) ? r.recos : undefined,
     // colonne créée par la migration 0012 : le rangement perso
     etiquettes: Array.isArray(r.etiquettes) ? r.etiquettes : undefined,
+    // migration 0015 : `false` = pas de signe, donc undefined (la carte teste
+    // la présence, pas la valeur). Le cœur d'un spot du CERCLE est le sien,
+    // pas le mien : tousLesLieux l'efface (voir « les signes de la carte »).
+    favori: r.favori ? true : undefined,
+    pepite: r.pepite ? true : undefined,
   }
 }
 function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
@@ -398,6 +419,10 @@ function lieuVersLigne(l: Lieu): Omit<LigneLieu, 'cree_le'> {
     // l'écriture échoue avec « column … » → pousserLieuCloud retente sans.
     recos: l.recos ?? null,
     etiquettes: l.etiquettes ?? null,
+    // 0015 : deux booléens `not null default false` — on écrit toujours la
+    // valeur pleine, sinon un retrait de signet ne remonterait jamais.
+    favori: l.favori ?? false,
+    pepite: l.pepite ?? false,
   }
 }
 
@@ -877,6 +902,160 @@ export async function ecrireTip(lieuId: string, texte: string): Promise<void> {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ── LES RAYURES CLOUD (table `rayures`, migration 0015 — APPLIQUÉE) ──
+// La rayure est le seul signal négatif de jeudi, et elle voyage : le cercle
+// doit la voir, SIGNÉE de celui qui a été déçu (« rayé par karim » ne pèse
+// pas comme une croix anonyme — c'est tout l'intérêt du signal).
+//
+// La RLS de 0015 fait déjà le tri à notre place : elle rend les MIENNES
+// (for all, user_id = auth.uid()) et celles de mon cercle SI elles vivent
+// encore (expire > now()). On ne refiltre donc rien à la lecture — sauf
+// pour choisir QUELLE croix montrer quand plusieurs personnes ont rayé le
+// même lieu : la mienne d'abord (c'est mon carnet, et elle m'a coûté la
+// page), sinon la première venue. Jamais un compteur : trois croix
+// empilées, ce n'est plus un carnet, c'est un tribunal.
+//
+// Hors-ligne : la rayure locale (rayure.ts) est écrite AVANT tout appel
+// réseau, et la lecture cloud est best-effort — null = « je ne sais pas »,
+// et l'appelant garde ce que le local sait déjà.
+// ════════════════════════════════════════════════════════════════════
+
+/** ligne de la table `rayures` (les seules colonnes lues) */
+interface LigneRayure {
+  user_id: string
+  lieu_id: string
+  motif: string | null
+  expire: string
+}
+
+/** charge les rayures VIVANTES visibles (les miennes + celles de mon cercle)
+ *  → map lieuId → Rayure signée du prénom. Best-effort : null si le réseau
+ *  manque (≠ map vide, qui veut dire « vraiment aucune rayure »). */
+async function chargerRayuresCloud(ids: string[]): Promise<Map<string, Rayure> | null> {
+  const map = new Map<string, Rayure>()
+  if (!ids.length || !monId) return map
+  // seuls les lieux qui existent côté cloud peuvent porter une rayure (la FK
+  // de 0015 pointe sur public.lieux) — inutile d'interroger pour le décor
+  const uuids = ids.filter(estUuid)
+  if (!uuids.length) return map
+  try {
+    const { data, error } = await supabase
+      .from('rayures')
+      .select('user_id,lieu_id,motif,expire')
+      .in('lieu_id', uuids)
+    if (error) throw error
+    const lignes = (data ?? []) as LigneRayure[]
+    if (!lignes.length) return map
+    // qui a rayé ? le cercle d'abord (déjà en cache), la vitrine ensuite —
+    // exactement le chemin des tips, pour que les deux voix se nomment pareil
+    const prenoms = new Map<string, string>()
+    for (const m of await monCercle()) prenoms.set(m.id, m.prenom)
+    const inconnus = [...new Set(lignes.map((r) => r.user_id))].filter(
+      (u) => u !== monId && !prenoms.has(u),
+    )
+    if (inconnus.length) {
+      try {
+        for (const [pid, p] of await profilsPublics(inconnus)) {
+          if (p.prenom) prenoms.set(pid, p.prenom)
+        }
+      } catch {
+        /* vitrine injoignable : prénom de repli ci-dessous */
+      }
+    }
+    for (const r of lignes) {
+      const mienne = r.user_id === monId
+      // ma croix passe devant celle d'un pote : elle m'a coûté la page
+      if (map.has(r.lieu_id) && !mienne) continue
+      map.set(r.lieu_id, {
+        qui: mienne ? 'toi' : (prenoms.get(r.user_id) ?? 'membre'),
+        expire: r.expire,
+        ...(r.motif ? { motif: r.motif } : {}),
+      })
+    }
+  } catch (e) {
+    console.warn('[jeudi] chargerRayuresCloud KO (hors-ligne ?)', e)
+    return null
+  }
+  return map
+}
+
+/** pose MA rayure là-haut — upsert sur (user_id, lieu_id) : une seule par
+ *  personne et par lieu, rayer deux fois remplace au lieu d'empiler.
+ *  Renvoie false sans crier : l'appelant a déjà écrit en local et enfile
+ *  une resync (l'app doit rester utilisable dans le métro). */
+async function pousserRayureCloud(
+  lieuId: string,
+  expire: string,
+  motif?: string,
+): Promise<boolean> {
+  if (!monId || !estUuid(lieuId)) return false
+  const { error } = await supabase.from('rayures').upsert(
+    {
+      user_id: monId,
+      lieu_id: lieuId,
+      // la colonne plafonne à 140 caractères (0015) : on coupe ici plutôt
+      // que de faire échouer toute l'écriture pour un motif bavard
+      motif: motif ? motif.slice(0, 140) : null,
+      expire,
+    },
+    { onConflict: 'user_id,lieu_id' },
+  )
+  if (error) {
+    console.warn('[jeudi] pousserRayureCloud KO', lieuId, error)
+    return false
+  }
+  return true
+}
+
+/** retire MA rayure là-haut (le repentir). 0 ligne touchée = déjà partie :
+ *  c'est un succès, on ne redemande pas au réseau ce qui n'existe plus. */
+async function retirerRayureCloud(lieuId: string): Promise<boolean> {
+  if (!monId || !estUuid(lieuId)) return false
+  const { error } = await supabase
+    .from('rayures')
+    .delete()
+    .eq('lieu_id', lieuId)
+    .eq('user_id', monId)
+  if (error) {
+    console.warn('[jeudi] retirerRayureCloud KO', lieuId, error)
+    return false
+  }
+  return true
+}
+
+/** RAYER — le geste entier, local d'abord (PWA oblige), cloud ensuite.
+ *  `qui` sert à signer la copie LOCALE (le cloud, lui, signe par user_id et
+ *  la relecture y remettra le vrai prénom). Renvoie la rayure posée. */
+export async function rayerLieu(
+  lieuId: string,
+  qui: string,
+  motif = '',
+  maintenant: Date = new Date(),
+): Promise<Rayure | undefined> {
+  const table = rayer(lieuId, qui, motif, maintenant)
+  const r = table[lieuId]
+  if (!r) return undefined
+  await pretAuth
+  // spot du décor / jamais monté au cloud : la rayure reste locale, et c'est
+  // juste — il n'existe pas de ligne `lieux` à laquelle l'accrocher (FK 0015)
+  if (!monId || !estUuid(lieuId)) return r
+  if (!(await pousserRayureCloud(lieuId, r.expire, r.motif))) {
+    enfiler('rayure-pose', CLE_TACHE_RAYURE + lieuId)
+  }
+  return r
+}
+
+/** SE DÉDIRE avant le jeudi — le lieu revient intact, sans trace du serment */
+export async function deRayerLieu(lieuId: string): Promise<void> {
+  deRayer(lieuId)
+  await pretAuth
+  if (!monId || !estUuid(lieuId)) return
+  if (!(await retirerRayureCloud(lieuId))) {
+    enfiler('rayure-retrait', CLE_TACHE_RAYURE + lieuId)
+  }
+}
+
 /** MON tip cloud déjà posé sur ce lieu (pré-remplissage de la validation) */
 export function monTipDans(lieu: Lieu): string {
   if (!monId) return ''
@@ -890,7 +1069,18 @@ export function monTipDans(lieu: Lieu): string {
 // l'état LOCAL actuel et le pousser, le dernier état gagne). Persistée en
 // localStorage, rejouée au démarrage (chargerMonId) et au retour en ligne.
 // ════════════════════════════════════════════════════════════════════
-type TypeTacheSync = 'lieu-upsert' | 'lieu-archive' | 'lieu-suppr' | 'profil'
+type TypeTacheSync =
+  | 'lieu-upsert'
+  | 'lieu-archive'
+  | 'lieu-suppr'
+  | 'profil'
+  | 'rayure-pose'
+  | 'rayure-retrait'
+/** les tâches de rayure portent un id PRÉFIXÉ : la file se dédoublonne par id
+ *  (le dernier état gagne), et sans ce préfixe une rayure enfilée effacerait
+ *  la resync du lieu lui-même. Entre elles, en revanche, poser et retirer
+ *  DOIVENT se chasser — même id, c'est voulu. */
+const CLE_TACHE_RAYURE = 'rayure:'
 interface TacheSync {
   type: TypeTacheSync
   id: string
@@ -964,6 +1154,15 @@ async function rejouerTache(t: TacheSync): Promise<{ ok: boolean; id?: string }>
       if (!p) return { ok: true } // plus rien à pousser
       return { ok: await pousserProfilCloud(p) }
     }
+    if (t.type === 'rayure-pose' || t.type === 'rayure-retrait') {
+      const lieuId = t.id.slice(CLE_TACHE_RAYURE.length)
+      // l'état LOCAL fait foi au rejeu (comme partout ici) : si la rayure a
+      // disparu du carnet entre-temps, c'est un retrait qu'on doit rejouer,
+      // pas la pose d'un serment auquel on a renoncé.
+      const r = lireRayures()[lieuId]
+      if (!r) return { ok: await retirerRayureCloud(lieuId) }
+      return { ok: await pousserRayureCloud(lieuId, r.expire, r.motif) }
+    }
     // lieu-upsert / lieu-archive : l'état local actuel EST la vérité à pousser
     const db = await getDB()
     const local = await db.get('lieux', t.id)
@@ -1031,6 +1230,9 @@ export async function tousLesLieux(): Promise<Lieu[]> {
   // les spots du CERCLE RÉEL (et les publics d'autres membres) : la RLS les
   // donne d'office dès qu'on lit sans filtre owner_id (étape 5).
   let duCercle: Lieu[] = []
+  // les rayures du CERCLE, lues en même temps que les lieux (0015). null =
+  // le réseau n'a rien dit → on garde ce que le local sait, sans l'écraser.
+  let rayuresCloud: Map<string, Rayure> | null = null
   let cloudOk = false
   try {
     if (monId) {
@@ -1054,6 +1256,9 @@ export async function tousLesLieux(): Promise<Lieu[]> {
         // local (seed/adoption). Le résultat part dans le miroir IndexedDB
         // ci-dessous → hors-ligne, les voix restent lisibles.
         const tipsCloud = await chargerTipsCloud([...miens, ...duCercle].map((l) => l.id))
+        // les croix : les miennes ET celles de mon cercle, signées (0015).
+        // Même lot, même best-effort que les voix ci-dessus.
+        rayuresCloud = await chargerRayuresCloud([...miens, ...duCercle].map((l) => l.id))
         const locauxParId = new Map(actifs.map((l) => [l.id, l] as const))
         for (const l of [...miens, ...duCercle]) {
           const local = locauxParId.get(l.id)
@@ -1114,6 +1319,39 @@ export async function tousLesLieux(): Promise<Lieu[]> {
   const tout = [...miens, ...duCercle, ...decor].sort((a, b) =>
     b.creeLe.localeCompare(a.creeLe),
   )
+  // ── LES SIGNES DE LA CARTE (09/08) ──
+  // Le cœur et la croix se dessinent depuis `l.favori` / `l.raye` (Carte.tsx,
+  // creerPinLieu) : deux champs que personne n'écrivait, faute d'écran.
+  //
+  // LE CŒUR est à TOI. Celui que le propriétaire d'un spot du cercle a posé
+  // sur SA carte ne te regarde pas — on l'efface (la pépite, elle, reste :
+  // c'est justement ce qu'il te tend). Le tien vient de deux endroits qui
+  // disent la même chose : la colonne `favori` (0015, pour mes spots, elle me
+  // suit d'un téléphone à l'autre) et la liste locale `jeudi-favoris`
+  // (instantanée, hors-ligne, et valable aussi sur le décor). Union des deux.
+  for (const l of duCercle) l.favori = undefined
+  marquerFavoris(tout)
+
+  // LA CROIX vient d'abord du cloud : lui seul connaît les rayures du CERCLE
+  // et sait QUI a été déçu (l'information la plus utile du signal). Puis les
+  // miennes par-dessus, depuis `jeudi-rayures` : local-first, donc un serment
+  // posé dans le métro s'affiche avant d'être parti.
+  const maintenant = new Date()
+  if (rayuresCloud) {
+    // …sauf là où je viens de me dédire sans réseau : la ligne est encore
+    // là-haut, mais ma rétractation attend dans la file. On ne ressuscite pas
+    // une croix que l'utilisateur a retirée.
+    const retractees = new Set(
+      lireAttente()
+        .filter((t) => t.type === 'rayure-retrait')
+        .map((t) => t.id.slice(CLE_TACHE_RAYURE.length)),
+    )
+    for (const l of tout) {
+      const r = rayuresCloud.get(l.id)
+      if (r && !retractees.has(l.id)) l.raye = r
+    }
+  }
+  marquerRayures(tout, maintenant)
   // ── LE MÊME LIEU DEUX FOIS (09/08) ──
   // Le filtre par id ci-dessus n'attrape que la même FICHE lue deux fois.
   // Or le fond versé dans le cloud a été dédoublonné par nom EXACT : « Harry's
@@ -1163,7 +1401,7 @@ async function assurerUuid(lieu: Lieu): Promise<Lieu> {
 /** remplace un id de lieu dans les petites listes localStorage (best-effort) */
 function remplacerIdLocal(ancien: string, neuf: string): void {
   // listes d'ids nus
-  for (const cle of ['jeudi-favoris', 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
+  for (const cle of [CLE_FAVORIS, 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
     try {
       const v = JSON.parse(localStorage.getItem(cle) ?? '[]')
       if (Array.isArray(v) && v.includes(ancien)) {
@@ -1187,9 +1425,9 @@ function remplacerIdLocal(ancien: string, neuf: string): void {
       /* idem */
     }
   }
-  // les tables indexées PAR id de lieu (émoji posé, rature « à tester ») :
-  // même sort que les listes ci-dessus — l'id change, la marque suit.
-  for (const cle of ['jeudi-marques', CLE_A_TESTER]) {
+  // les tables indexées PAR id de lieu (émoji posé, rature « à tester »,
+  // rayure) : même sort que les listes ci-dessus — l'id change, la marque suit.
+  for (const cle of ['jeudi-marques', CLE_A_TESTER, CLE_RAYURES]) {
     try {
       const v = JSON.parse(localStorage.getItem(cle) ?? '{}')
       if (v && typeof v === 'object' && !Array.isArray(v) && ancien in v) {
@@ -1233,11 +1471,15 @@ async function pousserLieuCloud(lieu: Lieu): Promise<boolean> {
       console.warn('[jeudi] écriture cloud : 0 ligne touchée (RLS ?)', lieu.id)
       return false
     }
-    if (essai === 0 && /recos|etiquettes/i.test(error.message ?? '')) {
-      console.warn('[jeudi] colonne `recos`/`etiquettes` absente en base (migration 0003/0012 pas passée) — nouvel essai sans elles')
+    if (essai === 0 && /recos|etiquettes|favori|pepite/i.test(error.message ?? '')) {
+      console.warn(
+        '[jeudi] colonne `recos`/`etiquettes`/`favori`/`pepite` absente en base (migration 0003/0012/0015 pas passée) — nouvel essai sans elles',
+      )
       ligne = { ...ligne }
       delete ligne.recos
       delete ligne.etiquettes
+      delete ligne.favori
+      delete ligne.pepite
       continue
     }
     console.warn('[jeudi] écriture cloud KO', lieu.id, error)
@@ -1363,7 +1605,7 @@ export async function desarchiverLieu(id: string): Promise<void> {
  *  de remplacerIdLocal : le lieu n'existe plus, ses traces non plus.
  *  (08/08 — sans ça, effacer un spot laissait un signet sur un fantôme.) */
 function effacerIdLocal(id: string): void {
-  for (const cle of ['jeudi-favoris', 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
+  for (const cle of [CLE_FAVORIS, 'jeudi-comparer', 'jeudi-vus', 'jeudi-signales']) {
     try {
       const v = JSON.parse(localStorage.getItem(cle) ?? '[]')
       if (Array.isArray(v) && v.includes(id)) {
@@ -1373,7 +1615,7 @@ function effacerIdLocal(id: string): void {
       /* liste illisible : tant pis */
     }
   }
-  for (const cle of ['jeudi-marques', CLE_A_TESTER]) {
+  for (const cle of ['jeudi-marques', CLE_A_TESTER, CLE_RAYURES]) {
     try {
       const v = JSON.parse(localStorage.getItem(cle) ?? '{}')
       if (v && typeof v === 'object' && !Array.isArray(v) && id in v) {
@@ -1409,7 +1651,7 @@ export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
   if (!estUuid(id)) {
     // id legacy : jamais poussé au cloud. On retire juste une éventuelle
     // resync en attente pour cet id, et c'est réglé.
-    ecrireAttente(lireAttente().filter((t) => t.id !== id))
+    ecrireAttente(lireAttente().filter((t) => t.id !== id && t.id !== CLE_TACHE_RAYURE + id))
     return 'efface'
   }
   const { data, error } = await supabase
@@ -1433,7 +1675,7 @@ export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
     console.warn('[jeudi] supprimerLieu : 0 ligne côté cloud', id)
   }
   // une resync en attente pour ce lieu n'a plus d'objet
-  ecrireAttente(lireAttente().filter((t) => t.id !== id))
+  ecrireAttente(lireAttente().filter((t) => t.id !== id && t.id !== CLE_TACHE_RAYURE + id))
   // les tirages partent avec le spot — les DEUX dossiers Storage. Les lignes
   // de la table `photos` tombent d'elles-mêmes (on delete cascade, 0001), mais
   // les fichiers, eux, n'ont pas de cascade : sans ce ménage, les clips super 8
@@ -1441,6 +1683,33 @@ export async function supprimerLieu(id: string): Promise<VerdictSuppression> {
   await nettoyerStorageLieu(id)
   await nettoyerStorageLieu(id, undefined, BUCKET_CLIPS)
   return 'efface'
+}
+
+/** LE PRIX DE LA RAYURE, payé à retardement (09/08). Rayer, c'est promettre
+ *  que le lieu quittera ton carnet ; le jeudi suivant tombe, la promesse se
+ *  tient. Entre les deux, tu pouvais te dédire (deRayer) — c'est tout ce que
+ *  vaut la semaine d'attente.
+ *
+ *  Appelé UNE FOIS au démarrage (App.tsx), jamais en minuterie : jeudi bat
+ *  une fois par semaine, pas à la seconde. supprimerLieu → effacerIdLocal
+ *  emporte la rayure avec le reste, rien ne traîne.
+ *
+ *  ⚠ ne vaut que pour MES spots — un spot du cercle effacé ici revient à la
+ *  lecture suivante (le cloud en est la source). Sans conséquence tant que le
+ *  geste ne s'ouvre que sur mes propres pages (fiche → « corriger »).
+ *  Renvoie le nombre de pages arrachées. */
+export async function balayerRayures(maintenant: Date = new Date()): Promise<number> {
+  const echues = rayuresExpirees(maintenant)
+  for (const id of echues) {
+    try {
+      await supprimerLieu(id)
+    } catch (e) {
+      // un balayage raté ne doit pas empêcher l'app de démarrer : la rayure
+      // reste échue, le prochain lancement réessaiera.
+      console.warn('[jeudi] balayerRayures : le lieu résiste', id, e)
+    }
+  }
+  return echues.length
 }
 
 // ── distance depuis "moi" (Place Vendôme par défaut) ───────────
@@ -1496,6 +1765,15 @@ export function tempsMarche(m: number): number {
 }
 
 // ── état d'ouverture à l'instant (lexique nocturne) ────────────
+/** une heure décimale telle que le carnet l'écrit : 19.5 → « 19h30 », 26 →
+ *  « 2h » (après minuit, le modulo tombe juste). Exportée depuis le 09/08 :
+ *  le formulaire d'horaires (PickersLieu) doit proposer EXACTEMENT les mêmes
+ *  heures que celles qu'on relira ici — sinon on saisit dans une langue et on
+ *  lit dans une autre. */
+export function formatHeure(x: number): string {
+  return `${Math.floor(x % 24)}h${x % 1 === 0.5 ? '30' : ''}`
+}
+
 export function etatHoraire(
   horaires: [number | null, number | null] | undefined,
   maintenant = new Date(),
@@ -1503,7 +1781,7 @@ export function etatHoraire(
   if (!horaires) return null
   const [o, f] = horaires
   if (o == null && f == null) return null
-  const fmt = (x: number) => `${Math.floor(x % 24)}h${x % 1 === 0.5 ? '30' : ''}`
+  const fmt = formatHeure
   // une seule borne connue : on ne peut pas trancher ouvert/fermé (ouvert: null)
   if (o == null) return { ouvert: null, texte: `ferme à ${fmt(f!)}` }
   if (f == null) return { ouvert: null, texte: `ouvre à ${fmt(o)}` }
@@ -1693,22 +1971,15 @@ export function viderComparer(): void {
 }
 
 // ── les favoris : un signet posé sur un lieu (le marque-page du carnet) ──
-// PAS une note — juste « celui-là, je le garde sous la main ». persisté en
-// localStorage, indépendant de la visibilité et du tampon.
-export function lireFavoris(): string[] {
-  try {
-    const v = JSON.parse(localStorage.getItem('jeudi-favoris') || '[]')
-    return Array.isArray(v) ? v : []
-  } catch {
-    return []
-  }
-}
-export function basculerFavori(id: string): string[] {
-  const l = lireFavoris()
-  const n = l.includes(id) ? l.filter((x) => x !== id) : [...l, id]
-  localStorage.setItem('jeudi-favoris', JSON.stringify(n))
-  return n
-}
+// PAS une note — juste « celui-là, je le garde sous la main ». La logique a
+// déménagé dans favoris.ts (pure, testable) le 09/08 ; db.ts la ré-exporte
+// pour que pas un appelant ne bouge.
+export { lireFavoris, estFavori, basculerFavori, CLE_FAVORIS } from './favoris'
+// ── la rayure : le seul signal négatif, et le plus cher (rayure.ts) ──
+// On ne ré-exporte PAS `rayer`/`deRayer` : l'app doit passer par rayerLieu()/
+// deRayerLieu() ci-dessous, qui écrivent en local ET là-haut. Les versions
+// nues sont le stockage, pas le geste.
+export { lireRayures, rayureActive, prochainJeudiMinuit, type Rayure } from './rayure'
 
 // ── code postal parisien déduit de l'adresse ───────────────────
 // les adresses géocodées portent soit "Paris Xe Arrondissement", soit un
@@ -1938,6 +2209,20 @@ export async function majLieu(lieu: Lieu): Promise<void> {
   // l'échec cloud n'est plus silencieux : gardé en local ET marqué à resynchroniser
   console.warn('[jeudi] majLieu : cloud KO — état gardé en local, resync planifiée', sur.id)
   enfiler('lieu-upsert', sur.id)
+}
+
+/** LE SIGNET, posé ou retiré (09/08). Le carnet local d'abord — instantané,
+ *  hors-ligne, et valable même sur un spot qui n'est pas à moi. Puis, si le
+ *  spot EST à moi, la colonne `favori` (0015) pour qu'il me suive d'un
+ *  téléphone à l'autre ; majLieu s'occupe de la file d'attente si le réseau
+ *  manque. Sur le spot d'un pote la colonne lui appartient : on n'y touche
+ *  pas, mon signet reste chez moi. Renvoie la liste à jour. */
+export async function basculerFavoriLieu(lieu: Lieu): Promise<string[]> {
+  const liste = basculerFavori(lieu.id)
+  if (estAMoi(lieu)) {
+    await majLieu({ ...lieu, favori: liste.includes(lieu.id) || undefined })
+  }
+  return liste
 }
 
 export async function lireLieu(id: string): Promise<Lieu | undefined> {
@@ -2820,6 +3105,7 @@ export async function exporterMesDonnees(): Promise<Record<string, unknown>> {
     comparer: lireComparer(),
     marques: lireMarques(), // les émojis posés sur les lieux (jeudi-marques)
     aTester: lireATester(), // les ratures de la pile « à tester » (jeudi-a-tester)
+    rayures: lireRayures(), // les serments posés sur des lieux (jeudi-rayures)
     tagline: lireTagline(),
     couleur: lireCouleur(),
     seuils: lireSeuils(),
