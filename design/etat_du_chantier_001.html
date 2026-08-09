@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — où on en est</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   L'ÉTAT DU CHANTIER — 9 août 2026, au soir.
+   Aucun <script> : la page est complète en dur, elle s'ouvre partout et
+   s'imprime. Tout ce qui est annoncé comme VÉRIFIÉ l'a été à la main ce
+   soir (tests lancés, base sondée table par table, arbre git regardé) —
+   les pourcentages, eux, sont un jugement, et le calcul est en bas pour
+   qu'on puisse me contredire.
+   La cire (#a8322a) est réservée à UNE chose dans cette page : ce qui
+   n'attend que toi. C'est l'encre de la main humaine, elle ne sert à rien
+   d'autre ici.
+   ════════════════════════════════════════════════════════════════════════ */
+:root{
+  --encre:#EFE9D8; --papier:#14120e; --nuit:#0e1015; --clair:#dfe9ff;
+  --cire:#a8322a;
+  --fait:#7fc79a; --cours:#e8b44a; --afaire:#7f8ba3; --bloque:#e05a3a;
+  /* les trois voix qui vont travailler */
+  --fable:#c08ae8; --opus:#5d8dff; --sonnet:#7fc79a; --toi:#a8322a;
+  --trait:rgba(239,233,216,.10); --trait2:rgba(239,233,216,.06);
+}
+*{margin:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--papier);color:var(--encre);
+ font-family:system-ui,-apple-system,sans-serif;line-height:1.55;
+ padding:0 20px 110px;max-width:880px;margin:0 auto}
+
+h1{font-family:'Caveat',cursive;font-size:46px;font-weight:600;
+ padding-top:38px;line-height:1}
+.trace{display:block;width:206px;height:11px;margin:2px 0 0 2px;overflow:visible}
+.trace path{fill:none;stroke:var(--cire);stroke-width:2.2;stroke-linecap:round;opacity:.8}
+.sous{opacity:.55;font-size:14px;margin-top:10px;max-width:60ch}
+h2{font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;
+ letter-spacing:.16em;opacity:.42;margin:52px 0 6px;
+ border-top:1px solid var(--trait);padding-top:20px}
+h3{font-size:13px;color:var(--clair);margin:22px 0 2px;font-weight:600}
+p{font-size:13.5px;opacity:.66;margin-top:10px;max-width:72ch}
+b{color:var(--clair);font-weight:600;opacity:1}
+i.q{font-style:normal;opacity:.5}
+.mono{font-family:'JetBrains Mono',monospace}
+code{font-family:'JetBrains Mono',monospace;font-size:11.5px;
+ background:rgba(239,233,216,.05);padding:1px 4px;border-radius:3px;opacity:.9}
+a{color:var(--opus)}
+
+/* ── LA JAUGE ─────────────────────────────────────────────────────── */
+.jauge{background:var(--nuit);border:1px solid var(--trait);border-radius:3px;
+ padding:26px;margin-top:26px;display:flex;gap:30px;align-items:flex-start;
+ flex-wrap:wrap}
+.jauge>div:first-child{flex:none}
+.pct{font-family:'Caveat',cursive;font-size:82px;line-height:.82;color:var(--fait)}
+.pct small{font-size:26px;opacity:.45;color:var(--encre)}
+.jc{flex:1;min-width:280px}
+.jl{font-size:13.5px;opacity:.72}
+.barre{height:10px;border-radius:99px;background:rgba(239,233,216,.07);
+ display:flex;overflow:hidden;margin-top:18px}
+.barre i{display:block;height:100%}
+.leg{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;opacity:.65}
+.leg span{display:flex;align-items:center;gap:7px}
+.pastille{width:8px;height:8px;border-radius:50%;flex:none}
+
+/* ── LE CONTRÔLE (les faits vérifiables) ──────────────────────────── */
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
+ gap:1px;background:var(--trait2);border:1px solid var(--trait);
+ border-radius:3px;overflow:hidden;margin-top:14px}
+.ctrl div{background:var(--nuit);padding:15px 16px}
+.ctrl .n{font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--fait);
+ letter-spacing:-.02em}
+.ctrl .n.gris{color:var(--clair)}
+.ctrl .q{font-size:11px;opacity:.5;margin-top:3px;line-height:1.4}
+
+/* ── LA FRISE ─────────────────────────────────────────────────────── */
+.frise{margin-top:6px;position:relative;padding-left:28px}
+.frise::before{content:'';position:absolute;left:7px;top:16px;bottom:16px;width:1px;
+ background:var(--trait)}
+.etape{position:relative;padding:15px 0}
+.etape::before{content:'';position:absolute;left:-25px;top:21px;width:11px;height:11px;
+ border-radius:50%;background:var(--papier);border:2px solid var(--afaire)}
+.etape.f::before{border-color:var(--fait);background:var(--fait)}
+.etape.c::before{border-color:var(--cours);background:var(--cours)}
+.quand{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.38;
+ letter-spacing:.08em;text-transform:uppercase}
+.tt{font-size:15px;color:var(--clair);font-weight:600;margin-top:1px}
+ul{margin:7px 0 0;padding:0;list-style:none}
+li{font-size:13px;opacity:.72;padding:3px 0 3px 18px;position:relative}
+li::before{content:'';position:absolute;left:2px;top:11px;width:5px;height:5px;
+ border-radius:50%;background:var(--fait)}
+li.c::before{background:var(--cours)}
+li.a::before{background:var(--afaire)}
+li.b::before{background:var(--bloque)}
+li em{font-style:normal;opacity:.5}
+
+/* ── LES TROIS VOIX + LE PLAN DES JOURS ───────────────────────────── */
+.voix{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+ gap:12px;margin-top:14px}
+.v{background:var(--nuit);border:1px solid var(--trait);border-left:2px solid var(--c);
+ border-radius:0 3px 3px 0;padding:15px 16px}
+.v .nom{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--c)}
+.v .role{font-size:13px;color:var(--clair);margin-top:5px;font-weight:600}
+.v .why{font-size:12px;opacity:.58;margin-top:5px;line-height:1.5}
+.f-fable{--c:var(--fable)} .f-opus{--c:var(--opus)}
+.f-sonnet{--c:var(--sonnet)} .f-toi{--c:var(--toi)}
+
+.jours{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));
+ gap:12px;margin-top:16px}
+.jour{background:var(--nuit);border:1px solid var(--trait);border-radius:3px;
+ padding:0 0 6px;overflow:hidden}
+.jour>.j-tete{padding:13px 15px;border-bottom:1px solid var(--trait);
+ background:linear-gradient(to bottom,rgba(239,233,216,.03),transparent)}
+.j-date{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.4;
+ letter-spacing:.1em;text-transform:uppercase}
+.j-titre{font-family:'Caveat',cursive;font-size:24px;line-height:1.1;margin-top:1px}
+.tache{padding:11px 15px;border-bottom:1px solid var(--trait2);font-size:12.5px}
+.tache:last-child{border-bottom:none}
+.tache .t{color:var(--clair);display:block}
+.tache .d{opacity:.55;font-size:11.5px;display:block;margin-top:2px;line-height:1.45}
+.puce{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;
+ font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+ padding:2px 7px;border-radius:99px;margin-bottom:5px;
+ border:1px solid color-mix(in srgb,var(--c) 45%,transparent);color:var(--c)}
+.puce.seul{border-style:dashed}
+.puce::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--c);flex:none}
+
+/* ── LA TABLE DES CHANTIERS ───────────────────────────────────────── */
+.tw{overflow-x:auto;margin-top:12px;border:1px solid var(--trait);border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px}
+th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:9px;
+ text-transform:uppercase;letter-spacing:.1em;opacity:.38;font-weight:400;
+ padding:11px 14px;background:var(--nuit);white-space:nowrap}
+td{padding:11px 14px;border-top:1px solid var(--trait2);vertical-align:top;opacity:.72}
+td:first-child{color:var(--clair);opacity:1}
+td.n{text-align:right;font-family:'JetBrains Mono',monospace;opacity:.7;
+ white-space:nowrap}
+tr.sep td{border-top:1px solid var(--trait);padding-top:16px}
+.diff{margin-top:8px}
+
+/* ── LA LISTE DE TA MAIN ──────────────────────────────────────────── */
+.main{background:var(--nuit);border:1px solid var(--trait);
+ border-left:2px solid var(--cire);border-radius:0 3px 3px 0;
+ padding:8px 20px 14px;margin-top:14px}
+.main .k{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--trait2);
+ font-size:13px;align-items:flex-start}
+.main .k:last-child{border-bottom:none}
+.case{width:13px;height:13px;flex:none;margin-top:3px;border:1.5px solid var(--cire);
+ border-radius:2px;opacity:.75}
+.main .k b{display:block}
+.main .k span{opacity:.58;font-size:12px;display:block;margin-top:2px;line-height:1.45}
+
+/* ── LES NOTES ────────────────────────────────────────────────────── */
+.note{background:var(--nuit);border:1px solid var(--trait);
+ border-left:2px solid var(--cours);border-radius:0 3px 3px 0;
+ padding:15px 18px;margin-top:16px;font-size:13.5px;opacity:.9;max-width:78ch}
+.note b:first-child{display:block;margin-bottom:5px;font-size:14px}
+.note.rouge{border-left-color:var(--bloque)}
+.pied{font-family:'JetBrains Mono',monospace;margin-top:40px;opacity:.32;
+ font-size:10px;line-height:1.7;border-top:1px solid var(--trait);padding-top:18px}
+
+/* ── LES DATES ────────────────────────────────────────────────────── */
+.dates{display:grid;gap:10px;margin-top:16px}
+.jalon{background:var(--nuit);border:1px solid var(--trait);
+ border-left:2px solid var(--c);border-radius:0 3px 3px 0;padding:16px 18px;
+ display:flex;gap:20px;flex-wrap:wrap;align-items:baseline}
+.jalon .d{flex:none;width:170px}
+.jalon .jj{font-family:'Caveat',cursive;font-size:27px;line-height:1.05;color:var(--c)}
+.jalon .je{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.38;
+ letter-spacing:.09em;text-transform:uppercase;margin-top:3px}
+.jalon .c{flex:1;min-width:230px}
+.jalon .ct{font-size:14px;color:var(--clair);font-weight:600}
+.jalon .cd{font-size:12.5px;opacity:.6;margin-top:4px;line-height:1.5}
+.jalon .cg{font-size:11.5px;opacity:.5;margin-top:7px;line-height:1.5;
+ border-top:1px solid var(--trait2);padding-top:7px}
+.jalon .cg b{opacity:.85;font-weight:600}
+.d1{--c:var(--fait)} .d2{--c:var(--opus)} .d3{--c:var(--cours)} .d4{--c:var(--fable)}
+
+/* ── LE TIROIR (sans une ligne de script) ─────────────────────────── */
+details{margin-top:16px;background:var(--nuit);border:1px solid var(--trait);
+ border-radius:3px;overflow:hidden}
+summary{cursor:pointer;padding:18px 20px;list-style:none;display:flex;
+ align-items:center;gap:13px;user-select:none}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:rgba(239,233,216,.02)}
+.chev{flex:none;width:9px;height:9px;border-right:1.6px solid var(--fable);
+ border-bottom:1.6px solid var(--fable);transform:rotate(-45deg);
+ transition:transform .14s ease;margin-left:2px}
+details[open] .chev{transform:rotate(45deg)}
+summary .st{font-size:15px;color:var(--clair);font-weight:600}
+summary .sq{font-size:11.5px;opacity:.45;display:block;margin-top:2px;font-weight:400}
+.tiroir{padding:4px 20px 24px;border-top:1px solid var(--trait)}
+.tiroir h3{margin-top:26px}
+.tiroir h3:first-child{margin-top:20px}
+.tiroir p{font-size:13px}
+.tiroir ul{margin-top:8px}
+.tiroir li{font-size:12.5px;padding-left:16px}
+.tiroir li::before{width:4px;height:4px;top:10px;background:var(--afaire)}
+.tiroir li.ok::before{background:var(--fait)}
+.tiroir li.ko::before{background:var(--bloque)}
+.tiroir table{min-width:520px}
+.tiroir .tw{background:var(--papier)}
+.src{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.34;
+ margin-top:6px;line-height:1.6}
+.dur{font-family:'JetBrains Mono',monospace;font-size:10px;
+ border:1px solid var(--trait);border-radius:99px;padding:1px 7px;
+ opacity:.6;white-space:nowrap;margin-left:6px}
+.alerte{border-left:2px solid var(--bloque);background:rgba(224,90,58,.05);
+ border-radius:0 3px 3px 0;padding:13px 16px;margin-top:14px;font-size:13px}
+.alerte b:first-child{display:block;color:#f0a494;margin-bottom:4px}
+
+@media (max-width:560px){
+  h1{font-size:38px} .pct{font-size:64px} body{padding:0 15px 90px}
+  .jauge{padding:20px;gap:18px}
+}
+@media print{
+  body{max-width:none;padding:0 0 20px}
+  .jauge,.jour,.v,.note,.main,.ctrl div,th{background:#0e1015 !important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h2{page-break-after:avoid} .jour,.note,.main{page-break-inside:avoid}
+}
+</style></head><body>
+
+<h1>où on en est</h1>
+<svg class="trace" viewBox="0 0 206 11" aria-hidden="true"><path d="M3 7.5c22-3.4 47-4.6 71-4.2 26 .5 41 2.9 62 3.3 21 .4 43-1.2 67-3.1"/></svg>
+<p class="sous">jeudi — l'état du chantier au 9 août 2026, au soir. Ce que l'app sait
+faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
+
+<div class="jauge">
+  <div><div class="pct">66 <small>%</small></div></div>
+  <div class="jc">
+    <div class="jl">du chemin vers une ouverture publique. Le produit est <b>debout et
+      vérifié</b> ; ce qui manque, c'est précisément <b>ce qui distingue jeudi de
+      Google Maps</b> — le jugement des gens en qui tu as confiance.</div>
+    <div class="barre">
+      <i style="width:66%;background:var(--fait)"></i>
+      <i style="width:12%;background:var(--cours)"></i>
+      <i style="width:22%;background:var(--afaire)"></i>
+    </div>
+    <div class="leg">
+      <span><i class="pastille" style="background:var(--fait)"></i> debout — 66 %</span>
+      <span><i class="pastille" style="background:var(--cours)"></i> à moitié — 12 %</span>
+      <span><i class="pastille" style="background:var(--afaire)"></i> à faire — 22 %</span>
+    </div>
+    <div class="jl" style="margin-top:14px;opacity:.5;font-size:12px">
+      Ce chiffre a <b>baissé</b> ce soir : il était à 69 avant l'audit d'empaquetage,
+      qui a trouvé un trou qu'aucune de mes listes ne comptait — on ne peut pas bloquer
+      quelqu'un, et un signalement n'arrive nulle part. Une jauge qui ne descend jamais
+      ne sert à rien.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
+<h2>le contrôle du soir — les faits, pas les impressions</h2>
+<div class="ctrl">
+  <div><div class="n">429</div><div class="q">tests verts, 31 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
+  <div><div class="n">17/17</div><div class="q">migrations appliquées<br>sondées une par une</div></div>
+  <div><div class="n">0</div><div class="q">fichier qui traîne<br><code>main</code> propre, à jour</div></div>
+  <div><div class="n gris">32 407</div><div class="q">lignes, 111 fichiers<br>dans <code>app/src</code></div></div>
+  <div><div class="n gris">302</div><div class="q">spots réels dans le cloud<br>plus un seul faux profil</div></div>
+</div>
+<p><b>Une correction importante.</b> Trois notes de suivi disaient encore que des
+migrations attendaient d'être collées (0011 super 8, 0012 étiquettes, 0014 pellicule).
+J'ai interrogé la base ce soir, table par table : <code>photos.clip_path</code>,
+<code>lieux.etiquettes</code>, <code>vues_pellicule</code>, <code>rayures</code>,
+<code>super_potes</code>, <code>jugements</code> — <b>tout répond</b>. Les 17 migrations
+sont passées. <b>Aucun SQL de schéma ne t'attend</b> ; il ne reste que le fichier de
+données de l'enrichissement.</p>
+
+<!-- ═══ LA FRISE ══════════════════════════════════════════════════════ -->
+<h2>ce qui tient debout</h2>
+<div class="frise">
+
+  <div class="etape f">
+    <div class="quand">phase 1 · le carnet</div>
+    <div class="tt">Capturer et collectionner</div>
+    <ul>
+      <li>capture en deux secondes, géoloc</li>
+      <li>import Google Takeout — les pins endormis deviennent une collection</li>
+      <li>visibilités : pour toi · ton cercle · public</li>
+      <li>le cycle de vie complet : corriger, favori, à tester, archiver, supprimer, créer à la main</li>
+      <li>les étiquettes perso — tes listes Google reviennent rangées comme tu les avais laissées</li>
+    </ul>
+  </div>
+
+  <div class="etape f">
+    <div class="quand">phase 2 · le moteur</div>
+    <div class="tt">« ça dit quoi ce soir ? »</div>
+    <ul>
+      <li>les trois questions : avec qui · pour quoi · la météo du porte-monnaie</li>
+      <li>le deck à deux axes, sa fin assumée</li>
+      <li>le swipe de sortie, le tampon valide / bof</li>
+      <li>le lexique vivant — minuit, les fêtes · le rayon qui s'élargit jusqu'à remplir le deck</li>
+    </ul>
+  </div>
+
+  <div class="etape f">
+    <div class="quand">phase 3 · le cercle</div>
+    <div class="tt">Les tiens</div>
+    <ul>
+      <li>invitations, cercle réel en base, recherche d'amis, cloche de notifications</li>
+      <li>« on dit où. » — le match de groupe : un lien WhatsApp, aucun compte, verdict déterministe</li>
+      <li>le Grand Jeudi — son écran</li>
+      <li>la recherche : pousser le cercle, répondre avec la ville</li>
+    </ul>
+  </div>
+
+  <div class="etape f">
+    <div class="quand">au-delà du concept</div>
+    <div class="tt">Ce qui n'était pas prévu</div>
+    <ul>
+      <li>la pellicule — le tas, le carrousel, les grappes, les soirs du cercle</li>
+      <li>les clips Super 8 et leur chambre noire</li>
+      <li>les transports complets : 581 stations, lignes IDFM, bouches numérotées avec leur sens</li>
+      <li>l'app bilingue, de l'écran d'entrée à la carte</li>
+    </ul>
+  </div>
+
+  <div class="etape f">
+    <div class="quand">9 août</div>
+    <div class="tt">La carte se met à parler</div>
+    <ul>
+      <li>glyphe nu + marqueur qui <em>désigne</em> le lieu, au pixel</li>
+      <li>trois crans d'encre — la carte cesse de faire semblant d'être ouverte</li>
+      <li>six marqueurs : à tester · j'y étais · favori · pépite · rayé</li>
+      <li>les gestes de la fiche, en bas, sur tous les spots</li>
+      <li>la hiérarchie du regard — c'était le compte de signes, pas le contraste</li>
+      <li>les fondations de la lentille en base : l'anneau intérieur et les jugements</li>
+    </ul>
+  </div>
+
+  <div class="etape c">
+    <div class="quand">à moitié</div>
+    <div class="tt">La boucle de confiance</div>
+    <ul>
+      <li class="c">les deux anneaux — <em>table <code>super_potes</code> posée, ni écran ni synchro</em></li>
+      <li class="c">les jugements — <em>table posée, le <b>geste</b> de juger manque</em></li>
+      <li class="c">la lentille « selon Karim » — <em>attend les deux au-dessus</em></li>
+      <li class="c">l'enrichissement — <em>le SQL est écrit, il attend d'être collé</em></li>
+      <li class="c">les monuments et les 4 glyphes — <em>planches à trancher, dessins à faire</em></li>
+      <li class="b">signaler et bloquer — <em>un signalement ne quitte pas le téléphone, et personne ne peut être bloqué</em></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ═══ LES TROIS VOIX ════════════════════════════════════════════════ -->
+<h2>qui fait quoi — et pourquoi lui</h2>
+<p>Le principe est simple : <b>plus une erreur coûte cher à rattraper, plus on monte
+en gamme.</b> Ce qui se répare en deux minutes descend chez les agents, qui travaillent
+en parallèle pendant que tu fais autre chose.</p>
+<div class="voix">
+  <div class="v f-fable">
+    <div class="nom">fable 5 — mercredi</div>
+    <div class="role">Ce qui ne se rattrape pas</div>
+    <div class="why">Sécurité, infrastructure irréversible, arbitrages de fond. Une
+      policy trop large ouvre les photos des autres ; un service worker cassé bloque
+      tout le monde sur une vieille version. On ne délègue pas ça.</div>
+  </div>
+  <div class="v f-opus">
+    <div class="nom">opus — dès demain</div>
+    <div class="role">La spec dense et le goût</div>
+    <div class="why">Les chantiers où il faut tenir une intention produit sur 300
+      lignes : le geste de juger, le lexique d'intentions, les arbitrages de DA avec
+      toi sur maquette avant de coder.</div>
+  </div>
+  <div class="v f-sonnet">
+    <div class="nom">agents sonnet — en fond</div>
+    <div class="role">Le motif déjà établi</div>
+    <div class="why">Bug localisé, dette connue, geste répétitif à volume. Trois ou
+      quatre en parallèle, chacun avec sa consigne écrite, vérifs vertes exigées avant
+      de rendre.</div>
+  </div>
+  <div class="v f-toi">
+    <div class="nom">toi — quand tu veux</div>
+    <div class="role">Ce qu'aucun modèle ne peut faire</div>
+    <div class="why">Le pouce sur l'écran, les décisions de produit, les clés et les
+      domaines, et la seule chose qui manque vraiment : <b>deux vrais cercles qui se
+      croisent</b>.</div>
+  </div>
+</div>
+
+<!-- ═══ LES JOURS ═════════════════════════════════════════════════════ -->
+<h2>la semaine, telle que je la propose</h2>
+<div class="jours">
+
+  <div class="jour">
+    <div class="j-tete"><div class="j-date">lundi 10 août</div>
+      <div class="j-titre">le geste de juger</div></div>
+    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
+      <span class="t">Les pastilles signées</span>
+      <span class="d">Les tables sont en base. Reste le geste : ●○○ ●●○ ●●● sur un
+        critère, signé par une personne. Jamais d'étoiles, jamais une moyenne. Maquette
+        avant code.</span></div>
+    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
+      <span class="t">Le bug des spots archivés</span>
+      <span class="d">Confirmé ce soir : <code>tousLesLieux</code> ne lit que
+        <code>statut='actif'</code> (db.ts, deux endroits) — l'écran « restaurer » ne
+        peut rien afficher.</span></div>
+    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
+      <span class="t">Les petites dettes</span>
+      <span class="d">Le cap des super potes affiche encore 20 au lieu de 10 ·
+        <code>erreurTip</code> non traduit · FormAjout court-circuite la file
+        Nominatim.</span></div>
+    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
+      <span class="t">Le dernier gros chunk</span>
+      <span class="d">Le vendor Supabase, ~175 ko. Motif déjà établi (714 → 597 ko la
+        semaine dernière) : rien à inventer.</span></div>
+  </div>
+
+  <div class="jour">
+    <div class="j-tete"><div class="j-date">mardi 11 août</div>
+      <div class="j-titre">voir par les yeux d'un autre</div></div>
+    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
+      <span class="t">« selon Karim » sur la fiche</span>
+      <span class="d">Un lieu regardé à travers les critères d'un proche. C'est la
+        moitié qui manque au produit — celle qu'aucune carte ne sait faire.</span></div>
+    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
+      <span class="t">L'anneau intérieur, à l'écran</span>
+      <span class="d">Choisir ses 10 super potes, et que ça débloque leur regard.</span></div>
+    <div class="tache"><span class="puce f-opus seul">opus · seul</span>
+      <span class="t">Le lexique d'intentions</span>
+      <span class="d">manger → resto · danser → nuit · bizarre → insolite. Table écrite
+        à la main, jamais devinée. C'est le prérequis n°2 de la refonte
+        <i class="q">trouver</i>, après l'enrichissement.</span></div>
+    <div class="tache"><span class="puce f-toi">toi</span>
+      <span class="t">Les 4 glyphes sur l'iPad</span>
+      <span class="d">Le verre à vin, la chope, le thé lisible, la glace à deux boules
+        — sur le gabarit 1200 px. Tu dessines, un agent vectorise le soir même.</span></div>
+  </div>
+
+  <div class="jour">
+    <div class="j-tete"><div class="j-date">mercredi 12 août</div>
+      <div class="j-titre">ce qui ne se rattrape pas</div></div>
+    <div class="tache"><span class="puce f-fable">fable 5 · session dédiée</span>
+      <span class="t">Les notifications push</span>
+      <span class="d">Une demi-journée pleine, seule. Le piège n°1 : le service worker
+        porte aussi la mise à jour de l'app — s'il casse, tout le monde reste bloqué
+        sur une vieille version, silencieusement. Plan écrit dans
+        <code>CHANTIER_PUSH.md</code>.</span></div>
+    <div class="tache"><span class="puce f-fable">fable 5 · valider d'abord</span>
+      <span class="t">Le tirage chez un pote</span>
+      <span class="d">Aujourd'hui une photo prise sur le spot d'un ami reste sur ton
+        téléphone. Ouvrir ça, c'est toucher aux policies des photos : le design se
+        valide <b>avant</b> une ligne de SQL.</span></div>
+    <div class="tache"><span class="puce f-fable">fable 5 · ta décision</span>
+      <span class="t">« publier = prouver »</span>
+      <span class="d">Le sujet du bas de page. À trancher avec un modèle qui sait dire
+        non.</span></div>
+    <div class="tache"><span class="puce f-fable">fable 5 · ta décision</span>
+      <span class="t">Le profil découvrable</span>
+      <span class="d">Trois lettres suffisent à tomber sur de vrais gens. Réglage ?
+        prénom exact ? amis d'amis ? Rien n'est tranché — et c'est de la vie privée.</span></div>
+  </div>
+
+</div>
+<p><i class="q">Les jours sont une proposition, pas un engagement : les agents du lundi
+peuvent tourner ce soir, et rien de ce qui est chez Fable ne devrait démarrer avant
+mercredi. <b>Jeudi et vendredi sont déjà pris</b> par le chantier qui est sorti de
+l'audit de ce soir — signaler et bloquer pour de vrai (2 à 3 jours, chez Fable aussi :
+c'est de la sécurité des gens).</i></p>
+
+<!-- ═══ LES DATES ═════════════════════════════════════════════════════ -->
+<h2>les dates — quatre ouvertures, pas une</h2>
+<p>« Sortir » n'est pas un interrupteur : il y a quatre portes, et chacune a son
+verrou. Les dates ci-dessous sont des <b>jeudis</b>, évidemment. Elles tiennent si
+la ligne « ce qui la verrouille » est levée — sinon elles glissent d'une semaine,
+et c'est normal.</p>
+<div class="dates">
+
+  <div class="jalon d1">
+    <div class="d"><div class="jj">jeudi 27 août</div><div class="je">porte 1 · le cercle élargi</div></div>
+    <div class="c"><div class="ct">Une trentaine de vrais gens, sur la PWA</div>
+      <div class="cd">Pas d'annonce, pas de store : le lien, tes amis, leurs amis.
+        C'est l'ouverture qui te rend les 5 points que je retire à la jauge.</div>
+      <div class="cg"><b>Ce qui la verrouille :</b> le test à deux comptes · le push
+        (mercredi, Fable) · <code>contact@jeudi.app</code> qui existe vraiment · la
+        décision « publier = prouver » · le profil découvrable.</div></div>
+  </div>
+
+  <div class="jalon d2">
+    <div class="d"><div class="jj">jeudi 24 septembre</div><div class="je">porte 2 · l'ouverture publique</div></div>
+    <div class="c"><div class="ct">jeudi.app, ouvert à qui veut</div>
+      <div class="cd">La rentrée est digérée, Paris ressort. C'est la vraie date de
+        naissance — celle qu'on raconte.</div>
+      <div class="cg"><b>Ce qui la verrouille :</b> les domaines et le DNS · des CGU
+        dignes du nom + l'AIPD · <b>le signalement et le blocage pour de vrai</b>
+        (voir l'alerte du tiroir) · la lentille debout, sinon jeudi ressemble encore
+        à une carte.</div></div>
+  </div>
+
+  <div class="jalon d3">
+    <div class="d"><div class="jj">jeudi 26 novembre</div><div class="je">porte 3 · google play</div></div>
+    <div class="c"><div class="ct">L'app sur Android</div>
+      <div class="cd">D'abord Android : ça se fait entièrement depuis ton PC, ça coûte
+        25 $ une seule fois, et la longue attente imposée par Google tourne pendant que
+        tu prépares Apple.</div>
+      <div class="cg"><b>Ce qui la verrouille :</b> ~3 semaines de chantier Capacitor
+        (l'authentification est à refaire, ce n'est pas cosmétique) · puis
+        <b>14 jours de test fermé avec 12 testeurs</b> réellement actifs, imposés par
+        Google. Départ du chantier début octobre au plus tard.</div></div>
+  </div>
+
+  <div class="jalon d4">
+    <div class="d"><div class="jj">jeudi 17 décembre</div><div class="je">porte 4 · l'app store</div></div>
+    <div class="c"><div class="ct">L'app sur iPhone — la plus chère et la plus lente</div>
+      <div class="cd">Prudente volontairement : c'est la seule porte où un refus te
+        coûte deux semaines, et il y a une décision de matériel à prendre avant même
+        d'écrire une ligne.</div>
+      <div class="cg"><b>Ce qui la verrouille :</b> <b>la décision Mac</b> (sans macOS,
+        quelque part dans la chaîne, on ne compile pas d'app iOS — c'est structurel) ·
+        99 €/an · la déclaration de « trader » européenne, qui touche ton anonymat ·
+        au moins un aller-retour de review à prévoir.</div></div>
+  </div>
+
+</div>
+<p><i class="q">Ma date à retenir si tu n'en gardes qu'une : <b>jeudi 24 septembre</b>.
+Les stores sont un canal de distribution, pas une naissance — l'app existe le jour où
+des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
+
+<!-- ═══ LE TIROIR DES STORES ══════════════════════════════════════════ -->
+<h2>si tu veux les stores — tout est là-dedans</h2>
+<details>
+  <summary><i class="chev"></i><span><span class="st">Publier jeudi sur l'App Store et Google Play</span>
+    <span class="sq">Vérifié le 9 août 2026 sur les sources officielles Apple et Google.
+      Clique pour ouvrir — c'est long, et c'est fait pour être refermé.</span></span></summary>
+  <div class="tiroir">
+
+  <p><b>Comment lire ce tiroir.</b> Tout ce qui suit a été vérifié ce soir sur
+  <code>developer.apple.com</code> et <code>support.google.com</code>, plus un audit du
+  code de jeudi ligne par ligne. Les règles des stores changent tous les trimestres :
+  <b>revérifie le jour où tu démarres</b>. Ce qui n'a pas pu être confirmé sur une page
+  officielle est signalé comme tel — je préfère te le dire.</p>
+
+  <div class="alerte"><b>La découverte de ce soir, et elle compte</b>
+  L'audit du code a trouvé deux trous que les <b>deux</b> stores refusent, et qui ne
+  sont pas des trous de store — ce sont des trous de produit :
+  <b>on ne peut pas bloquer quelqu'un</b> (« retirer de mon cercle » n'est pas un
+  blocage : la personne peut revenir et voit toujours le public), et
+  <b>le signalement n'arrive nulle part</b> (signaler un lieu écrit dans le
+  <code>localStorage</code> de ton téléphone ; signaler une photo ouvre un mail vers
+  <code>contact@jeudi.app</code>, qui n'existe pas). Apple l'exige noir sur blanc, Google
+  aussi. Compte <b>2 à 3 jours</b> de travail et une migration. Et c'est un verrou de
+  l'ouverture publique du 24 septembre, pas seulement des stores.</div>
+
+  <h3>1 · La décision qui commande tout : le Mac</h3>
+  <p><b>Sans macOS, on ne compile pas d'app iOS.</b> Ce n'est pas un manque d'outillage,
+  c'est structurel : il n'existe aucune chaîne officielle Apple pour produire un binaire
+  iOS signé depuis Windows. Quatre chemins, et il faut en choisir un :</p>
+  <ul>
+    <li><b>Codemagic</b> (CI dans le nuage) — construit un projet Capacitor et publie
+      directement vers App Store Connect, <b>sans jamais toucher un Mac</b>. 500 minutes
+      de build macOS gratuites par mois, puis à la minute (~0,095 $/min). <em>Le chemin
+      le plus économique pour ton cas.</em></li>
+    <li class="ko"><b>Xcode Cloud</b> — 25 h/mois incluses dans les 99 €… <b>mais la
+      création du premier workflow se fait dans Xcode</b>, donc sur un Mac. Ce n'est
+      <em>pas</em> une solution « zéro Mac », contrairement à ce qu'on lit partout.</li>
+    <li><b>Louer un Mac à distance</b> (MacInCloud, MacStadium) — 20 à 60 $/mois, un vrai
+      macOS avec Xcode. Le plus souple pour déboguer une fois, vraiment.</li>
+    <li><b>Acheter un Mac mini</b> — le modèle 256 Go a disparu du catalogue en mai 2026,
+      l'entrée de gamme est le 512 Go à 799 $ (soit ~900 à 1 000 € TTC en France,
+      <em>prix FR non vérifié précisément</em>). Ça n'a de sens que si tu comptes garder
+      un pied dans l'écosystème.</li>
+  </ul>
+  <p class="src">Sources : developer.apple.com/xcode-cloud · codemagic.io · apple.com/mac-mini.
+    À noter : Ionic Appflow ferme le 31 décembre 2027 — ne pas démarrer dessus.</p>
+
+  <h3>2 · Les deux comptes</h3>
+  <div class="tw"><table>
+  <tr><th>&nbsp;</th><th>Apple</th><th>Google</th></tr>
+  <tr><td>Prix</td><td>99 $/an (~99 €), <b>récurrent</b></td><td>25 $, <b>une seule fois</b></td></tr>
+  <tr><td>Statut</td><td>Individu : pas de DUNS, validé en 1 à 3 jours</td><td>Personnel : identité vérifiée, quelques jours</td></tr>
+  <tr><td>Ton nom</td><td><b>Ton nom légal est publié</b> comme vendeur sur la fiche. Aucune option de pseudonyme.</td><td>Nom du développeur affiché ; vérification d'identité obligatoire.</td></tr>
+  <tr><td>Machine</td><td>macOS obligatoire quelque part dans la chaîne</td><td><b>100 % faisable sur ton PC</b> : Android Studio + JDK 17 + une clé de signature</td></tr>
+  </table></div>
+  <p class="src">developer.apple.com/programs/enroll · support.google.com/googleplay/android-developer/answer/6112435</p>
+
+  <h3>3 · Le statut de « trader » européen — le point qui touche ton anonymat</h3>
+  <p>Depuis le <b>16 octobre 2024</b> (et purge effective des récalcitrants au
+  <b>17 février 2025</b>), tout compte qui distribue dans l'Union doit déclarer s'il est
+  « trader » ou non. Ce n'est pas optionnel : <b>sans déclaration, l'app est retirée de
+  l'App Store dans l'UE.</b></p>
+  <ul>
+    <li><b>Trader</b> → adresse, téléphone et email <b>publiés publiquement</b> sur la
+      fiche, dans les 27 pays.</li>
+    <li><b>Non-trader</b> (activité non professionnelle) → rien n'est publié, mais un
+      avertissement s'affiche aux utilisateurs européens.</li>
+  </ul>
+  <p>Pour jeudi c'est un vrai arbitrage : le jour où l'app rapporte un euro, « non-trader »
+  ne tient plus. Une boîte postale est acceptée comme adresse — c'est la parade habituelle.
+  Google pose la même question dans la section « Business information » de la Play Console.</p>
+  <p class="src">developer.apple.com/help/app-store-connect (EU DSA trader requirements). Côté
+    Google, la règle existe mais je n'ai pas trouvé <b>une</b> page officielle complète : à
+    vérifier dans la console au moment de l'inscription.</p>
+
+  <h3>4 · Le chantier de code — l'authentification est à refaire</h3>
+  <p>Il n'y a aujourd'hui <b>aucune trace de Capacitor</b> dans le projet. L'audit a
+  chiffré le travail réel :</p>
+  <div class="tw"><table>
+  <tr><th>#</th><th>travail</th><th class="n">temps</th><th class="n">risque</th></tr>
+  <tr><td class="n">1</td><td>Installer Capacitor, générer <code>ios/</code> et <code>android/</code></td><td class="n">2–3 h</td><td class="n">faible</td></tr>
+  <tr><td class="n">2</td><td>Neutraliser le service worker en natif — trois fichiers y sont couplés (<code>main.tsx</code>, <code>App.tsx</code>, <code>index.html</code>) sans casser la PWA du web</td><td class="n">4–6 h</td><td class="n">moyen</td></tr>
+  <tr><td class="n">3</td><td><b>Refaire l'authentification.</b> Google <b>interdit</b> OAuth dans une WebView embarquée depuis 2016 : il faut ouvrir le flux dans le navigateur système et revenir par un lien profond. Le magic link par mail a le même problème. <b>Sans ça, personne ne peut se connecter.</b></td><td class="n">2–4 j</td><td class="n" style="color:var(--bloque)">élevé</td></tr>
+  <tr><td class="n">4</td><td>Liens profonds pour <code>/sortie/&lt;token&gt;</code> (le lien WhatsApp du match) — Universal Links iOS + App Links Android</td><td class="n">1 j</td><td class="n">moyen</td></tr>
+  <tr><td class="n">5</td><td>Passer géoloc, partage, caméra et vibration sur les plugins natifs — la vibration ne marche <em>déjà pas</em> sur iOS aujourd'hui</td><td class="n">1–2 j</td><td class="n">faible</td></tr>
+  <tr><td class="n">6</td><td>Écrire les textes de permission (géoloc, caméra, photothèque) — <b>aucun n'existe</b> ; leur absence fait crasher ou rejeter</td><td class="n">2–4 h</td><td class="n">faible</td></tr>
+  <tr><td class="n">7</td><td>Le signalement serveur et le blocage d'utilisateur (voir l'alerte plus haut)</td><td class="n">2–3 j</td><td class="n">moyen</td></tr>
+  <tr><td class="n">8</td><td>Alléger le chunk de la carte — 1 066 ko, il dépasse déjà le plafond de Workbox</td><td class="n">1–2 j</td><td class="n">moyen</td></tr>
+  <tr><td class="n">9</td><td>Icônes et écrans de lancement natifs, configuration</td><td class="n">4–6 h</td><td class="n">faible</td></tr>
+  <tr><td class="n">10</td><td>Tests sur vrais appareils iOS et Android — c'est là que les surprises sortent</td><td class="n">2–3 j</td><td class="n">moyen</td></tr>
+  </table></div>
+  <p><b>Total : 3 à 4 semaines de travail effectif</b>, dominées par le point 3. Ce qui
+  est déjà bon dans le code : la <b>suppression de compte</b> et l'<b>export de tes
+  données</b> existent et sont propres — les deux stores les exigent, tu les as déjà.</p>
+
+  <h3>5 · Les règles où jeudi peut se faire refuser</h3>
+  <ul>
+    <li class="ko"><b>« Site web reconditionné » (Apple 4.2).</b> Le texte dit qu'une app
+      doit « aller au-delà d'un site web reconditionné ». Un ancien PWA empaqueté est
+      exactement le profil qu'Apple regarde de près : il faut que les notifications
+      natives, le hors-ligne et la navigation <em>se sentent</em>.</li>
+    <li class="ok"><b>Connexion (Apple 4.8).</b> Bonne nouvelle : ton magic link est
+      <em>ton</em> système de compte, pas un service tiers — la guideline exempte ce cas,
+      donc <b>Sign in with Apple ne devrait pas être obligatoire</b>. C'est une lecture
+      solide du texte, pas une garantie écrite ; à border.</li>
+    <li class="ko"><b>Contenu des utilisateurs (Apple 1.2, et l'équivalent Google).</b>
+      Quatre exigences littérales : filtrer, signaler, <b>bloquer</b>, et publier de quoi
+      te joindre. Deux te manquent.</li>
+    <li><b>Âge.</b> Apple a refondu ses tranches en 2025 (13+, 16+, 18+ ; les anciennes
+      12+ et 17+ ont disparu). Bars, alcool, vie nocturne + photos d'inconnus +
+      géolocalisation : <b>attends-toi à 16+, voire 18+</b>. À assumer dans le
+      questionnaire plutôt qu'à découvrir en review. Côté Google c'est le questionnaire
+      IARC qui décide (PEGI en France) — impossible à prédire sans le remplir.</li>
+    <li><b>Localisation.</b> Si l'app ne demande la position qu'au premier plan — c'est
+      le cas — tu évites le formulaire de justification Google, qui réclame parfois une
+      vidéo de démonstration.</li>
+  </ul>
+
+  <h3>6 · Les obligations techniques du moment</h3>
+  <ul>
+    <li><b>Apple, depuis le 28 avril 2026</b> : toute soumission doit être compilée avec
+      <b>Xcode 26 et le SDK iOS 26</b> ou plus. Une image macOS trop vieille (Mac loué,
+      CI mal réglé) se fait rejeter avant même la lecture du contenu.</li>
+    <li><b>Google, depuis le 31 août 2026</b> : une app <em>nouvelle</em> doit cibler
+      <b>Android 16 (API 36)</b>. Vise directement 36.</li>
+    <li><b>Google</b> : format <b>AAB</b> obligatoire, Play App Signing obligatoire.
+      Ta clé de signature — <b>si tu la perds, tu ne peux plus jamais mettre l'app à
+      jour.</b> À sauvegarder comme un passeport.</li>
+    <li><b>Apple</b> : <code>PrivacyInfo.xcprivacy</code> exigé depuis le 1<sup>er</sup> mai
+      2024, chaque plugin natif doit avoir le sien à jour.</li>
+    <li><b>Google</b> : formulaire « Data safety » obligatoire, et une <b>URL web</b> de
+      suppression de compte en plus du chemin dans l'app.</li>
+  </ul>
+
+  <h3>7 · Ce qu'il faut fabriquer pour les fiches</h3>
+  <ul>
+    <li><b>Apple</b> : icône 1024×1024 sans transparence · captures au format du plus
+      grand iPhone seulement — <b>6,9″, 1320×2868</b> (Apple redimensionne le reste) ·
+      nom ≤ 30 caractères · sous-titre ≤ 30 · mots-clés ≤ 100 · description ≤ 4 000 ·
+      une URL de politique de confidentialité et une URL de support avec un <em>vrai</em>
+      moyen de te joindre.</li>
+    <li><b>Google</b> : icône 512×512 · <b>bandeau 1024×500</b> (obligatoire, souvent
+      oublié) · 2 à 8 captures en 16:9 ou 9:16 · politique de confidentialité ·
+      questionnaire IARC.</li>
+    <li>Tu as déjà les pièces : la DA, le logo bleu jeudi, les épingles néon, la carte.
+      Les captures sont une demi-journée de mise en scène, pas une semaine.</li>
+  </ul>
+
+  <h3>8 · La course des 12 testeurs — le verrou Google, incompressible</h3>
+  <p>C'est la règle que personne ne voit venir. Tout compte <b>personnel</b> créé après
+  le 13 novembre 2023 doit passer par un test fermé avant de pouvoir publier :</p>
+  <ul>
+    <li><b>12 testeurs</b> inscrits <em>simultanément</em> (c'était 20, ramené à 12 en
+      décembre 2024)</li>
+    <li><b>14 jours consécutifs</b> — le compteur ne démarre qu'une fois les 12 atteints,
+      et une rupture d'engagement remet à zéro</li>
+    <li>Google regarde l'<b>usage réel</b>, pas les installations : un testeur qui
+      n'ouvre jamais l'app ne compte pas</li>
+    <li>Ensuite il faut demander l'accès à la production <em>et résumer les retours</em>
+      des testeurs — un traitement qui prend de quelques jours à deux ou trois semaines,
+      avec des refus sans explication rapportés dans la communauté</li>
+  </ul>
+  <p><b>Traduction pour toi :</b> tes 12 testeurs, ce sont les gens de la porte 1. La
+  bonne nouvelle, c'est que si le cercle élargi tourne depuis fin août, tu les as déjà —
+  et ils savent se servir de l'app.</p>
+  <p class="src">support.google.com/googleplay/android-developer/answer/14151465</p>
+
+  <h3>9 · Les délais et le coût, sans embellir</h3>
+  <div class="tw"><table>
+  <tr><th>&nbsp;</th><th>Google Play</th><th>App Store</th></tr>
+  <tr><td>Chantier Capacitor</td><td colspan="2">3 à 4 semaines, <b>partagées</b> entre les deux plateformes</td></tr>
+  <tr><td>Compte et vérifications</td><td>1 à 5 jours</td><td>1 à 3 jours (individu)</td></tr>
+  <tr><td>Le verrou</td><td><b>14 jours</b> de test fermé + l'accès production</td><td>Le Mac, puis la review</td></tr>
+  <tr><td>Review</td><td>quelques heures à 7 jours</td><td>2 à 7 jours pour un premier envoi</td></tr>
+  <tr><td>Total réaliste</td><td><b>5 à 8 semaines</b></td><td><b>3 à 6 semaines au mieux, 2 à 3 mois en vrai</b></td></tr>
+  <tr><td>Argent, an 1</td><td>~23 €, une fois</td><td>~99 €/an + 0 à 300 € de CI cloud <em>(ou ~1 000 € si Mac mini)</em></td></tr>
+  </table></div>
+  <p class="src">Les durées de review ne sont publiées officiellement par personne :
+    ce sont des ordres de grandeur concordants issus de sources spécialisées, pas des
+    statistiques d'Apple ou de Google.</p>
+
+  <h3>10 · Ma recommandation, en trois phrases</h3>
+  <p><b>Android d'abord, et sans hésiter.</b> Ça se fait entièrement sur ton PC, ça coûte
+  25 $ une fois, et les 14 jours d'attente imposés par Google tournent tout seuls pendant
+  que tu prépares Apple. <b>Le chantier Capacitor ne commence pas avant l'ouverture
+  publique</b> — refaire l'authentification pendant que le produit bouge encore, c'est
+  le meilleur moyen de casser les deux. Et <b>la décision Mac se prend maintenant</b>,
+  pas en novembre : c'est la seule ligne de ce tiroir qui peut coûter mille euros.</p>
+
+  </div>
+</details>
+
+<!-- ═══ LA TABLE ══════════════════════════════════════════════════════ -->
+<h2>tous les chantiers restants</h2>
+<div class="tw"><table>
+<tr><th>chantier</th><th>qui</th><th>avec toi ?</th><th>ce qu'il faut savoir</th></tr>
+
+<tr><td>Les notifications push</td><td class="mono" style="color:var(--fable)">fable</td><td>au départ</td>
+ <td>Le seul chantier d'infrastructure qui reste. Bascule du service worker, clés VAPID, une fonction Edge, un cron à 18 h. Ligne éditoriale stricte : demande de cercle, anniversaire, verdict d'hier, le rendez-vous du jeudi — rien d'autre, jamais de réengagement.</td></tr>
+
+<tr><td>RLS « tirage chez un pote »</td><td class="mono" style="color:var(--fable)">fable</td><td>valider le design</td>
+ <td>Écrire une photo sur le lieu d'un ami sans pouvoir toucher aux siennes. <code>syncPhotosLieu</code> réécrit tout aujourd'hui : incompatible avec plusieurs auteurs sur un même lieu.</td></tr>
+
+<tr><td>« publier = prouver »</td><td class="mono" style="color:var(--fable)">fable</td><td><b>ta décision</b></td>
+ <td>Les 3 photos ne sont pas exigées, et 302 spots importés n'ont jamais été prouvés. Voir la note rouge.</td></tr>
+
+<tr><td>Le profil découvrable</td><td class="mono" style="color:var(--fable)">fable</td><td><b>ta décision</b></td>
+ <td>Plus les notifications « demande reçue » et « demande acceptée », qui manquent.</td></tr>
+
+<tr><td>Signaler et bloquer, pour de vrai</td><td class="mono" style="color:var(--fable)">fable</td><td>oui</td>
+ <td><b>Découvert ce soir, et c'est un verrou de l'ouverture publique.</b> Signaler un lieu n'écrit que dans le <code>localStorage</code> du téléphone ; signaler une photo ouvre un mail vers une adresse qui n'existe pas ; et « retirer de mon cercle » n'est pas un blocage. Les deux stores l'exigent littéralement, et le produit le mérite. 2 à 3 jours + une migration.</td></tr>
+
+<tr class="sep"><td>Le geste de juger</td><td class="mono" style="color:var(--opus)">opus</td><td>maquette d'abord</td>
+ <td>Pastilles 3 niveaux signées, jamais d'étoiles — la mécanique des WC généralisée. Les tables sont en base depuis ce soir.</td></tr>
+
+<tr><td>« selon Karim » + l'anneau</td><td class="mono" style="color:var(--opus)">opus</td><td>oui</td>
+ <td>La lentille. 10 super potes maximum ; les ajouter débloque leur regard sur un lieu.</td></tr>
+
+<tr><td>Le lexique d'intentions</td><td class="mono" style="color:var(--opus)">opus</td><td>non</td>
+ <td>Table française → intention, écrite à la main. Sans elle, « manger thaï » ne trouve que les fiches où le mot « thaï » est déjà écrit.</td></tr>
+
+<tr><td>La refonte <i class="q">trouver</i></td><td class="mono" style="color:var(--opus)">opus</td><td>maquettes d'abord</td>
+ <td>La phrase à trous est validée, la caméra aussi. Ordre imposé : enrichissement → lexique → écran. Restent 2 maquettes : le picker [où], l'état vide.</td></tr>
+
+<tr><td>Les titres d'éclaireurs</td><td class="mono" style="color:var(--opus)">opus</td><td>concept à ouvrir</td>
+ <td>Mérités par la carte, jamais recrutés. Pas encore spécifié.</td></tr>
+
+<tr><td>Les monuments</td><td class="mono" style="color:var(--opus)">opus</td><td>trancher la planche</td>
+ <td><code>monuments_001.html</code> attend ton verdict. Ma reco tient : le jeu monoline unifié.</td></tr>
+
+<tr class="sep"><td>Le bug des spots archivés</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
+ <td>Localisé et confirmé ce soir. Une heure de travail.</td></tr>
+
+<tr><td>Les petites dettes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
+ <td>Cap 20 → 10 · <code>erreurTip</code> non traduit · FormAjout vs AjoutMain · la file Nominatim court-circuitée.</td></tr>
+
+<tr><td>Le chunk vendor Supabase</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
+ <td>~175 ko. Chantier déjà documenté, motif déjà appliqué une fois.</td></tr>
+
+<tr><td>Vectoriser tes 4 glyphes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>tu dessines</td>
+ <td>Contraintes fermées : viewBox 24, monoline 1,8, 4 tracés max, doit tenir à 18 px.</td></tr>
+
+<tr><td>Carte v2 — le contour dit le propriétaire</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
+ <td>Différé après le lancement, et c'est bien : plein / tirets / pointillé, spec écrite.</td></tr>
+
+<tr class="sep"><td>Où tu seras — les ancres</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
+ <td>Et leurs stickers. Concept encore ouvert.</td></tr>
+
+<tr><td>Le match, version 2</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
+ <td>Voter le soir en plus du lieu, la vraie triangulation des départs, « mes matchs », la conversion d'un invité en compte.</td></tr>
+
+<tr><td>Le moteur de couleur OKLCH</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
+ <td>Une graine, toute la palette par la roue. Le bleu jeudi est tranché ; le moteur peut attendre.</td></tr>
+
+<tr><td>Les stores (Capacitor)</td><td class="mono" style="opacity:.5">octobre</td><td><b>une décision de matériel</b></td>
+ <td>Ce n'était <b>pas</b> qu'une décision d'argent, comme je l'écrivais encore ce matin : l'authentification est à refaire (Google interdit OAuth dans une WebView), et sans macOS quelque part dans la chaîne on ne compile pas d'app iOS. 3 à 4 semaines. Tout le détail vérifié est dans le tiroir plus haut.</td></tr>
+</table></div>
+
+<!-- ═══ TA MAIN ═══════════════════════════════════════════════════════ -->
+<h2>ce qui n'attend que toi</h2>
+<p>Aucun modèle ne peut cocher ces cases. Les quatre premières débloquent du code
+qui est déjà écrit et qui attend.</p>
+<div class="main">
+  <div class="k"><i class="case"></i><div><b>Coller <code>_enrichissement/fusion_2026-08-08.sql</code></b>
+    <span>Le seul SQL en attente, et ce n'est même pas une migration. 12 descriptions,
+    6 glyphes, 5 tampons. SQL Editor → Run.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>La clé Google Places</b>
+    <span>Compte dédié, API restreinte, quota bas, alerte à 5 €. C'est <b>le</b> gisement
+    qui fera marcher « manger thaï » — prérequis n°1 de la refonte <i class="q">trouver</i>.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Le test au pouce, sur ton téléphone</b>
+    <span>L'opacité des plaques, la cible de 44 px des étiquettes (elles peuvent voler
+    des taps aux épingles), le seuil z15 des bouches, le double-tap météo, l'échelle.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Le premier tas</b>
+    <span>Un tirage, une heure de séchage. Toute la pellicule est codée et n'a jamais
+    vu une vraie photo arriver.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Le test à deux comptes</b>
+    <span>Invitation → cercle → photo → visibilité privé/cercle → suppression du compte.
+    C'est le trou le plus large de tout ce document.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Re-choisir ta photo de profil</b>
+    <span><code>photo_url</code> était NULL pour tout le monde — aucun portrait n'avait
+    jamais atteint le cloud avant la réparation. Chacun doit la reposer une fois.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les domaines et l'adresse</b>
+    <span><code>jeudi.app</code> + <code>jeudiapp.com</code> (~30 €/an), puis
+    <code>contact@jeudi.app</code> — elle est <b>déjà écrite dans l'app</b> : tant
+    qu'elle n'existe pas, un signalement de photo rebondit.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les CGU et l'AIPD</b>
+    <span>Géoloc + habitudes nocturnes + graphe social : l'analyse d'impact est quasi
+    obligatoire. Aujourd'hui les CGU sont quatre puces dans la politique.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Le compte fantôme</b>
+    <span><code>820897ad…</code> (0 spot, test Google) — à supprimer en s'y connectant,
+    par <code>supprimer_mon_compte()</code>. Jamais à la main dans la table : cascades.</span></div></div>
+</div>
+
+<!-- ═══ LE CALCUL ═════════════════════════════════════════════════════ -->
+<h2>le calcul — pour qu'on puisse me contredire</h2>
+<p>Chaque chantier est pesé selon ce qu'il coûte <b>avant une ouverture publique</b> —
+pas selon sa taille. Le moteur pèse lourd parce que sans lui il n'y a pas de produit ;
+les stickers pèsent zéro parce qu'on peut ouvrir sans eux.</p>
+<div class="tw"><table style="min-width:420px">
+<tr><th>chantier</th><th class="n">poids</th><th class="n">fait</th><th class="n">acquis</th></tr>
+<tr><td>le carnet</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
+<tr><td>le moteur — deck, swipe, rayon</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
+<tr><td>le cercle et le match</td><td class="n">12</td><td class="n">90 %</td><td class="n">10,8</td></tr>
+<tr><td>la carte</td><td class="n">14</td><td class="n">88 %</td><td class="n">12,3</td></tr>
+<tr><td>la boucle de confiance</td><td class="n">15</td><td class="n">30 %</td><td class="n">4,5</td></tr>
+<tr><td>la preuve par la photo</td><td class="n">7</td><td class="n">40 %</td><td class="n">2,8</td></tr>
+<tr><td>la modération — signaler, bloquer</td><td class="n">5</td><td class="n">20 %</td><td class="n">1,0</td></tr>
+<tr><td>notifications et rétention</td><td class="n">7</td><td class="n">0 %</td><td class="n">0,0</td></tr>
+<tr class="sep"><td><b>total</b></td><td class="n"><b>100</b></td><td></td><td class="n"><b>71,4</b></td></tr>
+</table></div>
+<p><i class="q">La ligne « modération » est apparue ce soir, et elle a coûté trois points
+aux autres : quand on ajoute un poids, il faut en retirer ailleurs, sinon on triche.</i></p>
+<p><b>71 sur le papier, 66 en conscience.</b> Je retire cinq points pour une raison
+précise, toujours la même : <b>rien de tout ça n'a été éprouvé par quelqu'un d'autre
+que toi.</b> Une app de sorties qui n'a jamais vu deux vrais cercles se croiser garde
+des trous qu'aucune relecture de code ne révèle. Ces cinq points se regagnent en une
+soirée — celle du test à deux comptes.</p>
+
+<div class="note"><b>Le point qui décide de la suite</b>
+Tu as magnifiquement construit le carnet et la carte : elles sont finies, vérifiées,
+en ligne. Ce qui reste — les deux anneaux, le geste de juger, les critères signés, la
+preuve par la photo — est exactement <b>ce qui distingue jeudi de Google Maps</b>.
+Ce n'est pas la moitié la plus grosse. C'est la moitié la plus importante, et c'est
+elle qui commence demain.</div>
+
+<div class="note rouge"><b>Le seul vrai risque avant d'ouvrir</b>
+« Publier = prouver » est un pilier du concept : partager une adresse exige tes propres
+photos, <i>polluer la carte coûte un déplacement physique</i>. Or les 302 spots du fond
+sont importés, publics, et n'ont jamais été prouvés par personne. Le jour où des
+inconnus arrivent, soit la règle s'applique à tous — et il faut décider ce qu'on fait
+du fond —, soit elle ne veut plus rien dire. À trancher <b>avant</b> l'ouverture,
+jamais après : après, c'est un revirement public.</div>
+
+<p class="pied">
+jeudi — état du chantier, 9 août 2026 au soir. Vérifié à la main : 429 tests,
+0 erreur de type, 17 migrations sur 17 sondées dans la base, arbre git propre.<br>
+Les planches de travail du jour : dictionnaire_carte_001 · atelier_grammaire_001 ·
+atelier_glyphes_001 · atelier_diamant_001 · monuments_001.<br>
+Les documents de fond : CONCEPT · ETAT_2026-08-08 · AVANT_LANCEMENT · CHANTIER_PUSH ·
+CHANTIER_PELLICULE · CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
+</p>
+</body></html>
