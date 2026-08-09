@@ -8046,6 +8046,14 @@ button {
 .vg-timbre .monument-vignette {
   opacity: 0.92;
 }
+/* trop loin pour que ce monument veuille dire quelque chose : à l'échelle
+ * réelle il ferait moins de 9 px. On l'efface au lieu de laisser une
+ * miette sur la carte — l'Arc n'existe qu'une fois qu'on s'en approche,
+ * la tour se voit de bien plus loin. C'est ça, le réalisme. */
+.vg-trop-petit {
+  opacity: 0;
+  pointer-events: none;
+}
 /* le cartouche : l'étiquette parchemin au texte rouge, sous la vignette —
  * c'est LUI qui nomme (le Caveat se retire quand la vignette est là) */
 .monument-etq {

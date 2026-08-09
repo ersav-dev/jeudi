@@ -23,6 +23,23 @@ import { lireATester } from './aTester'
  *  du marqueur (6). Doit rester d'accord avec --pin-taille / --pin-ecart /
  *  --mq-boite dans index.css. */
 const DECALAGE_MARQUEUR = 26
+
+/** LA HAUTEUR RÉELLE DES MONUMENTS, en mètres (09/08). C'est elle qui donne
+ *  leur taille sur la carte : un monument est un objet, pas un sticker.
+ *  Ce sont des élévations (des choses qui se dressent) — donc la hauteur.
+ *  Le jour où on ajoute une EMPREINTE (place des Vosges, un parc), c'est sa
+ *  largeur qu'il faudra mettre, et elle méritera un autre traitement :
+ *  une empreinte se visse au sol, une élévation reste debout. */
+const HAUTEUR_M: Record<string, number> = {
+  'tour eiffel': 330,
+  montparnasse: 210,
+  invalides: 107, // le dôme
+  'sacré-cœur': 83,
+  panthéon: 83,
+  'notre-dame': 69, // les tours (la flèche, 96 m, a brûlé)
+  opéra: 56,
+  'arc de triomphe': 50,
+}
 import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
 import {
   grouperTas,
@@ -1437,6 +1454,8 @@ export default function Carte({
       el.innerHTML = mo.img
         ? htmlVignette(mo.img, mo.etq, false)
         : `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
+      // son nom sert de clé pour retrouver sa hauteur réelle (HAUTEUR_M)
+      el.dataset.mo = mo.nom
       if (mo.img) vignettes.push(el)
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
@@ -1463,12 +1482,23 @@ export default function Carte({
     // zoom se lit par crans, et la transition CSS fait le glissé.
     const relaisVignettes = () => {
       const z = carte.current?.getZoom() ?? 0
-      // 09/08 — LA TAILLE DES MONUMENTS SUIT LE ZOOM : un monument est un
-      // objet posé au sol, on doit le voir grandir quand on s'approche.
-      // Pas la loi du terrain (×2 par niveau : la tour ferait 3000 px à
-      // z19) mais une croissance tempérée, ×2 tous les ~2 niveaux, bornée.
-      const h = Math.min(200, Math.max(34, 52 * Math.pow(2, (z - 13) * 0.55)))
-      carte.current?.getContainer().style.setProperty('--vign-h', `${h.toFixed(1)}px`)
+      // ── 09/08 · LES MONUMENTS À L'ÉCHELLE RÉELLE DE LA CARTE ──
+      // Un monument n'est pas un sticker : c'est un objet qui a une taille
+      // en MÈTRES. On la convertit en pixels au zoom courant, et tout le
+      // reste en découle sans aucun palier réglé à la main : la tour
+      // (330 m) se voit de loin, l'Arc (50 m) n'apparaît qu'en approchant.
+      // C'EST ÇA, le réalisme — pas une courbe inventée.
+      //
+      // mètres par pixel = 156543,034 × cos(latitude) / 2^zoom
+      const mpp = (156543.03392 * Math.cos((48.8566 * Math.PI) / 180)) / Math.pow(2, z)
+      for (const el of vignettes) {
+        const vrai = (HAUTEUR_M[el.dataset.mo ?? ''] ?? 60) / mpp
+        // sous ~9 px un dessin ne dit plus rien : on l'efface au lieu de
+        // le laisser saloper la carte. Au-dessus, on borne pour qu'un
+        // monument ne mange jamais tout l'écran.
+        el.style.setProperty('--vign-h', `${Math.min(340, Math.max(9, vrai)).toFixed(1)}px`)
+        el.classList.toggle('vg-trop-petit', vrai < 9)
+      }
       // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
       // plus à z11 et la ville disparaîtrait sous les stickers
       for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', z < 12.5)
