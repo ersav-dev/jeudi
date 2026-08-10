@@ -7,17 +7,25 @@
 // initial, la carte s'affiche d'abord, les repères se posent après.
 import type { FeatureCollection, Point } from 'geojson'
 
-export type TypeTransport = 'metro' | 'rer' | 'tram' | 'bus' | 'batobus' | 'velib'
+// 10/08 — LE FICHIER NE CONTIENT PLUS QUE CE QUI EST DESSINÉ. Il portait aussi
+// 3 107 arrêts de bus et 1 507 stations Vélib' que rien n'affichait : 88 % de
+// 716 ko téléchargés pour rien. Retirés (97 ko désormais).
+//   · les bus de JOUR ont quitté le produit — un arrêt montré à 2 h alors
+//     qu'il ne roule plus est une fausse promesse (panel du 10/08) ;
+//   · les bus de NUIT vivent dans `noctilien.json`, chargé seulement quand on
+//     ouvre une fiche (voir rentrer.ts) ;
+//   · les Vélib' viennent désormais du temps réel GBFS — leurs positions
+//     arrivent avec leur disponibilité, donc rien à figer ici (et rien qui
+//     pourrit quand une station ferme).
+export type TypeTransport = 'metro' | 'rer' | 'tram' | 'batobus'
 
-// couleur RATP par mode (bleu-nuit métro, bleu RER, vert tram, jaune bus,
-// rouge Vélib, cyan Batobus) — utilisée par le badge de la plaque
+// couleur RATP par mode (bleu-nuit métro, bleu RER, vert tram, cyan Batobus)
+// — utilisée par le badge de la plaque
 export const TEINTES: Record<TypeTransport, string> = {
   metro: '#0b1a3a',
   rer: '#0055c8',
   tram: '#66a933',
-  bus: '#f0b429',
   batobus: '#00a4c4',
-  velib: '#e05a3a',
 }
 
 let cache: FeatureCollection<Point, { type: TypeTransport; nom: string; lignes?: string[] }> | null = null

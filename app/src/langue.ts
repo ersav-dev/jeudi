@@ -120,6 +120,12 @@ const EN: Record<string, string> = {
   'étiquette :': 'label:',
   'toutes': 'all',
   'se déconnecter': 'sign out',
+  // « comment tu rentres » sur la fiche (10/08, décision du panel)
+  'rentrer': 'getting home',
+  'vélib’': 'vélib’',
+  'vélo': 'bike',
+  'vélos': 'bikes',
+  'noctilien': 'night bus',
   // les portes déjà utilisées sur ce téléphone (09/08)
   'déjà entré ici avec': 'you’ve been in here as',
   'Google': 'Google',

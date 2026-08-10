@@ -145,6 +145,7 @@ import {
   marquerVuPellicule,
 } from './db'
 import type { CompteConnecte } from './db'
+import { commentRentrer, type CommentRentrer } from './rentrer'
 import { anniversairesAVenir, motAnniversaire } from './fetes'
 import {
   construireTas,
@@ -3698,6 +3699,22 @@ function Fiche({
     }
   }, [lieu.id, lieu.lat, lieu.lng])
 
+  // COMMENT TU RENTRES (10/08) — la réponse du panel : rien sur la carte, une
+  // ligne ici, au moment où la question se pose. Chargé seulement quand une
+  // fiche s'ouvre ; ni le Vélib' ni le Noctilien ne coûtent quoi que ce soit
+  // à qui ne consulte pas de spot.
+  const [rentrer, setRentrer] = useState<CommentRentrer | null>(null)
+  useEffect(() => {
+    if (lieu.lat === 0 && lieu.lng === 0) return
+    let ok = true
+    void commentRentrer({ lat: lieu.lat, lng: lieu.lng }).then((r) => {
+      if (ok) setRentrer(r)
+    })
+    return () => {
+      ok = false
+    }
+  }, [lieu.id, lieu.lat, lieu.lng])
+
   // Échap ferme la fiche
   useEffect(() => {
     const h = (e: KeyboardEvent) => e.key === 'Escape' && onFermer()
@@ -4204,6 +4221,32 @@ function Fiche({
       {(adrComplete || lieu.adresse) && (
         <p className="mono fiche-adresse">
           {adrComplete || adresseLisible(lieu.adresse, lieu.nom)}
+        </p>
+      )}
+
+      {/* COMMENT TU RENTRES (10/08, décision du panel — voir rentrer.ts).
+          Une ligne, jamais une liste : le panel a prévenu qu'une liste
+          redeviendrait le calque qu'on venait de refuser. Et jamais un Vélib'
+          sans ses vélos : une station annoncée puis vide, c'est le
+          déplacement pour rien qu'on cherche à éviter. */}
+      {rentrer && (rentrer.velib.length > 0 || rentrer.noctilien) && (
+        <p className="mono fiche-rentrer">
+          <span className="fiche-rentrer-mot">{t('rentrer')}</span>
+          {rentrer.velib.map((s) => (
+            <span key={s.nom} className="fiche-rentrer-bout">
+              {t('vélib’')} {s.nom.toLowerCase()} · {formatDistance(s.m)} ·{' '}
+              <b>
+                {s.velos} {s.velos > 1 ? t('vélos') : t('vélo')}
+              </b>
+            </span>
+          ))}
+          {rentrer.noctilien && (
+            <span className="fiche-rentrer-bout">
+              {t('noctilien')} {rentrer.noctilien.nom.toLowerCase()} ·{' '}
+              {formatDistance(rentrer.noctilien.m)} ·{' '}
+              <b>{rentrer.noctilien.lignes.join(' ')}</b>
+            </span>
+          )}
         </p>
       )}
 
