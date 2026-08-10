@@ -1,5 +1,48 @@
 import { describe, it, expect } from 'vitest'
-import { metres, plusProches } from '../rentrer'
+import { metres, plusProches, heureDeNuit, etatNoctilien } from '../rentrer'
+
+// un 10 août 2026 à l'heure locale — on ne teste que l'heure, pas la date
+const a = (h: number, m = 0) => new Date(2026, 7, 10, h, m, 0)
+
+describe('l’heure du Noctilien', () => {
+  it('ne montre RIEN en pleine journée — la faute inverse de celle des bus de jour', () => {
+    for (const h of [7, 9, 11, 12, 15, 18, 21]) {
+      expect(etatNoctilien(a(h))).toBeNull()
+      expect(heureDeNuit(a(h))).toBe(false)
+    }
+  })
+
+  it('ouvre à 22 h, quand on prépare son retour — mais annonce « bientôt »', () => {
+    expect(etatNoctilien(a(21, 59))).toBeNull()
+    expect(etatNoctilien(a(22, 0))).toBe('bientot')
+    expect(etatNoctilien(a(23, 45))).toBe('bientot')
+    expect(etatNoctilien(a(0, 29))).toBe('bientot')
+  })
+
+  it('dit « ça roule » exactement de 0h30 à 5h30', () => {
+    expect(etatNoctilien(a(0, 30))).toBe('roule')
+    expect(etatNoctilien(a(2, 0))).toBe('roule')
+    expect(etatNoctilien(a(5, 30))).toBe('roule')
+  })
+
+  it('se referme NET après 5h30 — le piège de la fausse promesse inversée', () => {
+    // il est 5h45, le service est fini : annoncer « dès 0h30 » enverrait
+    // quelqu'un attendre un bus qui ne viendra plus. Rien, donc.
+    expect(etatNoctilien(a(5, 31))).toBeNull()
+    expect(etatNoctilien(a(5, 45))).toBeNull()
+    expect(etatNoctilien(a(6, 0))).toBeNull()
+    expect(heureDeNuit(a(5, 45))).toBe(false)
+  })
+
+  it('n’a rien à dire entre 6 h et 22 h — toute la journée', () => {
+    for (const h of [6, 8, 13, 17, 20]) expect(etatNoctilien(a(h, 30))).toBeNull()
+  })
+
+  it('compte minuit comme la nuit d’avant, jamais comme un nouveau jour', () => {
+    expect(heureDeNuit(a(0, 5))).toBe(true)
+    expect(heureDeNuit(a(3, 0))).toBe(true)
+  })
+})
 
 // Place Vendôme, le point de repli de l'app
 const VENDOME = { lat: 48.86746, lng: 2.32943 }

@@ -126,6 +126,8 @@ const EN: Record<string, string> = {
   'vélo': 'bike',
   'vélos': 'bikes',
   'noctilien': 'night bus',
+  'dès': 'from',
+  'jusqu’à': 'until',
   // les portes déjà utilisées sur ce téléphone (09/08)
   'déjà entré ici avec': 'you’ve been in here as',
   'Google': 'Google',

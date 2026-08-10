@@ -145,7 +145,12 @@ import {
   marquerVuPellicule,
 } from './db'
 import type { CompteConnecte } from './db'
-import { commentRentrer, type CommentRentrer } from './rentrer'
+import {
+  commentRentrer,
+  DEBUT_NOCTILIEN,
+  FIN_NOCTILIEN,
+  type CommentRentrer,
+} from './rentrer'
 import { anniversairesAVenir, motAnniversaire } from './fetes'
 import {
   construireTas,
@@ -4245,6 +4250,20 @@ function Fiche({
               {t('noctilien')} {rentrer.noctilien.nom.toLowerCase()} ·{' '}
               {formatDistance(rentrer.noctilien.m)} ·{' '}
               <b>{rentrer.noctilien.lignes.join(' ')}</b>
+              {/* le libellé dit la vérité de l'heure : tant que le service
+                  n'a pas commencé, on annonce quand — jamais un passage. */}
+              {rentrer.etatNoctilien === 'bientot' && (
+                <span className="fiche-rentrer-heure">
+                  {' '}
+                  · {t('dès')} {DEBUT_NOCTILIEN}
+                </span>
+              )}
+              {rentrer.etatNoctilien === 'roule' && (
+                <span className="fiche-rentrer-heure">
+                  {' '}
+                  · {t('jusqu’à')} {FIN_NOCTILIEN}
+                </span>
+              )}
             </span>
           )}
         </p>

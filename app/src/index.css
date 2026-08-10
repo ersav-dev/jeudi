@@ -8747,6 +8747,12 @@ button:focus:not(:focus-visible) {
   color: var(--encre);
   font-weight: 600;
 }
+/* l'heure du service, en retrait : elle qualifie, elle n'annonce pas un
+   passage — on n'a pas les horaires ligne par ligne et on ne fait pas
+   semblant de les avoir. */
+.fiche-rentrer-heure {
+  color: var(--encre-3);
+}
 
 .reglages-compte {
   display: flex;

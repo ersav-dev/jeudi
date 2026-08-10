@@ -144,23 +144,70 @@ export async function chargerNoctilien(): Promise<ArretNoctilien[] | null> {
   }
 }
 
+// ── L'HEURE DU NOCTILIEN (10/08, demande d'Ersan) ──────────────────────
+// Le réseau roule de 0h30 à 5h30 — c'est le titre du plan officiel d'IDFM
+// (« Plan du réseau Noctilien de 0h30 à 5h30 »), 48 lignes autour de cinq
+// points de correspondance dans Paris. Les horaires varient à la marge selon
+// la ligne et le jour ; on ne prétend donc jamais donner un passage.
+//
+// Pourquoi 22 h et pas 0h30 : la loi du panel vaut dans LES DEUX SENS. On a
+// retiré 3 107 arrêts de jour parce qu'un bus qui ne roule pas la nuit est
+// une fausse promesse ; afficher un bus de nuit à midi est la même faute
+// retournée. Mais on décide de rentrer AVANT que le service commence — à
+// 23 h on prépare sa sortie. On ouvre donc à 22 h, et c'est le LIBELLÉ qui
+// dit la vérité : « dès 0h30 » tant que ça ne roule pas.
+export const DEBUT_NOCTILIEN = '0h30'
+export const FIN_NOCTILIEN = '5h30'
+
+/** ça roule maintenant, ou seulement plus tard dans la nuit ?
+ *    'roule'   entre 0h30 et 5h30 (le service, d'après IDFM)
+ *    'bientot' de 22h à 0h29 — on prépare son retour, ça ne roule pas encore
+ *    null      le reste du temps : on n'affiche RIEN
+ *
+ *  ⚠ Le piège que j'ai failli livrer : entre 5h31 et 5h59 on est encore de
+ *  nuit, mais le service est FINI. Renvoyer 'bientot' aurait affiché « dès
+ *  0h30 » à quelqu'un qui rentre à 5h45 — la même fausse promesse que les
+ *  bus de jour, retournée. Après 5h30, plus rien. */
+export function etatNoctilien(d = new Date()): 'roule' | 'bientot' | null {
+  const min = d.getHours() * 60 + d.getMinutes()
+  if (min >= 30 && min <= 330) return 'roule' // 0h30 → 5h30
+  if (min >= 22 * 60 || min < 30) return 'bientot' // 22h → 0h29
+  return null
+}
+
+/** l'heure est-elle une heure où le Noctilien a quelque chose à dire ? */
+export function heureDeNuit(d = new Date()): boolean {
+  return etatNoctilien(d) !== null
+}
+
 export type CommentRentrer = {
   velib: StationVelib[]
   noctilien: ArretNoctilien | null
+  /** null = on n'affiche pas le Noctilien du tout (on est en journée) */
+  etatNoctilien: 'roule' | 'bientot' | null
 }
 
 /** Ce qu'on montre sous un spot. Les deux moitiés sont indépendantes : si le
  *  Vélib' ne répond pas, le Noctilien s'affiche quand même, et l'inverse. */
 export async function commentRentrer(
   depuis: { lat: number; lng: number },
+  maintenant = new Date(),
 ): Promise<CommentRentrer> {
-  const [v, n] = await Promise.all([chargerVelib(), chargerNoctilien()])
+  const etat = etatNoctilien(maintenant)
+  // en journée on ne charge même pas le fichier : un bus de nuit à midi ne
+  // s'affiche pas, donc il n'a pas à être téléchargé.
+  const [v, n] = await Promise.all([
+    chargerVelib(),
+    etat ? chargerNoctilien() : Promise.resolve(null),
+  ])
   return {
     // 2 stations : la plus proche peut être vide, la seconde sauve la mise.
-    // 400 m — au-delà, autant marcher jusqu'au métro.
+    // 400 m — au-delà, autant marcher jusqu'au métro. Le Vélib', lui, roule
+    // 24 h/24 : aucune condition d'heure.
     velib: v ? plusProches(v, depuis, 2, 400).filter((s) => s.velos > 0) : [],
     // un seul arrêt : le panel a prévenu qu'une LISTE redeviendrait un calque
     // déguisé. 600 m, un arrêt de nuit se mérite un peu.
     noctilien: n ? (plusProches(n, depuis, 1, 600)[0] ?? null) : null,
+    etatNoctilien: etat,
   }
 }
