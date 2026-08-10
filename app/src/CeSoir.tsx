@@ -102,27 +102,25 @@ export default function CeSoir({
   const [compagnie, setCompagnie] = useState<Compagnie | null>(null)
   const [envie, setEnvie] = useState<string | null>(null)
   const [meteo, setMeteo] = useState<Meteo>(() => lireMeteo())
-  // « la situation du portefeuille » : les prix restent cachés par défaut —
-  // un double-tap sur l'icône météo les révèle ~18 s (TRANCHÉ Ersan, 08/08).
-  // Pas de dblclick fiable sur mobile : on détecte nous-mêmes deux taps à
-  // moins de 300 ms d'écart.
+  // « la situation du portefeuille » : les prix restent cachés par défaut, et
+  // se révèlent ~18 s quand tu choisis ta météo.
+  //
+  // 10/08 — C'ÉTAIT UN DOUBLE-TAP SUR L'ICÔNE, et c'était introuvable. Ersan
+  // l'avait tranché le 08/08, puis ne l'a pas retrouvé lui-même deux jours
+  // plus tard (« quand on clique sur l'argent de la météo, on voit rien »).
+  // Un geste que son auteur oublie, personne ne le devinera. On garde
+  // l'intention — le prix n'est pas la première chose qu'on lit — mais elle
+  // est déjà servie par le fait qu'il soit caché au départ : il n'y avait pas
+  // besoin d'un secret en plus. Un tap simple sur le chip suffit désormais,
+  // et il n'y a plus de détection de double-tap à maintenir.
   const [prixReveles, setPrixReveles] = useState(false)
-  const dernierTapMeteoRef = useRef(0)
   const minuteurPrixRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => () => clearTimeout(minuteurPrixRef.current), [])
-  const tapIconeMeteo = (e: React.MouseEvent) => {
-    const maintenant = Date.now()
-    const delta = maintenant - dernierTapMeteoRef.current
-    dernierTapMeteoRef.current = maintenant
-    if (delta > 0 && delta < 300) {
-      // le double-tap ne doit RIEN déclencher d'autre (surtout pas re-choisir
-      // cette météo une 2e fois)
-      e.stopPropagation()
-      navigator.vibrate?.(10)
-      setPrixReveles(true)
-      clearTimeout(minuteurPrixRef.current)
-      minuteurPrixRef.current = setTimeout(() => setPrixReveles(false), 18_000)
-    }
+  const revelerPrix = () => {
+    navigator.vibrate?.(10)
+    setPrixReveles(true)
+    clearTimeout(minuteurPrixRef.current)
+    minuteurPrixRef.current = setTimeout(() => setPrixReveles(false), 18_000)
   }
   // bloc B : la porte « je sais pas » — pas un 6e onglet, un mode DANS ce soir
   const [surprise, setSurprise] = useState(false)
@@ -151,6 +149,8 @@ export default function CeSoir({
   const choisirMeteo = (m: Meteo) => {
     setMeteo(m)
     ecrireMeteo(m)
+    // choisir sa météo, c'est demander ce que ça coûte : on montre les prix
+    revelerPrix()
   }
 
   const { deck, anneau } = useMemo(() => {
@@ -312,9 +312,10 @@ export default function CeSoir({
             onClick={() => choisirMeteo(m)}
             title={label}
           >
-            <span className="meteo-icone" onClick={tapIconeMeteo}>
-              {icone}
-            </span>
+            {/* plus de gestionnaire ici : le tap du chip suffit. `meteo-icone`
+                garde son touch-action pour que le navigateur ne zoome pas si
+                on tapote deux fois de suite. */}
+            <span className="meteo-icone">{icone}</span>
             <span className={`meteo-prix mono${prixReveles ? ' revele' : ''}`}>{prixMeteo(m)}</span>
           </button>
         ))}
