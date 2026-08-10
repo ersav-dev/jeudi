@@ -5,7 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════════════════════════════════════
-   L'ÉTAT DU CHANTIER — 9 août 2026, au soir.
+   L'ÉTAT DU CHANTIER — mis à jour le 10 août 2026.
    Aucun <script> : la page est complète en dur, elle s'ouvre partout et
    s'imprime. Tout ce qui est annoncé comme VÉRIFIÉ l'a été à la main ce
    soir (tests lancés, base sondée table par table, arbre git regardé) —
@@ -223,42 +223,44 @@ summary .sq{font-size:11.5px;opacity:.45;display:block;margin-top:2px;font-weigh
 
 <h1>où on en est</h1>
 <svg class="trace" viewBox="0 0 206 11" aria-hidden="true"><path d="M3 7.5c22-3.4 47-4.6 71-4.2 26 .5 41 2.9 62 3.3 21 .4 43-1.2 67-3.1"/></svg>
-<p class="sous">jeudi — l'état du chantier au 9 août 2026, au soir. Ce que l'app sait
+<p class="sous">jeudi — l'état du chantier au 10 août 2026. Ce que l'app sait
 faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
 
 <div class="jauge">
-  <div><div class="pct">66 <small>%</small></div></div>
+  <div><div class="pct">67 <small>%</small></div></div>
   <div class="jc">
     <div class="jl">du chemin vers une ouverture publique. Le produit est <b>debout et
       vérifié</b> ; ce qui manque, c'est précisément <b>ce qui distingue jeudi de
       Google Maps</b> — le jugement des gens en qui tu as confiance.</div>
     <div class="barre">
-      <i style="width:66%;background:var(--fait)"></i>
+      <i style="width:67%;background:var(--fait)"></i>
       <i style="width:12%;background:var(--cours)"></i>
-      <i style="width:22%;background:var(--afaire)"></i>
+      <i style="width:21%;background:var(--afaire)"></i>
     </div>
     <div class="leg">
-      <span><i class="pastille" style="background:var(--fait)"></i> debout — 66 %</span>
+      <span><i class="pastille" style="background:var(--fait)"></i> debout — 67 %</span>
       <span><i class="pastille" style="background:var(--cours)"></i> à moitié — 12 %</span>
-      <span><i class="pastille" style="background:var(--afaire)"></i> à faire — 22 %</span>
+      <span><i class="pastille" style="background:var(--afaire)"></i> à faire — 21 %</span>
     </div>
     <div class="jl" style="margin-top:14px;opacity:.5;font-size:12px">
-      Ce chiffre a <b>baissé</b> ce soir : il était à 69 avant l'audit d'empaquetage,
-      qui a trouvé un trou qu'aucune de mes listes ne comptait — on ne peut pas bloquer
-      quelqu'un, et un signalement n'arrive nulle part. Une jauge qui ne descend jamais
-      ne sert à rien.
+      <b>Le chiffre n'a bougé que d'un point en deux jours, et c'est la vérité.</b>
+      Le 9 il était descendu de 69 à 66 parce que l'audit d'empaquetage avait trouvé
+      un trou qu'aucune liste ne comptait (on ne peut pas bloquer quelqu'un). Le 10 a
+      été une journée de <b>réparations et de finitions</b> — trois bugs sérieux, les
+      monuments soldés, l'app allégée de 619 ko — plus une petite fonction. Rien de
+      tout ça n'est un pilier. Une jauge honnête monte lentement.
     </div>
   </div>
 </div>
 
 <!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
-<h2>le contrôle du soir — les faits, pas les impressions</h2>
+<h2>le contrôle — les faits, pas les impressions</h2>
 <div class="ctrl">
-  <div><div class="n">429</div><div class="q">tests verts, 31 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">444</div><div class="q">tests verts, 32 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
   <div><div class="n">17/17</div><div class="q">migrations appliquées<br>sondées une par une</div></div>
-  <div><div class="n">0</div><div class="q">fichier qui traîne<br><code>main</code> propre, à jour</div></div>
-  <div><div class="n gris">32 407</div><div class="q">lignes, 111 fichiers<br>dans <code>app/src</code></div></div>
+  <div><div class="n">0</div><div class="q">commit en retard<br>poussé sur GitHub</div></div>
+  <div><div class="n">418<small style="font-size:13px"> ko</small></div><div class="q">la carte au premier affichage<br><em>1 037 ko avant</em></div></div>
   <div><div class="n gris">302</div><div class="q">spots réels dans le cloud<br>plus un seul faux profil</div></div>
 </div>
 <p><b>Une correction importante.</b> Trois notes de suivi disaient encore que des
@@ -331,6 +333,25 @@ données de l'enrichissement.</p>
     </ul>
   </div>
 
+  <div class="etape f">
+    <div class="quand">10 août</div>
+    <div class="tt">Trois bugs, et la carte soldée</div>
+    <ul>
+      <li>l'accueil appartient au <b>compte</b>, plus au téléphone — il se rejouait sur
+        chaque nouvel appareil et réécrivait le vrai profil</li>
+      <li>la <b>photothèque</b> est revenue : un attribut forçait l'appareil photo et
+        supprimait « choisir une photo »</li>
+      <li>les <b>accents des stations</b> réparés — c'était ça qui empêchait toute bouche
+        de métro de s'afficher, sur toutes les stations</li>
+      <li>les cinq chips de « sortir » n'étaient plus <b>vides</b> — une règle CSS des
+        prix effaçait leurs libellés</li>
+      <li>les monuments : redécoupés en 768 px depuis tes planches, +30 % puis encore
+        +30 %, priorité anti-empilement, les 7 cartouches manquants</li>
+      <li>« <b>comment tu rentres</b> » — Vélib' en temps réel et Noctilien, dans la fiche</li>
+      <li>l'app allégée de <b>619 ko</b> : la carte ne télécharge plus ce qu'elle ne dessine pas</li>
+    </ul>
+  </div>
+
   <div class="etape c">
     <div class="quand">à moitié</div>
     <div class="tt">La boucle de confiance</div>
@@ -339,7 +360,7 @@ données de l'enrichissement.</p>
       <li class="c">les jugements — <em>table posée, le <b>geste</b> de juger manque</em></li>
       <li class="c">la lentille « selon Karim » — <em>attend les deux au-dessus</em></li>
       <li class="c">l'enrichissement — <em>le SQL est écrit, il attend d'être collé</em></li>
-      <li class="c">les monuments et les 4 glyphes — <em>planches à trancher, dessins à faire</em></li>
+      <li class="c">les 4 glyphes — <em>vin, chope, thé, glace : à dessiner sur l'iPad</em></li>
       <li class="b">signaler et bloquer — <em>un signalement ne quitte pas le téléphone, et personne ne peut être bloqué</em></li>
     </ul>
   </div>
@@ -747,8 +768,14 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Les titres d'éclaireurs</td><td class="mono" style="color:var(--opus)">opus</td><td>concept à ouvrir</td>
  <td>Mérités par la carte, jamais recrutés. Pas encore spécifié.</td></tr>
 
-<tr><td>Les monuments</td><td class="mono" style="color:var(--opus)">opus</td><td>trancher la planche</td>
- <td><code>monuments_001.html</code> attend ton verdict. Ma reco tient : le jeu monoline unifié.</td></tr>
+<tr><td>Les monuments</td><td class="mono" style="color:var(--fait)">soldé</td><td>—</td>
+ <td>Fini le 10 août. Échelle repensée, +30 % deux fois, redécoupés en 768 px depuis tes planches réexportées, règle de priorité, 20 cartouches sur 20. Preuve : <code>monuments_echelle_001.html</code>.</td></tr>
+
+<tr><td>Le double-tap des prix</td><td class="mono" style="color:var(--toi)">ta décision</td><td><b>oui</b></td>
+ <td>Les prix du portefeuille ne se révèlent qu'au <b>double-tap</b> sur l'icône (18 s). Tu l'as construit et tu ne l'as pas retrouvé — personne ne le trouvera. Ma reco : un tap simple.</td></tr>
+
+<tr><td>Les bouches à deviner</td><td class="mono" style="color:var(--toi)">ta décision</td><td><b>oui</b></td>
+ <td>Elles n'apparaissent qu'après avoir <b>touché une station</b>, à z15+. Rien ne le dit. Piste : les afficher d'office dès z17, sans tap.</td></tr>
 
 <tr class="sep"><td>Le bug des spots archivés</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Localisé et confirmé ce soir. Une heure de travail.</td></tr>
@@ -795,6 +822,11 @@ qui est déjà écrit et qui attend.</p>
   <div class="k"><i class="case"></i><div><b>Le premier tas</b>
     <span>Un tirage, une heure de séchage. Toute la pellicule est codée et n'a jamais
     vu une vraie photo arriver.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Rouvrir l'app et confirmer les réparations du 10</b>
+    <span>Ferme-la complètement (balaye-la de la liste), rouvre. Trois choses à vérifier :
+    les cinq chips de « sortir » sont revenues · les sorties de métro s'affichent quand tu
+    touches une station et que tu zoomes · la ligne « rentrer » apparaît sous l'adresse
+    d'un spot.</span></div></div>
   <div class="k"><i class="case"></i><div><b>Le test à deux comptes</b>
     <span>Invitation → cercle → photo → visibilité privé/cercle → suppression du compte.
     C'est le trou le plus large de tout ce document.</span></div></div>
@@ -823,16 +855,19 @@ les stickers pèsent zéro parce qu'on peut ouvrir sans eux.</p>
 <tr><td>le carnet</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
 <tr><td>le moteur — deck, swipe, rayon</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
 <tr><td>le cercle et le match</td><td class="n">12</td><td class="n">90 %</td><td class="n">10,8</td></tr>
-<tr><td>la carte</td><td class="n">14</td><td class="n">88 %</td><td class="n">12,3</td></tr>
+<tr><td>la carte</td><td class="n">14</td><td class="n">94 %</td><td class="n">13,2</td></tr>
 <tr><td>la boucle de confiance</td><td class="n">15</td><td class="n">30 %</td><td class="n">4,5</td></tr>
 <tr><td>la preuve par la photo</td><td class="n">7</td><td class="n">40 %</td><td class="n">2,8</td></tr>
 <tr><td>la modération — signaler, bloquer</td><td class="n">5</td><td class="n">20 %</td><td class="n">1,0</td></tr>
 <tr><td>notifications et rétention</td><td class="n">7</td><td class="n">0 %</td><td class="n">0,0</td></tr>
-<tr class="sep"><td><b>total</b></td><td class="n"><b>100</b></td><td></td><td class="n"><b>71,4</b></td></tr>
+<tr class="sep"><td><b>total</b></td><td class="n"><b>100</b></td><td></td><td class="n"><b>72,3</b></td></tr>
 </table></div>
-<p><i class="q">La ligne « modération » est apparue ce soir, et elle a coûté trois points
-aux autres : quand on ajoute un poids, il faut en retirer ailleurs, sinon on triche.</i></p>
-<p><b>71 sur le papier, 66 en conscience.</b> Je retire cinq points pour une raison
+<p><i class="q">La ligne « modération » est apparue le 9 août, et elle a coûté trois points
+aux autres : quand on ajoute un poids, il faut en retirer ailleurs, sinon on triche.
+Le 10, seule « la carte » a bougé (88 → 94 %) : les monuments sont soldés et les
+transports allégés. Les trois bugs réparés ne font pas monter la jauge — ils
+empêchaient seulement le produit d'être ce qu'il prétendait déjà être.</i></p>
+<p><b>72 sur le papier, 67 en conscience.</b> Je retire cinq points pour une raison
 précise, toujours la même : <b>rien de tout ça n'a été éprouvé par quelqu'un d'autre
 que toi.</b> Une app de sorties qui n'a jamais vu deux vrais cercles se croiser garde
 des trous qu'aucune relecture de code ne révèle. Ces cinq points se regagnent en une
@@ -853,12 +888,21 @@ inconnus arrivent, soit la règle s'applique à tous — et il faut décider ce 
 du fond —, soit elle ne veut plus rien dire. À trancher <b>avant</b> l'ouverture,
 jamais après : après, c'est un revirement public.</div>
 
+<div class="note"><b>Ce que le 10 août a appris, et qui vaut plus que le code</b>
+Les trois bugs les plus graves de la journée ont été trouvés par <b>toi, sur ton
+téléphone</b> — ni par les tests, ni par la relecture. L'accueil qui se rejouait et
+réécrivait ton profil, les bouches de métro devenues invisibles, les cinq chips vides :
+<b>444 tests verts n'en avaient attrapé aucun.</b> C'est l'argument le plus concret
+pour la porte du 27 août — trente personnes qui l'utilisent une soirée trouveront ce
+qu'aucune vérification ne voit.</div>
+
 <p class="pied">
-jeudi — état du chantier, 9 août 2026 au soir. Vérifié à la main : 429 tests,
-0 erreur de type, 17 migrations sur 17 sondées dans la base, arbre git propre.<br>
-Les planches de travail du jour : dictionnaire_carte_001 · atelier_grammaire_001 ·
-atelier_glyphes_001 · atelier_diamant_001 · monuments_001.<br>
-Les documents de fond : CONCEPT · ETAT_2026-08-08 · AVANT_LANCEMENT · CHANTIER_PUSH ·
-CHANTIER_PELLICULE · CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
+jeudi — état du chantier, 10 août 2026. Vérifié à la main : 444 tests, 0 erreur de
+type, 17 migrations sur 17 sondées dans la base, arbre git propre et poussé.<br>
+Les planches : monuments_echelle_001 · dictionnaire_carte_001 · atelier_grammaire_001 ·
+atelier_glyphes_001 · atelier_diamant_001.<br>
+Les documents de fond : CONCEPT · PANEL_VELIB_BUS_2026-08-10 · ETAT_2026-08-08 ·
+AVANT_LANCEMENT · CHANTIER_PUSH · CHANTIER_PELLICULE · CHANTIER_SUPER8 ·
+PROMPTS_CHANTIERS.
 </p>
 </body></html>
