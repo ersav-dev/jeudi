@@ -256,7 +256,7 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
 <!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
 <h2>le contrôle — les faits, pas les impressions</h2>
 <div class="ctrl">
-  <div><div class="n">461</div><div class="q">tests verts, 34 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">495</div><div class="q">tests verts, 35 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
   <div><div class="n">17/17</div><div class="q">migrations appliquées<br>sondées une par une</div></div>
   <div><div class="n">0</div><div class="q">commit en retard<br>poussé sur GitHub</div></div>
@@ -357,6 +357,12 @@ données de l'enrichissement.</p>
         qui n'existe pas</li>
       <li>le <b>prix du portefeuille</b> ne reste plus : un tap le montre, un autre l'éteint</li>
       <li>l'app allégée de <b>619 ko</b> : la carte ne télécharge plus ce qu'elle ne dessine pas</li>
+      <li>les <b>spots archivés</b> réapparaissent — la section était vide depuis toujours,
+        donc « restaurer » était inatteignable</li>
+      <li><b>mes monuments</b> : ta photo par-dessus la gravure, sur ta carte seulement —
+        première tranche de ton idée de stickers</li>
+      <li>le <b>lexique d'intentions</b> : « manger thaï » veut enfin dire quelque chose</li>
+      <li>le chantier <b>signaler / bloquer</b> cadré pour mercredi</li>
     </ul>
   </div>
 
@@ -759,7 +765,7 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
  <td>Plus les notifications « demande reçue » et « demande acceptée », qui manquent.</td></tr>
 
 <tr><td>Signaler et bloquer, pour de vrai</td><td class="mono" style="color:var(--fable)">fable</td><td>oui</td>
- <td><b>Découvert ce soir, et c'est un verrou de l'ouverture publique.</b> Signaler un lieu n'écrit que dans le <code>localStorage</code> du téléphone ; signaler une photo ouvre un mail vers une adresse qui n'existe pas ; et « retirer de mon cercle » n'est pas un blocage. Les deux stores l'exigent littéralement, et le produit le mérite. 2 à 3 jours + une migration.</td></tr>
+ <td><b>Verrou de l'ouverture publique. Cadré le 10 août : <code>CHANTIER_SIGNALER_BLOQUER.md</code></b> — mercredi n'a plus à découvrir le terrain. L'état réel : signaler un lieu n'écrit que dans le <code>localStorage</code> du téléphone, signaler une photo part vers une boîte qui n'existe pas, et « retirer de mon cercle » n'est pas un blocage (la personne revient aussitôt et voit toujours les 302 spots publics). Le document liste les <b>dix tables</b> que le blocage traverse et le piège principal : la lecture des lieux se fait <b>sans filtre <code>owner_id</code></b> — c'est la RLS qui décide seule, donc un filtre côté client ne servirait à rien. <b>Quatre décisions t'attendent</b> dedans.</td></tr>
 
 <tr class="sep"><td>Le geste de juger</td><td class="mono" style="color:var(--opus)">opus</td><td>maquette d'abord</td>
  <td>Pastilles 3 niveaux signées, jamais d'étoiles — la mécanique des WC généralisée. Les tables sont en base depuis ce soir.</td></tr>
@@ -785,8 +791,8 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Les bouches à deviner</td><td class="mono" style="color:var(--toi)">ta décision</td><td><b>oui</b></td>
  <td><b>La dernière petite.</b> Elles n'apparaissent qu'après avoir <b>touché une station</b>, à z15+, et rien ne le dit. Piste : les afficher d'office dès z17, sans tap — mais ça change le comportement d'un écran que tu connais bien, donc planche d'abord. Les deux autres décisions qui t'attendent ne sont pas de l'interface : ce sont « publier = prouver » et le profil découvrable, réservées à mercredi.</td></tr>
 
-<tr class="sep"><td>Le bug des spots archivés</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
- <td>Localisé et confirmé ce soir. Une heure de travail.</td></tr>
+<tr class="sep"><td>Le bug des spots archivés</td><td class="mono" style="color:var(--fait)">soldé</td><td>—</td>
+ <td>Réparé le 10 août. La section filtrait la liste principale, qui ne charge que les spots actifs : elle était <b>vide depuis toujours</b>, et « restaurer » inatteignable. Nouveau lecteur dédié, appelé à l'ouverture — les archivés ne remontent pas dans le deck, ce qui est bien le sens de « ranger ».</td></tr>
 
 <tr><td>Les petites dettes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Cap 20 → 10 · <code>erreurTip</code> non traduit · FormAjout vs AjoutMain · la file Nominatim court-circuitée.</td></tr>
@@ -803,8 +809,8 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr class="sep"><td><b>L'happy hour, partout</b></td><td class="mono" style="opacity:.5">à écrire</td><td>—</td>
  <td><b>Idée du 10 août.</b> C'est LE fait économique de la nuit, et il traverse tout : le deck (« il est 18h40, celui-là finit son happy hour à 19h »), la météo du porte-monnaie (l'happy hour change de tranche de prix), le moment (régler « ce soir 20h » peut le faire tomber), la fiche, la recherche. Le nœud n'est pas le code mais <b>la donnée</b> : ni OSM ni Google ne la portent — elle vit sur l'Instagram des lieux. Donc elle viendra des gens, comme la propreté des WC : un champ qu'on remplit quand on y est. Ça la range du côté des critères, pas des horaires.</td></tr>
 
-<tr><td><b>Les stickers du carnet</b></td><td class="mono" style="opacity:.5">à écrire</td><td>—</td>
- <td><b>Idée du 10 août, la plus forte de la semaine.</b> Tes photos, détourées, deviennent des stickers qui marquent les lieux — et tu peux remplacer la gravure d'un monument par <b>ta</b> photo de ce monument. Personnel seulement : le repère ne bouge pas pour les autres. Trouvaille de la discussion : la gravure ne disparaît pas, elle reste à l'échelle de la ville et ta photo prend le relais en approchant — la carte se <em>développe</em> quand on zoome, et le relais de zoom existe déjà. Pièce à prototyper avant tout : <b>le détourage</b>, sans lui rien ne tient à 30 px. Le partage est une v2 qui exige signaler/bloquer.</td></tr>
+<tr><td><b>Les stickers du carnet</b></td><td class="mono" style="color:var(--cours)">1ʳᵉ tranche livrée</td><td>—</td>
+ <td><b>Idée du 10 août, la plus forte de la semaine — et « mes monuments » est en ligne le soir même.</b> Réglages → mes monuments : ta photo remplace la gravure, sur <b>ta</b> carte seulement, et elle ne quitte pas ton téléphone. La gravure tient l'échelle de la ville, ta photo prend le relais au-dessus de 64 px : <em>la carte se développe quand on zoome.</em> La taille du monument ne change pas d'un pixel (mesuré : 60 px de large avec ou sans photo).<br><b>Ce qui reste :</b> le <b>détourage</b> — sans fond retiré, une photo à 30 px est de la boue, et c'est la pièce à prototyper avant d'aller plus loin ; puis les stickers sur les <em>spots</em> (pas seulement les monuments) ; puis le partage, qui est une v2 et exige signaler/bloquer.</td></tr>
 
 <tr><td>Où tu seras — les ancres</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
  <td>Et leurs stickers — voir la ligne au-dessus, le mécanisme est le même.</td></tr>
@@ -914,12 +920,13 @@ pour la porte du 27 août — trente personnes qui l'utilisent une soirée trouv
 qu'aucune vérification ne voit.</div>
 
 <p class="pied">
-jeudi — état du chantier, 10 août 2026. Vérifié à la main : 461 tests, 0 erreur de
-type, 17 migrations sur 17 sondées dans la base, arbre git propre et poussé.<br>
+jeudi — état du chantier, 10 août 2026. Vérifié à la main : 495 tests, 0 erreur de
+type, 17 migrations sur 17 sondées dans la base, arbre git propre et poussé,
+sauvegarde en trois exemplaires (main, branche du jour, archive de 174 Mo).<br>
 Les planches : couleurs_lignes_001 · monuments_echelle_001 · dictionnaire_carte_001 ·
 atelier_grammaire_001 · atelier_glyphes_001 · atelier_diamant_001.<br>
-Les documents de fond : CONCEPT · PANEL_VELIB_BUS_2026-08-10 · ETAT_2026-08-08 ·
-AVANT_LANCEMENT · CHANTIER_PUSH · CHANTIER_PELLICULE · CHANTIER_SUPER8 ·
-PROMPTS_CHANTIERS.
+Les documents de fond : CONCEPT · PANEL_VELIB_BUS_2026-08-10 ·
+CHANTIER_SIGNALER_BLOQUER · CHANTIER_PUSH · ETAT_2026-08-08 · AVANT_LANCEMENT ·
+CHANTIER_PELLICULE · CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
 </p>
 </body></html>
