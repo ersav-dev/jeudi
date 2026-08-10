@@ -4432,19 +4432,24 @@ button {
   color: var(--encre);
 }
 /* les prix restent cachés par défaut — un double-tap sur l'icône météo les
-   révèle ~18 s (CeSoir.tsx tapIconeMeteo, 08/08). Scopé à .meteo-bas : la
-   classe .meteo-prix est réutilisée ailleurs (chips compagnie de « je sais
-   pas ») pour du texte toujours visible, jamais un prix à cacher. */
-.meteo-bas .meteo-prix {
+   révèle ~18 s (CeSoir.tsx tapIconeMeteo, 08/08).
+   ⚠ 10/08 — LE SCOPE ÉTAIT TROP LARGE, et ça a effacé un écran entier.
+   `.meteo-bas` n'est pas seulement la rangée du portefeuille : ChoixMoment
+   emprunte la même classe pour hériter du style des chips (« maintenant »,
+   « ce soir · 20h »…). Ces libellés-là ne sont pas des prix et doivent
+   TOUJOURS se lire — or ils héritaient de l'opacity: 0 et les cinq chips de
+   « sortir » apparaissaient VIDES. Signalé par Ersan sur son téléphone.
+   On exclut donc explicitement les chips du moment. */
+.meteo-bas:not(.moment-chips) .meteo-prix {
   opacity: 0;
   transition: opacity 1000ms ease;
 }
-.meteo-bas .meteo-prix.revele {
+.meteo-bas:not(.moment-chips) .meteo-prix.revele {
   opacity: 1;
   transition: opacity 120ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  .meteo-bas .meteo-prix {
+  .meteo-bas:not(.moment-chips) .meteo-prix {
     transition: none; /* apparition/disparition nettes, pas de fondu */
   }
 }
