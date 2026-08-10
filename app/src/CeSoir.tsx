@@ -7,6 +7,7 @@ import {
   type Meteo,
   COMPAGNIES,
   prixMeteo,
+  gesteMeteo,
   COMPAGNIE_GLOSE,
   gloseEnvie,
   ajouterSortie,
@@ -120,7 +121,12 @@ export default function CeSoir({
     navigator.vibrate?.(10)
     setPrixReveles(true)
     clearTimeout(minuteurPrixRef.current)
+    // le filet : même si personne ne retape, le prix ne RESTE pas
     minuteurPrixRef.current = setTimeout(() => setPrixReveles(false), 18_000)
+  }
+  const cacherPrix = () => {
+    clearTimeout(minuteurPrixRef.current)
+    setPrixReveles(false)
   }
   // bloc B : la porte « je sais pas » — pas un 6e onglet, un mode DANS ce soir
   const [surprise, setSurprise] = useState(false)
@@ -146,11 +152,24 @@ export default function CeSoir({
   const dateEffective = dateDuMoment(moment)
   const { envies, nuit } = lexiqueDuMoment(dateEffective)
 
+  // LE MÊME GESTE MONTRE ET CACHE (10/08, demande d'Ersan : « je ne veux pas
+  // que le prix reste »). Retaper la météo DÉJÀ choisie éteint les prix ;
+  // taper une AUTRE météo les montre — on vient de changer de budget, c'est
+  // précisément le moment de voir ce qu'il donne. Le fondu de 18 s reste en
+  // filet : même sans retap, le prix finit par s'effacer.
   const choisirMeteo = (m: Meteo) => {
-    setMeteo(m)
-    ecrireMeteo(m)
-    // choisir sa météo, c'est demander ce que ça coûte : on montre les prix
-    revelerPrix()
+    switch (gesteMeteo(m, meteo, prixReveles)) {
+      case 'cacher':
+        cacherPrix()
+        return
+      case 'montrer':
+        revelerPrix()
+        return
+      default:
+        setMeteo(m)
+        ecrireMeteo(m)
+        revelerPrix()
+    }
   }
 
   const { deck, anneau } = useMemo(() => {

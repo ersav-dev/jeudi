@@ -1916,6 +1916,25 @@ export function lireSeuils(): [number, number] {
 export function ecrireSeuils(s: [number, number]): void {
   localStorage.setItem('jeudi-seuils', JSON.stringify(s))
 }
+/** LE GESTE DU CHIP DE MÉTÉO (10/08) — ce qu'un tap doit faire, l'état courant
+ *  étant donné. Sorti du composant pour être TESTÉ : c'est une petite machine
+ *  à trois états qu'Ersan a fait évoluer deux fois en un jour (double-tap →
+ *  tap simple → bascule), et chaque fois le risque était de se tromper d'un
+ *  cran sans que rien ne le signale.
+ *
+ *    · taper une AUTRE météo  → on change de budget, et on montre ce qu'il donne
+ *    · retaper la MÊME, prix affichés  → on éteint (le geste qui montre est
+ *      celui qui cache — « je ne veux pas que le prix reste »)
+ *    · retaper la MÊME, prix cachés    → on remontre */
+export function gesteMeteo(
+  tapee: Meteo,
+  choisie: Meteo,
+  prixVisibles: boolean,
+): 'choisir-et-montrer' | 'montrer' | 'cacher' {
+  if (tapee !== choisie) return 'choisir-et-montrer'
+  return prixVisibles ? 'cacher' : 'montrer'
+}
+
 export function prixMeteo(m: Meteo): string {
   const [s1, s2] = lireSeuils()
   if (m === 'pluie') return `< ${s1} €`
