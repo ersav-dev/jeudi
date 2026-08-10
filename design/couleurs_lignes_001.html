@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>jeudi — les vraies couleurs des lignes</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--encre:#EFE9D8;--papier:#14120e;--nuit:#0e1015;--clair:#dfe9ff;--cire:#a8322a;
+ --vert:#7fc79a;--trait:rgba(239,233,216,.10)}
+*{margin:0;box-sizing:border-box}
+body{background:var(--papier);color:var(--encre);font-family:system-ui,sans-serif;
+ line-height:1.55;padding:0 20px 80px;max-width:900px;margin:0 auto}
+h1{font-family:'Caveat',cursive;font-size:44px;font-weight:600;padding-top:34px;line-height:1}
+.sous{opacity:.55;font-size:13.5px;margin-top:10px;max-width:68ch}
+h2{font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;
+ letter-spacing:.16em;opacity:.42;margin:40px 0 12px;border-top:1px solid var(--trait);padding-top:18px}
+p{font-size:13.5px;opacity:.68;margin-top:10px;max-width:74ch}
+b{color:var(--clair);font-weight:600;opacity:1}
+code{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:rgba(239,233,216,.05);
+ padding:1px 4px;border-radius:3px}
+.cle{background:var(--nuit);border:1px solid var(--trait);border-left:2px solid var(--cire);
+ border-radius:0 3px 3px 0;padding:15px 18px;margin-top:16px;font-size:13.5px;max-width:80ch}
+.cle.vert{border-left-color:var(--vert)}
+.cle b:first-child{display:block;margin-bottom:5px;font-size:14px}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:8px}
+.l{display:flex;align-items:center;gap:11px;background:var(--nuit);
+ border:1px solid var(--trait);border-radius:3px;padding:9px 12px}
+.ref{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;
+ min-width:38px;text-align:center;padding:3px 6px;border-radius:3px;flex:none}
+.duo{display:flex;align-items:center;gap:5px;flex:none}
+.p{width:26px;height:26px;border-radius:3px;display:block;
+ box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.fl{font-style:normal;opacity:.3;font-size:11px}
+.hex{font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.35;flex:1}
+.hex b{display:block;color:var(--encre)}
+.hex em{font-style:normal;opacity:.38;text-decoration:line-through}
+.ec{font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:.35;flex:none}
+.ec.fort{color:var(--vert);opacity:1}
+.pied{font-family:'JetBrains Mono',monospace;margin-top:38px;opacity:.32;font-size:10px;
+ line-height:1.7;border-top:1px solid var(--trait);padding-top:16px}
+</style></head><body>
+
+<h1>les vraies couleurs des lignes</h1>
+<p class="sous">10 août 2026 — pastille de gauche : ce que jeudi affichait.
+Pastille de droite : la couleur officielle. Δ mesure l'écart perçu ; en vert,
+celles qui se voient franchement.</p>
+
+<div class="cle"><b>Je m'étais trompé, et le commentaire du code affirmait le contraire</b>
+Il était écrit dans <code>lignes.ts</code> qu'OSM était « systématiquement plus
+terne » et que la vraie teinte du métro 1 était <code>#FFCE00</code>. Vérification
+faite à la source — le <b>référentiel des lignes d'Île-de-France Mobilités</b> en
+open data, champ <code>colourweb_hexa</code>, celui qui fait la signalétique
+officielle — le métro 1 est <b>#FFBE00</b> et la 3 <b>#6E6E00</b>.
+<b>C'était OSM qui avait raison.</b> Les valeurs en place venaient de la palette
+qu'on trouve sur Wikipédia, que j'avais crue meilleure sans la vérifier.
+Les <b>30 lignes</b> sont réécrites depuis le référentiel.</div>
+
+<div class="cle vert"><b>Et une déduction fausse, corrigée par la source</b>
+J'avais remarqué que les neuf couleurs de tram étaient <em>exactement</em> des
+couleurs de métro et j'en avais conclu à un repli paresseux. Faux : la charte
+officielle <b>réutilise vraiment les mêmes teintes entre modes</b> — le T1 porte le
+bleu du métro 2, le T2 le violet du 4, le T7 le brun du 11, le T10 l'olive du 3.
+Seuls le T6 et le T9 étaient réellement faux.</div>
+
+<h2>le métro</h2><div class="grille"><div class="l">
+      <span class="ref" style="background:#FFBE00;color:#14120e">1</span>
+      <span class="duo"><i class="p" style="background:#FFCE00"></i><i class="fl">→</i><i class="p" style="background:#FFBE00"></i></span>
+      <span class="hex"><b>#FFBE00</b><em>#FFCE00</em></span>
+      <span class="ec">Δ 6</span>
+    </div><div class="l">
+      <span class="ref" style="background:#0055C8;color:#EFE9D8">2</span>
+      <span class="duo"><i class="p" style="background:#0064B0"></i><i class="fl">→</i><i class="p" style="background:#0055C8"></i></span>
+      <span class="hex"><b>#0055C8</b><em>#0064B0</em></span>
+      <span class="ec fort">Δ 11</span>
+    </div><div class="l">
+      <span class="ref" style="background:#6E6E00;color:#EFE9D8">3</span>
+      <span class="duo"><i class="p" style="background:#9F9825"></i><i class="fl">→</i><i class="p" style="background:#6E6E00"></i></span>
+      <span class="hex"><b>#6E6E00</b><em>#9F9825</em></span>
+      <span class="ec fort">Δ 29</span>
+    </div><div class="l">
+      <span class="ref" style="background:#82C8E6;color:#14120e">3bis</span>
+      <span class="duo"><i class="p" style="background:#98D4E2"></i><i class="fl">→</i><i class="p" style="background:#82C8E6"></i></span>
+      <span class="hex"><b>#82C8E6</b><em>#98D4E2</em></span>
+      <span class="ec fort">Δ 10</span>
+    </div><div class="l">
+      <span class="ref" style="background:#A0006E;color:#EFE9D8">4</span>
+      <span class="duo"><i class="p" style="background:#C04191"></i><i class="fl">→</i><i class="p" style="background:#A0006E"></i></span>
+      <span class="hex"><b>#A0006E</b><em>#C04191</em></span>
+      <span class="ec fort">Δ 32</span>
+    </div><div class="l">
+      <span class="ref" style="background:#FF5A00;color:#EFE9D8">5</span>
+      <span class="duo"><i class="p" style="background:#F28E42"></i><i class="fl">→</i><i class="p" style="background:#FF5A00"></i></span>
+      <span class="hex"><b>#FF5A00</b><em>#F28E42</em></span>
+      <span class="ec fort">Δ 33</span>
+    </div><div class="l">
+      <span class="ref" style="background:#82DC73;color:#14120e">6</span>
+      <span class="duo"><i class="p" style="background:#83C491"></i><i class="fl">→</i><i class="p" style="background:#82DC73"></i></span>
+      <span class="hex"><b>#82DC73</b><em>#83C491</em></span>
+      <span class="ec fort">Δ 15</span>
+    </div><div class="l">
+      <span class="ref" style="background:#FF82B4;color:#EFE9D8">7</span>
+      <span class="duo"><i class="p" style="background:#F3A4BA"></i><i class="fl">→</i><i class="p" style="background:#FF82B4"></i></span>
+      <span class="hex"><b>#FF82B4</b><em>#F3A4BA</em></span>
+      <span class="ec fort">Δ 14</span>
+    </div><div class="l">
+      <span class="ref" style="background:#82DC73;color:#14120e">7bis</span>
+      <span class="duo"><i class="p" style="background:#83C491"></i><i class="fl">→</i><i class="p" style="background:#82DC73"></i></span>
+      <span class="hex"><b>#82DC73</b><em>#83C491</em></span>
+      <span class="ec fort">Δ 15</span>
+    </div><div class="l">
+      <span class="ref" style="background:#D282BE;color:#EFE9D8">8</span>
+      <span class="duo"><i class="p" style="background:#CEADD2"></i><i class="fl">→</i><i class="p" style="background:#D282BE"></i></span>
+      <span class="hex"><b>#D282BE</b><em>#CEADD2</em></span>
+      <span class="ec fort">Δ 19</span>
+    </div><div class="l">
+      <span class="ref" style="background:#D2D200;color:#14120e">9</span>
+      <span class="duo"><i class="p" style="background:#D5C900"></i><i class="fl">→</i><i class="p" style="background:#D2D200"></i></span>
+      <span class="hex"><b>#D2D200</b><em>#D5C900</em></span>
+      <span class="ec">Δ 4</span>
+    </div><div class="l">
+      <span class="ref" style="background:#DC9600;color:#EFE9D8">10</span>
+      <span class="duo"><i class="p" style="background:#E3B32A"></i><i class="fl">→</i><i class="p" style="background:#DC9600"></i></span>
+      <span class="hex"><b>#DC9600</b><em>#E3B32A</em></span>
+      <span class="ec fort">Δ 20</span>
+    </div><div class="l">
+      <span class="ref" style="background:#6E491E;color:#EFE9D8">11</span>
+      <span class="duo"><i class="p" style="background:#8D5E2A"></i><i class="fl">→</i><i class="p" style="background:#6E491E"></i></span>
+      <span class="hex"><b>#6E491E</b><em>#8D5E2A</em></span>
+      <span class="ec fort">Δ 15</span>
+    </div><div class="l">
+      <span class="ref" style="background:#00643C;color:#EFE9D8">12</span>
+      <span class="duo"><i class="p" style="background:#00814F"></i><i class="fl">→</i><i class="p" style="background:#00643C"></i></span>
+      <span class="hex"><b>#00643C</b><em>#00814F</em></span>
+      <span class="ec fort">Δ 14</span>
+    </div><div class="l">
+      <span class="ref" style="background:#82C8E6;color:#14120e">13</span>
+      <span class="duo"><i class="p" style="background:#98D4E2"></i><i class="fl">→</i><i class="p" style="background:#82C8E6"></i></span>
+      <span class="hex"><b>#82C8E6</b><em>#98D4E2</em></span>
+      <span class="ec fort">Δ 10</span>
+    </div><div class="l">
+      <span class="ref" style="background:#640082;color:#EFE9D8">14</span>
+      <span class="duo"><i class="p" style="background:#662483"></i><i class="fl">→</i><i class="p" style="background:#640082"></i></span>
+      <span class="hex"><b>#640082</b><em>#662483</em></span>
+      <span class="ec fort">Δ 14</span>
+    </div></div>
+<h2>le RER</h2><div class="grille"><div class="l">
+      <span class="ref" style="background:#EB2132;color:#EFE9D8">A</span>
+      <span class="duo"><i class="p" style="background:#E3051C"></i><i class="fl">→</i><i class="p" style="background:#EB2132"></i></span>
+      <span class="hex"><b>#EB2132</b><em>#E3051C</em></span>
+      <span class="ec fort">Δ 14</span>
+    </div><div class="l">
+      <span class="ref" style="background:#5091CB;color:#EFE9D8">B</span>
+      <span class="duo"><i class="p" style="background:#5291CE"></i><i class="fl">→</i><i class="p" style="background:#5091CB"></i></span>
+      <span class="hex"><b>#5091CB</b><em>#5291CE</em></span>
+      <span class="ec">Δ 1</span>
+    </div><div class="l">
+      <span class="ref" style="background:#FFCC30;color:#14120e">C</span>
+      <span class="duo"><i class="p" style="background:#FFCE00"></i><i class="fl">→</i><i class="p" style="background:#FFCC30"></i></span>
+      <span class="hex"><b>#FFCC30</b><em>#FFCE00</em></span>
+      <span class="ec fort">Δ 19</span>
+    </div><div class="l">
+      <span class="ref" style="background:#008B5B;color:#EFE9D8">D</span>
+      <span class="duo"><i class="p" style="background:#00814F"></i><i class="fl">→</i><i class="p" style="background:#008B5B"></i></span>
+      <span class="hex"><b>#008B5B</b><em>#00814F</em></span>
+      <span class="ec">Δ 6</span>
+    </div><div class="l">
+      <span class="ref" style="background:#B94E9A;color:#EFE9D8">E</span>
+      <span class="duo"><i class="p" style="background:#C04191"></i><i class="fl">→</i><i class="p" style="background:#B94E9A"></i></span>
+      <span class="hex"><b>#B94E9A</b><em>#C04191</em></span>
+      <span class="ec">Δ 7</span>
+    </div></div>
+<h2>le tram</h2><div class="grille"><div class="l">
+      <span class="ref" style="background:#0055C8;color:#EFE9D8">T1</span>
+      <span class="duo"><i class="p" style="background:#0064B0"></i><i class="fl">→</i><i class="p" style="background:#0055C8"></i></span>
+      <span class="hex"><b>#0055C8</b><em>#0064B0</em></span>
+      <span class="ec fort">Δ 11</span>
+    </div><div class="l">
+      <span class="ref" style="background:#A0006E;color:#EFE9D8">T2</span>
+      <span class="duo"><i class="p" style="background:#C04191"></i><i class="fl">→</i><i class="p" style="background:#A0006E"></i></span>
+      <span class="hex"><b>#A0006E</b><em>#C04191</em></span>
+      <span class="ec fort">Δ 32</span>
+    </div><div class="l">
+      <span class="ref" style="background:#FF5A00;color:#EFE9D8">T3a</span>
+      <span class="duo"><i class="p" style="background:#F28E42"></i><i class="fl">→</i><i class="p" style="background:#FF5A00"></i></span>
+      <span class="hex"><b>#FF5A00</b><em>#F28E42</em></span>
+      <span class="ec fort">Δ 33</span>
+    </div><div class="l">
+      <span class="ref" style="background:#00643C;color:#EFE9D8">T3b</span>
+      <span class="duo"><i class="p" style="background:#00814F"></i><i class="fl">→</i><i class="p" style="background:#00643C"></i></span>
+      <span class="hex"><b>#00643C</b><em>#00814F</em></span>
+      <span class="ec fort">Δ 14</span>
+    </div><div class="l">
+      <span class="ref" style="background:#DC9600;color:#EFE9D8">T4</span>
+      <span class="duo"><i class="p" style="background:#E3B32A"></i><i class="fl">→</i><i class="p" style="background:#DC9600"></i></span>
+      <span class="hex"><b>#DC9600</b><em>#E3B32A</em></span>
+      <span class="ec fort">Δ 20</span>
+    </div><div class="l">
+      <span class="ref" style="background:#FF0000;color:#EFE9D8">T6</span>
+      <span class="duo"><i class="p" style="background:#E3051C"></i><i class="fl">→</i><i class="p" style="background:#FF0000"></i></span>
+      <span class="hex"><b>#FF0000</b><em>#E3051C</em></span>
+      <span class="ec fort">Δ 16</span>
+    </div><div class="l">
+      <span class="ref" style="background:#6E491E;color:#EFE9D8">T7</span>
+      <span class="duo"><i class="p" style="background:#8D5E2A"></i><i class="fl">→</i><i class="p" style="background:#6E491E"></i></span>
+      <span class="hex"><b>#6E491E</b><em>#8D5E2A</em></span>
+      <span class="ec fort">Δ 15</span>
+    </div><div class="l">
+      <span class="ref" style="background:#3C91DC;color:#EFE9D8">T9</span>
+      <span class="duo"><i class="p" style="background:#5291CE"></i><i class="fl">→</i><i class="p" style="background:#3C91DC"></i></span>
+      <span class="hex"><b>#3C91DC</b><em>#5291CE</em></span>
+      <span class="ec fort">Δ 10</span>
+    </div><div class="l">
+      <span class="ref" style="background:#6E6E00;color:#EFE9D8">T10</span>
+      <span class="duo"><i class="p" style="background:#9F9825"></i><i class="fl">→</i><i class="p" style="background:#6E6E00"></i></span>
+      <span class="hex"><b>#6E6E00</b><em>#9F9825</em></span>
+      <span class="ec fort">Δ 29</span>
+    </div></div>
+
+<h2>le métro 15, retiré</h2>
+<p>Le référentiel le donne <b>« prochainement active » au 23 septembre 2027</b>, avec
+un gris d'attente <code>#AAAAAA</code> faute de teinte publiée — la valeur qu'on
+affichait (<code>#B90845</code>) ne venait donc pas d'IDFM. Le tracer aujourd'hui,
+c'était <b>promettre un métro qui n'existe pas</b> : exactement la faute des arrêts de
+bus de jour montrés la nuit. Ses 591 points sont retirés, et il reviendra à son
+ouverture.</p>
+<p>Conséquence assumée : <b>Bécon-les-Bruyères, Le Val d'Or, Bois-Colombes et
+Saint-Cloud</b> n'ont plus de ligne à allumer et redeviennent inertes — elles
+rejoignent les 45 stations déjà dans ce cas.</p>
+
+<p class="pied">
+Source : référentiel des lignes d'Île-de-France Mobilités (open data),
+champ colourweb_hexa · 36 lignes métro + RER + tram · relevé le 10 août 2026.<br>
+Géométrie OSM figée le 8 août 2026. 68 tracés, 193 ko.
+</p>
+</body></html>

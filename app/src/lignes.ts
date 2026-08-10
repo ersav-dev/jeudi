@@ -6,11 +6,28 @@
 // « stations reliées à la règle » a été essayée d'abord — trop schématique
 // une fois posée sur les vraies rues.
 //
-// Les couleurs sont celles de la charte IDFM, PAS celles d'OSM : OSM est
-// systématiquement plus terne (la 1 y est #ffbe00 au lieu du #FFCE00, la 3
-// #6e6e00 au lieu du #9F9825 olive).
+// ⚠ 10/08 — CE COMMENTAIRE DISAIT L'INVERSE DE LA VÉRITÉ, et je l'avais écrit.
+// Il affirmait qu'OSM était « plus terne » et que la vraie teinte du métro 1
+// était #FFCE00. Vérification faite à LA source — le « référentiel des lignes »
+// d'Île-de-France Mobilités en open data, champ `colourweb_hexa`, celui qui
+// fait la signalétique officielle — le métro 1 est bel et bien **#FFBE00** et
+// la 3 **#6E6E00**. C'était OSM qui avait raison. Les valeurs précédentes
+// venaient de la palette qu'on trouve sur Wikipédia (dite « charte 2016 »),
+// que j'avais crue meilleure sans la vérifier.
+// Les 30 lignes ont été réécrites depuis le référentiel le 10/08.
+// À réactualiser d'un coup :
+//   data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/
+//   referentiel-des-lignes/records?where=transportmode in ("metro","tram","rail")
 //
-// Données OSM figées le 2026-08-08.
+// Le métro 15 a été RETIRÉ : le référentiel le donne « prochainement active »
+// au 23/09/2027, avec un gris d'attente (#AAAAAA) faute de teinte publiée. Le
+// tracer aujourd'hui, c'était promettre un métro qui n'existe pas — la même
+// faute que les arrêts de bus de jour affichés la nuit. Il reviendra à son
+// ouverture. Conséquence assumée : Bécon-les-Bruyères, Le Val d'Or,
+// Bois-Colombes et Saint-Cloud n'ont plus de ligne à allumer et redeviennent
+// inertes (elles rejoignent les 45 autres déjà dans ce cas).
+//
+// Géométrie OSM figée le 2026-08-08 · couleurs IDFM du 2026-08-10.
 import type { FeatureCollection, MultiLineString, Point } from 'geojson'
 
 export type Ligne = {
