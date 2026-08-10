@@ -256,7 +256,7 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
 <!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
 <h2>le contrôle — les faits, pas les impressions</h2>
 <div class="ctrl">
-  <div><div class="n">444</div><div class="q">tests verts, 32 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">461</div><div class="q">tests verts, 34 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
   <div><div class="n">17/17</div><div class="q">migrations appliquées<br>sondées une par une</div></div>
   <div><div class="n">0</div><div class="q">commit en retard<br>poussé sur GitHub</div></div>
@@ -347,7 +347,15 @@ données de l'enrichissement.</p>
         prix effaçait leurs libellés</li>
       <li>les monuments : redécoupés en 768 px depuis tes planches, +30 % puis encore
         +30 %, priorité anti-empilement, les 7 cartouches manquants</li>
-      <li>« <b>comment tu rentres</b> » — Vélib' en temps réel et Noctilien, dans la fiche</li>
+      <li>« <b>comment tu rentres</b> » — Vélib' en temps réel et Noctilien, dans la fiche,
+        et seulement aux heures où le bus de nuit roule vraiment (0h30 → 5h30)</li>
+      <li>les <b>vraies couleurs IDFM</b> : les 30 lignes étaient fausses, et le
+        commentaire du code affirmait le contraire de la vérité</li>
+      <li>le <b>numéro de chaque ligne</b>, en pastille sur son tracé — sept lignes
+        s'allumaient à Châtelet sans que rien ne les nomme</li>
+      <li>le <b>métro 15 retiré</b> : il ouvre en 2027, le tracer promettait un métro
+        qui n'existe pas</li>
+      <li>le <b>prix du portefeuille</b> ne reste plus : un tap le montre, un autre l'éteint</li>
       <li>l'app allégée de <b>619 ko</b> : la carte ne télécharge plus ce qu'elle ne dessine pas</li>
     </ul>
   </div>
@@ -771,11 +779,11 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Les monuments</td><td class="mono" style="color:var(--fait)">soldé</td><td>—</td>
  <td>Fini le 10 août. Échelle repensée, +30 % deux fois, redécoupés en 768 px depuis tes planches réexportées, règle de priorité, 20 cartouches sur 20. Preuve : <code>monuments_echelle_001.html</code>.</td></tr>
 
-<tr><td>Le double-tap des prix</td><td class="mono" style="color:var(--toi)">ta décision</td><td><b>oui</b></td>
- <td>Les prix du portefeuille ne se révèlent qu'au <b>double-tap</b> sur l'icône (18 s). Tu l'as construit et tu ne l'as pas retrouvé — personne ne le trouvera. Ma reco : un tap simple.</td></tr>
+<tr><td>Le double-tap des prix</td><td class="mono" style="color:var(--fait)">soldé</td><td>—</td>
+ <td>Tranché le 10 août. Un tap montre le prix, un autre l'éteint, et le fondu de 18 s reste en filet : il ne reste jamais. La décision est sortie du composant en fonction pure et testée — ce chip avait changé trois fois en deux jours.</td></tr>
 
 <tr><td>Les bouches à deviner</td><td class="mono" style="color:var(--toi)">ta décision</td><td><b>oui</b></td>
- <td>Elles n'apparaissent qu'après avoir <b>touché une station</b>, à z15+. Rien ne le dit. Piste : les afficher d'office dès z17, sans tap.</td></tr>
+ <td><b>La dernière petite.</b> Elles n'apparaissent qu'après avoir <b>touché une station</b>, à z15+, et rien ne le dit. Piste : les afficher d'office dès z17, sans tap — mais ça change le comportement d'un écran que tu connais bien, donc planche d'abord. Les deux autres décisions qui t'attendent ne sont pas de l'interface : ce sont « publier = prouver » et le profil découvrable, réservées à mercredi.</td></tr>
 
 <tr class="sep"><td>Le bug des spots archivés</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Localisé et confirmé ce soir. Une heure de travail.</td></tr>
@@ -792,8 +800,14 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Carte v2 — le contour dit le propriétaire</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Différé après le lancement, et c'est bien : plein / tirets / pointillé, spec écrite.</td></tr>
 
-<tr class="sep"><td>Où tu seras — les ancres</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
- <td>Et leurs stickers. Concept encore ouvert.</td></tr>
+<tr class="sep"><td><b>L'happy hour, partout</b></td><td class="mono" style="opacity:.5">à écrire</td><td>—</td>
+ <td><b>Idée du 10 août.</b> C'est LE fait économique de la nuit, et il traverse tout : le deck (« il est 18h40, celui-là finit son happy hour à 19h »), la météo du porte-monnaie (l'happy hour change de tranche de prix), le moment (régler « ce soir 20h » peut le faire tomber), la fiche, la recherche. Le nœud n'est pas le code mais <b>la donnée</b> : ni OSM ni Google ne la portent — elle vit sur l'Instagram des lieux. Donc elle viendra des gens, comme la propreté des WC : un champ qu'on remplit quand on y est. Ça la range du côté des critères, pas des horaires.</td></tr>
+
+<tr><td><b>Les stickers du carnet</b></td><td class="mono" style="opacity:.5">à écrire</td><td>—</td>
+ <td><b>Idée du 10 août, la plus forte de la semaine.</b> Tes photos, détourées, deviennent des stickers qui marquent les lieux — et tu peux remplacer la gravure d'un monument par <b>ta</b> photo de ce monument. Personnel seulement : le repère ne bouge pas pour les autres. Trouvaille de la discussion : la gravure ne disparaît pas, elle reste à l'échelle de la ville et ta photo prend le relais en approchant — la carte se <em>développe</em> quand on zoome, et le relais de zoom existe déjà. Pièce à prototyper avant tout : <b>le détourage</b>, sans lui rien ne tient à 30 px. Le partage est une v2 qui exige signaler/bloquer.</td></tr>
+
+<tr><td>Où tu seras — les ancres</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
+ <td>Et leurs stickers — voir la ligne au-dessus, le mécanisme est le même.</td></tr>
 
 <tr><td>Le match, version 2</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
  <td>Voter le soir en plus du lieu, la vraie triangulation des départs, « mes matchs », la conversion d'un invité en compte.</td></tr>
@@ -866,7 +880,10 @@ les stickers pèsent zéro parce qu'on peut ouvrir sans eux.</p>
 aux autres : quand on ajoute un poids, il faut en retirer ailleurs, sinon on triche.
 Le 10, seule « la carte » a bougé (88 → 94 %) : les monuments sont soldés et les
 transports allégés. Les trois bugs réparés ne font pas monter la jauge — ils
-empêchaient seulement le produit d'être ce qu'il prétendait déjà être.</i></p>
+empêchaient seulement le produit d'être ce qu'il prétendait déjà être. Et je n'ai
+pas bougé la ligne pour les vraies couleurs ni pour les numéros de ligne, alors
+que c'est du travail réel : pour la même raison. Une carte dont les couleurs sont
+justes ne fait pas plus de choses qu'avant — elle cesse de mentir.</i></p>
 <p><b>72 sur le papier, 67 en conscience.</b> Je retire cinq points pour une raison
 précise, toujours la même : <b>rien de tout ça n'a été éprouvé par quelqu'un d'autre
 que toi.</b> Une app de sorties qui n'a jamais vu deux vrais cercles se croiser garde
@@ -897,10 +914,10 @@ pour la porte du 27 août — trente personnes qui l'utilisent une soirée trouv
 qu'aucune vérification ne voit.</div>
 
 <p class="pied">
-jeudi — état du chantier, 10 août 2026. Vérifié à la main : 444 tests, 0 erreur de
+jeudi — état du chantier, 10 août 2026. Vérifié à la main : 461 tests, 0 erreur de
 type, 17 migrations sur 17 sondées dans la base, arbre git propre et poussé.<br>
-Les planches : monuments_echelle_001 · dictionnaire_carte_001 · atelier_grammaire_001 ·
-atelier_glyphes_001 · atelier_diamant_001.<br>
+Les planches : couleurs_lignes_001 · monuments_echelle_001 · dictionnaire_carte_001 ·
+atelier_grammaire_001 · atelier_glyphes_001 · atelier_diamant_001.<br>
 Les documents de fond : CONCEPT · PANEL_VELIB_BUS_2026-08-10 · ETAT_2026-08-08 ·
 AVANT_LANCEMENT · CHANTIER_PUSH · CHANTIER_PELLICULE · CHANTIER_SUPER8 ·
 PROMPTS_CHANTIERS.

@@ -120,6 +120,12 @@ const EN: Record<string, string> = {
   'étiquette :': 'label:',
   'toutes': 'all',
   'se déconnecter': 'sign out',
+  // mes monuments (10/08) — ta photo à la place de la gravure
+  'mes monuments': 'my landmarks',
+  'ta photo remplace la gravure — sur TA carte seulement, jamais sur celle des autres. Elle ne quitte pas ce téléphone.':
+    'your photo replaces the engraving — on YOUR map only, never on anyone else’s. It never leaves this phone.',
+  'ma photo': 'my photo',
+  'la gravure': 'the engraving',
   // « comment tu rentres » sur la fiche (10/08, décision du panel)
   'rentrer': 'getting home',
   'vélib’': 'vélib’',

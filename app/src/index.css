@@ -8720,6 +8720,77 @@ button:focus:not(:focus-visible) {
    Deux comptes peuvent porter le même prénom. Le mail, la porte et les
    huit premiers caractères de l'identifiant sont les seules choses qui
    les séparent — donc ils s'affichent, en petit mais en clair. */
+/* la rangée de réglage d'un monument : son image telle qu'elle sera sur la
+   carte, son nom, et les deux gestes (ma photo / la gravure) */
+.monument-rangee {
+  gap: 8px;
+}
+.monument-apercu {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.monument-apercu img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
+}
+.monument-nom-reglage {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── MES MONUMENTS : ta photo par-dessus la gravure (10/08) ──────────
+   Le sticker est en position ABSOLUE au-dessus de la gravure : c'est donc
+   toujours la gravure qui définit la géométrie du monument, et sa taille ne
+   bouge pas d'un pixel — c'était la demande d'Ersan, et c'est ce qui permet
+   à la règle anti-chevauchement de continuer à raisonner juste.
+
+   LE RELAIS : sous 64 px d'affichage (SEUIL_PHOTO, mesMonuments.ts) on voit
+   la GRAVURE — une silhouette cernée se lit petit, une photo non. Au-delà,
+   ta photo prend la main. La carte se développe quand on zoome : de loin le
+   carnet imprimé, de près tes souvenirs. */
+.monument-repere.a-sticker {
+  position: relative;
+}
+.monument-sticker {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: var(--vign-h, 52px);
+  width: auto;
+  /* jamais une banderole : au-delà de 1,5× sa hauteur, un panoramique irait
+     cogner ses voisins et fausser le calcul de collision (qui raisonne sur la
+     demi-hauteur). `contain` le laisse simplement plus petit — un cadrage
+     bâclé prend moins de place, et c'est juste. */
+  max-width: calc(var(--vign-h, 52px) * 1.5);
+  object-fit: contain;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
+  transition: opacity 260ms ease;
+}
+.a-sticker.vg-photo .monument-sticker {
+  opacity: 0.92;
+}
+/* la gravure s'efface quand ta photo la remplace — sans disparaître du flux,
+   puisque c'est elle qui tient la taille */
+.a-sticker.vg-photo .monument-vignette {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .monument-sticker {
+    transition: none;
+  }
+}
+
 /* ── LA PASTILLE DU NUMÉRO SUR LE TRACÉ (10/08) ──────────────────────
    Sept lignes s'allumaient à Châtelet sans que rien ne les nomme : il
    fallait connaître la charte par cœur. La pastille dit le numéro dans la

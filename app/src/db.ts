@@ -254,17 +254,33 @@ interface JeudiDB extends DBSchema {
     key: string
     value: Profil
   }
+  /** MES MONUMENTS (v2, 10/08) — ta photo à la place de la gravure. Clé = le
+   *  nom du monument (celui de monuments.ts). STRICTEMENT LOCAL : ces blobs
+   *  ne montent jamais au cloud, personne d'autre ne les voit. Voir
+   *  mesMonuments.ts pour les trois règles qui commandent tout ça. */
+  stickers: {
+    key: string
+    value: { blob: Blob; ajoute: string }
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<JeudiDB>> | null = null
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<JeudiDB>('jeudi', 1, {
-      upgrade(db) {
-        const lieux = db.createObjectStore('lieux', { keyPath: 'id' })
-        lieux.createIndex('par-statut', 'statut')
-        db.createObjectStore('profil')
+    // v2 (10/08) : ajout du magasin `stickers`. La montée de version est
+    // ADDITIVE — on ne touche ni à `lieux` ni à `profil`, donc rien à perdre.
+    // `ancienne` distingue l'install neuve (0) de la base déjà en place (1) :
+    // sans ce garde-fou, createObjectStore('lieux') relancerait sur une base
+    // existante et l'ouverture échouerait, ce qui casserait TOUTE l'app.
+    dbPromise = openDB<JeudiDB>('jeudi', 2, {
+      upgrade(db, ancienne) {
+        if (ancienne < 1) {
+          const lieux = db.createObjectStore('lieux', { keyPath: 'id' })
+          lieux.createIndex('par-statut', 'statut')
+          db.createObjectStore('profil')
+        }
+        if (ancienne < 2) db.createObjectStore('stickers')
       },
     })
   }

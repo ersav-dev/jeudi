@@ -151,6 +151,13 @@ import {
   FIN_NOCTILIEN,
   type CommentRentrer,
 } from './rentrer'
+import { MONUMENTS } from './monuments'
+import {
+  lireStickers,
+  revoquerStickers,
+  poserSticker,
+  retirerSticker,
+} from './mesMonuments'
 import { anniversairesAVenir, motAnniversaire } from './fetes'
 import {
   construireTas,
@@ -601,9 +608,28 @@ function Reglages({
     | 'archives'
     | 'amis'
     | 'listes'
+    | 'monuments'
     | 'bientot'
     | null
   >(null)
+  // MES MONUMENTS (10/08) : ta photo à la place de la gravure, sur TA carte.
+  // Strictement local — rien ne monte au cloud, personne d'autre ne le voit.
+  const [stickers, setStickers] = useState<Map<string, string>>(new Map())
+  const rechargerStickers = () => {
+    void lireStickers().then((m) => {
+      setStickers((avant) => {
+        revoquerStickers(avant.values()) // les anciennes URL ne servent plus
+        return m
+      })
+    })
+  }
+  useEffect(() => {
+    rechargerStickers()
+  }, [])
+  const choisirSticker = async (nom: string, f: File | undefined) => {
+    if (!f) return
+    if (await poserSticker(nom, f)) rechargerStickers()
+  }
   // ton pas : la vitesse derrière tous les « X min à pied » de l'app
   const [vitesse, setVitesse] = useState(() => lireVitesse())
   const choisirVitesse = (v: number) => {
@@ -1022,6 +1048,50 @@ function Reglages({
               ))}
             </>
           )}
+        </div>
+      )}
+
+      {/* MES MONUMENTS (10/08) — ta photo par-dessus la gravure, sur ta carte
+          seulement. La gravure reste à l'échelle de la ville : ta photo prend
+          le relais en approchant, et la taille du monument ne change pas. */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'monuments'}
+        onClick={() => bascule('monuments')}
+      >
+        {t('mes monuments')}
+        <span className="reglages-chevron">{ouvert === 'monuments' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'monuments' && (
+        <div className="reglages-liste">
+          <p className="reglages-compte-note">
+            {t('ta photo remplace la gravure — sur TA carte seulement, jamais sur celle des autres. Elle ne quitte pas ce téléphone.')}
+          </p>
+          {MONUMENTS.filter((m) => m.img).map((m) => (
+            <span key={m.nom} className="reglages-item mono monument-rangee">
+              <span className="monument-apercu">
+                <img src={stickers.get(m.nom) ?? m.img} alt="" />
+              </span>
+              <span className="monument-nom-reglage">{m.nom}</span>
+              <label className="reglages-action">
+                {stickers.has(m.nom) ? t('changer') : t('ma photo')}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => void choisirSticker(m.nom, e.target.files?.[0])}
+                />
+              </label>
+              {stickers.has(m.nom) && (
+                <button
+                  className="reglages-action"
+                  onClick={() => void retirerSticker(m.nom).then(rechargerStickers)}
+                >
+                  {t('la gravure')}
+                </button>
+              )}
+            </span>
+          ))}
         </div>
       )}
 

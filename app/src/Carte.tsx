@@ -119,6 +119,7 @@ import {
 
 // les monuments du croquis : partagés avec la recherche (monuments.ts)
 import { MONUMENTS } from './monuments'
+import { lireStickers, revoquerStickers, SEUIL_PHOTO } from './mesMonuments'
 import { REPERES } from './reperes'
 import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
@@ -1557,6 +1558,11 @@ export default function Carte({
     // toutes les vignettes, monuments et points de rdv confondus : c'est sur
     // elles que joue le relais de zoom (voir relaisVignettes plus bas)
     const vignettes: HTMLElement[] = []
+    // MES MONUMENTS (10/08) : nom → son élément, pour y glisser ton sticker
+    // quand IndexedDB aura répondu. Les URL d'objet créées sont gardées ici
+    // pour être révoquées au démontage — sinon les blobs restent en mémoire.
+    const monumentsParNom = new Map<string, HTMLElement>()
+    const urlsStickers = new Set<string>()
     for (const mo of MONUMENTS) {
       const el = document.createElement('div')
       el.className = 'monument-repere'
@@ -1570,6 +1576,7 @@ export default function Carte({
       el.dataset.lng = String(mo.lng)
       el.dataset.lat = String(mo.lat)
       if (mo.img) vignettes.push(el)
+      monumentsParNom.set(mo.nom, el)
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
     // …et les points de rendez-vous qui ont leur vignette (République, la
@@ -1627,6 +1634,9 @@ export default function Carte({
         // nom de 13 px est aussi haut que le monument qu'il nomme : de loin
         // on reconnaît une silhouette, on ne lit pas une étiquette.
         el.classList.toggle('vg-nu', taille < 30)
+        // MES MONUMENTS : au-delà de SEUIL_PHOTO, ta photo prend le relais de
+        // la gravure (n'a d'effet que sur les monuments qui en ont une)
+        el.classList.toggle('vg-photo', taille >= SEUIL_PHOTO)
         // gardée pour le tri anti-chevauchement juste en dessous
         el.dataset.h = String(Math.max(SEUIL_VIGN, taille))
       }
@@ -1672,6 +1682,33 @@ export default function Carte({
     // sinon le monument saute d'un coup quand on lâche.
     carte.current.on('zoom', relaisVignettes)
     carte.current.on('zoomend', relaisVignettes)
+
+    // ── MES MONUMENTS : ta photo par-dessus la gravure (10/08) ──
+    // Posé APRÈS coup : la carte ne doit pas attendre une lecture IndexedDB
+    // pour s'afficher. Le sticker est en position ABSOLUE au-dessus de la
+    // gravure — c'est donc toujours la gravure qui définit la géométrie, et
+    // la taille du monument ne bouge pas d'un pixel (demande d'Ersan).
+    // Le relais est dans le CSS : sous SEUIL_PHOTO on voit la gravure, au-delà
+    // ta photo. La carte se développe quand on zoome.
+    void lireStickers()
+      .then((mes) => {
+        for (const [nom, url] of mes) {
+          const el = monumentsParNom.get(nom)
+          if (!el) {
+            URL.revokeObjectURL(url) // monument disparu : on ne fuit pas
+            continue
+          }
+          urlsStickers.add(url)
+          const img = document.createElement('img')
+          img.className = 'monument-sticker'
+          img.src = url
+          img.alt = ''
+          el.classList.add('a-sticker')
+          el.insertBefore(img, el.firstChild)
+        }
+        if (mes.size) relaisVignettes() // pose vg-photo sans attendre un zoom
+      })
+      .catch((err) => console.warn('[carte] mes monuments:', err))
 
     // "moi" par défaut : Place Vendôme (point de repère + futur calcul de distance)
     const elMoi = document.createElement('div')
@@ -1749,6 +1786,12 @@ export default function Carte({
       etiquettesTransport.current = []
       marqueursBouches.current.forEach((mk) => mk.remove())
       marqueursBouches.current = []
+      marqueursNumeros.current.forEach((mk) => mk.remove())
+      marqueursNumeros.current = []
+      // les blobs de tes stickers : sans révocation ils restent en mémoire
+      // tant que la page vit, et la carte se remonte à chaque changement de vue
+      revoquerStickers(urlsStickers)
+      urlsStickers.clear()
       for (const id of Object.keys(pins)) delete pins[id]
       dejaCadre.current = false
       carte.current?.remove()
