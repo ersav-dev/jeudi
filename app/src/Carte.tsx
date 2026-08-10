@@ -105,6 +105,8 @@ import {
   LAYER_LIGNES,
   LAYER_LIGNES_HALO,
   arretsPour,
+  etiquettesLignes,
+  situerStation,
   indexerStations,
   stationsIntrouvables,
   AUCUN_ARRET,
@@ -282,6 +284,8 @@ export default function Carte({
   // les bouches posées : marqueurs DOM (glyphe + numéro + rue), re-posés à
   // chaque zoom puisque le nom n'apparaît qu'au-delà de z17
   const marqueursBouches = useRef<maplibregl.Marker[]>([])
+  // les pastilles de numéro posées sur les tracés allumés (10/08)
+  const marqueursNumeros = useRef<maplibregl.Marker[]>([])
   const poserBouchesRef = useRef<(nom: string | null) => void>(() => {})
   // re-poser les étiquettes après un tracé, pour que la station active
   // porte sa marque (elle est repeinte, pas juste re-stylée)
@@ -1218,6 +1222,30 @@ export default function Carte({
       }
       poserBouchesRef.current = poserBouches
 
+      // LES PASTILLES DE NUMÉRO (10/08) : une par ligne allumée, sur son
+      // propre trait. Elles vivent exactement le même cycle que le tracé —
+      // posées au même peindre(nom), effacées au même peindre(null).
+      const poserNumeros = (nom: string | null, ids?: string[]) => {
+        for (const mk of marqueursNumeros.current) mk.remove()
+        marqueursNumeros.current = []
+        if (!carte.current || !nom) return
+        const depuis = indexStations.current
+          ? situerStation(nom, indexStations.current)
+          : null
+        const etiq = etiquettesLignes(ids, lignesConnues.current, depuis)
+        marqueursNumeros.current = etiq.map((e) => {
+          const el = document.createElement('div')
+          el.className = 'num-ligne mono'
+          el.textContent = e.ref
+          el.style.background = e.couleur
+          el.style.color = e.encre
+          // jamais tapable : c'est une légende, pas une commande. Sinon elle
+          // volerait le tap qui éteint le tracé.
+          el.setAttribute('aria-hidden', 'true')
+          return new maplibregl.Marker({ element: el }).setLngLat(e.p).addTo(carte.current!)
+        })
+      }
+
       const peindre = (nom: string | null, ids?: string[]) => {
         const sl = m.getSource(SOURCE_LIGNES) as maplibregl.GeoJSONSource | undefined
         const sa = m.getSource(SOURCE_ARRETS) as maplibregl.GeoJSONSource | undefined
@@ -1227,6 +1255,7 @@ export default function Carte({
         // moment, effacés au même peindre(null)
         sa?.setData(arretsPour(ids, table, indexStations.current, nom))
         poserBouches(nom)
+        poserNumeros(nom, ids)
       }
       const basculerLignes = (nom: string, ids?: string[]) => {
         const memeStation = stationTracee.current === nom

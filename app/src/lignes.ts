@@ -234,6 +234,115 @@ export const arretsPour = (
   return { type: 'FeatureCollection', features }
 }
 
+// ── LA PASTILLE DU NUMÉRO SUR LE TRACÉ (10/08) ─────────────────────────
+// Sept lignes s'allument à Châtelet, chacune dans sa couleur — et rien ne
+// les nomme. Il fallait connaître la charte par cœur pour s'y retrouver.
+// On pose donc une pastille par ligne, comme sur un plan : le numéro dans
+// la couleur de sa ligne.
+//
+// Pourquoi en DOM et pas en `symbol` MapLibre : le style de la carte est un
+// style RASTER inline, sans URL de `glyphs`. Sans polices, `text-field` ne
+// peut rien rendre. Les plaques de station et les bouches sont déjà des
+// marqueurs DOM — on reste dans le même geste.
+
+// NOIR ET BLANC PURS, et pas l'encre du carnet (#14120e / #EFE9D8). Deux
+// raisons qui vont dans le même sens :
+//  · la fidélité — la signalétique réelle du métro imprime du blanc ou du
+//    noir sur la couleur de ligne, jamais un ivoire ; et la règle qu'on s'est
+//    donnée dit que sur la carte le sans-serif appartient aux transports ;
+//  · la lisibilité — mesuré : avec l'ivoire du carnet, le RER E tombait à
+//    4,11:1, le A à 4,27, le D à 4,32, tous sous le seuil AA. Le passage au
+//    blanc et au noir purs gagne ~12 % de contraste et fait passer les 21
+//    couleurs officielles au-dessus de 4,5:1.
+const ENCRE_SOMBRE = '#000000'
+const ENCRE_CLAIRE = '#FFFFFF'
+
+/** luminance relative WCAG d'un #rrggbb (null si la couleur est mal formée) */
+const luminance = (hex: string): number | null => {
+  const v = hex.replace('#', '')
+  if (!/^[0-9a-fA-F]{6}$/.test(v)) return null
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const [r, g, b] = [0, 2, 4].map((i) => lin(parseInt(v.slice(i, i + 2), 16) / 255))
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** encre sombre ou ivoire sur cette couleur ?
+ *
+ *  ⚠ 10/08 — première version FAUSSE, corrigée avant livraison. Elle
+ *  basculait sur un SEUIL de luminance (0,45), et j'ai mesuré le résultat :
+ *  huit lignes tombaient sous 3:1, le métro 7 (rose #FF82B4) à **1,9:1** —
+ *  un numéro qu'on ne lit pas. Un seuil ne peut pas marcher : les teintes de
+ *  milieu de gamme sont à contraste médiocre des DEUX côtés, et c'est le
+ *  moins mauvais qu'il faut prendre.
+ *  On compare donc les deux encres et on garde celle qui contraste le plus.
+ *  Pire cas après correction : 4,45:1 (le 3 olive), au seuil AA. */
+export const encreSur = (hex: string): string => {
+  const l = luminance(hex)
+  if (l === null) return ENCRE_CLAIRE
+  const contraste = (autre: string) => {
+    const a = luminance(autre) ?? 0
+    return (Math.max(l, a) + 0.05) / (Math.min(l, a) + 0.05)
+  }
+  return contraste(ENCRE_SOMBRE) >= contraste(ENCRE_CLAIRE) ? ENCRE_SOMBRE : ENCRE_CLAIRE
+}
+
+export type EtiquetteLigne = {
+  ref: string
+  couleur: string
+  /** la couleur du texte, déjà décidée : l'appelant n'a rien à calculer */
+  encre: string
+  p: [number, number]
+}
+
+/** mètres approchés entre deux points proches (Paris) — suffisant pour
+ *  marcher le long d'un tracé, inutile de sortir la haversine. */
+const m2 = (a: [number, number], b: [number, number]): number =>
+  Math.hypot((a[0] - b[0]) * 73180, (a[1] - b[1]) * 111320)
+
+/** UNE pastille par ligne allumée, posée le long du tracé à ~`ecartM` de la
+ *  station touchée. Ni au milieu du tracé (le milieu du RER A est hors de
+ *  l'écran), ni sur la station (elle porte déjà sa plaque) : juste à côté,
+ *  sur son propre trait, donc toujours visible et jamais ambiguë. */
+export const etiquettesLignes = (
+  ids: string[] | undefined,
+  toutes: Map<string, Ligne> | null,
+  depuis: [number, number] | null,
+  ecartM = 190,
+): EtiquetteLigne[] => {
+  if (!ids?.length || !toutes || !depuis) return []
+  const out: EtiquetteLigne[] = []
+  const vues = new Set<string>()
+  for (const id of ids) {
+    const l = toutes.get(id)
+    if (!l || vues.has(l.ref)) continue // 7 et 7bis ont deux brins, un seul numéro
+    // le brin qui passe le plus près de la station touchée
+    let meilleur: { brin: [number, number][]; i: number; d: number } | null = null
+    for (const brin of l.brins) {
+      for (let i = 0; i < brin.length; i++) {
+        const d = m2(depuis, brin[i])
+        if (!meilleur || d < meilleur.d) meilleur = { brin, i, d }
+      }
+    }
+    if (!meilleur) continue
+    // on s'éloigne le long du trait jusqu'à ecartM ; si ce sens butte sur la
+    // fin du brin, on repart dans l'autre — un terminus ne doit pas priver
+    // la ligne de son numéro.
+    const marcher = (sens: 1 | -1): [number, number] | null => {
+      const { brin, i } = meilleur!
+      let parcouru = 0
+      for (let j = i; j + sens >= 0 && j + sens < brin.length; j += sens) {
+        parcouru += m2(brin[j], brin[j + sens])
+        if (parcouru >= ecartM) return brin[j + sens]
+      }
+      return null
+    }
+    const p = marcher(1) ?? marcher(-1) ?? meilleur.brin[meilleur.i]
+    vues.add(l.ref)
+    out.push({ ref: l.ref, couleur: l.couleur, encre: encreSur(l.couleur), p })
+  }
+  return out
+}
+
 // l'audit des trous, tiré UNE FOIS en console au chargement. Ce n'est pas de
 // la mise au point : c'est la mesure d'une limite connue. transport.json
 // s'arrête à la petite couronne, alors que les branches de RER listent leurs

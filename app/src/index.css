@@ -8720,6 +8720,34 @@ button:focus:not(:focus-visible) {
    Deux comptes peuvent porter le même prénom. Le mail, la porte et les
    huit premiers caractères de l'identifiant sont les seules choses qui
    les séparent — donc ils s'affichent, en petit mais en clair. */
+/* ── LA PASTILLE DU NUMÉRO SUR LE TRACÉ (10/08) ──────────────────────
+   Sept lignes s'allumaient à Châtelet sans que rien ne les nomme : il
+   fallait connaître la charte par cœur. La pastille dit le numéro dans la
+   couleur de sa ligne — c'est le geste du plan de métro, celui que tout le
+   monde sait lire.
+   La couleur de fond et celle du texte viennent du JS (par ligne, et
+   l'encre est choisie par luminance dans lignes.ts) : ici, seulement la
+   forme. Sans-serif, comme toute la signalétique de la carte — le Caveat
+   dit les lieux, le sans-serif dit les transports.
+   Même étage que les plaques de station (pile : .monument-repere). */
+.num-ligne {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 10.5px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  padding: 3px 5px 2px;
+  border-radius: 3px;
+  /* le filet clair décolle la pastille du trait, quelle que soit la teinte
+     dessous — sans lui, le vert du 6 se noie dans son propre tracé */
+  box-shadow:
+    0 0 0 1px rgba(239, 233, 216, 0.55),
+    0 1px 3px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+
 /* ── COMMENT TU RENTRES (10/08) ──────────────────────────────────────
    Une ligne sous l'adresse, au graphite : c'est une note de bas de page,
    pas une fonctionnalité qui réclame l'attention. Le seul élément mis en
