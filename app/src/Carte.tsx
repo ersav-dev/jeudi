@@ -41,11 +41,17 @@ const HAUTEUR_M: Record<string, number> = {
   'arc de triomphe': 50,
 }
 
-/** LE PLAFOND = la résolution des vignettes (elles font 128 px de haut).
- *  Au-delà on n'agrandit plus, on interpole : une gravure fine étirée
- *  devient une bouillie. Le jour où les planches sont réexportées plus
- *  grandes, ce nombre monte avec elles — et pas avant. */
-const PLAFOND_VIGN = 128
+/** LA RÉFÉRENCE de la courbe de compression : la taille à laquelle le dessin
+ *  et le réel tombent d'accord. Elle ne bouge PAS quand les sources
+ *  grandissent — sinon toute l'échelle déjà validée se décalerait. */
+const REF_VIGN = 128
+/** LE PLAFOND = ce que la résolution des sources permet d'afficher sans
+ *  interpoler. 10/08 : Ersan a réexporté ses planches (Topaz 4×, fond retiré)
+ *  et les vignettes de la carte sont passées de 128 à 448 px de haut → le
+ *  plafond monte de 128 à 220 px d'affichage, ce qui reste net même sur un
+ *  écran à 2× . Au-delà de 220 on n'agrandit plus : un monument qui occupe
+ *  la moitié du téléphone n'est plus un repère, c'est un obstacle. */
+const PLAFOND_VIGN = 220
 /** sous ce seuil un dessin ne dit plus rien : on l'efface plutôt que de
  *  laisser une miette sur la carte. 14 et non 9 — à 9 px une gravure est
  *  une tache, elle salit sans situer. */
@@ -1564,12 +1570,15 @@ export default function Carte({
         const vrai = (HAUTEUR_M[el.dataset.mo ?? ''] ?? 60) / mpp
         // la compression perceptive (voir GAMMA_VIGN) : l'ordre des tailles
         // reste celui du réel, l'écart se resserre pour que tout se lise.
-        const taille =
-          PLAFOND_VIGN * Math.pow(Math.min(1, vrai / PLAFOND_VIGN), GAMMA_VIGN)
-        el.style.setProperty(
-          '--vign-h',
-          `${Math.min(PLAFOND_VIGN, Math.max(SEUIL_VIGN, taille)).toFixed(1)}px`,
+        // La courbe est ancrée sur REF_VIGN ; le plafond ne fait que la
+        // COUPER. Conséquence voulue : tout ce qui s'affiche sous 128 px ne
+        // bouge pas d'un pixel malgré les nouvelles sources — on ne redéfait
+        // pas une échelle validée à l'œil, on prolonge seulement le haut.
+        const taille = Math.min(
+          PLAFOND_VIGN,
+          REF_VIGN * Math.pow(vrai / REF_VIGN, GAMMA_VIGN),
         )
+        el.style.setProperty('--vign-h', `${Math.max(SEUIL_VIGN, taille).toFixed(1)}px`)
         el.classList.toggle('vg-trop-petit', taille < SEUIL_VIGN)
         // LE CARTOUCHE NE PARLE QUE QUAND LA GRAVURE PORTE. Sous ~30 px, un
         // nom de 13 px est aussi haut que le monument qu'il nomme : de loin
