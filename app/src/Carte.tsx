@@ -46,12 +46,22 @@ const HAUTEUR_M: Record<string, number> = {
  *  grandissent — sinon toute l'échelle déjà validée se décalerait. */
 const REF_VIGN = 128
 /** LE PLAFOND = ce que la résolution des sources permet d'afficher sans
- *  interpoler. 10/08 : Ersan a réexporté ses planches (Topaz 4×, fond retiré)
- *  et les vignettes de la carte sont passées de 128 à 448 px de haut → le
- *  plafond monte de 128 à 220 px d'affichage, ce qui reste net même sur un
- *  écran à 2× . Au-delà de 220 on n'agrandit plus : un monument qui occupe
- *  la moitié du téléphone n'est plus un repère, c'est un obstacle. */
-const PLAFOND_VIGN = 220
+ *  interpoler. Les vignettes de la carte sont découpées à 576 px de haut
+ *  depuis les planches réexportées d'Ersan : 260 px d'affichage restent nets
+ *  sur un écran à 2×. Au-delà on n'agrandit plus — un monument qui occupe la
+ *  moitié du téléphone n'est plus un repère, c'est un obstacle.
+ *  ⚠ Ce nombre est adossé à la découpe : le remonter sans redécouper plus
+ *  grand ne donnerait pas des monuments plus gros, seulement plus flous. */
+const PLAFOND_VIGN = 260
+/** L'AGRANDISSEMENT GÉNÉRAL (10/08, demandé par Ersan sur la vraie carte,
+ *  après avoir vu la version précédente sur son téléphone). Il s'applique
+ *  APRÈS la courbe : la hiérarchie entre monuments ne change pas, tout monte
+ *  du même coup. */
+const BOOST_VIGN = 1.18
+/** …et le supplément propre à certains. La tour n'est pas seulement la plus
+ *  haute : c'est LE repère de Paris, celui qu'on cherche en premier pour
+ *  savoir où on est. Elle a droit à plus que sa part. */
+const BOOST_PROPRE: Record<string, number> = { 'tour eiffel': 1.08 }
 /** sous ce seuil un dessin ne dit plus rien : on l'efface plutôt que de
  *  laisser une miette sur la carte. 14 et non 9 — à 9 px une gravure est
  *  une tache, elle salit sans situer. */
@@ -1571,12 +1581,15 @@ export default function Carte({
         // la compression perceptive (voir GAMMA_VIGN) : l'ordre des tailles
         // reste celui du réel, l'écart se resserre pour que tout se lise.
         // La courbe est ancrée sur REF_VIGN ; le plafond ne fait que la
-        // COUPER. Conséquence voulue : tout ce qui s'affiche sous 128 px ne
-        // bouge pas d'un pixel malgré les nouvelles sources — on ne redéfait
-        // pas une échelle validée à l'œil, on prolonge seulement le haut.
+        // COUPER, et les deux boosts s'appliquent après elle — la hiérarchie
+        // entre monuments reste celle du réel compressé, on ne fait que
+        // monter le volume. Le plafond suit le boost PROPRE (celui de la
+        // tour) mais pas le général : le +18 % général est déjà dans les
+        // 260 px de PLAFOND_VIGN.
+        const propre = BOOST_PROPRE[el.dataset.mo ?? ''] ?? 1
         const taille = Math.min(
-          PLAFOND_VIGN,
-          REF_VIGN * Math.pow(vrai / REF_VIGN, GAMMA_VIGN),
+          PLAFOND_VIGN * propre,
+          REF_VIGN * Math.pow(vrai / REF_VIGN, GAMMA_VIGN) * BOOST_VIGN * propre,
         )
         el.style.setProperty('--vign-h', `${Math.max(SEUIL_VIGN, taille).toFixed(1)}px`)
         el.classList.toggle('vg-trop-petit', taille < SEUIL_VIGN)
