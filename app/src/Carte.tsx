@@ -51,13 +51,14 @@ const REF_VIGN = 128
  *  sur un écran à 2×. Au-delà on n'agrandit plus — un monument qui occupe la
  *  moitié du téléphone n'est plus un repère, c'est un obstacle.
  *  ⚠ Ce nombre est adossé à la découpe : le remonter sans redécouper plus
- *  grand ne donnerait pas des monuments plus gros, seulement plus flous. */
-const PLAFOND_VIGN = 260
+ *  grand ne donnerait pas des monuments plus gros, seulement plus flous.
+ *  Découpe du 10/08 (2e passe) : 768 px de haut → plafond 338. */
+const PLAFOND_VIGN = 338
 /** L'AGRANDISSEMENT GÉNÉRAL (10/08, demandé par Ersan sur la vraie carte,
- *  après avoir vu la version précédente sur son téléphone). Il s'applique
- *  APRÈS la courbe : la hiérarchie entre monuments ne change pas, tout monte
- *  du même coup. */
-const BOOST_VIGN = 1.18
+ *  après avoir vu la version précédente sur son téléphone — deux passes :
+ *  d'abord +18 %, puis encore +30 % dessus). Il s'applique APRÈS la courbe :
+ *  la hiérarchie entre monuments ne change pas, tout monte du même coup. */
+const BOOST_VIGN = 1.53
 /** …et le supplément propre à certains. La tour n'est pas seulement la plus
  *  haute : c'est LE repère de Paris, celui qu'on cherche en premier pour
  *  savoir où on est. Elle a droit à plus que sa part. */

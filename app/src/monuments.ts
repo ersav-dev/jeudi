@@ -28,7 +28,7 @@ export const MONUMENTS: Monument[] = [
   // l'île : les deux tours carrées
   { nom: 'notre-dame', img: '/monuments/notre-dame.webp', etq: '/monuments/notre-dame-etq.webp', lat: 48.853, lng: 2.3499, trait: trait('<path d="M6 20V8h4v12"/><path d="M14 20V8h4v12"/><path d="M10 12h4"/><path d="M4 20h16"/>') },
   // la montagne : le dôme sur colonnes
-  { nom: 'panthéon', img: '/monuments/pantheon.webp', lat: 48.8462, lng: 2.3464, trait: trait('<path d="M7 20v-7M12 20v-7M17 20v-7"/><path d="M5 13a7 5 0 0 1 14 0"/><path d="M4 20h16"/>') },
+  { nom: 'panthéon', img: '/monuments/pantheon.webp', etq: '/monuments/pantheon-etq.webp', lat: 48.8462, lng: 2.3464, trait: trait('<path d="M7 20v-7M12 20v-7M17 20v-7"/><path d="M5 13a7 5 0 0 1 14 0"/><path d="M4 20h16"/>') },
   // l'opéra : le fronton
   { nom: 'opéra', img: '/monuments/palais-garnier.webp', etq: '/monuments/palais-garnier-etq.webp', lat: 48.872, lng: 2.3316, trait: trait('<path d="M4 20l8-12 8 12z"/><path d="M8 20v-4M12 20v-6M16 20v-4"/>') },
   // le dôme doré

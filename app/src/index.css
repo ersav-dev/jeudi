@@ -8075,8 +8075,12 @@ button {
   pointer-events: none;
   transition: opacity 240ms ease;
 }
+/* 10/08 — 0,9 et non 0,8 : Ersan a trouvé République trop petite. Les points
+ * de rendez-vous portent DEUX pénalités (la hauteur par défaut de 60 m, plus
+ * ce facteur) et cumulées elles les écrasaient. On leur rend un cran, sans
+ * les aligner sur les monuments : une place n'est pas une cathédrale. */
 .monument-vignette.petite {
-  height: calc(var(--vign-h, 52px) * 0.8);
+  height: calc(var(--vign-h, 52px) * 0.9);
 }
 /* les vignettes de points de rdv se voilent sous z12.5 (Carte.tsx) */
 .repere-vignette {
