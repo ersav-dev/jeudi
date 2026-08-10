@@ -8146,6 +8146,14 @@ button {
 .monument-repere.vg-nu .monument-etq {
   opacity: 0;
 }
+/* 10/08 — SERRÉE : une gravure qui viendrait se coucher sur une plus grande
+ * s'efface. La priorité va à la hauteur réelle (ce qui se repère vraiment de
+ * loin). Ce n'est pas une perte : en approchant, la place se libère et le
+ * monument revient tout seul. Même remède que le cap des étiquettes de
+ * station — un repère rare situe, dix repères empilés cachent la ville. */
+.vg-serre {
+  opacity: 0;
+}
 /* §6 — rien ne glisse chez qui a demandé le calme : le relais reste, la
  * transition saute */
 @media (prefers-reduced-motion: reduce) {

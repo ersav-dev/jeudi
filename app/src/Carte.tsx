@@ -63,7 +63,7 @@ const SEUIL_VIGN = 14
  *  vrai, et ça se voit) mais on COMPRESSE l'écart, comme l'œil compresse
  *  la lumière : part^0,55 du plafond. La tour ne fait plus 6,6 fois l'Arc
  *  mais 2,9 fois, et les deux se lisent. */
-const GAMMA_VIGN = 0.55
+const GAMMA_VIGN = 0.42
 import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
 import {
   grouperTas,
@@ -1519,6 +1519,10 @@ export default function Carte({
         : `${mo.trait}<span class="monument-nom">${mo.nom}</span>`
       // son nom sert de clé pour retrouver sa hauteur réelle (HAUTEUR_M)
       el.dataset.mo = mo.nom
+      // sa position, gardée sur l'élément : le tri anti-chevauchement en a
+      // besoin à chaque zoom (project() veut des coordonnées, pas un marker)
+      el.dataset.lng = String(mo.lng)
+      el.dataset.lat = String(mo.lat)
       if (mo.img) vignettes.push(el)
       new maplibregl.Marker({ element: el }).setLngLat([mo.lng, mo.lat]).addTo(carte.current)
     }
@@ -1532,6 +1536,8 @@ export default function Carte({
       const el = document.createElement('div')
       el.className = 'monument-repere repere-vignette'
       el.innerHTML = htmlVignette(r.img, r.etq, true)
+      el.dataset.lng = String(r.lng)
+      el.dataset.lat = String(r.lat)
       vignettes.push(el)
       vignettesRdv.push(
         new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(carte.current),
@@ -1569,10 +1575,40 @@ export default function Carte({
         // nom de 13 px est aussi haut que le monument qu'il nomme : de loin
         // on reconnaît une silhouette, on ne lit pas une étiquette.
         el.classList.toggle('vg-nu', taille < 30)
+        // gardée pour le tri anti-chevauchement juste en dessous
+        el.dataset.h = String(Math.max(SEUIL_VIGN, taille))
       }
+      // ── 10/08 · LA PRIORITÉ, PARCE QU'ELLES SONT DEVENUES GROSSES ──
+      // À z11 Paris ne fait que ~240 px de large : huit gravures de 30 px
+      // s'empilent et la ville disparaît dessous. Même remède que les
+      // étiquettes de station (cap + collision) : on pose d'abord ce qui se
+      // voit de plus loin — la priorité, c'est la HAUTEUR RÉELLE, la seule
+      // chose qui dit honnêtement « ça, on le repère de loin » — et on
+      // efface ce qui viendrait se coucher dessus. Un monument caché n'est
+      // pas une perte : en approchant, la place se libère et il revient.
       // les vignettes de rdv se voilent en dessous de z12.5 — douze images de
-      // plus à z11 et la ville disparaîtrait sous les stickers
+      // plus à z11 et la ville disparaîtrait sous les stickers. Posé AVANT le
+      // tri : une vignette voilée ne doit pas voler sa place à un monument.
       for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', z < 12.5)
+      const posees: { x: number; y: number; r: number }[] = []
+      const parPortee = [...vignettes].sort(
+        (a, b) => (HAUTEUR_M[b.dataset.mo ?? ''] ?? 0) - (HAUTEUR_M[a.dataset.mo ?? ''] ?? 0),
+      )
+      for (const el of parPortee) {
+        if (el.classList.contains('vg-trop-petit') || el.classList.contains('cachee')) {
+          el.classList.remove('vg-serre')
+          continue
+        }
+        const lng = Number(el.dataset.lng)
+        const lat = Number(el.dataset.lat)
+        const p = carte.current?.project([lng, lat])
+        if (!p) continue
+        // rayon = la demi-hauteur de la gravure, plus une marge de respect
+        const r = Number(el.dataset.h ?? SEUIL_VIGN) / 2 + 5
+        const serre = posees.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < q.r + r)
+        el.classList.toggle('vg-serre', serre)
+        if (!serre) posees.push({ x: p.x, y: p.y, r })
+      }
       for (const el of vignettes) {
         // z ≤ 13 pleines · 13→15 en retrait · z ≥ 15 timbres
         el.classList.toggle('vg-retrait', z > 13 && z < 15)
