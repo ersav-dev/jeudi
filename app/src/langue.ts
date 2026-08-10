@@ -160,6 +160,7 @@ const EN: Record<string, string> = {
   'mes listes': 'my lists',
   'restaurer': 'restore',
   'réintégrer': 'bring back',
+  'on ouvre le tiroir…': 'opening the drawer…',
   'aucun spot archivé.': 'no archived spots.',
   'aucun ami archivé.': 'no archived friends.',
   'rien à signaler — la cloche est calme.': 'nothing to report — the bell is quiet.',

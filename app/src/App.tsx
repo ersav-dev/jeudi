@@ -57,6 +57,7 @@ import {
   uniteParPersonne,
   gloseEnvie,
   tousLesLieux,
+  mesLieuxArchives,
   chargerMonId,
   ajouterLieu,
   archiverLieu,
@@ -612,6 +613,20 @@ function Reglages({
     | 'bientot'
     | null
   >(null)
+  // LE TIROIR DES SPOTS RANGÉS (10/08) — lu à la demande, pas dans la liste
+  // principale. null = pas encore lu (on affiche « on ouvre le tiroir… »).
+  const [archives, setArchives] = useState<Lieu[] | null>(null)
+  useEffect(() => {
+    if (ouvert !== 'archives') return
+    let vivant = true
+    void mesLieuxArchives().then((l) => {
+      if (vivant) setArchives(l)
+    })
+    return () => {
+      vivant = false
+    }
+  }, [ouvert])
+
   // MES MONUMENTS (10/08) : ta photo à la place de la gravure, sur TA carte.
   // Strictement local — rien ne monte au cloud, personne d'autre ne le voit.
   const [stickers, setStickers] = useState<Map<string, string>>(new Map())
@@ -967,19 +982,31 @@ function Reglages({
       </button>
       {ouvert === 'archives' && (
         <div className="reglages-liste">
-          {lieux
-            .filter((l) => l.statut === 'archive' && estAMoi(l))
-            .map((l) => (
-              <span key={l.id} className="reglages-item mono">
-                <button className="lien" onClick={() => onVoir(l)}>
-                  {l.nom}
-                </button>
-                <button className="reglages-action mono" onClick={() => onRestaurer(l)}>
-                  {t('restaurer')} →
-                </button>
-              </span>
-            ))}
-          {lieux.filter((l) => l.statut === 'archive' && estAMoi(l)).length === 0 && (
+          {/* 10/08 — CETTE SECTION ÉTAIT VIDE EN PERMANENCE. Elle filtrait la
+              liste principale, qui ne charge que les spots ACTIFS : « restaurer »
+              était donc inatteignable. On lit maintenant le tiroir à part, à
+              l'ouverture de la section — les archivés ne remontent pas dans le
+              deck ni sur la carte, ce qui est bien le sens de « ranger ». */}
+          {archives === null && (
+            <span className="reglages-item mono estompe">{t('on ouvre le tiroir…')}</span>
+          )}
+          {archives?.map((l) => (
+            <span key={l.id} className="reglages-item mono">
+              <button className="lien" onClick={() => onVoir(l)}>
+                {l.nom}
+              </button>
+              <button
+                className="reglages-action mono"
+                onClick={() => {
+                  onRestaurer(l)
+                  setArchives((a) => a?.filter((x) => x.id !== l.id) ?? null)
+                }}
+              >
+                {t('restaurer')} →
+              </button>
+            </span>
+          ))}
+          {archives?.length === 0 && (
             <span className="reglages-item mono estompe">{t('aucun spot archivé.')}</span>
           )}
         </div>

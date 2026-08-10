@@ -1233,6 +1233,49 @@ async function pousserProfilCloud(p: Profil): Promise<boolean> {
 // rond, la lecture est probablement PARTIELLE → interdiction de purger.
 const PLAFOND_LECTURE = 1000
 
+/** MES SPOTS ARCHIVÉS — lus à part, et c'est tout le correctif.
+ *
+ *  ⚠ Le bug, signalé le 08/08 et corrigé le 10/08 : l'écran « spots archivés »
+ *  filtrait la liste rendue par `tousLesLieux()`. Or celle-ci ne lit que
+ *  `statut='actif'`, en local ET dans le cloud (voir juste en dessous). La
+ *  section était donc VIDE en permanence, et « restaurer » inatteignable —
+ *  un spot rangé ne pouvait plus jamais ressortir depuis les réglages.
+ *
+ *  On ne corrige PAS en chargeant les archivés dans la liste principale : ils
+ *  reviendraient dans le deck, sur la carte et dans la recherche, ce qui est
+ *  exactement ce que « ranger » veut éviter. On les lit à la demande, quand la
+ *  section s'ouvre.
+ *
+ *  Le cloud a le dernier mot quand il répond ; sinon on rend le miroir local
+ *  (on ne prétend pas que le tiroir est vide juste parce qu'on est hors ligne). */
+export async function mesLieuxArchives(): Promise<Lieu[]> {
+  await pretAuth
+  const db = await getDB()
+  const local = (await db.getAllFromIndex('lieux', 'par-statut', 'archive')).filter(estAMoi)
+  let cloud: Lieu[] | null = null
+  try {
+    if (monId) {
+      const { data, error } = await supabase
+        .from('lieux')
+        .select('*')
+        .eq('statut', 'archive')
+        .eq('owner_id', monId)
+      if (error) throw error
+      if (data) cloud = (data as LigneLieu[]).map(ligneVersLieu)
+    }
+  } catch (e) {
+    console.warn('[jeudi] mesLieuxArchives cloud KO — miroir local', e)
+  }
+  const liste = cloud ?? local
+  // miroir : ce qu'on vient de lire au cloud alimente le cache hors-ligne
+  if (cloud) {
+    const tx = db.transaction('lieux', 'readwrite')
+    for (const l of cloud) await tx.store.put(l)
+    await tx.done
+  }
+  return liste.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+}
+
 export async function tousLesLieux(): Promise<Lieu[]> {
   // la course monId : sans cette attente, un appel parti avant la première
   // réponse d'auth sautait la branche cloud et classait mes spots en décor.
