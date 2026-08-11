@@ -8686,7 +8686,9 @@ button:focus:not(:focus-visible) {
   margin: 6px 2px 0;
   text-align: right;
 }
-.fiche-signaler a {
+/* 0018 : plus un lien mailto mais un petit formulaire — même discrétion */
+.fiche-signaler .signaler-ouvrir,
+.fiche-signaler .lien {
   color: var(--encre-3);
   font-size: 10px;
   letter-spacing: 0.3px;
@@ -8694,8 +8696,35 @@ button:focus:not(:focus-visible) {
   text-underline-offset: 3px;
   padding: 6px 0;
 }
-.fiche-signaler a:hover {
+.fiche-signaler .lien:hover {
   color: var(--encre-2);
+}
+.signaler-texte {
+  display: block;
+  width: 100%;
+  margin: 4px 0 2px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--encre);
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--encre-3) 60%, transparent);
+  border-radius: 4px;
+  resize: none;
+}
+.signaler-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+}
+.signaler-envoyer {
+  color: var(--encre-2);
+}
+.signaler-erreur {
+  margin: 4px 0 0;
+  font-size: 10px;
+  color: var(--red);
+  text-align: right;
 }
 
 /* « ton pas » : les trois allures + le champ précis */

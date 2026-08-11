@@ -19,29 +19,15 @@ export function srcPhoto(p: { blob?: Blob; url?: string }): string {
 
 // ── le retrait d'une photo ──────────────────────────────────────
 // jeudi ne masque pas les visages : on assume, comme tout réseau social.
-// La contrepartie, c'est que le retrait doit être FACILE — et la personne
-// qui se reconnaît sur un tirage n'a presque jamais de compte. Le canal est
-// donc un mail, qui marche pour tout le monde. (LCEN art. 6-I-5 : un
-// contenu signalé se retire vite ; la politique de confidentialité l'engage
-// à 24 h.)
-// ⚠️ ADRESSE À CRÉER avant toute ouverture publique (AVANT_LANCEMENT.md) :
-// le domaine jeudi.app doit être acheté et contact@ redirigé vers la vraie
-// boîte — tant que ce n'est pas fait, un mail envoyé ici REBONDIT.
+// La contrepartie, c'est que le retrait doit être FACILE. Depuis la 0018,
+// le signalement s'écrit EN BASE (db.ts → signalerCible, formulaire dans la
+// fiche) — l'ancien mailto: vers une boîte inexistante est mort. (LCEN art.
+// 6-I-5 : un contenu signalé se retire vite ; la politique l'engage à 24 h.)
+// ⚠️ ADRESSE À CRÉER avant toute ouverture publique (AVANT_LANCEMENT.md,
+// décision 12/08) : le domaine jeudi.app + contact@ — c'est la 4ᵉ obligation
+// d'Apple 1.2 (un moyen de joindre, PUBLIÉ), même si le signalement in-app
+// n'en dépend plus.
 export const CONTACT_RETRAIT = 'contact@jeudi.app'
-
-export function lienSignalement(nomLieu: string, position: number, total: number): string {
-  const sujet = `jeudi — retrait d'une photo : ${nomLieu}`
-  const corps = [
-    `Lieu : ${nomLieu}`,
-    `Photo : ${position}/${total}`,
-    '',
-    'Ce que je demande (retrait, autre) :',
-    '',
-    'Pourquoi (je m’y reconnais, je n’ai pas donné mon accord…) :',
-    '',
-  ].join('\n')
-  return `mailto:${CONTACT_RETRAIT}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`
-}
 
 // une photo distante qui ne charge pas (service down, hors-ligne, lien mort) :
 // on efface l'<img> — le fond papier/tirage stylé en CSS reprend sa place.

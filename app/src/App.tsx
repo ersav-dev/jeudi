@@ -12,7 +12,7 @@ import { lireATester, basculerATester, estATester, type MarqueATester } from './
 import { suivre } from './analytique'
 // le générateur de cartes 1080×1920 ne sert qu'au moment du partage : on va
 // le chercher sur le clic, pas au démarrage (voir les deux appels plus bas)
-import { srcPhoto, photoIndisponible, lienSignalement } from './photos'
+import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau, ICrayon } from './icones'
 import { fusionnerPhotos } from './tirage'
 import { typeDeLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
@@ -92,6 +92,11 @@ import {
   lireTagline,
   ecrireTagline,
   signalerLieu,
+  signalerCible,
+  bloquerMembre,
+  debloquerMembre,
+  listeBloques,
+  type MembreBloque,
   ajouterBof,
   viderSorties,
   effacerTout,
@@ -607,6 +612,7 @@ function Reglages({
     | 'donnees'
     | 'notifs'
     | 'archives'
+    | 'bloques'
     | 'amis'
     | 'listes'
     | 'monuments'
@@ -626,6 +632,31 @@ function Reglages({
       vivant = false
     }
   }, [ouvert])
+
+  // LES BLOQUÉS (0019) — lus à l'ouverture de la section, comme les archives.
+  // Se dédire doit être aussi facile que bloquer (ligne du chantier).
+  const [bloques, setBloques] = useState<MembreBloque[] | null>(null)
+  const [erreurBloques, setErreurBloques] = useState<string | null>(null)
+  useEffect(() => {
+    if (ouvert !== 'bloques') return
+    let vivant = true
+    void listeBloques().then((b) => {
+      if (vivant) setBloques(b)
+    })
+    return () => {
+      vivant = false
+    }
+  }, [ouvert])
+  const debloquer = async (id: string) => {
+    setErreurBloques(null)
+    try {
+      await debloquerMembre(id)
+    } catch (e) {
+      setErreurBloques((e as Error).message)
+      return
+    }
+    setBloques((b) => b?.filter((x) => x.id !== id) ?? null)
+  }
 
   // MES MONUMENTS (10/08) : ta photo à la place de la gravure, sur TA carte.
   // Strictement local — rien ne monte au cloud, personne d'autre ne le voit.
@@ -1009,6 +1040,42 @@ function Reglages({
           {archives?.length === 0 && (
             <span className="reglages-item mono estompe">{t('aucun spot archivé.')}</span>
           )}
+        </div>
+      )}
+
+      {/* BLOQUÉS (0019) — la liste des portes fermées. Le prénom est celui
+          qu'ils portaient au moment du geste (après, la vitrine ne les montre
+          plus). Débloquer ne restaure PAS la relation : on se redemande. */}
+      <button
+        className="mono reglages-section reglages-toggle"
+        aria-expanded={ouvert === 'bloques'}
+        onClick={() => bascule('bloques')}
+      >
+        {t('bloqués')}
+        <span className="reglages-chevron">{ouvert === 'bloques' ? '–' : '+'}</span>
+      </button>
+      {ouvert === 'bloques' && (
+        <div className="reglages-liste">
+          {bloques === null && (
+            <span className="reglages-item mono estompe">{t('on regarde…')}</span>
+          )}
+          {bloques?.map((b) => (
+            <span key={b.id} className="reglages-item mono">
+              @{b.prenom.toLowerCase()}
+              <button className="reglages-action mono" onClick={() => void debloquer(b.id)}>
+                {t('débloquer')} →
+              </button>
+            </span>
+          ))}
+          {bloques?.length === 0 && (
+            <span className="reglages-item mono estompe">{t('personne.')}</span>
+          )}
+          {bloques !== null && bloques.length > 0 && (
+            <span className="reglages-item mono estompe">
+              {t('débloquer ne le remet pas dans ton cercle — on se redemande.')}
+            </span>
+          )}
+          {erreurBloques && <p className="reglages-erreur mono">{erreurBloques}</p>}
         </div>
       )}
 
@@ -1399,6 +1466,19 @@ export default function App() {
     }
     setDemandes((prev) => prev.filter((x) => x.deId !== deId))
   }
+  // 0019 : ignorer ne suffit pas toujours — ignoré, on peut re-demander dès la
+  // seconde suivante. Bloquer ferme la porte : plus de demande possible (RLS),
+  // plus trouvable, plus rien qui passe. Silencieux pour l'autre, par principe.
+  const bloquerDemande = async (deId: string) => {
+    try {
+      await bloquerMembre(deId)
+    } catch (e) {
+      setFlash((e as Error).message)
+      return
+    }
+    setDemandes((prev) => prev.filter((x) => x.deId !== deId))
+    setFlash('c’est fait. tu peux te dédire dans les réglages.')
+  }
   // inviter un pote : navigator.share si dispo, sinon copie presse-papier
   const inviterUnPote = async () => {
     let lien: string
@@ -1749,9 +1829,20 @@ export default function App() {
     setFlash('rayure effacée. il reste dans ton carnet.')
   }
 
+  // 0018 : le drapeau local s'allume tout de suite (« on vérifie », même hors
+  // ligne) ET le signal part en base — c'est lui qui compte désormais.
+  // La ligne éditoriale du chantier : on confirme, on ne remercie pas.
   const signaler = async (l: Lieu) => {
     signalerLieu(l.id)
-    setFlash('signalé. merci, on vérifie.')
+    try {
+      await signalerCible('lieu', l.id, 'lieu à vérifier', undefined, {
+        nom: l.nom,
+        adresse: l.adresse,
+      })
+      setFlash('c’est noté.')
+    } catch (e) {
+      setFlash((e as Error).message)
+    }
   }
 
   // qui possède quoi : mes spots + ceux de mon cercle = "ma carte" ; les
@@ -2055,6 +2146,10 @@ export default function App() {
                       </button>
                       <button className="notif-non" onClick={() => ignorerDemande(d.deId)}>
                         ignorer
+                      </button>
+                      {/* libellé provisoire — le mot de marque se tranche à part */}
+                      <button className="notif-non notif-bloquer" onClick={() => bloquerDemande(d.deId)}>
+                        bloquer
                       </button>
                     </span>
                   </div>
@@ -2927,6 +3022,19 @@ export default function App() {
             chargerCercle()
             recharger()
           }}
+          onBloquer={async (m) => {
+            try {
+              await bloquerMembre(m.id)
+            } catch (e) {
+              setFlash((e as Error).message)
+              return
+            }
+            setCurateur(null)
+            // silencieux pour l'autre ; pour toi : la porte de sortie est dite
+            setFlash('c’est fait. tu peux te dédire dans les réglages.')
+            chargerCercle()
+            recharger()
+          }}
           onFermer={() => setCurateur(null)}
         />
       )}
@@ -3553,6 +3661,7 @@ function CarteCurateur({
   reels,
   onVoir,
   onRetirer,
+  onBloquer,
   onFermer,
 }: {
   curateur: string
@@ -3563,6 +3672,8 @@ function CarteCurateur({
   onVoir: (l: Lieu) => void
   /** retirer un VRAI membre de mon cercle (la relation part) */
   onRetirer: (m: MembreCercle) => void
+  /** bloquer (0019) : il ne me voit plus, je ne le vois plus — silencieux */
+  onBloquer: (m: MembreCercle) => void
   onFermer: () => void
 }) {
   const reel = reels.find((m) => m.prenom === curateur)
@@ -3570,6 +3681,7 @@ function CarteCurateur({
   const spots = reel ? lieux.filter((l) => l.proprietaire === reel.id) : []
   const [vue, setVue] = useState<'liste' | 'carte'>('liste')
   const [confirmRetrait, setConfirmRetrait] = useState(false)
+  const [confirmBloquer, setConfirmBloquer] = useState(false)
 
   // garde-fou : la personne a quitté (ou n'a jamais été dans) mon cercle
   if (!reel) {
@@ -3718,6 +3830,79 @@ function CarteCurateur({
           ? `sûr ? @${reel.prenom.toLowerCase()} sortira de ton cercle.`
           : 'retirer de mon cercle'}
       </button>
+      {/* bloquer (0019) — la porte qu'on ferme : retirer ne suffit pas, un
+          retiré peut re-demander et voit toujours le carnet public. Deux taps.
+          Libellé provisoire « bloquer » — le mot de marque se tranche à part. */}
+      <button
+        className={`lien retirer-cercle ${confirmBloquer ? 'confirm' : ''}`}
+        onClick={() => (confirmBloquer ? onBloquer(reel) : setConfirmBloquer(true))}
+      >
+        {confirmBloquer
+          ? `sûr ? @${reel.prenom.toLowerCase()} ne te verra plus — et toi non plus.`
+          : 'bloquer'}
+      </button>
+    </div>
+  )
+}
+
+// ── signaler une photo (0018) : le vrai formulaire, plus un mailto: mort ──
+// Trois temps : replié → déplié (les mots, facultatifs) → « c'est noté. ».
+// On confirme, on ne remercie pas, on ne promet aucun délai (ligne du chantier).
+function SignalerPhoto({ lieu, position, total }: { lieu: Lieu; position: number; total: number }) {
+  const [etat, setEtat] = useState<'plie' | 'ouvert' | 'envoi' | 'note'>('plie')
+  const [texte, setTexte] = useState('')
+  const [erreur, setErreur] = useState<string | null>(null)
+  const envoyer = async () => {
+    setEtat('envoi')
+    setErreur(null)
+    try {
+      // la cible = le lieu + la position du tirage (les photos locales n'ont
+      // pas d'id cloud stable) ; le contexte fige de quoi retrouver le fichier
+      await signalerCible('photo', `${lieu.id}#${position}`, 'photo à retirer', texte, {
+        lieu: lieu.nom,
+        photo: position,
+        sur: total,
+      })
+      setEtat('note')
+    } catch (e) {
+      setErreur((e as Error).message)
+      setEtat('ouvert')
+    }
+  }
+  if (etat === 'note') {
+    return <p className="mono fiche-signaler">{t('c’est noté.')}</p>
+  }
+  return (
+    <div className="mono fiche-signaler">
+      {etat === 'plie' ? (
+        <button className="lien signaler-ouvrir" onClick={() => setEtat('ouvert')}>
+          {t('signaler cette photo')}
+        </button>
+      ) : (
+        <>
+          <textarea
+            className="signaler-texte"
+            rows={2}
+            maxLength={1000}
+            placeholder={t('pourquoi ? (facultatif)')}
+            value={texte}
+            onChange={(e) => setTexte(e.target.value)}
+          />
+          <span className="signaler-actions">
+            <button className="lien" onClick={() => setEtat('plie')}>
+              {t('annuler')}
+            </button>
+            <button
+              className="lien signaler-envoyer"
+              disabled={etat === 'envoi'}
+              onClick={() => void envoyer()}
+            >
+              {etat === 'envoi' ? t('ça part…') : t('signaler')}
+            </button>
+          </span>
+          {erreur && <p className="signaler-erreur">{erreur}</p>}
+        </>
+      )}
     </div>
   )
 }
@@ -4288,13 +4473,11 @@ function Fiche({
       </div>
 
       {/* le retrait : on ne masque pas les visages, donc la porte de sortie
-          doit être visible et sans compte (la politique l'engage à 24 h) */}
+          doit être visible (la politique l'engage à 24 h). 0018 : le signal
+          s'écrit en base — fini le mailto: vers une boîte qui n'existait pas.
+          key = la photo affichée : changer de tirage replie le formulaire. */}
       {nbPhotos > 0 && (
-        <p className="mono fiche-signaler">
-          <a href={lienSignalement(lieu.nom, photoIndex + 1, nbPhotos)}>
-            {t('signaler cette photo')}
-          </a>
-        </p>
+        <SignalerPhoto key={photoIndex} lieu={lieu} position={photoIndex + 1} total={nbPhotos} />
       )}
 
       {/* l'album à trous : sur MES spots, chaque photo manquante démange */}

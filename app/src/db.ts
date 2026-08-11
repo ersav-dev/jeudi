@@ -2753,6 +2753,71 @@ export async function retirerDuCercle(id: string): Promise<void> {
   }
 }
 
+// ── BLOQUER (0019) — la porte qu'on ferme ───────────────────────
+/** bloquer quelqu'un : la RPC pose le blocage ET fait le ménage côté serveur
+ *  (la relation dans les deux sens, l'anneau intérieur des deux côtés). La RLS
+ *  fait le reste : ses spots, tips, photos, rayures et jugements cessent
+ *  d'exister pour moi — et les miens pour lui. Un match en cours FINIT (décision
+ *  du 12/08) ; le prochain ne nous réunira plus (garde sg_rejoindre).
+ *  Throw si le cloud refuse : bloquer est un geste de sécurité — l'UI doit dire
+ *  la vérité, jamais faire semblant. Pas de file hors-ligne pour ça. */
+export async function bloquerMembre(id: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase.rpc('bloquer', { cible: id })
+  if (error) {
+    console.warn('[jeudi] bloquerMembre KO', id, error)
+    throw new Error('ça n’est pas passé — réessaie quand ça capte.')
+  }
+  // le cache du cercle suit tout de suite (même geste que retirerDuCercle)
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_CERCLE_CACHE) ?? '[]')
+    if (Array.isArray(v)) {
+      localStorage.setItem(
+        CLE_CERCLE_CACHE,
+        JSON.stringify((v as MembreCercle[]).filter((m) => m.id !== id)),
+      )
+    }
+  } catch {
+    /* cache illisible : il se refera à la prochaine lecture */
+  }
+}
+
+/** se dédire — le blocage part, la relation ne revient PAS : on se redemande
+ *  (le cercle est un accord, pas un état qu'on restaure). */
+export async function debloquerMembre(id: string): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase.rpc('debloquer', { cible: id })
+  if (error) {
+    console.warn('[jeudi] debloquerMembre KO', id, error)
+    throw new Error('ça n’est pas passé — réessaie quand ça capte.')
+  }
+}
+
+export type MembreBloque = { id: string; prenom: string; bloqueLe: string }
+/** la liste des réglages, pour se dédire. Le prénom est l'instantané figé au
+ *  moment du geste : après, la vitrine ne montre plus cette personne. */
+export async function listeBloques(): Promise<MembreBloque[]> {
+  try {
+    await pretAuth
+    if (!monId) return []
+    const { data, error } = await supabase
+      .from('blocages')
+      .select('bloque_id,prenom_fige,cree_le')
+      .order('cree_le', { ascending: false })
+    if (error || !data) return []
+    const lignes = data as { bloque_id: string; prenom_fige: string | null; cree_le: string }[]
+    return lignes.map((b) => ({
+      id: b.bloque_id,
+      prenom: b.prenom_fige || 'membre',
+      bloqueLe: b.cree_le,
+    }))
+  } catch {
+    return []
+  }
+}
+
 /** la vitrine publique d'UN membre (écran d'invitation). null = introuvable. */
 export async function profilPublic(id: string): Promise<MembreCercle | null> {
   try {
@@ -3071,6 +3136,36 @@ export function lireSuivis(): string[] {
 }
 export function ecrireSuivis(noms: string[]): void {
   localStorage.setItem('jeudi-suivis', JSON.stringify(noms))
+}
+
+// ── SIGNALER (0018) — le signal part VRAIMENT ───────────────────
+/** avant : un drapeau localStorage (rien ne quittait le téléphone) et un
+ *  mailto: vers une boîte inexistante. Désormais le signalement s'écrit dans
+ *  `signalements` — RLS : chacun crée et lit les siens, personne d'autre.
+ *  `contexte` fige ce qu'il faut pour comprendre après coup (la cible peut
+ *  disparaître, le signalement reste — pas de FK, choix de la 0018). */
+export type CibleSignalement = 'lieu' | 'photo' | 'tip' | 'profil'
+export async function signalerCible(
+  cible: CibleSignalement,
+  cibleId: string,
+  motif: string,
+  texte?: string,
+  contexte?: Record<string, unknown>,
+): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase.from('signalements').insert({
+    auteur_id: monId,
+    cible_type: cible,
+    cible_id: cibleId,
+    motif,
+    texte: texte?.trim() ? texte.trim() : null,
+    contexte: contexte ?? null,
+  })
+  if (error) {
+    console.warn('[jeudi] signalerCible KO', cible, cibleId, error)
+    throw new Error('ça n’est pas parti — réessaie quand ça capte.')
+  }
 }
 
 // les lieux signalés (flag « on vérifie »)

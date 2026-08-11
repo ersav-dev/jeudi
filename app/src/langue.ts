@@ -659,6 +659,20 @@ const EN: Record<string, string> = {
 
   'signaler cette photo': 'report this photo',
 
+  // signaler (0018) — on confirme, on ne remercie pas
+  'c’est noté.': 'noted.',
+  'pourquoi ? (facultatif)': 'why? (optional)',
+  'signaler': 'report',
+  'ça part…': 'sending…',
+
+  // bloquer (0019) — réglages : les portes fermées
+  'bloqués': 'blocked',
+  'débloquer': 'unblock',
+  'on regarde…': 'one moment…',
+  'personne.': 'no one.',
+  'débloquer ne le remet pas dans ton cercle — on se redemande.':
+    'unblocking doesn’t put them back in your circle — you ask again.',
+
   // la visionneuse : le switch couverture / photo entière
   'la couverture': 'the cover',
   'la photo entière': 'the full photo',

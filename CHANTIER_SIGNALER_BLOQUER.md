@@ -1,7 +1,51 @@
 # CHANTIER — signaler et bloquer
-*Cadrage du 10 août 2026. RIEN n'est implémenté. Session dédiée requise,
-prévue avec Fable le mercredi 12 — c'est de la sécurité des gens et de la RLS,
-pas de l'UI.*
+*Cadrage du 10 août 2026. Session Fable du mercredi 12 : FAIT — voir
+« l'état au 12/08 » ci-dessous. Reste à coller les migrations et à
+lancer l'attaque.*
+
+---
+
+## L'état au 12/08 (session Fable)
+
+**Codé, testé (493 tests verts, tsc 0, build vert), non appliqué en base :**
+- `supabase/migrations/0018_signalements.sql` — la table + RLS (chacun crée
+  et lit les siens). Pas de FK vers la cible : le signalement survit à la
+  suppression ; `contexte` fige de quoi comprendre après coup.
+  ⚠ Numérotation : le push (CHANTIER_PUSH.md) glisse en 0020.
+- `supabase/migrations/0019_blocages.sql` — la table (+ `prenom_fige`,
+  l'instantané pour la liste des réglages), `sont_bloques()`, les RPC
+  `bloquer()`/`debloquer()` (ménage : relation + anneau des deux côtés), et
+  le blocage glissé dans `est_dans_mon_cercle()`, `lieu_visible()` et
+  `chemin_photo_visible()` → lieux, tips, photos, rayures, jugements et les
+  DEUX buckets d'un coup. Policies retouchées : lieux (passe par
+  lieu_visible — ça rend vraie la règle d'ancienneté de la 0013, qui ne
+  gardait pas la table), tips (lecture ET écriture), vitrine, relations,
+  sg_participants + sg_rejoindre (un match en cours finit ; le prochain ne
+  les réunit plus).
+- Côté app : `signalerCible()` écrit en base (le lieu depuis la fiche, la
+  photo via le vrai formulaire — le mailto: est mort) ; `bloquerMembre()` /
+  `debloquerMembre()` / `listeBloques()` ; bouton deux-taps dans la feuille
+  membre, « bloquer » sur une demande reçue, section « bloqués » des
+  réglages. Voix du carnet : « c'est noté. », jamais de merci.
+- `_verification/attaque_blocage.mjs` — l'attaque du plan §4, automatisée
+  (mode d'emploi en tête du script).
+
+**Les quatre décisions, prises par Ersan le 12/08 :**
+1. le mot : « bloquer » provisoire à l'écran, le mot de marque se tranche
+   en fin de session ; 2. le passé : ses photos disparaissent ;
+3. un match en cours finit, puis plus jamais ; 4. destinataire :
+contact@jeudi.app (boîte à créer — la table se lit dans Supabase en
+attendant).
+
+**Reste, dans l'ordre :** Ersan colle 0018 puis 0019 (SQL Editor) · deux
+jetons + `node ../_verification/attaque_blocage.mjs` depuis app/ — zéro
+fuite exigé · trancher le mot de marque · acheter jeudi.app + créer la
+boîte (verrou porte 2) · l'obligation n°1 d'Apple (le filtre de contenu)
+reste un chantier à part.
+
+---
+
+*Le cadrage d'origine, ci-dessous, reste la référence du pourquoi.*
 
 > Ce document existe pour la même raison que `CHANTIER_PUSH.md` : pour que la
 > session ne brûle pas sa matinée à découvrir le terrain.
