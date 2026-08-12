@@ -1973,10 +1973,18 @@ export default function App() {
   useEffect(() => {
     if (vue !== 'carte') return
     if (!inviteAMontrer(pelliculeDonnees.soirees.length === 0, lireJourInvite())) return
-    setInvite(true)
-    noterInviteVue()
+    // l'allumage passe par un timer (tick 0) : la règle react-hooks interdit
+    // le setState synchrone dans un effet — il déclencherait un second rendu
+    // en cascade avant que le premier soit peint. Même geste, un tick plus tard.
+    const t0 = window.setTimeout(() => {
+      setInvite(true)
+      noterInviteVue()
+    }, 0)
     const t = window.setTimeout(() => setInvite(false), DUREE_INVITE_MS)
-    return () => window.clearTimeout(t)
+    return () => {
+      window.clearTimeout(t0)
+      window.clearTimeout(t)
+    }
   }, [vue, pelliculeDonnees.soirees.length])
 
   // ── les soirs du cercle (§7) : la MÊME pellicule, lue humainement.
