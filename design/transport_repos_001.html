@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — le transport au repos (hiérarchie, 12/08)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --encre: #EFE9D8;
+    --nuit: #0b1a3a;
+    --rer-vif: #0055c8;
+    --metro-vif: #0b1a3a;
+    --tram-vif: #66a933;
+    --bato-vif: #00a4c4;
+    --l7: #ff82b4;  /* officiel IDFM, vérifié 12/08 */
+    --l8: #d282be;  /* officiel IDFM, vérifié 12/08 */
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: #1a1d24; color: var(--encre);
+    font-family: system-ui, sans-serif;
+    padding: 24px 16px 60px; max-width: 520px; margin: 0 auto;
+  }
+  h1 { font-family: 'Caveat', cursive; font-size: 30px; font-weight: 600; margin-bottom: 4px; }
+  .sous { opacity: .55; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; opacity: .5; margin: 30px 0 8px; font-weight: 600; }
+  .note { font-size: 12px; opacity: .55; margin: 6px 2px 0; line-height: 1.5; }
+  .note b { opacity: .9; }
+
+  /* le faux bout de carte — même squelette que etiquettes_transport.html */
+  .carte {
+    position: relative; height: 240px; border-radius: 10px;
+    background:
+      radial-gradient(ellipse at 70% 30%, #232838 0%, transparent 55%),
+      radial-gradient(ellipse at 20% 80%, #20242f 0%, transparent 50%),
+      #191c25;
+    overflow: hidden; border: 1px solid rgba(239,233,216,.08);
+  }
+  .carte::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(115deg, transparent 48%, rgba(239,233,216,.05) 48.5%, rgba(239,233,216,.05) 49%, transparent 49.5%),
+      linear-gradient(35deg, transparent 30%, rgba(239,233,216,.04) 30.5%, rgba(239,233,216,.04) 31%, transparent 31.5%),
+      linear-gradient(0deg, transparent 63%, rgba(239,233,216,.05) 63.5%, rgba(239,233,216,.05) 64.2%, transparent 64.7%);
+  }
+  .p { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(239,233,216,.5); box-shadow: 0 0 0 2px rgba(239,233,216,.1); }
+
+  /* le pin spot (tampon) + son nom manuscrit : LA référence de hiérarchie */
+  .pin { position: absolute; width: 15px; height: 15px; border-radius: 50%; background: var(--encre); box-shadow: 0 1px 4px rgba(0,0,0,.5), inset 0 0 0 2.5px #191c25, inset 0 0 0 4px var(--encre); }
+  .nomspot { position: absolute; font-family: 'Caveat', cursive; font-size: 15px; color: var(--encre); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .monu { position: absolute; font-family: 'Caveat', cursive; font-size: 12px; opacity: .5; letter-spacing: .04em; }
+
+  /* ── AUJOURD'HUI (témoin) : la plaque pleine + le nom Caveat, ×0.30 ── */
+  .badge { position: absolute; display: inline-flex; align-items: center; gap: 4px; opacity: .30; white-space: nowrap; }
+  .badge.rer { opacity: .38; }
+  .badge.mineur { opacity: .24; }
+  .badge .plaque {
+    font-weight: 700; font-size: 8px; color: var(--encre); padding: 2px 4px 1px; border-radius: 3px;
+    box-shadow: 0 0 0 .5px rgba(239,233,216,.22);
+  }
+  .badge .nomst { font-family: 'Caveat', cursive; font-size: 12px; color: var(--encre); text-shadow: 0 0 3px rgba(11,26,58,.7); }
+  .badge.rer .nomst { font-size: 13px; }
+  .plaque.m { background: var(--metro-vif); } .plaque.r { background: var(--rer-vif); }
+  .plaque.t { background: var(--tram-vif); } .plaque.b { background: var(--bato-vif); }
+
+  /* ── PROPOSÉ : le cachet à l'encre — le code seul, sans fond ── */
+  .cachet {
+    position: absolute; font-weight: 700; font-size: 9px; letter-spacing: .03em;
+    color: var(--encre); opacity: .35; white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0,0,0,.5);
+  }
+  .cachet .nomst {
+    font-family: system-ui, sans-serif; font-weight: 400; font-size: 10px;
+    opacity: .85; margin-left: 4px; letter-spacing: 0;
+  }
+  .cachet.eteint { opacity: .1; }        /* le mode focus : les autres se taisent */
+  .cachet.repondu { opacity: 1; }        /* la station tapée : pleine voix */
+  .cachet.repondu .plaque { font-size: 8px; padding: 2px 4px 1px; border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(239,233,216,.85); margin-right: 2px; }
+
+  /* le tracé (état tapé) : halo nuit + couleur officielle pleine voix */
+  .trait { position: absolute; height: 5px; border-radius: 3px; box-shadow: 0 0 0 2px rgba(11,26,58,.55); }
+  .quai { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--encre); }
+  .pastille {
+    position: absolute; font-weight: 800; font-size: 9px; color: #1a1d24;
+    width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+
+  /* la bande d'échantillons */
+  .bande { display: flex; gap: 18px; align-items: center; padding: 14px; border: 1px solid rgba(239,233,216,.1); border-radius: 10px; background: #191c25; flex-wrap: wrap; }
+  .bande .gr { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .bande .lg { font-size: 10px; opacity: .45; }
+  .fleche { opacity: .4; font-size: 16px; }
+  .encart {
+    margin-top: 8px; padding: 10px 12px; border-left: 2px solid rgba(239,233,216,.25);
+    font-size: 12px; opacity: .75; line-height: 1.55;
+  }
+  .ok { color: #9fd6a1; }
+</style>
+</head>
+<body>
+
+<h1>le transport au repos</h1>
+<p class="sous">Planche 001 — 12/08/2026. La règle qu'on répare : au repos le transport
+est une <b>présence</b>, jamais un discours ; le tap lui rend sa pleine voix.
+Choix validés par Ersan : cachet à l'encre unique · le nom se tait avant z14,5 ·
+Batobus à son heure seulement. Couleurs vérifiées au référentiel IDFM (zéro écart).</p>
+
+<h2>1 · aujourd'hui, z13 — le témoin</h2>
+<div class="carte">
+  <span class="p" style="left:12%;top:64%"></span><span class="p" style="left:30%;top:38%"></span>
+  <span class="p" style="left:56%;top:70%"></span><span class="p" style="left:78%;top:30%"></span>
+  <span class="p" style="left:66%;top:52%"></span><span class="p" style="left:22%;top:20%"></span>
+  <span class="pin" style="left:31%;top:41%"></span><span class="nomspot" style="left:35%;top:39%">le bisou</span>
+  <span class="pin" style="left:57%;top:73%"></span><span class="nomspot" style="left:61%;top:71%">chez suzette</span>
+  <span class="pin" style="left:79%;top:33%"></span>
+  <span class="monu" style="left:8%;top:8%">■ république</span>
+  <span class="badge rer" style="left:4%;top:26%"><span class="plaque r">RER</span><span class="nomst">châtelet-les halles</span></span>
+  <span class="badge" style="left:46%;top:14%"><span class="plaque m">M</span><span class="nomst">arts et métiers</span></span>
+  <span class="badge" style="left:60%;top:40%"><span class="plaque m">M</span><span class="nomst">température</span></span>
+  <span class="badge" style="left:10%;top:48%"><span class="plaque m">M</span><span class="nomst">rambuteau</span></span>
+  <span class="badge" style="left:38%;top:58%"><span class="plaque m">M</span><span class="nomst">étienne marcel</span></span>
+  <span class="badge" style="left:64%;top:86%"><span class="plaque m">M</span><span class="nomst">pont marie</span></span>
+  <span class="badge" style="left:6%;top:78%"><span class="plaque m">M</span><span class="nomst">châtelet</span></span>
+  <span class="badge rer" style="left:40%;top:88%"><span class="plaque r">RER</span><span class="nomst">saint-michel</span></span>
+  <span class="badge mineur" style="left:74%;top:62%"><span class="plaque b">BAT</span><span class="nomst">hôtel de ville</span></span>
+  <span class="badge mineur" style="left:26%;top:70%"><span class="plaque t">T</span><span class="nomst">balard</span></span>
+  <span class="badge" style="left:70%;top:18%"><span class="plaque m">M</span><span class="nomst">réaumur</span></span>
+</div>
+<p class="note">Onze badges pour trois spots : les aplats colorés + le nom manuscrit
+font parler la signalétique plus fort — et plus NOMBREUSE — que le carnet
+(cap réel : 14 transports contre ~8 noms de spots). L'œil compte les plaques,
+pas les épingles.</p>
+
+<h2>2 · proposé, z13 — le cachet à l'encre, le code seul</h2>
+<div class="carte">
+  <span class="p" style="left:12%;top:64%"></span><span class="p" style="left:30%;top:38%"></span>
+  <span class="p" style="left:56%;top:70%"></span><span class="p" style="left:78%;top:30%"></span>
+  <span class="p" style="left:66%;top:52%"></span><span class="p" style="left:22%;top:20%"></span>
+  <span class="pin" style="left:31%;top:41%"></span><span class="nomspot" style="left:35%;top:39%">le bisou</span>
+  <span class="pin" style="left:57%;top:73%"></span><span class="nomspot" style="left:61%;top:71%">chez suzette</span>
+  <span class="pin" style="left:79%;top:33%"></span>
+  <span class="monu" style="left:8%;top:8%">■ république</span>
+  <span class="cachet" style="left:6%;top:28%">RER</span>
+  <span class="cachet" style="left:48%;top:16%">M</span>
+  <span class="cachet" style="left:11%;top:50%">M</span>
+  <span class="cachet" style="left:40%;top:60%">M</span>
+  <span class="cachet" style="left:42%;top:88%">RER</span>
+  <span class="cachet" style="left:66%;top:86%">M</span>
+</div>
+<p class="note">Six cachets, pas onze. Le code seul suffit à SE SITUER — le nom, c'est
+déjà du discours, il attend z14,5. Plus d'aplat : la couleur pleine devient la
+<b>récompense du tap</b>. Le Batobus n'apparaît qu'à son heure de service
+(la loi des bus de jour, appliquée à l'eau).</p>
+
+<h2>3 · proposé, z14,5+ — le nom arrive, en signalétique</h2>
+<div class="carte">
+  <span class="p" style="left:12%;top:64%"></span><span class="p" style="left:30%;top:38%"></span>
+  <span class="p" style="left:66%;top:52%"></span>
+  <span class="pin" style="left:31%;top:41%"></span><span class="nomspot" style="left:35%;top:39%">le bisou</span>
+  <span class="pin" style="left:57%;top:73%"></span><span class="nomspot" style="left:61%;top:71%">chez suzette</span>
+  <span class="cachet" style="left:8%;top:26%">RER<span class="nomst">châtelet-les halles</span></span>
+  <span class="cachet" style="left:44%;top:14%">M<span class="nomst">arts et métiers</span></span>
+  <span class="cachet" style="left:12%;top:52%">M<span class="nomst">rambuteau</span></span>
+  <span class="cachet" style="left:38%;top:60%">M<span class="nomst">étienne marcel</span></span>
+  <span class="cachet" style="left:42%;top:88%">RER<span class="nomst">saint-michel</span></span>
+</div>
+<p class="note">Le nom en <b>sans-serif 10 px</b> — la règle des bouches enfin appliquée
+aux stations : « la main dit les lieux, le sans-serif dit la signalétique ».
+Le Caveat redevient la voix exclusive du carnet.</p>
+
+<h2>4 · tapé — la pleine voix, et le cas 7/8 réglé</h2>
+<div class="carte">
+  <span class="pin" style="left:31%;top:41%"></span>
+  <span class="cachet eteint" style="left:8%;top:20%">RER</span>
+  <span class="cachet eteint" style="left:80%;top:76%">M</span>
+  <span class="cachet eteint" style="left:70%;top:14%">M</span>
+  <span class="trait" style="left:8%;top:56%;width:80%;background:var(--l7);transform:rotate(-7deg)"></span>
+  <span class="trait" style="left:6%;top:72%;width:84%;background:var(--l8);transform:rotate(4deg)"></span>
+  <span class="quai" style="left:24%;top:52%;box-shadow:0 0 0 2px var(--l7)"></span>
+  <span class="quai" style="left:56%;top:49%;box-shadow:0 0 0 2px var(--l7)"></span>
+  <span class="quai" style="left:30%;top:71%;box-shadow:0 0 0 2px var(--l8)"></span>
+  <span class="quai" style="left:62%;top:73%;box-shadow:0 0 0 2px var(--l8)"></span>
+  <span class="pastille" style="left:3%;top:50%;background:var(--l7)">7</span>
+  <span class="pastille" style="left:91%;top:44%;background:var(--l7)">7</span>
+  <span class="pastille" style="left:1%;top:67%;background:var(--l8)">8</span>
+  <span class="pastille" style="left:92%;top:74%;background:var(--l8)">8</span>
+  <span class="cachet repondu" style="left:38%;top:58%"><span class="plaque m">M</span><span class="nomst">opéra</span></span>
+</div>
+<p class="note">Le tap garde tout ce qu'il a : trait pleine voix, vraies couleurs IDFM,
+pastilles de quais. <b>Deux nouveautés</b> : les autres cachets tombent à ~0,1
+(la carte répond à UNE question), et la pastille de numéro se pose <b>aux deux
+extrémités</b> de chaque tracé — la 7 et la 8 sont officiellement deux roses
+voisins (vérifié : ff82b4 / d282be, et IDFM réutilise ses couleurs — 6=7bis,
+3=T8=T10, 13=3bis) : c'est le <b>numéro</b> qui les départage, pas une
+trahison de la charte.</p>
+
+<h2>5 · la grammaire, en une bande</h2>
+<div class="bande">
+  <div class="gr">
+    <span style="font-weight:700;font-size:10px;opacity:.35">M&nbsp;&nbsp;RER&nbsp;&nbsp;T</span>
+    <span class="lg">repos : l'encre, ×0,35</span>
+  </div>
+  <span class="fleche">→</span>
+  <div class="gr">
+    <span>
+      <span style="background:var(--metro-vif);color:var(--encre);font-weight:700;font-size:9px;padding:2px 5px;border-radius:3px;box-shadow:0 0 0 1px rgba(239,233,216,.85)">M</span>
+      <span style="background:var(--rer-vif);color:var(--encre);font-weight:700;font-size:9px;padding:2px 5px;border-radius:3px;margin-left:6px">RER</span>
+      <span style="background:var(--tram-vif);color:var(--encre);font-weight:700;font-size:9px;padding:2px 5px;border-radius:3px;margin-left:6px">T</span>
+    </span>
+    <span class="lg">tapé : la plaque pleine — la couleur est la récompense</span>
+  </div>
+</div>
+
+<div class="encart">
+  <b>Décidé sur cette planche</b> (si elle te va) : cachet encre unique ×0,35 ·
+  code seul avant z14,5, nom sans-serif ensuite · cap 6 → 14 selon le zoom, en
+  fondu · mode focus pendant un tracé · Batobus à son heure · bouches à 0,9
+  après le tap · pastilles aux deux bouts · étiquettes SOUS les monuments ·
+  fiche : « y aller » (M/RER) + « rentrer » en deux souffles.<br>
+  <span class="ok">Données déjà prêtes : Auber, Luxembourg, Vincennes et 105 autres
+  stations récupérées le 12/08 — tout ce qui s'affichera ici existe.</span>
+</div>
+
+</body>
+</html>
