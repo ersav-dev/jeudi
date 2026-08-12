@@ -82,9 +82,29 @@ sticker, ça a un BORD. Deux options :
 - **Jamais (reco) : le détourage IA** — lourd, aléatoire, et le raté est
   moche ; le déchiré rate toujours bien.
 
+### Les portes d'entrée (précisées par Ersan le 12/08 — « avec le + ?
+### en cliquant sur les monuments ? » : oui aux deux)
+
+Le geste doit vivre là où on regarde, pas au fond des réglages :
+- **Le + de la bande** : il devient le geste « j'ajoute au carnet » —
+  le tap ouvre une petite feuille à DEUX choix : « **un spot** » (le
+  chemin actuel, mis en avant) · « **un sticker** ». Un tap de plus sur
+  le chemin principal, mais TOUT est découvrable — la leçon de l'audit
+  (les appuis longs cachés ne s'apprennent jamais seuls). Variante à
+  trancher : tap = spot direct, appui long = sticker (zéro friction,
+  zéro découvrabilité).
+- **Taper un monument** sur la carte : sa petite feuille s'ouvre —
+  « **ta photo ici** » (galerie → déchiré → posée), et s'il porte déjà
+  ta photo : « remplacer · retirer · revoir la gravure ». Fini le détour
+  par les réglages pour « mes monuments » (qui reste la vue d'ensemble).
+- **L'appui long sur la carte nue** : le panneau de marque gagne
+  « coller une photo ici » — la pose GÉOLOCALISÉE précise, pour le
+  sticker libre.
+
 ### C · Le sticker libre (le cœur du chantier)
-1. **La pose** : appui long sur la carte nue → le panneau de marque gagne
-   « coller une photo ici » → galerie → réduction + bord déchiré → posé.
+1. **La pose** : par le + (feuille « un sticker » → on tape ensuite
+   l'endroit sur la carte) ou par l'appui long (l'endroit est déjà sous
+   le doigt) → galerie → réduction + bord déchiré → posé.
 2. **La donnée** : le magasin `stickers` se généralise —
    `<uid>:libre:<id>` → `{ blob, lat, lng, ajoute }` (le monument reste
    `<uid>:<nom>`). Un module `stickers.ts` remplace `mesMonuments.ts`
@@ -109,8 +129,9 @@ sticker, ça a un BORD. Deux options :
 
 1. **Le bord du sticker v1** : déchiré automatique (reco) — ou tu veux
    direct le lasso au doigt ?
-2. **Le geste de pose** : l'appui long → panneau de marque enrichi
-   (reco, le geste existe) — ou un mode « colle » dédié ?
+2. **Le + à deux choix** : tap → petite feuille « un spot · un sticker »
+   (reco — tout se découvre) ou tap = spot direct + appui long = sticker
+   (zéro friction, mais invisible) ?
 3. **Le catalogue de monuments** : activer/désactiver parmi les ~18
    gravés (reco v1) — ou aller jusqu'au monument LIBRE (nom + position
    choisis — c'est alors un sticker libre nommé, et il peut entrer dans
