@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi — la barre en îlot + le « + » visible (12/08)</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --encre: #EFE9D8;
+    --nuit: #15130F;
+    --papier: #1a1d24;
+    --print-white: #fbf8f1;
+    --bleu: #5d8dff;   /* l'accent jeudi, tranché le 07/08 */
+    --cire: #a8322a;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: #101216; color: var(--encre);
+    font-family: system-ui, sans-serif;
+    padding: 24px 16px 60px; max-width: 520px; margin: 0 auto;
+  }
+  h1 { font-family: 'Caveat', cursive; font-size: 30px; font-weight: 600; margin-bottom: 4px; }
+  .sous { opacity: .55; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; opacity: .5; margin: 30px 0 8px; font-weight: 600; }
+  .note { font-size: 12px; opacity: .55; margin: 6px 2px 0; line-height: 1.5; }
+  .note b { opacity: .9; }
+
+  /* le bas d'écran simulé : un bout de carte vivante derrière */
+  .ecran {
+    position: relative; height: 210px; border-radius: 12px; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 70% 20%, #232838 0%, transparent 55%),
+      radial-gradient(ellipse at 15% 60%, #20242f 0%, transparent 50%),
+      #191c25;
+    border: 1px solid rgba(239,233,216,.08);
+  }
+  .ecran::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(115deg, transparent 48%, rgba(239,233,216,.05) 48.5%, rgba(239,233,216,.05) 49%, transparent 49.5%),
+      linear-gradient(25deg, transparent 62%, rgba(239,233,216,.04) 62.5%, rgba(239,233,216,.04) 63.2%, transparent 63.7%);
+  }
+  .p { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(239,233,216,.5); box-shadow: 0 0 0 2px rgba(239,233,216,.1); }
+  .pin { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--encre); box-shadow: inset 0 0 0 2.5px #191c25, inset 0 0 0 4px var(--encre); }
+  .nomspot { position: absolute; font-family: 'Caveat', cursive; font-size: 14px; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+
+  /* ── TÉMOIN : la barre pleine largeur + le fab papier blanc ── */
+  .barre-actuelle {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: space-around;
+    padding: 12px 0 10px;
+    background: linear-gradient(transparent, var(--papier) 35%);
+  }
+  .ni { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: .45; font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .ni.on { opacity: 1; position: relative; }
+  .ni.on::after { content: ''; position: absolute; bottom: -6px; width: 22px; height: 3px; background: var(--encre); border-radius: 2px; }
+  .ni .ic { font-size: 17px; font-family: system-ui; }
+  .fab-actuel {
+    position: absolute; right: 14px; bottom: 64px;
+    width: 44px; height: 44px; border-radius: 8px;
+    background: var(--print-white); color: #22201a;
+    font-size: 26px; display: grid; place-items: center;
+    transform: rotate(-2deg); box-shadow: 0 1px 0 rgba(0,0,0,.5);
+  }
+
+  /* ── L'ÎLOT : la bande de papier posée sur la nuit ── */
+  .ilot {
+    position: absolute; left: 14px; right: 14px; bottom: 12px;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 10px 6px;
+    background: #211e18;                    /* papier de nuit, pas un aplat UI */
+    border: 1px solid rgba(239,233,216,.14);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);  /* décollé de la ville */
+    transform: rotate(-.4deg);              /* posé à la main, comme le fab */
+  }
+  .ilot .ni { font-size: 9.5px; }
+  /* variante B : le + amarré au bout de l'îlot, débordant, à l'accent */
+  .ilot .plus-amarre {
+    flex: none; width: 46px; height: 46px; margin: -16px 4px -8px 2px;
+    border-radius: 12px;
+    background: var(--bleu); color: #0e1116;
+    font-size: 28px; font-weight: 600;
+    display: grid; place-items: center;
+    transform: rotate(2deg);
+    box-shadow: 0 4px 14px rgba(93,141,255,.35), 0 1px 0 rgba(0,0,0,.5);
+  }
+  /* variante A : fab séparé mais à l'accent */
+  .fab-bleu {
+    position: absolute; right: 14px; bottom: 74px;
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--bleu); color: #0e1116;
+    font-size: 28px; font-weight: 600; display: grid; place-items: center;
+    transform: rotate(-2deg);
+    box-shadow: 0 4px 14px rgba(93,141,255,.35), 0 1px 0 rgba(0,0,0,.5);
+  }
+
+  .encart {
+    margin-top: 8px; padding: 10px 12px; border-left: 2px solid rgba(239,233,216,.25);
+    font-size: 12px; opacity: .75; line-height: 1.55;
+  }
+</style>
+</head>
+<body>
+
+<h1>la barre en îlot, le « + » qui se voit</h1>
+<p class="sous">Planche 001 — 12/08/2026, idée d'Ersan. Deux questions, une seule
+réponse : l'îlot est une <b>bande de papier posée sur la nuit</b> (plus carnet
+que la barre pleine largeur), et le « + » prend <b>l'accent bleu jeudi</b> —
+la décision du 07/08 dit que l'accent existe ; l'action n°1 le mérite plus
+qu'un chevron.</p>
+
+<h2>0 · témoin — aujourd'hui</h2>
+<div class="ecran">
+  <span class="p" style="left:20%;top:30%"></span><span class="p" style="left:60%;top:18%"></span>
+  <span class="pin" style="left:38%;top:26%"></span><span class="nomspot" style="left:43%;top:24%">le bisou</span>
+  <div class="fab-actuel">+</div>
+  <div class="barre-actuelle">
+    <span class="ni"><span class="ic">✦</span>sortir</span>
+    <span class="ni"><span class="ic">◌</span>trouver</span>
+    <span class="ni on"><span class="ic">▤</span>ma carte</span>
+    <span class="ni"><span class="ic">◯</span>le cercle</span>
+    <span class="ni"><span class="ic">✪</span>moi</span>
+  </div>
+</div>
+<p class="note">La barre traverse tout l'écran (le dégradé mange le bas de la
+carte) et le « + » papier-blanc se fond dans les zones claires. Il n'existe
+que sur « ma carte ».</p>
+
+<h2>A · l'îlot + le « + » séparé, à l'accent</h2>
+<div class="ecran">
+  <span class="p" style="left:20%;top:30%"></span><span class="p" style="left:60%;top:18%"></span>
+  <span class="pin" style="left:38%;top:26%"></span><span class="nomspot" style="left:43%;top:24%">le bisou</span>
+  <div class="fab-bleu">+</div>
+  <div class="ilot">
+    <span class="ni"><span class="ic">✦</span>sortir</span>
+    <span class="ni"><span class="ic">◌</span>trouver</span>
+    <span class="ni on"><span class="ic">▤</span>ma carte</span>
+    <span class="ni"><span class="ic">◯</span>le cercle</span>
+    <span class="ni"><span class="ic">✪</span>moi</span>
+  </div>
+</div>
+<p class="note">La ville respire AUTOUR de la bande (on voit la carte passer
+dessous, à gauche et à droite). Le « + » bleu jeudi se voit sur n'importe quel
+fond. Deux objets posés, deux inclinaisons légères — la grammaire du carnet.</p>
+
+<h2>B · l'îlot avec le « + » amarré au bout</h2>
+<div class="ecran">
+  <span class="p" style="left:20%;top:30%"></span><span class="p" style="left:60%;top:18%"></span>
+  <span class="pin" style="left:38%;top:26%"></span><span class="nomspot" style="left:43%;top:24%">le bisou</span>
+  <div class="ilot">
+    <span class="ni"><span class="ic">✦</span>sortir</span>
+    <span class="ni"><span class="ic">◌</span>trouver</span>
+    <span class="ni on"><span class="ic">▤</span>ma carte</span>
+    <span class="ni"><span class="ic">◯</span>le cercle</span>
+    <span class="ni"><span class="ic">✪</span>moi</span>
+    <span class="plus-amarre">+</span>
+  </div>
+</div>
+<p class="note">Le « + » devient le SIXIÈME geste, amarré au bout de la bande
+et débordant vers le haut — toujours au même endroit, sur TOUS les écrans.
+Un pouce droit l'atteint sans regarder. Coût : la bande est plus dense
+(6 objets), les libellés se serrent un peu.</p>
+
+<h2>les deux décisions</h2>
+<div class="encart">
+  <b>1 · L'îlot :</b> oui — et en <b>bande de papier</b> (bord ivoire léger,
+  ombre douce, ±0,4° d'inclinaison), pas en pilule UI translucide « à
+  l'iPhone ». La carte gagne ses coins bas, le carnet gagne un objet.<br>
+  <b>2 · Le « + » :</b> bleu jeudi dans les deux cas. Reste à choisir
+  <b>A</b> (séparé, ne vit que là où capturer a du sens) ou <b>B</b> (amarré,
+  partout, toujours au même endroit). Ma préférence : <b>B</b> — la capture
+  est le geste fondateur du carnet, il mérite une place permanente ; et un
+  seul objet flottant est plus calme que deux.<br>
+  <span style="opacity:.6">Détails d'exécution si validé : safe-area sous
+  l'îlot, z-index au-dessus des toasts repensés (audit P0), cible 46 px,
+  le trait d'encre de l'onglet actif conservé tel quel.</span>
+</div>
+
+</body>
+</html>
