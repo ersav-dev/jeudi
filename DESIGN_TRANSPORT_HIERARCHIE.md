@@ -144,6 +144,30 @@ toujours pas : rien ne change là.
 
 ---
 
+## 3 bis · Les couleurs et les données — vérifiées le 12/08 (après audit)
+
+- **Les 30 couleurs de `lignes.json` = le référentiel IDFM officiel, zéro
+  écart** (API `referentiel-des-lignes`, champ `colourweb_hexa`).
+- La gêne « 7 et 8 trop proches » (remontée par Ersan) est **officielle** :
+  7 = `ff82b4`, 8 = `d282be`, deux roses voisins assumés par IDFM. Et ce
+  n'est pas la seule paire : **6 = 7bis** (même vert exact), **3 = T8 =
+  T10** (même olive), **13 = 3bis** (même bleu ciel), 5 = T3a = T11, 2 =
+  T1, 4 = T2. Le référentiel réutilise ses couleurs entre lignes et modes.
+  → On ne touche PAS aux couleurs (la loi : les vraies, prises à la
+  source). Le remède est la **pastille de numéro**, qui existe déjà —
+  proposition : quand DEUX lignes de couleurs proches sont allumées
+  ensemble (7+8 à Opéra), la pastille se répète aux deux extrémités de
+  chaque tracé, pas à un seul point.
+- **Stations complétées le 12/08** : l'audit croisé lignes ↔ carte a trouvé
+  des trous réels — **Auber et Luxembourg en plein centre**, Vincennes,
+  Gentilly/Laplace/Bagneux, la branche Orly de la 14, les terminus de la
+  13, les trams de petite couronne. +108 stations récupérées d'OSM
+  (validées à < 600 m du tracé réel de leur ligne — jamais un homonyme),
+  et l'appariement des noms de quais réparé (« Paris Gare du Nord – Voie
+  44 » retrouve Gare du Nord : la pastille du RER B y manquait). Les ~90
+  restantes sont de la grande couronne, hors carte — su, pas subi
+  (rapport : `_enrichissement/completion_transport_2026-08-12.md`).
+
 ## 4 · Ce qui ne change PAS (et pourquoi)
 - Le **tap = tracer les lignes** : bon geste, unique, appris — on ne le
   touche pas.

@@ -165,9 +165,14 @@ export const AUCUN_ARRET: FeatureCollection<Point, PropsArret> = {
 // quai — la parenthèse de désambiguïsation (« (Métro) », « (RER) »), les
 // accents, la casse, les tirets et les espaces. « Saint-Denis - Université »
 // et « Saint-Denis-Université » tombent alors sur la même clé.
+// Et le suffixe DE QUAI (« – Voie 44 », « - Voie 1B ») saute aussi : les
+// lignes de RER nomment leurs quais, la carte connaît des STATIONS — sans ça
+// « Paris Gare du Nord – Voie 44 » ne retrouvait jamais Gare du Nord et la
+// pastille du RER B manquait à la plus grosse gare d'Europe (audit 12/08).
 export const clefStation = (nom: string): string =>
   nom
     .replace(/\([^)]*\)/g, ' ')
+    .replace(/\s*[-–—]\s*voies?\s+\w+\s*$/i, '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
@@ -195,11 +200,19 @@ export const indexerStations = (
 }
 
 // le nom exact d'abord — c'est le cas des neuf dixièmes du métro — puis la
-// clé souple. null quand on ne sait pas situer : on n'invente pas un quai.
+// clé souple, puis la clé sans le préfixe « Paris » (le référentiel des
+// lignes dit « Paris Gare du Nord », OSM dit « Gare du Nord » — même gare,
+// audit 12/08). null quand on ne sait pas situer : on n'invente pas un quai.
 export const situerStation = (
   nom: string,
   index: IndexStations,
-): [number, number] | null => index.exact.get(nom) ?? index.souple.get(clefStation(nom)) ?? null
+): [number, number] | null => {
+  const direct = index.exact.get(nom) ?? index.souple.get(clefStation(nom))
+  if (direct) return direct
+  const k = clefStation(nom)
+  if (k.startsWith('paris')) return index.souple.get(k.slice(5)) ?? null
+  return null
+}
 
 // les pastilles à poser pour les lignes allumées. Une station desservie par
 // DEUX lignes allumées n'est dessinée qu'une fois (la première couleur
