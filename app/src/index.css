@@ -48,7 +48,10 @@
   --nuit: #14120e; /* fond global — charbon chaud, pas noir */
   --nuit-2: #1b1813; /* la page posée sur la table (cartes, sheets) */
   --nuit-3: #23201a; /* la page soulevée (états actifs, modales) */
-  --ilot: #201c16; /* la bande déchirée du bas (navbas) — papier de nuit, un cran sous la page soulevée */
+  /* la place que la bande déchirée (navbas) occupe en bas : TOUT ce qui
+     s'empile au-dessus (carrousel, sheet, contrôles carte, toasts) se cale
+     sur elle — une seule vérité, plus jamais un élément qui glisse dessous */
+  --navbas-h: 100px;
   --encre: #efe9d8; /* le trait principal */
   --encre-2: rgba(239, 233, 216, 0.62); /* la note en marge */
   --encre-3: rgba(239, 233, 216, 0.34); /* le crayonné (méta, hints) */
@@ -464,7 +467,7 @@ body::before,
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  bottom: calc(var(--navbas-h) + 6px + env(safe-area-inset-bottom));
   z-index: 13;
   display: flex;
   flex-direction: column;
@@ -2327,7 +2330,7 @@ button {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(64px + 96px + env(safe-area-inset-bottom));
+  bottom: calc(var(--navbas-h) + 96px + env(safe-area-inset-bottom));
   z-index: 4;
   /* taille FIXE — le cadre ne bouge pas d'une page à l'autre */
   height: 112px;
@@ -2511,7 +2514,9 @@ button {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(64px + env(safe-area-inset-bottom));
+  /* calé sur la bande déchirée (--navbas-h) — sur la capture d'Ersan du
+     12/08, l'îlot recouvrait ces cartes : plus jamais un 64px en dur ici */
+  bottom: calc(var(--navbas-h) + env(safe-area-inset-bottom));
   z-index: 4;
   display: flex;
   gap: 8px;
@@ -3600,13 +3605,13 @@ button {
 /* contrôles de carte : en bas à droite (zone du pouce), au-dessus du + */
 .maplibregl-ctrl-bottom-right {
   /* au-dessus du carrousel (~96px) — rien ne se superpose */
-  bottom: calc(176px + env(safe-area-inset-bottom));
+  bottom: calc(var(--navbas-h) + 112px + env(safe-area-inset-bottom));
   right: 20px;
 }
 /* quand un lieu est sélectionné, le bottom-sheet apparaît : on remonte encore */
 .carte-sel ~ .maplibregl-ctrl-bottom-right,
 .carte-sel .maplibregl-ctrl-bottom-right {
-  bottom: calc(280px + env(safe-area-inset-bottom));
+  bottom: calc(var(--navbas-h) + 216px + env(safe-area-inset-bottom));
 }
 @media (min-width: 480px) {
   .maplibregl-ctrl-bottom-right {
@@ -5665,41 +5670,31 @@ button {
 
 /* ── nav du bas ── */
 /* ── LA BANDE DÉCHIRÉE (12/08, planche navbas_ilot_001, choix d'Ersan) ──
-   Plus une barre pleine largeur : un ÎLOT — une bande de papier de nuit
-   ARRACHÉE du carnet (le bord haut est la déchirure), posée sur la ville
-   avec l'inclinaison de la maison. La carte respire autour, le dégradé qui
-   mangeait le bas de l'écran est mort. */
+   Plus une barre pleine largeur : un ÎLOT — une bande de VRAI papier
+   déchiré (l'image d'Ersan, ilot-dechire.webp, 16 ko), arrachée du carnet
+   sur les quatre côtés. Le clip-path géométrique de la v1 « rendait pas
+   bien » (son mot) : le border-image découpe l'image en 9 — les bords
+   déchirés restent VRAIS à toute largeur, le centre plat s'étire.
+   Les tranches (72/140/48/132) = la profondeur réelle des déchirures,
+   MESURÉE dans l'image (scan du canal alpha, 12/08). */
 .navbas {
   position: fixed;
   left: 50%;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  transform: translateX(-50%) rotate(-0.4deg);
-  width: min(452px, calc(100% - 24px));
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) rotate(-0.3deg);
+  width: min(452px, calc(100% - 20px));
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 9px 6px 8px;
-  background: var(--ilot);
-  border: 1px solid rgba(239, 233, 216, 0.13);
-  border-top: none; /* le haut, c'est la déchirure (::before) */
-  border-radius: 3px 3px 14px 14px;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+  padding: 4px 2px 2px;
+  border: solid transparent;
+  border-width: 10px 14px 8px;
+  border-image: url('/ilot-dechire.webp') 72 140 48 132 fill stretch;
+  background: none;
+  /* l'ombre suit les pixels PEINTS (la déchirure), pas la boîte : un
+     box-shadow rectangulaire dépasserait dans les entailles */
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
   font-size: 21px;
-}
-/* la déchirure : une frise irrégulière du même papier — jamais deux dents
-   pareilles, sinon ça redevient une bordure d'imprimeur */
-.navbas::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -8px;
-  height: 9px;
-  background: var(--ilot);
-  clip-path: polygon(0% 100%, 0% 45%, 3% 72%, 6% 28%, 10% 66%, 13% 22%,
-    17% 58%, 21% 34%, 25% 70%, 29% 18%, 33% 55%, 37% 30%, 41% 76%, 45% 24%,
-    49% 60%, 53% 30%, 57% 70%, 61% 20%, 65% 58%, 69% 32%, 73% 68%, 77% 26%,
-    81% 62%, 85% 22%, 89% 66%, 93% 30%, 97% 58%, 100% 40%, 100% 100%);
 }
 /* le + amarré au bout (variante B) : l'accent au service du geste fondateur.
    Il déborde de la bande vers le haut — toujours là, toujours sous le pouce. */
@@ -5744,6 +5739,18 @@ button {
   font-size: 11px;
   letter-spacing: 0.5px;
   white-space: nowrap;
+}
+/* petits écrans (≤ 400px — SE, mini) : depuis que le + vit dans la bande,
+   cinq libellés + lui ne tiennent plus à 11px — vérifié au banc du 12/08,
+   « le cercle » mordait « ma carte ». On serre, on ne coupe jamais. */
+@media (max-width: 400px) {
+  .nav-lbl {
+    font-size: 8.5px;
+    letter-spacing: 0;
+  }
+  .nav-item {
+    padding: 8px 2px;
+  }
 }
 .nav-item.actif {
   opacity: 1;
