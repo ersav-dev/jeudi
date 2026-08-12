@@ -5697,15 +5697,15 @@ button {
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
   font-size: 21px;
 }
-/* le + dans le rang (retouche DA d'Ersan, 12/08) : plus de débordement —
-   il vit SUR la ligne des icônes, centré comme elles. C'est le bleu qui le
-   fait exister, pas la taille : l'accent est la seule couleur de la bande. */
+/* le + AU MILIEU de la bande (Ersan, 12/08) : entre « ma carte » et « le
+   cercle », sur la ligne des icônes. C'est le bleu qui le fait exister, pas
+   la taille : l'accent est la seule couleur de la bande. */
 .nav-plus {
   flex: none;
   align-self: center;
   width: 40px;
   height: 40px;
-  margin: 0 6px 0 2px;
+  margin: 0 4px;
   border: none;
   border-radius: 10px;
   background: var(--red); /* l'accent jeudi (bleu — décision du 07/08) */

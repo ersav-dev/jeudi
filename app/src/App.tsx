@@ -3206,6 +3206,20 @@ export default function App() {
             <ICarnet taille={24} />
             <span className="nav-lbl">{t('ma carte')}</span>
           </button>
+          {/* le + AU MILIEU (Ersan, 12/08) : après « ma carte », avant « le
+              cercle » — le geste fondateur au centre de la bande, à l'accent.
+              Depuis un autre onglet il t'amène d'abord sur ta carte : un spot
+              capturé atterrit toujours chez toi. */}
+          <button
+            className="nav-plus"
+            onClick={() => {
+              setOnglet('macarte')
+              setAjout(true)
+            }}
+            aria-label="capturer un lieu"
+          >
+            +
+          </button>
           <button
             className={`nav-item ${onglet === 'cercle' ? 'actif' : ''}`}
             onClick={allerAuCercle}
@@ -3221,20 +3235,6 @@ export default function App() {
           >
             <ITampon taille={24} />
             <span className="nav-lbl">{t('moi')}</span>
-          </button>
-          {/* le + amarré (12/08, planche navbas_ilot_001 variante B) : la
-              capture est le geste fondateur — place permanente au bout de la
-              bande, à l'accent. Depuis un autre onglet il t'amène d'abord sur
-              ta carte : un spot capturé atterrit toujours chez toi. */}
-          <button
-            className="nav-plus"
-            onClick={() => {
-              setOnglet('macarte')
-              setAjout(true)
-            }}
-            aria-label="capturer un lieu"
-          >
-            +
           </button>
         </nav>
       )}
