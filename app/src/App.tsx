@@ -2064,7 +2064,9 @@ export default function App() {
     return (
       <>
         <Auth />
-        <ToastNouvelleVersion />
+        <div className="toasts">
+          <ToastNouvelleVersion />
+        </div>
       </>
     )
   // on demande au cloud si ce compte est déjà installé : le tampon respire
@@ -2551,7 +2553,10 @@ export default function App() {
             ))}
           </ul>
 
-          {ajout ? (
+          {/* le fab papier-blanc est mort (12/08, planche navbas_ilot_001) :
+              la capture vit désormais dans la bande, amarrée au bout — un
+              seul objet flottant, visible partout, toujours sous le pouce. */}
+          {ajout && (
             <FormAjout
               importOuvert={importDirect}
               onFini={() => {
@@ -2564,10 +2569,6 @@ export default function App() {
                 setImportDirect(false)
               }}
             />
-          ) : (
-            <button className="fab" onClick={() => setAjout(true)} aria-label="capturer un lieu">
-              +
-            </button>
           )}
 
           {/* la table de comparaison est rendue au niveau GLOBAL (voir plus bas),
@@ -3156,22 +3157,26 @@ export default function App() {
         />
       )}
 
-      {archive && (
-        <div className="toast">
-          <span className="mono">{t('archivé.')}</span>
-          <button className="lien" onClick={annulerArchive}>
-            {t('annuler')}
-          </button>
-        </div>
-      )}
-
-      {flash && (
-        <div className="toast">
-          <span className="mono">{flash}</span>
-        </div>
-      )}
-
-      <ToastNouvelleVersion />
+      {/* LA PILE des toasts (audit P0, 12/08) : avant, les trois partageaient
+          la même position fixe et s'écrasaient — archiver puis adopter dans
+          les 5 s recouvrait le bouton « annuler ». Un seul conteneur fixe,
+          ils s'empilent, chacun garde sa vie propre. */}
+      <div className="toasts">
+        {archive && (
+          <div className="toast">
+            <span className="mono">{t('archivé.')}</span>
+            <button className="lien" onClick={annulerArchive}>
+              {t('annuler')}
+            </button>
+          </div>
+        )}
+        {flash && (
+          <div className="toast">
+            <span className="mono">{flash}</span>
+          </div>
+        )}
+        <ToastNouvelleVersion />
+      </div>
 
       {!ajout && !fiche && (
         <nav className="navbas">
@@ -3216,6 +3221,20 @@ export default function App() {
           >
             <ITampon taille={24} />
             <span className="nav-lbl">{t('moi')}</span>
+          </button>
+          {/* le + amarré (12/08, planche navbas_ilot_001 variante B) : la
+              capture est le geste fondateur — place permanente au bout de la
+              bande, à l'accent. Depuis un autre onglet il t'amène d'abord sur
+              ta carte : un spot capturé atterrit toujours chez toi. */}
+          <button
+            className="nav-plus"
+            onClick={() => {
+              setOnglet('macarte')
+              setAjout(true)
+            }}
+            aria-label="capturer un lieu"
+          >
+            +
           </button>
         </nav>
       )}

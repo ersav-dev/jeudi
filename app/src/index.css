@@ -48,6 +48,7 @@
   --nuit: #14120e; /* fond global — charbon chaud, pas noir */
   --nuit-2: #1b1813; /* la page posée sur la table (cartes, sheets) */
   --nuit-3: #23201a; /* la page soulevée (états actifs, modales) */
+  --ilot: #201c16; /* la bande déchirée du bas (navbas) — papier de nuit, un cran sous la page soulevée */
   --encre: #efe9d8; /* le trait principal */
   --encre-2: rgba(239, 233, 216, 0.62); /* la note en marge */
   --encre-3: rgba(239, 233, 216, 0.34); /* le crayonné (méta, hints) */
@@ -454,13 +455,26 @@ body::before,
   color: rgba(239, 233, 216, 0.35);
 }
 
-/* ── toast "archivé · annuler" ── */
-.toast {
+/* ── LA PILE des toasts (audit P0, 12/08) ──
+   Avant : trois toasts (archivé·annuler / flash / nouvelle version) en
+   position fixed IDENTIQUE — ils s'écrasaient, « annuler » pouvait être
+   recouvert. Un seul conteneur fixe, les toasts s'y empilent. Posé
+   au-dessus de la bande déchirée (navbas îlot), z au-dessus d'elle. */
+.toasts {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(78px + env(safe-area-inset-bottom));
-  z-index: 8;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none; /* le conteneur est un fantôme… */
+  max-width: min(92vw, 440px);
+}
+.toast {
+  pointer-events: auto; /* …chaque toast redevient tapable */
   background: var(--nuit-3); /* page soulevée */
   border: 1px solid rgba(239, 233, 216, 0.3);
   border-radius: var(--rayon);
@@ -472,12 +486,6 @@ body::before,
   animation: inkIn 150ms var(--pose) backwards;
 }
 
-/* ── desktop : les fixed se calent sur le conteneur 480px ── */
-@media (min-width: 480px) {
-  .fab {
-    right: calc(50% - 240px + 20px);
-  }
-}
 
 /* ── signature 4 — LA PAGE TOURNE : la page pivote sur sa TRANCHE GAUCHE
    (la reliure — §6 : « origine tranche gauche ») : translate 12px +
@@ -1657,24 +1665,8 @@ button {
 
 /* ── le + de capture : une étiquette papier posée (le budget --cire de
    l'écran reste au tampon-logo + aux tampons du registre) ── */
-.fab {
-  position: fixed;
-  right: max(20px, env(safe-area-inset-right));
-  bottom: calc(86px + env(safe-area-inset-bottom));
-  width: 58px;
-  height: 58px;
-  border-radius: var(--rayon);
-  border: none;
-  background: var(--print-white);
-  color: var(--encre-papier);
-  font-size: 34px;
-  line-height: 0;
-  transform: rotate(-2deg);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-.fab:active {
-  transform: rotate(-2deg) scale(0.94);
-}
+/* (le fab papier-blanc est mort le 12/08 — la capture vit dans la bande,
+   .nav-plus. Voir la planche design/navbas_ilot_001.html.) */
 
 /* ── le formulaire de capture ── */
 .form {
@@ -3701,13 +3693,11 @@ button {
   font-size: 17px;
 }
 .entete,
-.fab,
 .navbas {
   position: relative;
   /* au-dessus des cartes (menu ⋯ z:3, pastilles, idx-reglages z:6) */
   z-index: 12;
 }
-.fab,
 .navbas {
   position: fixed;
 }
@@ -5674,18 +5664,64 @@ button {
 }
 
 /* ── nav du bas ── */
+/* ── LA BANDE DÉCHIRÉE (12/08, planche navbas_ilot_001, choix d'Ersan) ──
+   Plus une barre pleine largeur : un ÎLOT — une bande de papier de nuit
+   ARRACHÉE du carnet (le bord haut est la déchirure), posée sur la ville
+   avec l'inclinaison de la maison. La carte respire autour, le dégradé qui
+   mangeait le bas de l'écran est mort. */
 .navbas {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-width: 480px;
-  margin: 0 auto;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) rotate(-0.4deg);
+  width: min(452px, calc(100% - 24px));
   display: flex;
   justify-content: space-around;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, var(--paper) 35%);
+  align-items: center;
+  padding: 9px 6px 8px;
+  background: var(--ilot);
+  border: 1px solid rgba(239, 233, 216, 0.13);
+  border-top: none; /* le haut, c'est la déchirure (::before) */
+  border-radius: 3px 3px 14px 14px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
   font-size: 21px;
+}
+/* la déchirure : une frise irrégulière du même papier — jamais deux dents
+   pareilles, sinon ça redevient une bordure d'imprimeur */
+.navbas::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 9px;
+  background: var(--ilot);
+  clip-path: polygon(0% 100%, 0% 45%, 3% 72%, 6% 28%, 10% 66%, 13% 22%,
+    17% 58%, 21% 34%, 25% 70%, 29% 18%, 33% 55%, 37% 30%, 41% 76%, 45% 24%,
+    49% 60%, 53% 30%, 57% 70%, 61% 20%, 65% 58%, 69% 32%, 73% 68%, 77% 26%,
+    81% 62%, 85% 22%, 89% 66%, 93% 30%, 97% 58%, 100% 40%, 100% 100%);
+}
+/* le + amarré au bout (variante B) : l'accent au service du geste fondateur.
+   Il déborde de la bande vers le haut — toujours là, toujours sous le pouce. */
+.nav-plus {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  margin: -16px 4px -6px 2px;
+  border: none;
+  border-radius: 11px;
+  background: var(--red); /* l'accent jeudi (bleu — décision du 07/08) */
+  color: #0e1116;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 0;
+  display: grid;
+  place-items: center;
+  transform: rotate(2deg);
+  box-shadow: 0 4px 14px rgba(93, 141, 255, 0.35), 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.nav-plus:active {
+  transform: rotate(2deg) scale(0.94);
 }
 .nav-item {
   opacity: 0.45;

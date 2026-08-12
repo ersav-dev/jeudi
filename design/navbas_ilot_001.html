@@ -69,11 +69,22 @@
     position: absolute; left: 14px; right: 14px; bottom: 12px;
     display: flex; justify-content: space-around; align-items: center;
     padding: 10px 6px;
-    background: #211e18;                    /* papier de nuit, pas un aplat UI */
-    border: 1px solid rgba(239,233,216,.14);
-    border-radius: 14px;
+    background: #201c16;                    /* papier de nuit, pas un aplat UI */
+    border: 1px solid rgba(239,233,216,.13);
+    border-top: none;                       /* le haut, c'est la déchirure */
+    border-radius: 3px 3px 14px 14px;
     box-shadow: 0 8px 24px rgba(0,0,0,.5);  /* décollé de la ville */
     transform: rotate(-.4deg);              /* posé à la main, comme le fab */
+  }
+  /* LE BORD DÉCHIRÉ (demande d'Ersan) : la bande est ARRACHÉE du carnet —
+     une frise irrégulière du même papier, jamais deux dents pareilles */
+  .ilot::before {
+    content: ''; position: absolute; left: 0; right: 0; top: -8px; height: 9px;
+    background: #201c16;
+    clip-path: polygon(0% 100%, 0% 45%, 3% 72%, 6% 28%, 10% 66%, 13% 22%,
+      17% 58%, 21% 34%, 25% 70%, 29% 18%, 33% 55%, 37% 30%, 41% 76%, 45% 24%,
+      49% 60%, 53% 30%, 57% 70%, 61% 20%, 65% 58%, 69% 32%, 73% 68%, 77% 26%,
+      81% 62%, 85% 22%, 89% 66%, 93% 30%, 97% 58%, 100% 40%, 100% 100%);
   }
   .ilot .ni { font-size: 9.5px; }
   /* variante B : le + amarré au bout de l'îlot, débordant, à l'accent */
@@ -163,19 +174,16 @@ et débordant vers le haut — toujours au même endroit, sur TOUS les écrans.
 Un pouce droit l'atteint sans regarder. Coût : la bande est plus dense
 (6 objets), les libellés se serrent un peu.</p>
 
-<h2>les deux décisions</h2>
+<h2>tranché par Ersan le 12/08</h2>
 <div class="encart">
-  <b>1 · L'îlot :</b> oui — et en <b>bande de papier</b> (bord ivoire léger,
-  ombre douce, ±0,4° d'inclinaison), pas en pilule UI translucide « à
-  l'iPhone ». La carte gagne ses coins bas, le carnet gagne un objet.<br>
-  <b>2 · Le « + » :</b> bleu jeudi dans les deux cas. Reste à choisir
-  <b>A</b> (séparé, ne vit que là où capturer a du sens) ou <b>B</b> (amarré,
-  partout, toujours au même endroit). Ma préférence : <b>B</b> — la capture
-  est le geste fondateur du carnet, il mérite une place permanente ; et un
-  seul objet flottant est plus calme que deux.<br>
-  <span style="opacity:.6">Détails d'exécution si validé : safe-area sous
-  l'îlot, z-index au-dessus des toasts repensés (audit P0), cible 46 px,
-  le trait d'encre de l'onglet actif conservé tel quel.</span>
+  <b>La bande déchirée</b> (son idée) : le bord haut est une déchirure
+  irrégulière du même papier — la barre est ARRACHÉE du carnet, pas
+  fabriquée. <b>Variante B retenue</b> (le « + » amarré au bout, bleu jeudi,
+  permanent) — « pas ce que j'aime le plus, mais vas-y » : à re-regarder en
+  vrai sur téléphone, réversible en A en dix lignes si le cœur dit non.<br>
+  <span style="opacity:.6">Exécution : safe-area sous l'îlot · toasts
+  regroupés en pile AU-DESSUS (le P0 de l'audit réglé du même coup) ·
+  cible du + 46 px · le trait d'encre de l'onglet actif conservé.</span>
 </div>
 
 </body>
