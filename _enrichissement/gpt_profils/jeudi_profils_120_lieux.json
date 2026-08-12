@@ -1,0 +1,1241 @@
+{
+  "generated_at": "2026-08-10",
+  "city": "Paris",
+  "legend": {
+    "0€": "gratuit",
+    "€": "jusqu’à ~20 €",
+    "€€": "~20–40 €",
+    "€€€": "~40–80 €",
+    "€€€€": "~80 € et +"
+  },
+  "notes": "Budgets indicatifs, pas une garantie de ticket final. 'Actif' signifie qu’un signal d’activité 2026 / des horaires actuels / une source officielle récente a été trouvé. Les notes Jeudi sont éditoriales et ne prétendent pas être des témoignages de membres.",
+  "profiles": [
+    {
+      "id": "etudiante",
+      "name": "Inès — l’étudiante",
+      "age": 21,
+      "portrait": "Master à Paris, vit entre le 10e/20e et le Quartier latin. Budget surveillé, beaucoup de solo, de travail et de plans potes. Elle veut manger vraiment bien sans payer le décor.",
+      "obsession": "rapport plaisir/prix + droit de rester seule sans justification",
+      "places": [
+        {
+          "name": "Fami",
+          "address": "39 bis rue de Tourtille, 75020 Paris",
+          "type": "réunionnais / cantine",
+          "budget_band": "€",
+          "price_detail": "≈ 15,50 € formule midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto · alloco",
+          "editorial_note": "Le genre de déjeuner qui sauve la fin du mois sans donner l'impression de se punir."
+        },
+        {
+          "name": "Motsuya",
+          "address": "9 Cité Riverin, 75010 Paris",
+          "type": "japonais / bento",
+          "budget_band": "€",
+          "price_detail": "≈ 12 € le bento",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / resto · tranquilo",
+          "editorial_note": "Petit, net, efficace : viens tôt, déjeune bien, repars sans trou dans le compte."
+        },
+        {
+          "name": "Chez Jeannette",
+          "address": "47 rue du Faubourg Saint-Denis, 75010 Paris",
+          "type": "bistrot",
+          "budget_band": "€",
+          "price_detail": "≈ 9 € plat du jour · 15 € formule",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto · apéro",
+          "editorial_note": "Le Faubourg comme on l'aime : pas besoin d'une occasion pour s'y poser."
+        },
+        {
+          "name": "Best Tofu",
+          "address": "9 boulevard de la Villette, 75010 Paris",
+          "type": "chinois / tofu",
+          "budget_band": "€",
+          "price_detail": "≈ 1–3 € selon produit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / alloco · tranquilo",
+          "editorial_note": "Trois euros et t'as déjà une vraie raison de traverser Belleville."
+        },
+        {
+          "name": "Le Diamant Rose",
+          "address": "161 boulevard du Montparnasse, 75006 Paris",
+          "type": "chinois",
+          "budget_band": "€",
+          "price_detail": "formules autour de 15 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto",
+          "editorial_note": "Montparnasse sans addition de Montparnasse."
+        },
+        {
+          "name": "Comité Caribe",
+          "address": "7 rue de Nantes, 75019 Paris",
+          "type": "caraïbes",
+          "budget_band": "€",
+          "price_detail": "≈ 18 € le midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto",
+          "editorial_note": "Une assiette qui voyage plus loin que ton budget."
+        },
+        {
+          "name": "Paloma",
+          "address": "93 rue Julien-Lacroix, 75020 Paris",
+          "type": "bistrot / bar à vins",
+          "budget_band": "€–€€",
+          "price_detail": "≈ 16–35 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto · apéro",
+          "editorial_note": "À midi c'est le cheat code ; le soir, tu peux rester pour un verre."
+        },
+        {
+          "name": "Pistil",
+          "address": "12 rue Léchevin, 75011 Paris",
+          "type": "végétarien / cantine",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo · resto",
+          "editorial_note": "Déjeuner propre, lumineux, sans le cérémonial du brunch à 28 €."
+        },
+        {
+          "name": "A Nosa Casa de Galicia",
+          "address": "91 rue du Ruisseau, 75018 Paris",
+          "type": "galicien",
+          "budget_band": "€",
+          "price_detail": "≈ 15 €",
+          "status": "✅ actif",
+          "jeudi_modes": "potos / resto · alloco",
+          "editorial_note": "À plusieurs c'est mieux : tu commandes trop, et c'est précisément le plan."
+        },
+        {
+          "name": "Galerna",
+          "address": "7 rue du Cher, 75020 Paris",
+          "type": "espagnol / méditerranéen",
+          "budget_band": "€–€€",
+          "price_detail": "≈ 20 € le midi",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · solo / resto",
+          "editorial_note": "Le déjeuner qui fait croire que t'as prévu ta journée."
+        },
+        {
+          "name": "Miam Miam Cool",
+          "address": "41 rue de Provence, 75009 Paris",
+          "type": "sichuanais / nouilles",
+          "budget_band": "€",
+          "price_detail": "≈ 10–13 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / alloco · resto",
+          "editorial_note": "Niveau piment : commence humble, tu remercieras ton toi de 14 h."
+        },
+        {
+          "name": "Mama Kossa",
+          "address": "8 rue Myrha, 75018 Paris",
+          "type": "afro / street food",
+          "budget_band": "€",
+          "price_detail": "≈ 9,90 € le bowl midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / alloco",
+          "editorial_note": "Barbès, un bowl, dix balles : dossier classé."
+        },
+        {
+          "name": "Ika",
+          "address": "26 rue de Chabrol, 75010 Paris",
+          "type": "japonais familial",
+          "budget_band": "€",
+          "price_detail": "≈ 19 € formule midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / resto · tranquilo",
+          "editorial_note": "Six places : ton déjeuner devient presque un secret."
+        },
+        {
+          "name": "AVE Pizza Romana",
+          "address": "90 rue de la Folie-Méricourt, 75011 Paris",
+          "type": "pizza romaine",
+          "budget_band": "€",
+          "price_detail": "≈ 6–15 € selon formule/promo",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / alloco · resto",
+          "editorial_note": "Quand le compte dit non mais que la pizza dit oui."
+        },
+        {
+          "name": "Chez Mamane",
+          "address": "27 rue des Cinq-Diamants, 75013 Paris",
+          "type": "couscous",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto",
+          "editorial_note": "Butte-aux-Cailles, semoule, pas de drame bancaire."
+        },
+        {
+          "name": "Royal China",
+          "address": "85 rue Beaubourg, 75003 Paris",
+          "type": "chinois / nouilles",
+          "budget_band": "€",
+          "price_detail": "≈ 10,50 € les nouilles",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / alloco · resto",
+          "editorial_note": "Tu viens pour manger, pas pour faire une réunion autour du menu."
+        },
+        {
+          "name": "Bokko",
+          "address": "11 place du Commerce, 75015 Paris",
+          "type": "coréen",
+          "budget_band": "€",
+          "price_detail": "≈ 18 € le midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto",
+          "editorial_note": "Le 15e a aussi ses bonnes surprises, il fallait juste les chercher."
+        },
+        {
+          "name": "Miznon Marais",
+          "address": "22 rue des Écouffes, 75004 Paris",
+          "type": "méditerranéen / pita",
+          "budget_band": "€",
+          "price_detail": "≈ 8–12 € la pita",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / alloco",
+          "editorial_note": "Mange debout si besoin : la pita fait le reste."
+        },
+        {
+          "name": "SAaM",
+          "address": "59 bis rue de Lancry, 75010 Paris",
+          "type": "coréen / bao",
+          "budget_band": "€",
+          "price_detail": "≈ 15 € formule",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / alloco",
+          "editorial_note": "Deux baos, des frites, fin du débat."
+        },
+        {
+          "name": "Café du Coin",
+          "address": "9 rue Camille-Desmoulins, 75011 Paris",
+          "type": "bistrot / vin",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–35 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto · apéro",
+          "editorial_note": "Un peu plus cher, mais assez vivant pour mériter le nuageux."
+        },
+        {
+          "name": "Bouillon Pigalle",
+          "address": "22 boulevard de Clichy, 75018 Paris",
+          "type": "bouillon",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto",
+          "editorial_note": "Tu commandes comme tes grands-parents, tu paies presque comme eux."
+        },
+        {
+          "name": "Bouillon République",
+          "address": "39 boulevard du Temple, 75003 Paris",
+          "type": "bouillon",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto",
+          "editorial_note": "Grande table, petite addition : parfait quand personne ne veut choisir."
+        },
+        {
+          "name": "Bouillon Chartier Grands Boulevards",
+          "address": "7 rue du Faubourg-Montmartre, 75009 Paris",
+          "type": "bouillon historique",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto",
+          "editorial_note": "Le décor fait la sortie, le prix ne la ruine pas."
+        },
+        {
+          "name": "Bouillon Chartier Montparnasse",
+          "address": "59 boulevard du Montparnasse, 75006 Paris",
+          "type": "bouillon historique",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / resto",
+          "editorial_note": "Un classique utile : quand t'as faim maintenant, pas dans trois réservations."
+        },
+        {
+          "name": "Café Content",
+          "address": "11 rue Saint-Maur, 75011 Paris",
+          "type": "café / bistrot",
+          "budget_band": "€€",
+          "price_detail": "≈ 18 € formule midi · 20–30 € courant",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo · resto",
+          "editorial_note": "Tu peux y déjeuner sans que ton ordi ressemble à un crime."
+        },
+        {
+          "name": "Özlem",
+          "address": "57 rue des Petites-Écuries, 75010 Paris",
+          "type": "turc / grillades",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / alloco · resto",
+          "editorial_note": "Le genre d'adresse qu'on regrette d'avoir trop racontée."
+        },
+        {
+          "name": "Lao Siam",
+          "address": "49 rue de Belleville, 75019 Paris",
+          "type": "laotien / thaï",
+          "budget_band": "€–€€",
+          "price_detail": "≈ 15–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto",
+          "editorial_note": "Belleville sait très bien quoi faire de ta faim."
+        },
+        {
+          "name": "Hitonigiri",
+          "address": "360 rue de Vaugirard, 75015 Paris",
+          "type": "japonais / onigiri",
+          "budget_band": "€",
+          "price_detail": "≈ 5–15 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / alloco · tranquilo",
+          "editorial_note": "Un vrai déjeuner dans la main, pas un snack triste."
+        },
+        {
+          "name": "Kokashita",
+          "address": "64 passage des Panoramas, 75002 Paris",
+          "type": "japonais",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–35 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto",
+          "editorial_note": "Le passage fait déjà la moitié du rendez-vous."
+        },
+        {
+          "name": "Chloé's Cantine",
+          "address": "25 rue Sedaine, 75011 Paris",
+          "type": "cantine",
+          "budget_band": "€",
+          "price_detail": "≈ 19,50 € le midi",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / resto · tranquilo",
+          "editorial_note": "Midi seulement : elle récompense ceux qui sortent du bureau à l'heure."
+        },
+        {
+          "name": "Nuage Café",
+          "address": "14 rue des Carmes, 75005 Paris",
+          "type": "coworking café",
+          "budget_band": "€–€€",
+          "price_detail": "3 €/h · journée étudiante ≈ 25 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Ici tu paies le droit de rester : ton laptop peut enfin respirer."
+        },
+        {
+          "name": "Anticafé Beaubourg",
+          "address": "79 rue Quincampoix, 75003 Paris",
+          "type": "coworking café",
+          "budget_band": "€–€€",
+          "price_detail": "tarification au temps",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Quand deux cafés deviennent plus chers qu'une vraie session de travail."
+        },
+        {
+          "name": "Bibliothèque Sainte-Geneviève",
+          "address": "10 place du Panthéon, 75005 Paris",
+          "type": "bibliothèque",
+          "budget_band": "0€",
+          "price_detail": "accès gratuit selon conditions",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / tranquilo",
+          "editorial_note": "Pour les jours où ton budget et ton cerveau demandent tous les deux du calme."
+        },
+        {
+          "name": "Salle Ovale — BnF Richelieu",
+          "address": "5 rue Vivienne, 75002 Paris",
+          "type": "bibliothèque / patrimoine",
+          "budget_band": "0€",
+          "price_detail": "gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Une salle qui donne envie de finir le dossier juste pour rester cinq minutes de plus."
+        },
+        {
+          "name": "Bibliothèque Forney",
+          "address": "1 rue du Figuier, 75004 Paris",
+          "type": "bibliothèque arts graphiques",
+          "budget_band": "0€",
+          "price_detail": "gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Design, affiches, silence : très bonne excuse pour ne répondre à personne."
+        },
+        {
+          "name": "Médiathèque Françoise Sagan",
+          "address": "8 rue Léon-Schwartzenberg, 75010 Paris",
+          "type": "médiathèque",
+          "budget_band": "0€",
+          "price_detail": "gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / tranquilo",
+          "editorial_note": "Le spot calme du 10e qu'on oublie quand on cherche seulement des cafés."
+        },
+        {
+          "name": "Médiathèque Marguerite Duras",
+          "address": "115 rue de Bagnolet, 75020 Paris",
+          "type": "médiathèque",
+          "budget_band": "0€",
+          "price_detail": "gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo / tranquilo",
+          "editorial_note": "Grand, calme, sans obligation de commander quoi que ce soit."
+        },
+        {
+          "name": "Cité internationale universitaire de Paris",
+          "address": "17 boulevard Jourdan, 75014 Paris",
+          "type": "campus / parc / architecture",
+          "budget_band": "0€–€",
+          "price_detail": "parc gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / tranquilo",
+          "editorial_note": "Tu viens marcher vingt minutes, tu repars deux heures plus tard."
+        },
+        {
+          "name": "Ground Control",
+          "address": "81 rue du Charolais, 75012 Paris",
+          "type": "food court / lieu culturel",
+          "budget_band": "€–€€",
+          "price_detail": "souvent < 20 € pour manger",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / apéro · alloco",
+          "editorial_note": "Le plan de groupe où chacun peut avoir une envie différente sans ouvrir WhatsApp pendant 25 minutes."
+        },
+        {
+          "name": "La Felicità",
+          "address": "5 Parvis Alan Turing, 75013 Paris",
+          "type": "food court / bar",
+          "budget_band": "€–€€",
+          "price_detail": "≈ 10–25 €",
+          "status": "✅ actif",
+          "jeudi_modes": "potos · duo / alloco · apéro",
+          "editorial_note": "Immense, bruyant, facile : parfait quand le groupe est indécis."
+        }
+      ]
+    },
+    {
+      "id": "da",
+      "name": "Jules — le DA",
+      "age": 31,
+      "portrait": "Directeur artistique, bosse entre mode, image et musique. Il regarde la lumière, la typo, la bande-son et la cohérence du lieu avant même la carte.",
+      "obsession": "identité visuelle réelle, pas une déco faite pour Instagram",
+      "places": [
+        {
+          "name": "Bar Nouveau",
+          "address": "5 rue des Haudriettes, 75003 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "cocktails ≈ 9–13 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / apéro · incognito",
+          "editorial_note": "Dix places et aucun décor de remplissage : le bar tient tout seul."
+        },
+        {
+          "name": "CRAVAN 6e",
+          "address": "165 boulevard Saint-Germain, 75006 Paris",
+          "type": "cocktail bar / maison",
+          "budget_band": "€€–€€€",
+          "price_detail": "cocktails premium",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro · incognito",
+          "editorial_note": "Quatre étages, mais rien n'a l'air d'avoir été ajouté par accident."
+        },
+        {
+          "name": "CRAVAN 16e",
+          "address": "17 rue Jean-de-La-Fontaine, 75016 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "cocktails premium",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · solo / apéro · incognito",
+          "editorial_note": "Petit frère plus discret : celui que tu donnes seulement aux gens qui regardent les détails."
+        },
+        {
+          "name": "Danico",
+          "address": "6 rue Vivienne, 75002 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–20 € le cocktail",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro",
+          "editorial_note": "Planqué derrière Daroco : très bon test pour savoir si ton rendez-vous aime les entrées cachées."
+        },
+        {
+          "name": "Bisou",
+          "address": "15 boulevard du Temple, 75003 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 14–18 € le cocktail",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / apéro",
+          "editorial_note": "Pas de carte : pour une fois, parler au barman sert vraiment à quelque chose."
+        },
+        {
+          "name": "Bisou Canal",
+          "address": "98 quai de Jemmapes, 75010 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro",
+          "editorial_note": "Le canal, mais avec des cocktails qui ne ressemblent pas à une punition touristique."
+        },
+        {
+          "name": "Le Syndicat",
+          "address": "51 rue du Faubourg Saint-Denis, 75010 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 14–18 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro · incognito",
+          "editorial_note": "Façade douteuse, verre précis : bonne hiérarchie des priorités."
+        },
+        {
+          "name": "Little Red Door",
+          "address": "60 rue Charlot, 75003 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 16–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / incognito · apéro",
+          "editorial_note": "Le classique des gens qui ont un avis sur la typographie du menu."
+        },
+        {
+          "name": "Combat",
+          "address": "63 rue de Belleville, 75019 Paris",
+          "type": "cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 12–18 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / apéro",
+          "editorial_note": "Belleville, cocktails solides, zéro besoin de jouer au palace."
+        },
+        {
+          "name": "Fréquence",
+          "address": "20 rue Keller, 75011 Paris",
+          "type": "cocktails + vinyles",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–30 € par personne",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro · turbo",
+          "editorial_note": "Si la playlist est mauvaise, au moins ici tu sais exactement qui blâmer."
+        },
+        {
+          "name": "The Cambridge Public House",
+          "address": "8 rue de Poitou, 75003 Paris",
+          "type": "pub + cocktails",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–25 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro",
+          "editorial_note": "Un pub anglais dessiné par des gens qui savent faire autre chose que coller du bois sombre."
+        },
+        {
+          "name": "Candelaria",
+          "address": "52 rue de Saintonge, 75003 Paris",
+          "type": "tacos + speakeasy",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / alloco · apéro",
+          "editorial_note": "Tacos devant, nuit derrière : très bon raccourci narratif."
+        },
+        {
+          "name": "Moonshiner",
+          "address": "5 rue Sedaine, 75011 Paris",
+          "type": "speakeasy",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–20 € le cocktail",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / incognito · apéro",
+          "editorial_note": "Tu passes par la pizza. Oui, c'est encore drôle quand c'est bien fait."
+        },
+        {
+          "name": "Dirty Dick",
+          "address": "10 rue Frochot, 75009 Paris",
+          "type": "tiki cocktail bar",
+          "budget_band": "€€",
+          "price_detail": "≈ 14–18 €",
+          "status": "✅ actif",
+          "jeudi_modes": "potos · duo / apéro · turbo",
+          "editorial_note": "Assume le kitsch ou n'entre pas : au moins le brief est clair."
+        },
+        {
+          "name": "Red House",
+          "address": "1 bis rue de la Forge-Royale, 75011 Paris",
+          "type": "bar",
+          "budget_band": "€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "potos / apéro · turbo",
+          "editorial_note": "Pas besoin que tout soit beige pour que ce soit cool."
+        },
+        {
+          "name": "Déviant",
+          "address": "39 rue des Petites-Écuries, 75010 Paris",
+          "type": "bar à vins / cuisine",
+          "budget_band": "€€€",
+          "price_detail": "≈ 35–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro · resto",
+          "editorial_note": "Le verre devient dîner sans que personne n'ait officiellement pris la décision."
+        },
+        {
+          "name": "Le Bunker",
+          "address": "54 rue Guy-Môquet, 75017 Paris",
+          "type": "bar queer",
+          "budget_band": "€€",
+          "price_detail": "≈ 10–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · potos / apéro",
+          "editorial_note": "Lumineux, inclusif, sans l'esthétique de bunker malgré le nom."
+        },
+        {
+          "name": "Mishmish",
+          "address": "3 rue de la Fidélité, 75010 Paris",
+          "type": "bar à vins + musique",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–30 €",
+          "status": "✅ actif · nouvelle adresse",
+          "jeudi_modes": "potos · duo / apéro · turbo",
+          "editorial_note": "Commence avec le vin ; laisse les enceintes décider de la suite."
+        },
+        {
+          "name": "Le Dauphin",
+          "address": "131 avenue Parmentier, 75011 Paris",
+          "type": "bar à vins / restaurant",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–70 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto · apéro",
+          "editorial_note": "Rem Koolhaas au dîner : même le marbre a une opinion."
+        },
+        {
+          "name": "Maison",
+          "address": "3 rue Saint-Hubert, 75011 Paris",
+          "type": "restaurant",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Une salle qui fait comprendre le menu avant même la première assiette."
+        },
+        {
+          "name": "Datil",
+          "address": "13 rue des Gravilliers, 75003 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / gastro",
+          "editorial_note": "Précis, calme, construit : pas le lieu pour venir juste parce qu'il est 'hype'."
+        },
+        {
+          "name": "Oobatz",
+          "address": "4 bis avenue Jean-Aicard, 75011 Paris",
+          "type": "pizza / vin",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto · apéro",
+          "editorial_note": "Pizza sérieuse, salle pas sérieuse : très bon équilibre."
+        },
+        {
+          "name": "Mantra",
+          "address": "17 rue Claude-Rodier, 75009 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Le budget pluie, mais au moins il pleut pour quelque chose."
+        },
+        {
+          "name": "Bus Palladium",
+          "address": "6 rue Pierre-Fontaine, 75009 Paris",
+          "type": "hôtel / restaurant / club",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–80 € selon moment",
+          "status": "✅ rouvert en 2026",
+          "jeudi_modes": "duo · potos / resto · disco",
+          "editorial_note": "Un vieux nom repris sans le momifier : à surveiller surtout la nuit."
+        },
+        {
+          "name": "Calcifer",
+          "address": "41 rue Notre-Dame-de-Nazareth, 75003 Paris",
+          "type": "restaurant",
+          "budget_band": "€€€",
+          "price_detail": "≈ 35–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / resto",
+          "editorial_note": "Petite salle, feu visible, concept lisible : assez pour donner envie sans pitch de quinze lignes."
+        },
+        {
+          "name": "Bambino",
+          "address": "25 rue Saint-Sébastien, 75011 Paris",
+          "type": "restaurant / bar / vinyles",
+          "budget_band": "€€€",
+          "price_detail": "≈ 30–50 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto · apéro",
+          "editorial_note": "Un dîner qui sait qu'il finira probablement en musique."
+        },
+        {
+          "name": "Le Mary Celeste",
+          "address": "1 rue Commines, 75003 Paris",
+          "type": "bar / restaurant",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–40 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro · resto",
+          "editorial_note": "Une valeur sûre quand tu veux du cool sans devoir expliquer le concept."
+        },
+        {
+          "name": "Early June",
+          "address": "19 rue Jean-Poulmarch, 75010 Paris",
+          "type": "bar à vins / chefs invités",
+          "budget_band": "€€€",
+          "price_detail": "≈ 30–50 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro · resto",
+          "editorial_note": "La carte change, le bon réflexe reste : regarde qui cuisine cette semaine."
+        },
+        {
+          "name": "Folderol",
+          "address": "10 rue du Grand-Prieuré, 75011 Paris",
+          "type": "vin + glace",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · solo / apéro · incognito",
+          "editorial_note": "Vin naturel et glace : idée absurde jusqu'à la première fois."
+        },
+        {
+          "name": "Le Rigmarole",
+          "address": "10 rue du Grand-Prieuré, 75011 Paris",
+          "type": "restaurant",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–70 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / resto",
+          "editorial_note": "Même adresse que Folderol, autre tempo : choisis selon l'heure et la faim."
+        },
+        {
+          "name": "Le Servan",
+          "address": "32 rue Saint-Maur, 75011 Paris",
+          "type": "bistrot",
+          "budget_band": "€€€",
+          "price_detail": "≈ 35–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Un classique du 11e qui n'a pas besoin d'être 'nouveau' pour rester juste."
+        },
+        {
+          "name": "Clamato",
+          "address": "80 rue de Charonne, 75011 Paris",
+          "type": "fruits de mer / vin",
+          "budget_band": "€€€",
+          "price_detail": "≈ 35–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto · apéro",
+          "editorial_note": "Le comptoir est une très bonne réponse quand tu veux dîner sans cérémonie."
+        },
+        {
+          "name": "Jones",
+          "address": "43 rue Godefroy-Cavaignac, 75011 Paris",
+          "type": "bistrot / vin",
+          "budget_band": "€€€",
+          "price_detail": "≈ 30–50 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto",
+          "editorial_note": "Pas besoin de néon signature : l'assiette et les bouteilles font déjà le travail."
+        },
+        {
+          "name": "Trâmette",
+          "address": "128 rue Saint-Maur, 75011 Paris",
+          "type": "cantine / bar à vin",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–40 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto · apéro",
+          "editorial_note": "Le lieu qui peut commencer en déjeuner et se souvenir qu'il a une cave."
+        },
+        {
+          "name": "Cornichon",
+          "address": "2 rue des Goncourt, 75011 Paris",
+          "type": "bistrot",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–40 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto",
+          "editorial_note": "Néo-Giscardien, mais avec assez d'autodérision pour que ça marche."
+        },
+        {
+          "name": "Gainsbarre",
+          "address": "14 rue de Verneuil, 75006 Paris",
+          "type": "bar à cocktails",
+          "budget_band": "€€€",
+          "price_detail": "cocktails ≈ 16–20 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / incognito · apéro",
+          "editorial_note": "Tu viens pour Serge, tu restes si le cocktail mérite d'exister sans lui."
+        },
+        {
+          "name": "Bar de la Maison Proust",
+          "address": "26 rue de Picardie, 75003 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€",
+          "price_detail": "cocktails ≈ 17–24 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / incognito · apéro",
+          "editorial_note": "Belle Époque très chargée : à choisir quand le minimalisme t'ennuie."
+        },
+        {
+          "name": "Lolo",
+          "address": "12 rue de Châteaudun, 75009 Paris",
+          "type": "bar à vins",
+          "budget_band": "€€",
+          "price_detail": "verre ≈ 5–6 € · assiettes 3–9 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / apéro",
+          "editorial_note": "Le bon plan pour parler vin sans transformer la soirée en masterclass."
+        },
+        {
+          "name": "Café Content",
+          "address": "11 rue Saint-Maur, 75011 Paris",
+          "type": "café / bistrot",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo · resto",
+          "editorial_note": "Le matin travaille, le soir débranche : rare adresse qui sait faire les deux."
+        },
+        {
+          "name": "Le Coyote",
+          "address": "86 rue des Archives, 75003 Paris",
+          "type": "coffee shop + bar à vins",
+          "budget_band": "€€",
+          "price_detail": "plat 10–14 € · verre dès 6 € · cocktail 12 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / tranquilo · apéro",
+          "editorial_note": "Cowboy queer le jour, saloon le soir : au moins l'identité ne sort pas d'un moodboard générique."
+        }
+      ]
+    },
+    {
+      "id": "architecte",
+      "name": "Nora — l’architecte",
+      "age": 36,
+      "portrait": "Architecte, aime les lieux où le bâtiment, la circulation, les matériaux et la vue ont autant de poids que ce qu’on mange ou boit. Utilise Jeudi en duo, pro et solo.",
+      "obsession": "espace, matière, transformation du bâti et qualité des proportions",
+      "places": [
+        {
+          "name": "La Halle aux Grains",
+          "address": "2 rue de Viarmes, 75001 Paris",
+          "type": "restaurant / Bourse de Commerce",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Avant l'assiette, regarde comment le restaurant s'insère dans le cylindre de la Bourse."
+        },
+        {
+          "name": "Joli",
+          "address": "16 rue des Francs-Bourgeois, 75004 Paris",
+          "type": "restaurant / musée Carnavalet",
+          "budget_band": "€€€",
+          "price_detail": "≈ 35–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Un bon test : est-ce que le lieu sait exister à côté d'un musée sans singer le musée ?"
+        },
+        {
+          "name": "Le Grand Café",
+          "address": "1 place Clemenceau, 75008 Paris",
+          "type": "brasserie / Grand Palais",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+ possible",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto · gastro",
+          "editorial_note": "Joseph Dirand : viens autant pour les proportions que pour le déjeuner."
+        },
+        {
+          "name": "L'Envol",
+          "address": "221 avenue Jean-Jaurès, 75019 Paris",
+          "type": "restaurant / Philharmonie",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–70 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Jean Nouvel en dessous, Paris autour : le bâtiment fait partie de l'addition."
+        },
+        {
+          "name": "Hanok — Musée Guimet",
+          "address": "6 place d'Iéna, 75016 Paris",
+          "type": "coréen / musée",
+          "budget_band": "€€",
+          "price_detail": "≈ 20–40 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto · tranquilo",
+          "editorial_note": "Bois clair, papier, calme : presque une salle de respiration après le musée."
+        },
+        {
+          "name": "Girafe",
+          "address": "1 place du Trocadéro, 75016 Paris",
+          "type": "restaurant / Cité de l'Architecture",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80–120 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Joseph Dirand + Chaillot + Tour Eiffel : oui, le décor sait qu'il est photogénique."
+        },
+        {
+          "name": "Blanc",
+          "address": "52 rue de Longchamp, 75016 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Kengo Kuma : observe ce qui disparaît plutôt que ce qui se montre."
+        },
+        {
+          "name": "Le Dauphin",
+          "address": "131 avenue Parmentier, 75011 Paris",
+          "type": "restaurant / bar à vins",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–70 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Le marbre de Rem Koolhaas transforme un petit volume en vraie expérience spatiale."
+        },
+        {
+          "name": "Maison",
+          "address": "3 rue Saint-Hubert, 75011 Paris",
+          "type": "restaurant",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Tsuyoshi Tane : un lieu qui mérite d'être regardé avant de s'asseoir."
+        },
+        {
+          "name": "Restaurant Passerini",
+          "address": "65 rue Traversière, 75012 Paris",
+          "type": "italien contemporain",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–70 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Simple en apparence ; justement, regarde les détails qui rendent le simple crédible."
+        },
+        {
+          "name": "La Coupole",
+          "address": "102 boulevard du Montparnasse, 75014 Paris",
+          "type": "brasserie Art déco",
+          "budget_band": "€€€",
+          "price_detail": "≈ 30–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Un cours d'histoire du décor parisien où tu peux commander des huîtres."
+        },
+        {
+          "name": "Pur' — Park Hyatt Paris-Vendôme",
+          "address": "5 rue de la Paix, 75002 Paris",
+          "type": "gastronomique / hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 150 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Luxe contemporain : utile pour voir jusqu'où on peut pousser le détail sans faire musée."
+        },
+        {
+          "name": "Monsieur Bleu",
+          "address": "20 avenue de New York, 75016 Paris",
+          "type": "restaurant / Palais de Tokyo",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto · gastro",
+          "editorial_note": "Encore Joseph Dirand, mais dans une autre grammaire : compare avec Girafe."
+        },
+        {
+          "name": "Bambini — Palais de Tokyo",
+          "address": "13 avenue du Président-Wilson, 75016 Paris",
+          "type": "italien / musée",
+          "budget_band": "€€€",
+          "price_detail": "≈ 30–60 €",
+          "status": "✅ actif",
+          "jeudi_modes": "potos · duo / resto · apéro",
+          "editorial_note": "Plus démonstratif, plus collectif : ici le décor doit encaisser le volume sonore."
+        },
+        {
+          "name": "Les Ombres",
+          "address": "27 quai Jacques-Chirac, 75007 Paris",
+          "type": "rooftop / musée du quai Branly",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "La structure et la vue font presque tout le storytelling avant le menu."
+        },
+        {
+          "name": "Café Jacques",
+          "address": "27 quai Jacques-Chirac, 75007 Paris",
+          "type": "café / musée",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Le même Jean Nouvel, mais en version pause de journée plutôt que grand soir."
+        },
+        {
+          "name": "Le Frank — Fondation Louis Vuitton",
+          "address": "8 avenue du Mahatma-Gandhi, 75016 Paris",
+          "type": "restaurant / fondation",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 40–80 €",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · duo / resto",
+          "editorial_note": "Gehry dehors, assiette dedans : même sans manger, l'approche vaut le détour."
+        },
+        {
+          "name": "Le Tout-Paris",
+          "address": "8 quai du Louvre, 75001 Paris",
+          "type": "rooftop / Cheval Blanc",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto · gastro",
+          "editorial_note": "Paris en panorama : très bon endroit pour juger la relation entre luxe et vue."
+        },
+        {
+          "name": "Hakuba",
+          "address": "8 quai du Louvre, 75001 Paris",
+          "type": "gastronomique japonais",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / gastro",
+          "editorial_note": "Architecture de précision pour cuisine de précision : cohérence presque obsessionnelle."
+        },
+        {
+          "name": "Plénitude",
+          "address": "8 quai du Louvre, 75001 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "200 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / gastro",
+          "editorial_note": "Ici le budget fait partie du dispositif. À garder pour un vrai grand soir."
+        },
+        {
+          "name": "Bar Joséphine — Lutetia",
+          "address": "45 boulevard Raspail, 75006 Paris",
+          "type": "bar d'hôtel / Art déco",
+          "budget_band": "€€€",
+          "price_detail": "≈ 20–35 € le verre/cocktail",
+          "status": "⏸ fermeture saisonnière 2–22 août 2026",
+          "jeudi_modes": "duo · pro / incognito · apéro",
+          "editorial_note": "Wilmotte + fresques historiques : reviens après le 22 août, pas besoin de le déclarer mort."
+        },
+        {
+          "name": "Bar 228 — Le Meurice",
+          "address": "228 rue de Rivoli, 75001 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 25–40 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / incognito · apéro",
+          "editorial_note": "Boiseries, plafond peint, codes palace : une masterclass du 'trop' tenu très droit."
+        },
+        {
+          "name": "Le Bar Long — Royal Monceau",
+          "address": "37 avenue Hoche, 75008 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€",
+          "price_detail": "≈ 20–35 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "pro · duo / apéro",
+          "editorial_note": "Starck en mode salon continu : pratique pour un rendez-vous qui refuse la table formelle."
+        },
+        {
+          "name": "Le Dalí — Le Meurice",
+          "address": "228 rue de Rivoli, 75001 Paris",
+          "type": "restaurant / hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 80–150 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Starck + palace historique : bon terrain pour discuter de ce qui relève du décor et de l'architecture."
+        },
+        {
+          "name": "Bar Hemingway — Ritz Paris",
+          "address": "15 place Vendôme, 75001 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "cocktails premium",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / incognito · apéro",
+          "editorial_note": "Petit, dense, légendaire : la surface n'a rien à voir avec la présence."
+        },
+        {
+          "name": "Bar Botaniste — Shangri-La",
+          "address": "10 avenue d'Iéna, 75016 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "cocktails premium",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro",
+          "editorial_note": "Ancien palais, botanique, vue : un bar qui travaille avec ce qu'il hérite."
+        },
+        {
+          "name": "Les Salons du Prince — Shangri-La",
+          "address": "10 avenue d'Iéna, 75016 Paris",
+          "type": "salons / hôtel",
+          "budget_band": "€€€€",
+          "price_detail": "expérience premium",
+          "status": "✅ actif",
+          "jeudi_modes": "pro · duo / tranquilo · gastro",
+          "editorial_note": "Ici la circulation et les salons comptent autant que ce qui arrive sur la table."
+        },
+        {
+          "name": "Madame Rêve",
+          "address": "48 rue du Louvre, 75001 Paris",
+          "type": "hôtel / rooftop / restaurants",
+          "budget_band": "€€€–€€€€",
+          "price_detail": "≈ 40–100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro · resto",
+          "editorial_note": "La Poste du Louvre transformée en hôtel : viens voir comment on fait habiter un monument administratif."
+        },
+        {
+          "name": "Bonnie",
+          "address": "10 rue Agrippa-d'Aubigné, 75004 Paris",
+          "type": "restaurant / bar panoramique",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–80 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / resto · apéro",
+          "editorial_note": "La vue et les miroirs font le spectacle ; choisis-le quand tu veux que Paris participe."
+        },
+        {
+          "name": "Le Perchoir Ménilmontant",
+          "address": "14 rue Crespin-du-Gast, 75011 Paris",
+          "type": "rooftop",
+          "budget_band": "€€",
+          "price_detail": "≈ 15–30 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · potos / apéro",
+          "editorial_note": "Le rooftop qui reste utile : hauteur, densité, et assez de désordre pour ne pas sentir le showroom."
+        },
+        {
+          "name": "Jacques' Bar — The Hoxton",
+          "address": "30–32 rue du Sentier, 75002 Paris",
+          "type": "bar d'hôtel",
+          "budget_band": "€€€",
+          "price_detail": "≈ 20–35 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro",
+          "editorial_note": "Petit volume marocainisant, bon pour un rendez-vous où le décor doit aider sans crier."
+        },
+        {
+          "name": "Café de l'Homme",
+          "address": "17 place du Trocadéro, 75016 Paris",
+          "type": "restaurant / Palais de Chaillot",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 60 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Le vrai sujet est la terrasse : regarde comment on cadre un monument qu'on ne contrôle pas."
+        },
+        {
+          "name": "Loulou — Musée des Arts Décoratifs",
+          "address": "107 rue de Rivoli, 75001 Paris",
+          "type": "restaurant / musée",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–80 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto",
+          "editorial_note": "Tuileries devant, arts décoratifs derrière : la localisation fait presque tout le brief."
+        },
+        {
+          "name": "Le 39V",
+          "address": "39 avenue George-V, 75008 Paris",
+          "type": "gastronomique / rooftop",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "pro · duo / gastro",
+          "editorial_note": "Un restaurant caché sur les toits : l'arrivée fait partie de l'expérience."
+        },
+        {
+          "name": "Bus Palladium",
+          "address": "6 rue Pierre-Fontaine, 75009 Paris",
+          "type": "hôtel / restaurant / club",
+          "budget_band": "€€€",
+          "price_detail": "≈ 40–80 € selon moment",
+          "status": "✅ rouvert en 2026",
+          "jeudi_modes": "duo · potos / resto · disco",
+          "editorial_note": "Intéressant surtout comme projet de réinterprétation d'un lieu mythique, pas comme relique."
+        },
+        {
+          "name": "Vaisseau",
+          "address": "35 rue Faidherbe, 75011 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "≈ 100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / gastro",
+          "editorial_note": "Cuisine iconoclaste, espace retenu : regarde comment le lieu évite de concurrencer l'assiette."
+        },
+        {
+          "name": "Salle Ovale — BnF Richelieu",
+          "address": "5 rue Vivienne, 75002 Paris",
+          "type": "bibliothèque / patrimoine",
+          "budget_band": "0€",
+          "price_detail": "gratuit",
+          "status": "✅ actif",
+          "jeudi_modes": "solo · pro / tranquilo",
+          "editorial_note": "Pas besoin de consommer pour avoir l'une des plus belles expériences spatiales de la liste."
+        },
+        {
+          "name": "Datil",
+          "address": "13 rue des Gravilliers, 75003 Paris",
+          "type": "gastronomique",
+          "budget_band": "€€€€",
+          "price_detail": "100 €+",
+          "status": "✅ actif",
+          "jeudi_modes": "duo / gastro",
+          "editorial_note": "Très bon exemple d'espace discret où le soin se lit surtout dans la séquence."
+        },
+        {
+          "name": "CRAVAN 6e",
+          "address": "165 boulevard Saint-Germain, 75006 Paris",
+          "type": "bar / maison",
+          "budget_band": "€€–€€€",
+          "price_detail": "cocktails premium",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / apéro",
+          "editorial_note": "Un immeuble entier comme programme : monte avant de décider quelle salle tu préfères."
+        },
+        {
+          "name": "Le Duc",
+          "address": "243 boulevard Raspail, 75014 Paris",
+          "type": "restaurant de poissons / décor 1960s",
+          "budget_band": "€€€€",
+          "price_detail": "déjeuner ≈ 60 € · sole ≈ 90 €",
+          "status": "✅ actif",
+          "jeudi_modes": "duo · pro / resto · gastro",
+          "editorial_note": "Cabine de paquebot signée Slavik : ici le décor a mieux vieilli que beaucoup de tendances neuves."
+        }
+      ]
+    }
+  ]
+}
