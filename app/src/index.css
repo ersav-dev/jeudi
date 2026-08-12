@@ -5697,26 +5697,36 @@ button {
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
   font-size: 21px;
 }
-/* le + AU MILIEU de la bande (Ersan, 12/08) : entre « ma carte » et « le
-   cercle », sur la ligne des icônes. C'est le bleu qui le fait exister, pas
-   la taille : l'accent est la seule couleur de la bande. */
+/* les deux moitiés de la bande : largeur ÉGALE de part et d'autre du + —
+   c'est ce qui le met au centre GÉOMÉTRIQUE (3 onglets à gauche, 2 à
+   droite : un flex naïf le décalait — vu par Ersan). */
+.nav-groupe {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+/* le + au centre exact, PLUS GROS (Ersan, 12/08 — la référence Insta) :
+   le geste fondateur assume sa taille, et le bleu reste la seule couleur
+   de toute la bande. */
 .nav-plus {
   flex: none;
   align-self: center;
-  width: 40px;
-  height: 40px;
-  margin: 0 4px;
+  width: 50px;
+  height: 50px;
+  margin: 0 2px;
   border: none;
-  border-radius: 10px;
+  border-radius: 13px;
   background: var(--red); /* l'accent jeudi (bleu — décision du 07/08) */
   color: #0e1116;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 600;
   line-height: 0;
   display: grid;
   place-items: center;
   transform: rotate(1.5deg);
-  box-shadow: 0 2px 8px rgba(93, 141, 255, 0.28), 0 1px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: 0 3px 10px rgba(93, 141, 255, 0.32), 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 .nav-plus:active {
   transform: rotate(1.5deg) scale(0.94);

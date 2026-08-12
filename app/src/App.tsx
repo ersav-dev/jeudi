@@ -3180,36 +3180,40 @@ export default function App() {
 
       {!ajout && !fiche && (
         <nav className="navbas">
-          <button
-            className={`nav-item ${onglet === 'cesoir' ? 'actif' : ''}`}
-            onClick={() => setOnglet('cesoir')}
-            aria-label={lireSortieActive() ? 'sortir — un vote en cours' : 'ça dit quoi ce soir ?'}
-          >
-            <IEtincelle taille={24} />
-            {/* la pastille cire : un vote de groupe vit quelque part */}
-            {lireSortieActive() && <span className="nav-pastille" aria-hidden="true" />}
-            <span className="nav-lbl">{t('sortir')}</span>
-          </button>
-          <button
-            className={`nav-item ${onglet === 'trouver' ? 'actif' : ''}`}
-            onClick={() => setOnglet('trouver')}
-            aria-label="trouver"
-          >
-            <ILoupe taille={24} />
-            <span className="nav-lbl">{t('trouver')}</span>
-          </button>
-          <button
-            className={`nav-item ${onglet === 'macarte' ? 'actif' : ''}`}
-            onClick={() => setOnglet('macarte')}
-            aria-label="ma carte"
-          >
-            <ICarnet taille={24} />
-            <span className="nav-lbl">{t('ma carte')}</span>
-          </button>
-          {/* le + AU MILIEU (Ersan, 12/08) : après « ma carte », avant « le
-              cercle » — le geste fondateur au centre de la bande, à l'accent.
-              Depuis un autre onglet il t'amène d'abord sur ta carte : un spot
-              capturé atterrit toujours chez toi. */}
+          {/* le + EXACTEMENT au centre (Ersan, 12/08 — « comme Insta ») :
+              deux moitiés de largeur ÉGALE de part et d'autre, le + entre les
+              deux. Avec 3 onglets à gauche et 2 à droite, un flex naïf le
+              poussait hors centre — les groupes règlent la géométrie. */}
+          <span className="nav-groupe">
+            <button
+              className={`nav-item ${onglet === 'cesoir' ? 'actif' : ''}`}
+              onClick={() => setOnglet('cesoir')}
+              aria-label={lireSortieActive() ? 'sortir — un vote en cours' : 'ça dit quoi ce soir ?'}
+            >
+              <IEtincelle taille={24} />
+              {/* la pastille cire : un vote de groupe vit quelque part */}
+              {lireSortieActive() && <span className="nav-pastille" aria-hidden="true" />}
+              <span className="nav-lbl">{t('sortir')}</span>
+            </button>
+            <button
+              className={`nav-item ${onglet === 'trouver' ? 'actif' : ''}`}
+              onClick={() => setOnglet('trouver')}
+              aria-label="trouver"
+            >
+              <ILoupe taille={24} />
+              <span className="nav-lbl">{t('trouver')}</span>
+            </button>
+            <button
+              className={`nav-item ${onglet === 'macarte' ? 'actif' : ''}`}
+              onClick={() => setOnglet('macarte')}
+              aria-label="ma carte"
+            >
+              <ICarnet taille={24} />
+              <span className="nav-lbl">{t('ma carte')}</span>
+            </button>
+          </span>
+          {/* le geste fondateur, à l'accent — depuis un autre onglet il
+              t'amène d'abord sur ta carte : un spot capturé atterrit chez toi */}
           <button
             className="nav-plus"
             onClick={() => {
@@ -3220,22 +3224,24 @@ export default function App() {
           >
             +
           </button>
-          <button
-            className={`nav-item ${onglet === 'cercle' ? 'actif' : ''}`}
-            onClick={allerAuCercle}
-            aria-label="le cercle"
-          >
-            <ICercle taille={24} />
-            <span className="nav-lbl">{t('le cercle')}</span>
-          </button>
-          <button
-            className={`nav-item ${onglet === 'profil' ? 'actif' : ''}`}
-            onClick={() => setOnglet('profil')}
-            aria-label="moi"
-          >
-            <ITampon taille={24} />
-            <span className="nav-lbl">{t('moi')}</span>
-          </button>
+          <span className="nav-groupe">
+            <button
+              className={`nav-item ${onglet === 'cercle' ? 'actif' : ''}`}
+              onClick={allerAuCercle}
+              aria-label="le cercle"
+            >
+              <ICercle taille={24} />
+              <span className="nav-lbl">{t('le cercle')}</span>
+            </button>
+            <button
+              className={`nav-item ${onglet === 'profil' ? 'actif' : ''}`}
+              onClick={() => setOnglet('profil')}
+              aria-label="moi"
+            >
+              <ITampon taille={24} />
+              <span className="nav-lbl">{t('moi')}</span>
+            </button>
+          </span>
         </nav>
       )}
     </div>
