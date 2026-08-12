@@ -21,7 +21,7 @@
 //     mètres, courbe de compression, plafond, règle de priorité. On ne
 //     réinvente rien — seule l'image change.
 
-import { getDB } from './db'
+import { getDB, idCompteActuel } from './db'
 import { MONUMENTS } from './monuments'
 
 /** Au-dessus de cette hauteur d'affichage, ta photo prend le relais de la
@@ -49,11 +49,21 @@ export function estStickable(nom: string): boolean {
 }
 
 // ── le stockage ────────────────────────────────────────────────────────
-// Une entrée par monument, clé = son nom (celui de monuments.ts, qui sert
-// déjà de clé partout ailleurs : dataset.mo, HAUTEUR_M, BOOST_PROPRE).
+// Une entrée par monument ET PAR COMPTE, clé = `<uid>:<nom>` (le nom est
+// celui de monuments.ts, qui sert déjà de clé partout ailleurs : dataset.mo,
+// HAUTEUR_M, BOOST_PROPRE). Le scope par compte date de la relecture du
+// 12/08 : IndexedDB est partagé par l'ORIGINE du navigateur, pas par la
+// session — sans lui, « strictement personnel » (règle n°1) était faux pour
+// deux comptes sur le même téléphone, l'un voyait les photos de l'autre.
 const STORE = 'stickers'
 
 type Sticker = { blob: Blob; ajoute: string }
+
+/** la clé rangée : `<uid>:<nom>` — 'anonyme' si personne (mode dégradé) */
+async function cleSticker(nom: string): Promise<string> {
+  const id = await idCompteActuel()
+  return `${id ?? 'anonyme'}:${nom}`
+}
 
 /** IndexedDB n'a pas ce magasin avant la version 2 : on l'ouvre à part
  *  plutôt que de faire monter la version du magasin principal, pour ne pas
@@ -75,13 +85,17 @@ export async function poserSticker(nom: string, fichier: Blob): Promise<boolean>
   if (!db) return false
   const blob = await reduire(fichier, HAUTEUR_STOCK)
   if (!blob) return false
-  await db.put(STORE, { blob, ajoute: new Date().toISOString() }, nom)
+  await db.put(STORE, { blob, ajoute: new Date().toISOString() }, await cleSticker(nom))
   return true
 }
 
 export async function retirerSticker(nom: string): Promise<void> {
   const db = await magasin()
-  await db?.delete(STORE, nom)
+  if (!db) return
+  await db.delete(STORE, await cleSticker(nom))
+  // et l'éventuelle entrée d'avant le scope par compte (clé nue) : la garder
+  // la ferait ressusciter à la prochaine lecture (l'adoption ci-dessous)
+  await db.delete(STORE, nom)
 }
 
 /** tous tes stickers, en URL d'objet prêtes à poser dans un <img>.
@@ -93,7 +107,19 @@ export async function lireStickers(): Promise<Map<string, string>> {
   const db = await magasin()
   if (!db) return out
   for (const nom of MONUMENTS_STICKABLES) {
-    const s = (await db.get(STORE, nom)) as Sticker | undefined
+    const cle = await cleSticker(nom)
+    let s = (await db.get(STORE, cle)) as Sticker | undefined
+    if (!s?.blob) {
+      // l'adoption des stickers d'avant le 12/08 : ils vivaient sous le nom
+      // nu, sans compte. Le premier compte qui les lit les prend à son nom —
+      // sur un téléphone à un seul compte (le cas réel), c'est leur auteur.
+      const legacy = (await db.get(STORE, nom)) as Sticker | undefined
+      if (legacy?.blob) {
+        await db.put(STORE, legacy, cle)
+        await db.delete(STORE, nom)
+        s = legacy
+      }
+    }
     if (s?.blob) out.set(nom, URL.createObjectURL(s.blob))
   }
   return out

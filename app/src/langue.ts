@@ -665,6 +665,10 @@ const EN: Record<string, string> = {
   'signaler': 'report',
   'ça part…': 'sending…',
 
+  // mes monuments — l'échec de lecture d'un fichier se dit (relecture 12/08)
+  'cette photo n’a pas pu être lue — essaie-en une autre.':
+    'that photo couldn’t be read — try another one.',
+
   // bloquer (0019) — réglages : les portes fermées
   'bloqués': 'blocked',
   'débloquer': 'unblock',

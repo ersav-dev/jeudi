@@ -26,13 +26,20 @@
 //     testable, donc relisible. C'est ce qui permettra à l'écran « trouver »
 //     de s'appuyer dessus sans rien savoir de tout ça.
 //
+// ET UN COMPROMIS ASSUMÉ : quelques mots seuls très génériques déclenchent
+// une catégorie précise (« vue » → rooftop, « quai » → sur l'eau, « nature »/
+// « rouge » → vin, « chef » → gastro). Hors contexte, ce sont des faux
+// positifs possibles — jugés rares dans une barre de recherche de sorties, et
+// rattrapables : la phrase garde toujours ses autres mots. Ce n'est pas un
+// oubli, c'est un choix (documenté à la relecture du 12/08).
+//
 // ⚠ CE FICHIER NE FAIT QUE TRADUIRE. Il ne cherche pas, il ne trie pas, il ne
 // touche pas à la carte. Le branchement dans la recherche vient avec l'écran
 // (ordre imposé : enrichissement → lexique → écran).
 // ════════════════════════════════════════════════════════════════════════
 
 import { ENVIES, type Envie } from './db'
-import { TYPES_LIEU, type TypeLieu } from './typesLieu'
+import { TYPES_LIEU, TAMPONS_CUISINE, type TypeLieu } from './typesLieu'
 
 /** ce qu'une phrase VEUT, une fois traduite */
 export type Intention = {
@@ -216,7 +223,11 @@ const LEXIQUE: Regle[] = [
   { mots: ['rooftop', 'toit', 'sur les toits', 'vue', 'en hauteur'], faits: ['rooftop'] },
   { mots: ['peniche', 'sur l eau', 'sur la seine', 'quai', 'bateau'], faits: ['surLeau'] },
   { mots: ['match', 'foot', 'football', 'rugby', 'ecran', 'diffusion', 'ligue des champions'], faits: ['match'] },
-  { mots: ['seul', 'solo', 'manger seul', 'toute seule', 'tout seul'], faits: ['seul'] },
+  // ⚠ pas d'expression « manger seul » ici : elle consommerait le mot
+  // « manger » (les expressions longues passent d'abord) et la règle resto ne
+  // le verrait jamais — « manger seul » perdait l'envie de manger (relecture
+  // 12/08). « seul » suffit, et « manger » reste libre pour sa règle.
+  { mots: ['seul', 'solo', 'toute seule', 'tout seul'], faits: ['seul'] },
 
   // ── LES CUISINES (le tampon de douane) ───────────────────────────────
   { mots: ['italien', 'italienne', 'trattoria', 'osteria', 'pasta', 'pates'], cuisines: ['ITA'] },
@@ -301,10 +312,14 @@ export function intentionVide(i: Intention): boolean {
 // jusqu'à ce qu'une recherche ne rende rien. Vérifié par les tests.
 export function ciblesInvalides(): string[] {
   const mauvaises: string[] = []
+  // les 21 codes réels du tampon de douane — un 'TAH' pour 'THA' passerait
+  // sinon inaperçu, exactement comme le 'rest0' du commentaire (relecture 12/08)
+  const codesConnus = new Set(TAMPONS_CUISINE.map((c) => c.code))
   for (const r of LEXIQUE) {
     for (const e of r.envies ?? []) if (!ENVIES.includes(e)) mauvaises.push(`envie ${e}`)
     for (const t of r.types ?? []) if (!TYPES_LIEU.includes(t)) mauvaises.push(`type ${t}`)
     for (const f of r.faits ?? []) if (!FAITS.includes(f)) mauvaises.push(`fait ${f}`)
+    for (const c of r.cuisines ?? []) if (!codesConnus.has(c)) mauvaises.push(`cuisine ${c}`)
   }
   return unique(mauvaises)
 }

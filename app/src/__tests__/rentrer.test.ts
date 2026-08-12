@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { metres, plusProches, heureDeNuit, etatNoctilien } from '../rentrer'
+import { metres, plusProches, heureDeNuit, etatNoctilien, stationsAMontrer } from '../rentrer'
 
 // un 10 août 2026 à l'heure locale — on ne teste que l'heure, pas la date
 const a = (h: number, m = 0) => new Date(2026, 7, 10, h, m, 0)
@@ -102,5 +102,41 @@ describe('plusProches', () => {
   it('ne perd pas les champs de l’objet d’origine', () => {
     const r = plusProches([{ nom: 'x', lat: 48.8675, lng: 2.3294, lignes: ['N14'] }], VENDOME, 1, 500)
     expect(r[0].lignes).toEqual(['N14'])
+  })
+})
+
+describe('les stations à montrer (loi n°1 : jamais une station sans dispo)', () => {
+  // le point de départ, et trois stations : les DEUX plus proches sont vides,
+  // la troisième — plus loin mais toujours < 400 m — a des vélos.
+  const depuis = { lat: 48.842, lng: 2.322 }
+  const st = (nom: string, dLat: number, velos: number) => ({
+    nom,
+    lat: depuis.lat + dLat,
+    lng: depuis.lng,
+    velos,
+    places: 10,
+    m: 0, // recalculé par plusProches — la valeur d'entrée n'a aucun poids
+  })
+
+  it('deux stations vides côte à côte ne masquent pas la pleine juste derrière', () => {
+    // la régression du 12/08 : le filtre « velos > 0 » passait APRÈS le top-2
+    // par distance → deux vides devant = résultat vide, la pleine invisible.
+    const stations = [st('vide-1', 0.0005, 0), st('vide-2', 0.001, 0), st('pleine', 0.002, 5)]
+    const rendues = stationsAMontrer(stations, depuis)
+    expect(rendues.map((s) => s.nom)).toEqual(['pleine'])
+    expect(rendues[0].velos).toBe(5)
+  })
+
+  it('ne montre jamais une station vide, même seule au monde', () => {
+    expect(stationsAMontrer([st('vide', 0.0005, 0)], depuis)).toEqual([])
+  })
+
+  it('au-delà de 400 m, une station pleine reste hors jeu (autant marcher au métro)', () => {
+    expect(stationsAMontrer([st('trop-loin', 0.02, 8)], depuis)).toEqual([])
+  })
+
+  it('deux pleines : les deux plus proches, dans l’ordre', () => {
+    const stations = [st('b', 0.001, 2), st('a', 0.0005, 1), st('c', 0.0015, 9)]
+    expect(stationsAMontrer(stations, depuis).map((s) => s.nom)).toEqual(['a', 'b'])
   })
 })

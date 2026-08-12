@@ -3277,11 +3277,28 @@ export async function compteDejaInstalle(): Promise<boolean | null> {
       .select('prenom')
       .eq('id', monId)
       .maybeSingle()
-    if (error) return null
+    if (error) {
+      // le repli sur null est voulu (jamais d'accueil à tort hors-ligne), mais
+      // un vrai souci RLS/réseau doit rester lisible au débogage (règle du
+      // dépôt : un échec cloud n'est jamais muet) — relecture 12/08
+      console.warn('[jeudi] compteDejaInstalle cloud KO', error)
+      return null
+    }
     return !!(data?.prenom && String(data.prenom).trim())
-  } catch {
+  } catch (e) {
+    console.warn('[jeudi] compteDejaInstalle KO', e)
     return null
   }
+}
+
+/** l'identifiant du compte connecté (null si personne) — pour les modules
+ *  LOCAUX qui doivent séparer leurs données par compte (mesMonuments) :
+ *  IndexedDB et localStorage sont partagés par l'origine du navigateur,
+ *  pas par la session — sans ce scope, deux comptes sur le même téléphone
+ *  se verraient l'un l'autre. (relecture 12/08) */
+export async function idCompteActuel(): Promise<string | null> {
+  await pretAuth
+  return monId
 }
 
 // ── LES PORTES DÉJÀ UTILISÉES SUR CE TÉLÉPHONE ─────────────────
@@ -3301,13 +3318,25 @@ export function lirePortesConnues(): PorteConnue[] {
   }
 }
 
+/** les portes d'un compte : une ligne d'`identities` par porte reliée
+ *  (Google ET lien par mail peuvent pointer le même compte) ; repli sur
+ *  app_metadata si la liste est absente. UNE seule dérivation — noterPorte
+ *  et lireCompteConnecte la recalculaient chacune, avec des replis
+ *  différents ('email' en dur vs app_metadata). (relecture 12/08) */
+function portesDe(u: {
+  identities?: { provider: string }[]
+  app_metadata?: { provider?: string }
+}): string[] {
+  return u.identities?.length
+    ? [...new Set(u.identities.map((i) => i.provider))]
+    : [u.app_metadata?.provider ?? 'email']
+}
+
 /** note la porte de la session en cours (appelée à chaque retour d'auth) */
-function noterPorte(session: { user?: { id?: string; email?: string; identities?: { provider: string }[] } } | null) {
+function noterPorte(session: { user?: { id?: string; email?: string; identities?: { provider: string }[]; app_metadata?: { provider?: string } } } | null) {
   const u = session?.user
   if (!u?.email || !u.id) return
-  const portes = u.identities?.length
-    ? [...new Set(u.identities.map((i) => i.provider))]
-    : ['email']
+  const portes = portesDe(u)
   const autres = lirePortesConnues().filter((p) => p.email !== u.email)
   const liste = [
     { email: u.email, portes, idCourt: u.id.slice(0, 8), vu: new Date().toISOString() },
@@ -3338,11 +3367,7 @@ export async function lireCompteConnecte(): Promise<CompteConnecte | null> {
   const { data } = await supabase.auth.getSession()
   const u = data.session?.user
   if (!u) return null
-  // identities = une ligne par porte reliée (Google ET lien par mail peuvent
-  // pointer le même compte) ; repli sur app_metadata si la liste est absente.
-  const portes = u.identities?.length
-    ? [...new Set(u.identities.map((i) => i.provider))]
-    : [(u.app_metadata?.provider as string | undefined) ?? 'email']
+  const portes = portesDe(u)
   return {
     email: u.email ?? '',
     portes,

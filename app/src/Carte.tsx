@@ -1653,6 +1653,10 @@ export default function Carte({
       // tri : une vignette voilée ne doit pas voler sa place à un monument.
       for (const mk of vignettesRdv) mk.getElement().classList.toggle('cachee', z < 12.5)
       const posees: { x: number; y: number; r: number }[] = []
+      // ⚠ le `?? 0` est un CHOIX, pas le même repli que l'affichage (`?? 60`,
+      // plus haut) : les repères de rendez-vous n'ont pas d'entrée dans
+      // HAUTEUR_M (pas de dataset.mo) → priorité nulle, ils passent TOUJOURS
+      // derrière un monument. Voulu — un repère est secondaire par nature.
       const parPortee = [...vignettes].sort(
         (a, b) => (HAUTEUR_M[b.dataset.mo ?? ''] ?? 0) - (HAUTEUR_M[a.dataset.mo ?? ''] ?? 0),
       )
@@ -1690,8 +1694,17 @@ export default function Carte({
     // la taille du monument ne bouge pas d'un pixel (demande d'Ersan).
     // Le relais est dans le CSS : sous SEUIL_PHOTO on voit la gravure, au-delà
     // ta photo. La carte se développe quand on zoome.
+    // ⚠ la carte peut être DÉMONTÉE avant que cette lecture réponde (bascule
+    // d'onglet pendant l'ouverture d'IndexedDB) : le cleanup aurait déjà
+    // révoqué un Set vide, et ces URL deviendraient orphelines — une fuite
+    // par aller-retour (relecture 12/08). Le drapeau tranche.
+    let stickersVivants = true
     void lireStickers()
       .then((mes) => {
+        if (!stickersVivants) {
+          revoquerStickers(mes.values()) // trop tard : on rend tout, tout de suite
+          return
+        }
         for (const [nom, url] of mes) {
           const el = monumentsParNom.get(nom)
           if (!el) {
@@ -1790,6 +1803,7 @@ export default function Carte({
       marqueursNumeros.current = []
       // les blobs de tes stickers : sans révocation ils restent en mémoire
       // tant que la page vit, et la carte se remonte à chaque changement de vue
+      stickersVivants = false // une lecture encore en vol rendra ses URL elle-même
       revoquerStickers(urlsStickers)
       urlsStickers.clear()
       for (const id of Object.keys(pins)) delete pins[id]

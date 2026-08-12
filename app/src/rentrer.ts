@@ -187,6 +187,25 @@ export type CommentRentrer = {
   etatNoctilien: 'roule' | 'bientot' | null
 }
 
+/** Les 2 stations à montrer : les plus proches PARMI celles qui ont des
+ *  vélos. Le filtre passe AVANT le top-2 — c'est la loi n°1 (jamais une
+ *  station sans dispo) : dans Paris dense les stations vont par grappes, et
+ *  deux vides côte à côte masquaient la pleine juste derrière (bug trouvé à
+ *  la relecture du 12/08 — le filtre venait APRÈS le top-2). 400 m : au-delà,
+ *  autant marcher jusqu'au métro. Le Vélib' roule 24 h/24, aucune condition
+ *  d'heure. PURE — testée. */
+export function stationsAMontrer(
+  stations: StationVelib[],
+  depuis: { lat: number; lng: number },
+): (StationVelib & { m: number })[] {
+  return plusProches(
+    stations.filter((s) => s.velos > 0),
+    depuis,
+    2,
+    400,
+  )
+}
+
 /** Ce qu'on montre sous un spot. Les deux moitiés sont indépendantes : si le
  *  Vélib' ne répond pas, le Noctilien s'affiche quand même, et l'inverse. */
 export async function commentRentrer(
@@ -201,10 +220,7 @@ export async function commentRentrer(
     etat ? chargerNoctilien() : Promise.resolve(null),
   ])
   return {
-    // 2 stations : la plus proche peut être vide, la seconde sauve la mise.
-    // 400 m — au-delà, autant marcher jusqu'au métro. Le Vélib', lui, roule
-    // 24 h/24 : aucune condition d'heure.
-    velib: v ? plusProches(v, depuis, 2, 400).filter((s) => s.velos > 0) : [],
+    velib: v ? stationsAMontrer(v, depuis) : [],
     // un seul arrêt : le panel a prévenu qu'une LISTE redeviendrait un calque
     // déguisé. 600 m, un arrêt de nuit se mérite un peu.
     noctilien: n ? (plusProches(n, depuis, 1, 600)[0] ?? null) : null,

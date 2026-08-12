@@ -676,9 +676,14 @@ function Reglages({
   useEffect(() => {
     rechargerStickers()
   }, [])
+  // un fichier qui ne se décode pas (format exotique, corrompu) doit le DIRE :
+  // avant, le geste échouait en silence (relecture 12/08)
+  const [stickerRate, setStickerRate] = useState<string | null>(null)
   const choisirSticker = async (nom: string, f: File | undefined) => {
     if (!f) return
+    setStickerRate(null)
     if (await poserSticker(nom, f)) rechargerStickers()
+    else setStickerRate(nom)
   }
   // ton pas : la vitesse derrière tous les « X min à pied » de l'app
   const [vitesse, setVitesse] = useState(() => lireVitesse())
@@ -1165,6 +1170,11 @@ function Reglages({
           <p className="reglages-compte-note">
             {t('ta photo remplace la gravure — sur TA carte seulement, jamais sur celle des autres. Elle ne quitte pas ce téléphone.')}
           </p>
+          {stickerRate && (
+            <p className="reglages-erreur mono">
+              {t('cette photo n’a pas pu être lue — essaie-en une autre.')}
+            </p>
+          )}
           {MONUMENTS.filter((m) => m.img).map((m) => (
             <span key={m.nom} className="reglages-item mono monument-rangee">
               <span className="monument-apercu">
@@ -1395,8 +1405,14 @@ export default function App() {
   // écrasaient le vrai profil. Maintenant : `null` = on ne sait pas encore, on
   // attend la réponse du cloud plutôt que de troubler l'écran d'accueil.
   const [onboard, setOnboard] = useState<boolean | null>(() => (onboardingFait() ? false : null))
+  // ⚠ Le cloud est TOUJOURS consulté, même quand le drapeau local a déjà
+  // tranché (relecture 12/08) : `jeudi-onboard` est une clé d'APPAREIL — sur
+  // un téléphone où le compte A l'a posée, le compte B (réellement neuf)
+  // sautait l'accueil et se retrouvait sans prénom ni portrait. La voie
+  // rapide locale ne sert plus qu'à éviter le clignotement ; le prénom en
+  // base a le dernier mot, dans les deux sens.
   useEffect(() => {
-    if (onboard !== null || !session) return
+    if (!session) return
     let vivant = true
     void compteDejaInstalle().then((installe) => {
       if (!vivant) return
@@ -1404,15 +1420,16 @@ export default function App() {
         marquerOnboarding() // ce compte est connu : ce téléphone le sait maintenant
         setOnboard(false)
       } else if (installe === false) {
-        setOnboard(true) // compte réellement neuf
+        setOnboard(true) // compte réellement neuf — même si un AUTRE compte avait posé le drapeau
       } else {
-        setOnboard(!onboardingFait()) // cloud muet : on s'en remet au local
+        // cloud muet : on s'en remet au local, sans écraser un état déjà résolu
+        setOnboard((o) => (o === null ? !onboardingFait() : o))
       }
     })
     return () => {
       vivant = false
     }
-  }, [onboard, session])
+  }, [session])
   // `sorties` = TOUTES les sorties en attente (miroir du stockage, lu une fois) ;
   // `attente` = la file de validation ouverte à l'écran. une seule source, deux vues.
   const [sorties, setSorties] = useState<SortieEnAttente[]>([])

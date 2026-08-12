@@ -130,6 +130,9 @@ describe('les phrases qu’on dira vraiment', () => {
     ['un rooftop avec vue', (i) => expect(i.faits).toContain('rooftop')],
     ['voir le match', (i) => expect(i.faits).toContain('match')],
     ['manger seul', (i) => expect(i.faits).toContain('seul')],
+    // la régression du 12/08 : l'expression « manger seul » consommait le mot
+    // « manger » et la phrase perdait l'envie de manger — on verrouille les DEUX
+    ['manger seul', (i) => expect(i.envies).toContain('resto')],
     ['un speakeasy', (i) => expect(i.envies).toContain('incognito')],
     ['une péniche', (i) => expect(i.faits).toContain('surLeau')],
     ['bosser au café', (i) => expect(i.types).toContain('cafe')],
