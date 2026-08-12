@@ -8950,7 +8950,10 @@ button:focus:not(:focus-visible) {
 .affiche {
   position: relative;
   width: min(92vw, 430px);
-  background: var(--blanc);
+  /* --blanc n'a jamais existé (audit DA 12/08) : var() retombait sur
+     transparent et le cadre « tirage papier » laissait voir la nuit.
+     Le blanc du polaroïd, c'est --print-white — comme les autres tirages. */
+  background: var(--print-white);
   padding: 10px 10px 0;
   box-shadow: 0 6px 26px rgba(0, 0, 0, 0.6);
   transform: rotate(-1.4deg);
@@ -9009,7 +9012,7 @@ button:focus:not(:focus-visible) {
   font-family: 'Caveat', cursive;
   font-weight: 600;
   text-align: center;
-  color: var(--blanc);
+  color: var(--print-white); /* --blanc n'existait pas (audit DA 12/08) */
   font-size: clamp(46px, 15vw, 76px);
   line-height: 0.9;
   z-index: 4;
