@@ -51,8 +51,9 @@
   /* la place que la bande déchirée (navbas) occupe en bas : TOUT ce qui
      s'empile au-dessus (carrousel, sheet, contrôles carte, toasts) se cale
      sur elle — une seule vérité, plus jamais un élément qui glisse dessous.
-     (84 depuis que le + ne déborde plus — retouche DA du 12/08) */
-  --navbas-h: 84px;
+     (MESURÉE au banc du 12/08 : 8px d'assise + 81px de bande = 89, plus un
+     souffle — l'échelle de la carte mordait encore la déchirure à 84) */
+  --navbas-h: 92px;
   --encre: #efe9d8; /* le trait principal */
   --encre-2: rgba(239, 233, 216, 0.62); /* la note en marge */
   --encre-3: rgba(239, 233, 216, 0.34); /* le crayonné (méta, hints) */
@@ -3624,12 +3625,16 @@ button {
   margin: 0 0 8px 0;
 }
 /* l'échelle (bas-gauche) au-dessus de l'attribution, peu importe l'ordre
-   d'ajout des contrôles — column-reverse place le dernier ajouté en haut */
+   d'ajout des contrôles — column-reverse place le dernier ajouté en haut.
+   Et AU-DESSUS de la bande déchirée (Ersan, 12/08) : la navbas îlot
+   recouvrait l'échelle — elle se cale sur --navbas-h comme tout l'étage. */
 .maplibregl-ctrl-bottom-left {
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-start;
   gap: 4px;
+  bottom: calc(var(--navbas-h) + env(safe-area-inset-bottom));
+  left: 12px;
 }
 /* l'échelle éphémère : jamais posée en permanence — visible seulement
    pendant le geste de zoom (Carte.tsx, zoomstart/zoomend). Style carnet,
