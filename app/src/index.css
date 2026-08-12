@@ -50,8 +50,9 @@
   --nuit-3: #23201a; /* la page soulevée (états actifs, modales) */
   /* la place que la bande déchirée (navbas) occupe en bas : TOUT ce qui
      s'empile au-dessus (carrousel, sheet, contrôles carte, toasts) se cale
-     sur elle — une seule vérité, plus jamais un élément qui glisse dessous */
-  --navbas-h: 100px;
+     sur elle — une seule vérité, plus jamais un élément qui glisse dessous.
+     (84 depuis que le + ne déborde plus — retouche DA du 12/08) */
+  --navbas-h: 84px;
   --encre: #efe9d8; /* le trait principal */
   --encre-2: rgba(239, 233, 216, 0.62); /* la note en marge */
   --encre-3: rgba(239, 233, 216, 0.34); /* le crayonné (méta, hints) */
@@ -5696,27 +5697,29 @@ button {
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.5));
   font-size: 21px;
 }
-/* le + amarré au bout (variante B) : l'accent au service du geste fondateur.
-   Il déborde de la bande vers le haut — toujours là, toujours sous le pouce. */
+/* le + dans le rang (retouche DA d'Ersan, 12/08) : plus de débordement —
+   il vit SUR la ligne des icônes, centré comme elles. C'est le bleu qui le
+   fait exister, pas la taille : l'accent est la seule couleur de la bande. */
 .nav-plus {
   flex: none;
-  width: 46px;
-  height: 46px;
-  margin: -16px 4px -6px 2px;
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 6px 0 2px;
   border: none;
-  border-radius: 11px;
+  border-radius: 10px;
   background: var(--red); /* l'accent jeudi (bleu — décision du 07/08) */
   color: #0e1116;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
   line-height: 0;
   display: grid;
   place-items: center;
-  transform: rotate(2deg);
-  box-shadow: 0 4px 14px rgba(93, 141, 255, 0.35), 0 1px 0 rgba(0, 0, 0, 0.5);
+  transform: rotate(1.5deg);
+  box-shadow: 0 2px 8px rgba(93, 141, 255, 0.28), 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 .nav-plus:active {
-  transform: rotate(2deg) scale(0.94);
+  transform: rotate(1.5deg) scale(0.94);
 }
 .nav-item {
   opacity: 0.45;
