@@ -151,6 +151,10 @@ import {
   marquerVuPellicule,
 } from './db'
 import type { CompteConnecte } from './db'
+// le push (0020) : l'interrupteur « me prévenir » du centre de notifications
+import { etatPush, activerPush, couperPush, conseilIphone, type EtatPush } from './push'
+// « nouvelle version » : l'état retenu (course du boot — voir majApp.ts)
+import { majEnAttente } from './majApp'
 import {
   commentRentrer,
   DEBUT_NOCTILIEN,
@@ -1561,8 +1565,8 @@ export default function App() {
   const [curateur, setCurateur] = useState<string | null>(null)
   // petit message éphémère (effacé / signalé / visibilité changée)
   const [flash, setFlash] = useState<string | null>(null)
-  // une nouvelle version du service worker attend (émis par main.tsx) → toast
-  const [majDispo, setMajDispo] = useState(false)
+  // (le toast « nouvelle version » est devenu ToastNouvelleVersion — autonome,
+  // rendu aussi sur l'écran d'auth, et sans course au boot. 12/08.)
   // filtres COMBINABLES (3 axes qui s'additionnent) :
   //  · statut : tout · à découvrir (pas fait) · faits (validés)
   //  · ouvert : ouvert maintenant (on/off)
@@ -1591,13 +1595,6 @@ export default function App() {
   // appliquer la couleur de marque choisie (dès le premier rendu)
   useEffect(() => {
     appliquerCouleur(lireCouleur())
-  }, [])
-
-  // le service worker signale une nouvelle version → on lève le toast
-  useEffect(() => {
-    const onMaj = () => setMajDispo(true)
-    window.addEventListener('jeudi:maj-dispo', onMaj)
-    return () => window.removeEventListener('jeudi:maj-dispo', onMaj)
   }, [])
 
   // re-render quand la vraie géoloc arrive (les distances se recalculent)
@@ -2036,7 +2033,15 @@ export default function App() {
         <div className="tampon-logo attente-auth-logo">Jeudi.</div>
       </div>
     )
-  if (!session) return <Auth />
+  // le toast « nouvelle version » vit AUSSI ici : quelqu'un de déconnecté
+  // coincé sur une vieille version doit pouvoir se mettre à jour (12/08)
+  if (!session)
+    return (
+      <>
+        <Auth />
+        <ToastNouvelleVersion />
+      </>
+    )
   // on demande au cloud si ce compte est déjà installé : le tampon respire
   // plutôt que de faire clignoter un accueil qu'on va peut-être sauter
   if (onboard === null)
@@ -2177,6 +2182,9 @@ export default function App() {
                 ))
               )}
             </div>
+
+            {/* le push (0020) : l'interrupteur vit ici, avec les notifications */}
+            <PousserMoi />
 
             {/* vider le centre — avec garde-fou sur les lieux à noter */}
             {(demandes.length > 0 || aNoter.length > 0) && (
@@ -3138,21 +3146,7 @@ export default function App() {
         </div>
       )}
 
-      {majDispo && (
-        <div className="toast">
-          <span className="mono">{t('nouvelle version.')}</span>
-          <button
-            className="lien"
-            onClick={() => {
-              // main.tsx applique (skipWaiting) puis recharge — sur CE clic, pas au boot
-              setMajDispo(false)
-              window.dispatchEvent(new Event('jeudi:applique-maj'))
-            }}
-          >
-            {t('recharger')}
-          </button>
-        </div>
-      )}
+      <ToastNouvelleVersion />
 
       {!ajout && !fiche && (
         <nav className="navbas">
@@ -3841,6 +3835,87 @@ function CarteCurateur({
           ? `sûr ? @${reel.prenom.toLowerCase()} ne te verra plus — et toi non plus.`
           : 'bloquer'}
       </button>
+    </div>
+  )
+}
+
+// ── le toast « nouvelle version » — autonome (12/08). Il porte son propre
+// état pour vivre AUSSI sur l'écran d'auth, et il relit majEnAttente() au
+// montage : l'événement du service worker peut partir avant lui (course du
+// boot, trouvée au test de la bascule injectManifest).
+function ToastNouvelleVersion() {
+  const [dispo, setDispo] = useState(() => majEnAttente())
+  useEffect(() => {
+    const onMaj = () => setDispo(true)
+    window.addEventListener('jeudi:maj-dispo', onMaj)
+    return () => window.removeEventListener('jeudi:maj-dispo', onMaj)
+  }, [])
+  if (!dispo) return null
+  return (
+    <div className="toast">
+      <span className="mono">{t('nouvelle version.')}</span>
+      <button
+        className="lien"
+        onClick={() => {
+          // main.tsx applique (skipWaiting) puis recharge — sur CE clic, pas au boot
+          setDispo(false)
+          window.dispatchEvent(new Event('jeudi:applique-maj'))
+        }}
+      >
+        {t('recharger')}
+      </button>
+    </div>
+  )
+}
+
+// ── « me prévenir » (0020) : l'interrupteur du push, dans le centre de
+// notifications — là où on pense aux notifications, pas perdu aux réglages.
+// La permission n'est demandée QUE sur le tap. Rare et précieux : la ligne
+// éditoriale du push vit côté envoyeur (Edge Function), ici on ne fait
+// qu'ouvrir ou fermer la porte de CET appareil.
+function PousserMoi() {
+  const [etat, setEtat] = useState<EtatPush | 'lecture' | 'encours'>('lecture')
+  const [erreur, setErreur] = useState<string | null>(null)
+  useEffect(() => {
+    void etatPush().then(setEtat)
+  }, [])
+  const basculer = async () => {
+    if (etat !== 'coupe' && etat !== 'active') return
+    const avant = etat
+    setEtat('encours')
+    setErreur(null)
+    try {
+      if (avant === 'coupe') await activerPush()
+      else await couperPush()
+      setEtat(await etatPush())
+    } catch (e) {
+      setErreur((e as Error).message)
+      setEtat(await etatPush())
+    }
+  }
+  if (etat === 'lecture') return null
+  return (
+    <div className="notif-section notif-push">
+      <span className="notif-titre mono">me prévenir</span>
+      {etat === 'indisponible' ? (
+        <p className="hand notif-vide">
+          {conseilIphone()
+            ? 'sur iPhone : installe d’abord jeudi sur l’écran d’accueil (partager → sur l’écran d’accueil).'
+            : 'ce navigateur ne sait pas prévenir quand l’app est fermée.'}
+        </p>
+      ) : etat === 'refuse' ? (
+        <p className="hand notif-vide">
+          le téléphone bloque les notifications de jeudi — ça se rouvre dans ses réglages.
+        </p>
+      ) : (
+        <button className="notif-ligne notif-push-bascule hand" onClick={() => void basculer()}>
+          <span>même app fermée — rare et précieux, promis.</span>
+          <span className={`mono notif-push-etat ${etat === 'active' ? 'on' : ''}`}>
+            {etat === 'encours' ? '…' : etat === 'active' ? 'oui' : 'non'}
+          </span>
+        </button>
+      )}
+      {erreur && <p className="hand notif-vide">{erreur}</p>}
     </div>
   )
 }

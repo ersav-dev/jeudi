@@ -679,6 +679,29 @@ body::before,
   text-decoration: underline;
   cursor: pointer;
 }
+/* le push (0020) : l'interrupteur « me prévenir » — une ligne, un état */
+.notif-push-bascule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.notif-push-etat {
+  flex: none;
+  font-size: 11px;
+  opacity: 0.55;
+}
+.notif-push-etat.on {
+  opacity: 1;
+  color: var(--accent, inherit);
+}
 .notif-confirm p {
   font-family: 'Instrument Serif', serif; /* la voix de l'app, pas la main (§5) */
   font-style: italic;

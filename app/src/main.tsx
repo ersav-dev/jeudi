@@ -6,6 +6,7 @@ import './index.css'
 import App from './App.tsx'
 import { extraireTokenSortie } from './sortieGroupe'
 import { registerSW } from 'virtual:pwa-register'
+import { signalerMajDispo } from './majApp'
 import { releverCrash, jalonner, lireCrash, effacerCrash } from './jalon'
 
 // ── journal de bord : relever un éventuel crash de la session précédente,
@@ -37,8 +38,9 @@ if (crashPrec) {
 const majSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    // une nouvelle version attend → App affiche le toast « nouvelle version »
-    window.dispatchEvent(new Event('jeudi:maj-dispo'))
+    // une nouvelle version attend → majApp RETIENT l'état (le toast peut
+    // monter après ce signal — course du boot) et réveille les écouteurs
+    signalerMajDispo()
   },
 })
 // le toast (App.tsx) demande d'appliquer : skipWaiting + reload, sur le clic.

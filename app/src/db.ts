@@ -3138,6 +3138,32 @@ export function ecrireSuivis(noms: string[]): void {
   localStorage.setItem('jeudi-suivis', JSON.stringify(noms))
 }
 
+// ── PUSH (0020) — l'adresse de cet appareil ─────────────────────
+/** upsert : se réabonner sur le même appareil remplace la ligne (la clé,
+ *  c'est l'endpoint — un par appareil, pas un par compte). */
+export async function sauverAbonnementPush(abo: {
+  endpoint: string
+  p256dh: string
+  auth: string
+}): Promise<void> {
+  await pretAuth
+  if (!monId) throw new Error('connecte-toi d’abord.')
+  const { error } = await supabase
+    .from('push_abonnements')
+    .upsert({ ...abo, user_id: monId }, { onConflict: 'endpoint' })
+  if (error) {
+    console.warn('[jeudi] sauverAbonnementPush KO', error)
+    throw new Error('ça n’est pas parti — réessaie quand ça capte.')
+  }
+}
+
+export async function supprimerAbonnementPush(endpoint: string): Promise<void> {
+  await pretAuth
+  if (!monId) return
+  const { error } = await supabase.from('push_abonnements').delete().eq('endpoint', endpoint)
+  if (error) console.warn('[jeudi] supprimerAbonnementPush KO', error)
+}
+
 // ── SIGNALER (0018) — le signal part VRAIMENT ───────────────────
 /** avant : un drapeau localStorage (rien ne quittait le téléphone) et un
  *  mailto: vers une boîte inexistante. Désormais le signalement s'écrit dans

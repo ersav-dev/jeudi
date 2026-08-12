@@ -12,6 +12,13 @@ export default defineConfig({
       // prend la main au boot = écran blanc (bug WebKit connu). À la place, App
       // affiche un toast « nouvelle version » ; le reload se fait sur le clic.
       registerType: 'prompt',
+      // CHANTIER PUSH (12/08) : generateSW ne peut pas recevoir de push →
+      // on écrit NOTRE service worker (src/sw.ts). Il refait tout ce que
+      // l'ancien mode générait (précache, purge, update-flow) — chaque
+      // option Workbox d'avant y est reportée et commentée.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       // le manifest est généré ici (public/manifest.webmanifest supprimé — une seule source)
       manifest: {
         name: 'jeudi — je dis où.',
@@ -29,37 +36,17 @@ export default defineConfig({
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
-      workbox: {
-        // precache : tout le build + le public (fonts, icônes) ; SPA fallback par défaut
+      // les options Workbox restantes — celles qui pilotent l'INJECTION du
+      // manifest de précache dans src/sw.ts. Le reste (cleanupOutdatedCaches,
+      // clientsClaim, SPA fallback, l'ex-runtimeCaching NetworkOnly) vit
+      // désormais DANS sw.ts, commenté ligne à ligne.
+      injectManifest: {
+        // precache : tout le build + le public (fonts, icônes)
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,woff2}'],
-        // hygiène de cache : purge les précaches des anciens builds (sinon ils
-        // s'empilent et, sous le budget storage riquiqui d'une PWA iOS, une
-        // éviction fait 404 un chunk précaché → bundle qui ne charge pas → blanc).
-        cleanupOutdatedCaches: true,
-        // le nouveau SW prend la main sur l'onglet dès son activation (offline
-        // dès la 1re visite). Il n'est activé qu'après le clic du toast (prompt).
-        clientsClaim: true,
         // og.png ne sert qu'aux scrapers (WhatsApp…) — inutile de le précacher
         globIgnores: ['**/og.png'],
         // le chunk Carte dépasse le plafond par défaut (2 Mo) — marge
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            // Supabase (auth + données) : jamais servi depuis le cache
-            urlPattern: /^https:\/\/[^/]+\.supabase\.co\//,
-            handler: 'NetworkOnly',
-          },
-          {
-            // Nominatim (géocodage) : réseau seulement
-            urlPattern: /^https:\/\/nominatim\.openstreetmap\.org\//,
-            handler: 'NetworkOnly',
-          },
-          {
-            // tuiles carto : pas de cache SW agressif (le cache HTTP suffit)
-            urlPattern: /^https:\/\/[abc]\.basemaps\.cartocdn\.com\//,
-            handler: 'NetworkOnly',
-          },
-        ],
       },
     }),
   ],
