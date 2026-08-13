@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 7 : toutes les zones, pas que la sienne</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .bloc{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:26px 0;
+        border-top:1px solid rgba(239,233,216,.12)}
+  .bloc .no{font-size:11px;letter-spacing:.14em;color:var(--encre-3)}
+  .bloc h3{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+           font-size:27px;line-height:1.05;margin:4px 0 12px}
+  .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
+  .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .frames{display:grid;grid-template-columns:repeat(3,300px);gap:16px}
+  .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
+  .dit{width:300px}
+  .verdict{margin-top:14px}
+  /* la liste de résultats (maquette) */
+  .liste{width:300px;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);
+         border-radius:var(--rayon);box-shadow:0 1px 0 rgba(0,0,0,.5);overflow:hidden}
+  .liste .lt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);
+             padding:11px 13px 9px;border-bottom:1px solid rgba(239,233,216,.1)}
+  .liste .li{padding:9px 13px;border-bottom:1px solid rgba(239,233,216,.07);
+             display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .liste .li:last-child{border-bottom:0}
+  .liste .n{font-family:'Instrument Serif',serif;font-style:italic;font-size:17px}
+  .liste .d{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--encre-3);flex:none}
+  .liste .li.out .n{color:var(--encre-3);text-decoration:line-through;
+                    text-decoration-color:rgba(239,233,216,.35)}
+  .liste .li.out .d{color:var(--encre-3);opacity:.7}
+  .liste .pied{font-size:10.5px;color:var(--encre-3);padding:10px 13px;line-height:1.5;
+               border-top:1px solid rgba(239,233,216,.1);margin:0}
+  .large{display:grid;grid-template-columns:390px 1fr;gap:26px;align-items:start}
+  .cap{font-size:11.5px;color:var(--encre-2);line-height:1.6}
+  .cap b{color:var(--encre);font-weight:400}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 7</div>
+    <h1>Toutes les zones, pas que la sienne.</h1>
+  </div>
+  <div class="droite">13 août 2026 · d'après ta relance<br>
+    « le taf · dating area · alerte dealers · no go »<br>
+    <b>deux sens</b> : on y va, ou on l'évite — et c'est la <b>matière</b> qui le dit
+  </div>
+</div>
+
+<p class="chapo">Tu ouvres la fonctionnalité bien plus large qu'un « chez moi », et ça règle
+  d'un coup <b>l'objection principale du panel</b> : une zone qu'on évite <b>fait quelque
+  chose</b> — elle retire des résultats. Mais ça soulève une question de dessin :
+  comment dire « j'évite » sans peindre la carte en rouge ? Réponse : <b>pas avec la
+  couleur — avec la matière.</b> Plein = j'y vais. Hachuré = j'évite. C'est le geste du
+  carnet : on hachure ce qu'on raye.</p>
+
+<div id="planche"></div>
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const V = [310,288], W = 300, H = 348
+const A = '#8E76B4', P = '#5C88A6', G = '#9A948A', I = '#B85F82'
+const f = (etape, html, dit) => `<div><div class="et">${etape}</div>${html}<div class="dit">${dit}</div></div>`
+const C = (o) => cadre({ vue:V, w:W, h:H, ...o })
+// une bulle de huit points doux, dans le repère de la mosaïque (« entourer autour d'ici »)
+const bulle = (cx, cy, r, cotes = 8) =>
+  Array.from({length:cotes}, (_, i) => {
+    const a = (i/cotes)*Math.PI*2
+    return [cx + Math.cos(a)*r, cy + Math.sin(a)*r]
+  })
+const EVITEE = bulle(500, 556, 72)
+const TAF = bulle(232, 214, 84)
+const DATING = bulle(700, 300, 88)
+const JAMAIS = bulle(636, 792, 96)
+
+const li = (n, d, out) => `<div class="li ${out?'out':''}"><span class="n">${n}</span><span class="d">${d}</span></div>`
+
+const BLOCS = [
+{
+  no:'le sens', nom:'Plein,<br>ou hachuré', tampon:['t-garde','la matière, pas la couleur'],
+  lignes:[
+    ['j’y vais',"les rues prennent l'encre. C'est « chez moi », « le taf », « le coin des potes »."],
+    ['j’évite',"la zone se <b>hachure</b> et les rues restent grises : on n'a pas envie que ça brille."],
+    ['pourquoi pas le rouge',"le rouge, c'est la cire — le tampon, le sceau, l'irréversible. Une zone rouge volerait le seul accent de l'app, et une carte avec trois taches rouges devient une carte d'alerte."],
+    ['le bonus',"hachuré ou plein se distingue <b>même en noir et blanc</b>, et même pour un œil qui confond les couleurs."],
+  ],
+  frames:[
+    f('« j’y vais » — le taf', C({ zones:[{c:P, pts:bulle(452,452,112), teinte:true, trait:2,
+        nom:'le taf', nx:452, ny:452, nt:20}] }),
+      "Plein : les rues prennent l'encre. On lit « je connais » avant d'avoir lu le mot."),
+    f('« j’évite » — jamais ici', C({ zones:[{c:G, pts:bulle(452,452,112), hachure:true, trait:2,
+        nom:'jamais ici', nx:452, ny:452, nt:20}] }),
+      "Hachuré, rues grises : la zone <b>se retire</b> au lieu de s'annoncer. Discrète, et sans jugement affiché."),
+    f('les deux ensemble', C({ zones:[
+        {c:A, teinte:true, trait:2, nom:'mon quartier', nx:430, ny:420, nt:22},
+        {c:G, pts:EVITEE, hachure:true, trait:2, nom:'jamais ici', nx:500, ny:556, nt:18}] }),
+      "Le cas réel : <b>un trou dans son propre quartier</b>. Deux traitements, aucune confusion possible."),
+  ],
+},
+{
+  no:'ce que ça FAIT', nom:'La zone<br>agit enfin', tampon:['t-garde','la réponse au panel'],
+  lignes:[
+    ['j’évite',"s'applique <b>toujours</b>, sans qu'on le redemande : ce qui tombe dedans ne remonte plus, jamais. Personne n'entoure un endroit pour qu'on le lui propose un soir de fatigue."],
+    ['j’y vais',"ne s'applique que si on l'<b>allume</b> — « ce soir près du taf ». Sinon, avoir tracé son bureau réduirait toutes les recherches à son bureau."],
+    ['la règle',"l'évitement gagne sur tout le reste, même sur une zone qu'on vient d'allumer."],
+    ['déjà écrit',"<code>ecarterLesEvitees()</code> et <code>filtrerParZones()</code> sont dans le module, avec leurs tests."],
+  ],
+  frames:[
+    f('sans zone', `<div class="liste"><div class="lt">ce soir · 6 lieux</div>
+      ${li('Aux Deux Amis','230 m')}${li('Le Perchoir','380 m')}${li('Chez Jeannette','520 m')}
+      ${li('Le Mécano','610 m')}${li('Le Comptoir','740 m')}${li('Aux Folies','890 m')}
+      <p class="pied">l'app propose ce qui est ouvert et proche.</p></div>`,
+      "L'état d'aujourd'hui : la distance décide, et rien d'autre."),
+    f('avec « jamais ici »', `<div class="liste"><div class="lt">ce soir · 4 lieux</div>
+      ${li('Aux Deux Amis','230 m')}${li('Le Perchoir','380 m')}
+      ${li('Chez Jeannette','520 m', true)}${li('Le Mécano','610 m', true)}
+      ${li('Le Comptoir','740 m')}${li('Aux Folies','890 m')}
+      <p class="pied">deux lieux tombent dans une zone que tu évites : ils ne remontent plus.</p></div>`,
+      "<b>Voilà l'usage que le panel réclamait.</b> Rien à activer, rien à expliquer : ça se voit au premier soir."),
+    f('« près du taf »', `<div class="liste"><div class="lt">près du taf · 2 lieux</div>
+      ${li('Le Bistrot du Coin','120 m')}${li('La Cantine','260 m')}
+      <p class="pied">le filtre « j'y vais » s'allume à la demande, depuis la fiche de la zone.</p></div>`,
+      "Le même moteur, dans l'autre sens : on restreint au lieu d'écarter."),
+  ],
+},
+{
+  no:'la carte pleine', nom:'Quelqu’un qui<br>a tout tracé', tampon:['t-second','le cap passe à 10'],
+  lignes:[
+    ['ce qui tombe',"la règle « une encre = une zone » ne tient plus : dès qu'on trace le taf, le dating, ce qu'on évite et son quartier, six ne suffisent pas."],
+    ['ce qui la remplace',"l'encre redevient une <b>couleur qu'on choisit</b> (elle peut se répéter — c'est le mot qui distingue), et le plafond redevient un nombre : <b>dix</b>."],
+    ['pourquoi dix',"au-delà, la carte redevient un mur. Et le cap n'est pas un mur : on cure, comme les proches et les stickers."],
+    ['le garde-fou',"une seule zone garde ses rues teintées à l'écran — celle sous le centre. Les autres tombent à l'aplat, sinon c'est une flaque."],
+  ],
+  frames:[],
+},
+]
+
+document.getElementById('planche').innerHTML = BLOCS.map((b) => `
+  <div class="bloc">
+    <div><div class="no">${b.no}</div><h3>${b.nom}</h3>
+      ${b.lignes.map((l) => `<div class="ligne"><i>${l[0]}</i>${l[1]}</div>`).join('')}
+      <div class="verdict"><span class="tampon ${b.tampon[0]}">${b.tampon[1]}</span></div></div>
+    <div class="frames">${b.frames.join('')}</div>
+  </div>`).join('')
+
+// la dernière ligne : une carte de quelqu'un qui a tout tracé (z14)
+document.querySelector('.bloc:last-child .frames').outerHTML = `<div class="large">
+  <div>${cadre({ z:14, vue:[120,0], w:390, h:560, noms:1, zones:[
+    { c:A, teinte:true, trait:2, nom:'mon quartier', nx:446, ny:470, nt:20 },
+    { c:P, pts:TAF, aplat:.28, trait:2, nom:'le taf', nx:232, ny:214, nt:18 },
+    { c:I, pts:DATING, aplat:.28, trait:2, nom:'dating area', nx:700, ny:300, nt:18 },
+    { c:G, pts:JAMAIS, hachure:true, trait:2, nom:'jamais ici', nx:636, ny:792, nt:18 },
+    { c:G, pts:EVITEE, hachure:true, trait:1.6 },
+  ] })}</div>
+  <div class="cap">
+    <p><b>Quatre zones, deux sens, et la carte reste une carte.</b> Une seule garde ses rues
+    teintées (celle du centre) ; les autres se contentent de leur aplat, et les évitées de leurs
+    hachures. À dix zones on atteint le plafond — pas un mur, une invitation à curer.</p>
+    <p style="margin-top:12px"><b>Et là où je dois être franc avec toi.</b> « Alerte dealers »,
+    « no go » : dans un carnet privé, c'est une note personnelle, ça ne regarde personne et il n'y
+    a rien à modérer — c'est même la force de la règle n°1. Le jour où ces zones se partagent,
+    s'agrègent ou remontent au cloud, jeudi devient <b>une carte des quartiers dangereux</b>
+    dessinée par ses utilisateurs. Ce n'est ni ton produit (« un carnet, pas un mur »), ni tenable :
+    on parle de jugements portés sur des bouts de ville où des gens habitent.</p>
+    <p style="margin-top:12px">Donc la règle est écrite dans le code, en tête du module, et je ne
+    la contournerai pas : <b>les zones ne quittent pas l'appareil, ne se partagent pas, ne
+    s'agrègent jamais, et n'influencent jamais ce que voit quelqu'un d'autre.</b> Elles changent
+    ce que <em>toi</em> tu vois. C'est tout, et c'est déjà beaucoup.</p>
+  </div>
+</div>`
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que ta relance change.</b><br>
+  <span class="q">1.</span> <b>Une zone n'est plus une identité, c'est une intention</b> — et elle
+  n'a que <b>deux sens</b> : on y va, ou on l'évite. Deux états valent mieux qu'un catalogue de
+  catégories : personne ne range ses habitudes dans les cases d'un autre.<br>
+  <span class="q">2.</span> <b>Le sens se dit par la matière</b> : plein / hachuré. Pas par la
+  couleur — le rouge appartient à la cire, et une carte qui vire au rouge devient une carte
+  d'alerte.<br>
+  <span class="q">3.</span> <b>« Une encre = une zone » est morte</b> : l'encre se répète, le mot
+  distingue, et le plafond passe à <b>dix</b>.<br>
+  <span class="q">4.</span> <b>Le panel a sa réponse</b> : la zone évitée retire des résultats dès
+  le premier soir, sans rien allumer. C'est l'usage qui manquait — il est déjà codé et testé.<br>
+  <span class="q">→ à trancher :</span> le mot pour le sens. « <b>j'y vais</b> / <b>j'évite</b> »
+  (ma reco : deux verbes, ça se comprend sans mode d'emploi), ou « pour moi / jamais », ou le tien.`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

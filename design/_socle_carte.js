@@ -156,7 +156,14 @@ function cadre(o) {
          clip-path:path('${zz.d}');opacity:${zz.teinte === true ? 1 : zz.teinte}">
       <div class="plan" style="width:${m.s}px;height:${m.s}px;left:0;top:0">${tuiles(z)}</div></div>`).join('')
 
-  const encre = zones.map((zz) => {
+  // la MATIÈRE dit le sens : plein = j'y vais, hachuré = j'évite. Jamais la
+  // couleur (le rouge serait un piège : c'est la cire, et elle a un métier)
+  const hachures = zones.map((zz, i) => zz.hachure
+    ? `<pattern id="${id}h${i}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+         <line x1="0" y1="0" x2="0" y2="7" stroke="${zz.c}" stroke-width="1.6" opacity=".55"/></pattern>`
+    : '').join('')
+
+  const encre = zones.map((zz, iz) => {
     if (zz.part !== undefined && zz.part < 1) {
       const p = partiel(zz.P, zz.part, zz.seed)
       return `<g style="--enc:${zz.c}"><path d="${p.d}" class="trace-vive"/>
@@ -165,6 +172,7 @@ function cadre(o) {
     }
     return `<g style="--enc:${zz.c}">
       ${zz.aplat ? `<path d="${zz.d}" class="aplat" style="opacity:${zz.aplat}"/>` : ''}
+      ${zz.hachure ? `<path d="${zz.d}" fill="url(#${id}h${iz})" stroke="none"/>` : ''}
       ${zz.contour === false ? '' : `<path d="${zz.d}"
           class="${zz.fantome ? 'contour-fantome' : zz.vif ? 'contour-vif' : 'contour'}"
           style="stroke-width:${zz.fantome ? 1.6 : zz.vif ? (zz.trait || 2.2) : (zz.repos || 1.4)}"/>`}
@@ -188,7 +196,7 @@ function cadre(o) {
   return `<div class="cadre" style="width:${w}px;height:${h}px" id="${id}">
     ${plan('')}${teinte}
     <svg viewBox="${v[0]} ${v[1]} ${w} ${h}" width="${w}" height="${h}">
-      <defs><marker id="tete${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <defs>${hachures}<marker id="tete${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
         <path d="M 0 1 L 9 5 L 0 9 z" fill="rgba(239,233,216,.55)"/></marker></defs>
       ${o.spots === false ? '' : (() => { let n = o.noms === undefined ? 99 : o.noms
           return SPOTS.map((s) => pin(s.n && n-- > 0 ? s : { ...s, n: null }, z)).join('') })()}

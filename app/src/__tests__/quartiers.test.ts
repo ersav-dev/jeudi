@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ENCRES, CAP_ZONES, encreLibre, metres, simplifier, depuisTrace, depuisTaps,
+  ENCRES, CAP_ZONES, encreSuggeree, metres, simplifier, depuisTrace, depuisTaps,
   bulleAutour, retournerPoint, contour, enGeoJSON, dansLaZone, lieuxDeLaZone,
+  ecarterLesEvitees, filtrerParZones, zonesQuiContiennent,
   metresParPixel, pointsSaisissables, TOLERANCE_M, type PointZone,
 } from '../quartiers'
 
@@ -9,22 +10,59 @@ import {
 const CENTRE = { lng: 2.3661, lat: 48.8698 }
 const ZONE = bulleAutour(CENTRE, 350)
 
-describe('les encres — la palette EST le plafond', () => {
-  it('six encres, six quartiers', () => {
+describe('les encres', () => {
+  it('six encres nommées, et un plafond de dix zones', () => {
     expect(ENCRES).toHaveLength(6)
-    expect(CAP_ZONES).toBe(6)
+    // « une encre = une zone » est tombée : on trace aussi le taf, le
+    // dating, ce qu'on évite — six ne suffisaient plus
+    expect(CAP_ZONES).toBe(10)
   })
-  it('rend la première encre libre, dans l’ordre du carnet', () => {
-    expect(encreLibre([])).toBe('prusse')
-    expect(encreLibre([{ encre: 'prusse' }, { encre: 'vert' }])).toBe('aniline')
+  it('suggère la première encre libre, dans l’ordre du carnet', () => {
+    expect(encreSuggeree([])).toBe('prusse')
+    expect(encreSuggeree([{ encre: 'prusse' }, { encre: 'vert' }])).toBe('aniline')
   })
-  it('rend null quand les six sont prises — pour un septième, on rature', () => {
-    expect(encreLibre(ENCRES.map((e) => ({ encre: e.id })))).toBeNull()
+  it('ne bloque plus quand les six sont prises — l’encre se répète, le mot distingue', () => {
+    const toutes = ENCRES.map((e) => ({ encre: e.id }))
+    expect(ENCRES.map((e) => e.id)).toContain(encreSuggeree(toutes))
   })
   it('ni la cire ni le bleu jeudi n’entrent dans la palette', () => {
     const hex = ENCRES.map((e) => e.hex.toLowerCase())
     expect(hex).not.toContain('#a8322a')
     expect(hex).not.toContain('#5d8dff')
+  })
+})
+
+describe('les deux sens — on y va, ou on l’évite', () => {
+  const TAF = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), sens: 'vers' as const }
+  const EVITE = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), sens: 'contre' as const }
+  const lieux = [
+    { id: 'au taf', lat: 48.8720, lng: 2.3350 },
+    { id: 'dans la zone évitée', lat: 48.8698, lng: 2.3661 },
+    { id: 'ailleurs', lat: 48.8566, lng: 2.3522 },
+  ]
+
+  it('« j’évite » s’applique TOUJOURS, sans qu’on le redemande', () => {
+    expect(ecarterLesEvitees(lieux, [TAF, EVITE]).map((l) => l.id))
+      .toEqual(['au taf', 'ailleurs'])
+  })
+  it('« j’y vais » ne s’applique QUE si on l’allume', () => {
+    // sans demande : avoir tracé son bureau ne réduit pas tout à son bureau
+    expect(filtrerParZones(lieux, [TAF, EVITE])).toHaveLength(2)
+    // avec demande : « ce soir près du taf »
+    expect(filtrerParZones(lieux, [TAF, EVITE], TAF).map((l) => l.id)).toEqual(['au taf'])
+  })
+  it('l’évitement gagne même sur une zone qu’on allume', () => {
+    const chevauche = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 600), sens: 'vers' as const }
+    expect(filtrerParZones(lieux, [chevauche, EVITE], chevauche)
+      .some((l) => l.id === 'dans la zone évitée')).toBe(false)
+  })
+  it('sans zone évitée, rien n’est retiré', () => {
+    expect(ecarterLesEvitees(lieux, [TAF])).toHaveLength(3)
+    expect(ecarterLesEvitees(lieux, [])).toHaveLength(3)
+  })
+  it('dit dans quelles zones on se trouve — « tu es dans : le taf »', () => {
+    expect(zonesQuiContiennent({ lat: 48.8720, lng: 2.3350 }, [TAF, EVITE])).toEqual([TAF])
+    expect(zonesQuiContiennent({ lat: 48.8000, lng: 2.3000 }, [TAF, EVITE])).toEqual([])
   })
 })
 

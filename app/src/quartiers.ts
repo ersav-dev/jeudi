@@ -15,8 +15,21 @@
 //      Conséquence : l'outil « traits droits » n'existe pas (c'est une zone
 //      tout en durs) et le cran de lissage n'existe pas non plus.
 //
-//   2. « une encre = une zone » : la palette REMPLACE le plafond arbitraire.
-//      Six encres, donc six quartiers. Pour un septième, on en rature un.
+//   2. « on trace TOUS les quartiers, pas que le sien — le taf, dating
+//      area, alerte dealers, no go » (13/08 au soir). Une zone n'est donc
+//      pas une identité mais une INTENTION, et elle n'a que deux sens :
+//      on y va, ou on l'évite. Ça a tué la règle « une encre = une zone »
+//      (six ne suffisent plus) et ça donne enfin aux zones un usage réel —
+//      ce que le panel réclamait : « j'évite » retire des résultats.
+//
+// ⚠ LA RÈGLE N°1 DEVIENT NON NÉGOCIABLE À CAUSE DE ÇA. Une zone « alerte »
+// ou « no go » est un jugement porté sur un bout de ville. Dans un carnet
+// privé, c'est une note personnelle, et ça ne regarde personne. Partagé,
+// agrégé ou synchronisé, ça devient une carte des « quartiers dangereux » —
+// ce qui n'est ni le produit (« un carnet, pas un mur », cadrage du 13/08),
+// ni tenable juridiquement. Donc : les zones ne quittent pas l'appareil, ne
+// se partagent pas, ne s'agrègent jamais, et n'influencent JAMAIS ce que
+// voit quelqu'un d'autre. Ce fichier ne contient aucun chemin de sortie.
 //
 // Et une exigence du panel du 13/08 (PANEL_QUARTIERS_2026-08-13.md) : une
 // zone qui ne sert à rien n'est qu'un dessin. `dansLaZone()` est donc écrite
@@ -32,10 +45,19 @@ export interface PointZone {
   dur?: boolean
 }
 
+// LE SENS D'UNE ZONE (Ersan, 13/08 : « on trace tous les quartiers, pas que
+// le sien — genre le taf, dating area, alerte dealers, no go »). Une zone
+// n'est plus une identité, c'est une INTENTION, et elle n'a que deux sens :
+// on y va, ou on l'évite. Deux états valent mieux qu'un catalogue de
+// catégories : personne ne range ses habitudes dans les cases d'un autre.
+export type SensZone = 'vers' | 'contre'
+
 export interface Quartier {
   id: string
   /** le mot, écrit (ou composé en lettres) par un humain — jamais par l'app */
   nom: string
+  /** on y va (« le taf », « mon quartier ») ou on l'évite (« jamais ici ») */
+  sens: SensZone
   /** l'identifiant d'encre (voir ENCRES), pas une valeur hexadécimale */
   encre: EncreId
   points: PointZone[]
@@ -59,13 +81,19 @@ export const ENCRES = [
 
 export type EncreId = (typeof ENCRES)[number]['id']
 
-/** le plafond n'est pas un nombre inventé : c'est la palette elle-même */
-export const CAP_ZONES = ENCRES.length
+// ⚠ La règle « une encre = une zone » est TOMBÉE le 13/08 au soir : dès
+// qu'on trace le taf, le dating, ce qu'on évite et son quartier, six zones
+// ne suffisent plus. L'encre redevient une couleur qu'on choisit (elle peut
+// se répéter — c'est le MOT qui distingue), et le plafond redevient un
+// nombre : dix. Au-delà, la carte redevient un mur — et le cap n'est pas un
+// mur, on cure, comme les proches et les stickers.
+export const CAP_ZONES = 10
 
-/** la première encre encore libre — `null` quand la carte est pleine */
-export function encreLibre(zones: Pick<Quartier, 'encre'>[]): EncreId | null {
+/** l'encre proposée par défaut : la première encore libre, sinon la suivante
+    dans l'ordre du carnet (la répétition est permise, plus un blocage) */
+export function encreSuggeree(zones: Pick<Quartier, 'encre'>[]): EncreId {
   const prises = new Set(zones.map((z) => z.encre))
-  return ENCRES.find((e) => !prises.has(e.id))?.id ?? null
+  return ENCRES.find((e) => !prises.has(e.id))?.id ?? ENCRES[zones.length % ENCRES.length].id
 }
 
 // ── géométrie de base ───────────────────────────────────────────────
@@ -223,6 +251,42 @@ export function lieuxDeLaZone<T extends { lat: number; lng: number }>(
   points: PointZone[],
 ): T[] {
   return lieux.filter((l) => dansLaZone(l, points))
+}
+
+// ── les deux sens ne se filtrent PAS de la même façon ────────────────
+// « j'y vais » est un filtre qu'on ALLUME (« ce soir près du taf ») : il ne
+// s'applique que si on le demande, sinon avoir tracé son bureau réduirait
+// toutes les recherches à son bureau.
+// « j'évite » s'applique TOUJOURS, sans qu'on le redemande : quelqu'un qui
+// a entouré un endroit pour ne plus y aller ne veut pas qu'on le lui
+// propose un soir de fatigue. L'évitement gagne sur tout le reste.
+
+/** retire les lieux tombés dans une zone « j'évite » — appliqué en permanence */
+export function ecarterLesEvitees<T extends { lat: number; lng: number }>(
+  lieux: T[],
+  zones: Pick<Quartier, 'points' | 'sens'>[],
+): T[] {
+  const contre = zones.filter((z) => z.sens === 'contre')
+  if (!contre.length) return lieux
+  return lieux.filter((l) => !contre.some((z) => dansLaZone(l, z.points)))
+}
+
+/** le filtre complet : on écarte toujours, on restreint seulement si demandé */
+export function filtrerParZones<T extends { lat: number; lng: number }>(
+  lieux: T[],
+  zones: Pick<Quartier, 'points' | 'sens'>[],
+  dans?: Pick<Quartier, 'points'>,
+): T[] {
+  const restants = ecarterLesEvitees(lieux, zones)
+  return dans ? lieuxDeLaZone(restants, dans.points) : restants
+}
+
+/** dans quelles zones tombe ce point — pour dire « tu es dans : le taf » */
+export function zonesQuiContiennent<T extends Pick<Quartier, 'points'>>(
+  p: { lat: number; lng: number },
+  zones: T[],
+): T[] {
+  return zones.filter((z) => dansLaZone(p, z.points))
 }
 
 // ── la règle des 32 px (planche 6) ──────────────────────────────────

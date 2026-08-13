@@ -174,9 +174,50 @@ tracé » avec l'ancien en fantôme · le mot du quartier **composé en
 lettres-objets** (les perles sont sorties, 41 fichiers) · le « + » devient
 **la trousse**, l'écran des lettres **le sachet**.
 
+## L'ÉLARGISSEMENT — 13/08 au soir (Ersan)
+
+> « On trace TOUS les quartiers, pas que le sien ! Genre le taf, dating
+> area, alerte dealers, no go… »
+
+Une zone n'est plus une identité, c'est une **intention** — et elle n'a que
+**deux sens** : on y va (`vers`) ou on l'évite (`contre`). Deux états valent
+mieux qu'un catalogue de catégories : personne ne range ses habitudes dans
+les cases d'un autre. Planche 7 : `design/quartiers_sens_001.png`.
+
+- **le sens se dit par la MATIÈRE, jamais par la couleur** : plein (les rues
+  prennent l'encre) = j'y vais · **hachuré** (les rues restent grises) =
+  j'évite. Le rouge appartient à la cire, et une carte qui vire au rouge
+  devient une carte d'alerte. Bonus : plein/hachuré se distingue en noir et
+  blanc, et pour un œil qui confond les couleurs.
+- **« une encre = une zone » est morte** : dès qu'on trace le taf, le dating,
+  ce qu'on évite et son quartier, six ne suffisent plus. L'encre se répète,
+  **le mot distingue**, et le plafond redevient un nombre : **dix**.
+- **ça donne enfin l'usage que le panel réclamait** : « j'évite » **retire des
+  résultats**, toujours, sans rien allumer. « J'y vais » ne restreint que si
+  on l'allume (sinon avoir tracé son bureau réduirait tout à son bureau).
+  L'évitement gagne sur tout le reste. *(Déjà codé et testé :
+  `ecarterLesEvitees()`, `filtrerParZones()`, `zonesQuiContiennent()`.)*
+- **un garde-fou de plus** : une seule zone garde ses rues teintées à
+  l'écran — celle sous le centre ; les autres tombent à l'aplat.
+
+### ⚠ La règle n°1 devient non négociable, et c'est à cause de ça
+
+« Alerte dealers », « no go » : dans un carnet privé, c'est une note
+personnelle, ça ne regarde personne, et il n'y a **rien à modérer** — c'est
+la force de la règle n°1. Partagées, agrégées ou synchronisées, ces zones
+feraient de jeudi **une carte des « quartiers dangereux » dessinée par ses
+utilisateurs** : ce n'est ni le produit (« un carnet, pas un mur »), ni
+tenable — on parle de jugements portés sur des bouts de ville où des gens
+habitent. Donc, écrit en tête de `app/src/quartiers.ts` et non contournable :
+**les zones ne quittent pas l'appareil, ne se partagent pas, ne s'agrègent
+jamais, et n'influencent jamais ce que voit quelqu'un d'autre.**
+
 ### Ce qui reste à trancher
 
-- **le mot** : « la plume » et « le lasso », ou « la plume » et « le doigt » ;
+- **le mot des outils** : « la plume » et « le lasso », ou « la plume » et
+  « le doigt » ;
+- **le mot des deux sens** : « j'y vais / j'évite » (reco : deux verbes, ça
+  se comprend sans mode d'emploi), « pour moi / jamais », ou le tien ;
 - **les lettres** : trois familles ou quatre · majuscules seules ou aussi
   les minuscules · les accents (É È À) — se tranche quand on y sera, pas
   avant.
