@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · la voie A, prouvée</title>
+<link rel="stylesheet" href="../app/node_modules/maplibre-gl/dist/maplibre-gl.css">
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .duo{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;align-items:start}
+  .carte{height:520px;border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);overflow:hidden}
+  .lg{font-size:10.5px;letter-spacing:.06em;color:var(--encre-2);margin-bottom:7px}
+  .cap{font-size:11.5px;line-height:1.6;color:var(--encre-3);margin-top:9px}
+  .cap b{color:var(--encre-2);font-weight:400}
+  .maplibregl-ctrl-attrib{font-size:9px}
+  pre{background:var(--nuit-2);border:1px solid rgba(239,233,216,.12);border-radius:var(--rayon);
+      padding:14px 16px;font-size:11px;line-height:1.65;color:var(--encre-2);overflow-x:auto;
+      margin-top:14px}
+  pre b{color:var(--encre);font-weight:400}
+  .etat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--encre-3);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · banc d'essai</div>
+    <h1>La voie A, prouvée.</h1>
+  </div>
+  <div class="droite">13 août 2026 · vraie carte, vrai MapLibre, vrai <code>within</code><br>
+    fond : <b>CARTO Dark Matter vectoriel</b>, sans clé d'API<br>
+    zone : un cercle de 350 m autour de République
+  </div>
+</div>
+
+<p class="chapo">Le cadrage annonçait que <code>within</code> teinterait les rues ; j'ai montré que
+  c'était faux <b>sur le fond actuel</b> (raster). Voici la vérification de la sortie : le même
+  quartier, à gauche le style vectoriel nu, à droite <b>les couches de routes dupliquées et
+  filtrées par <code>within</code></b>. Si la droite est violette et la gauche grise, la voie A
+  n'est plus une hypothèse.</p>
+
+<div class="duo">
+  <div>
+    <div class="lg">le fond vectoriel, nu</div>
+    <div class="carte" id="m1"></div>
+    <div class="cap">CARTO <b>Dark Matter</b> — l'équivalent vectoriel exact du fond raster
+      d'aujourd'hui. Même palette, mêmes libellés, même densité.</div>
+  </div>
+  <div>
+    <div class="lg">les rues de la zone, teintées par <code>within</code></div>
+    <div class="carte" id="m2"></div>
+    <div class="cap">Seules les <b>routes</b> changent de couleur — pas le bâti, pas les libellés,
+      pas l'eau. C'est ce que la voie B ne savait pas faire.</div>
+  </div>
+</div>
+<div class="etat" id="etat">chargement…</div>
+
+<div class="pied" id="reco"></div>
+
+<script src="../app/node_modules/maplibre-gl/dist/maplibre-gl.js"></script>
+<script>
+const STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+const CENTRE = [2.3661, 48.8698]
+const ENCRE = '#8E76B4'
+
+// la zone : un cercle de 350 m, en GeoJSON (ce que rendra `enGeoJSON()`)
+const zone = (() => {
+  const R = 6371000, m = 350, n = 24
+  const dLat = (m / R) * (180 / Math.PI)
+  const dLng = dLat / Math.cos((CENTRE[1] * Math.PI) / 180)
+  const c = Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2
+    return [CENTRE[0] + Math.cos(a) * dLng, CENTRE[1] + Math.sin(a) * dLat]
+  })
+  c.push(c[0])
+  return { type: 'Polygon', coordinates: [c] }
+})()
+
+const faire = (id) => new maplibregl.Map({
+  container: id, style: STYLE, center: CENTRE, zoom: 14.6,
+  attributionControl: { compact: false }, interactive: false, preserveDrawingBuffer: true,
+})
+const m1 = faire('m1'), m2 = faire('m2')
+let teintees = 0, total = 0
+
+m2.on('load', () => {
+  const couches = m2.getStyle().layers
+  total = couches.length
+  // ── LA RECETTE : on duplique CHAQUE couche de route (les `_fill`, pas les
+  //    `_case` qui sont les liserés), on lui colle un filtre `within` et on
+  //    la repeint à l'encre. Rien d'autre ne bouge sur la carte.
+  for (const c of couches) {
+    if (c.type !== 'line' || !/^(road|tunnel|bridge)_/.test(c.id) || /_case/.test(c.id)) continue
+    const copie = JSON.parse(JSON.stringify(c))
+    copie.id = `zone-${c.id}`
+    copie.filter = c.filter ? ['all', c.filter, ['within', zone]] : ['within', zone]
+    copie.paint = { ...(c.paint || {}), 'line-color': ENCRE, 'line-opacity': 0.95 }
+    delete copie.source_layer
+    m2.addLayer({ ...copie, 'source-layer': c['source-layer'] })
+    teintees++
+  }
+  // l'aplat, qui prend le relais au dézoom (le fondu croisé de la planche 3)
+  m2.addSource('zone', { type: 'geojson', data: { type: 'Feature', geometry: zone, properties: {} } })
+  m2.addLayer({
+    id: 'zone-aplat', type: 'fill', source: 'zone',
+    paint: {
+      'fill-color': ENCRE,
+      'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13.5, 0.28, 14.5, 0.06],
+    },
+  })
+  m2.addLayer({
+    id: 'zone-contour', type: 'line', source: 'zone',
+    paint: { 'line-color': ENCRE, 'line-width': 1.4, 'line-opacity': 0.38 },
+  })
+  document.getElementById('etat').textContent =
+    `chargé · ${teintees} couches de routes dupliquées et filtrées sur ${total} couches du style`
+  document.getElementById('reco').innerHTML = `
+    <b>Ce que ce banc prouve.</b><br>
+    <span class="q">1.</span> <b>La voie A marche</b> : ${teintees} couches de routes dupliquées,
+    filtrées par <code>['within', polygone]</code> et repeintes à l'encre. Le bâti, l'eau et les
+    libellés ne bougent pas — c'est exactement ce que la note d'Ersan décrivait, et ce que le fond
+    raster ne pouvait pas faire.<br>
+    <span class="q">2.</span> <b>Le style est gratuit et sans clé</b> (CARTO Dark Matter). Même
+    palette que le fond d'aujourd'hui : le changement ne se verra pas, sauf en mieux (les libellés
+    deviennent nets à tous les zooms au lieu d'être des images).<br>
+    <span class="q">3.</span> <b>L'aplat cohabite</b> : une couche <code>fill</code> classique avec
+    l'opacité interpolée par zoom — le fondu croisé de la planche 3 tient en six lignes.<br>
+    <span class="q">→ ce qu'il reste à faire dans l'app</b> : remplacer <code>STYLE</code> dans
+    <code>Carte.tsx:129</code>, vérifier que les couches maison (poussière d'encre, lignes de
+    transport, bouches) se posent au bon étage, et regarder à l'œil sur le téléphone. Le reste du
+    code de la carte ne bouge pas.`
+})
+m2.on('error', (e) => {
+  document.getElementById('etat').textContent = 'ERREUR : ' + (e.error && e.error.message || e.type)
+})
+</script>
+</body>
+</html>

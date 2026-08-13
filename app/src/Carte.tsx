@@ -124,26 +124,24 @@ import { REPERES } from './reperes'
 import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
 
-// fond sombre gratuit (tuiles raster Carto dark) — style inline : aucun
-// fichier de config externe à charger, donc rien à bloquer.
-const STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-      ],
-      tileSize: 256,
-      // OSM pour le fond, les lignes et une partie des accès · Île-de-France
-      // Mobilités (Licence Ouverte v2.0) pour les accès et leur sens de passage
-      attribution: '© OpenStreetMap, © CARTO, © Île-de-France Mobilités',
-    },
-  },
-  layers: [{ id: 'carto', type: 'raster', source: 'carto' }],
-}
+// ── LE FOND PASSE EN VECTORIEL (13/08) ──────────────────────────────
+// Avant : les tuiles RASTER « dark_all » de CARTO — une image. Le chantier
+// des quartiers a buté dessus : aucune expression ne peut repeindre une
+// rue dans une image, donc le filtre `within` (qui doit teindre les rues
+// d'une zone dessinée) était impossible. Le style vectoriel « Dark Matter »
+// est l'équivalent EXACT du même fond, gratuit et sans clé d'API — même
+// palette, mêmes libellés, en plus nets (du texte, plus des pixels).
+//
+// Prouvé sur banc avant la bascule (design/quartiers_voieA_001.html) :
+// 26 couches de routes dupliquées et filtrées par `within` sur les 93 du
+// style, sans une erreur — seules les routes changent de couleur, ni le
+// bâti, ni l'eau, ni les libellés.
+//
+// L'attribution : le style porte la sienne (© CARTO, © OpenStreetMap) ;
+// on ajoute Île-de-France Mobilités (Licence Ouverte v2.0) pour les accès
+// et leur sens de passage, qui viennent de nos données à nous.
+const STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+const ATTRIBUTION_MAISON = '© Île-de-France Mobilités'
 // "moi" : la vraie position si la géoloc a répondu, sinon Place Vendôme
 const moi = (): [number, number] => [maPosition.lng, maPosition.lat]
 
@@ -1522,7 +1520,7 @@ export default function Carte({
     // bas-gauche, sous l'îlot, en 8 px (index.css .maplibregl-ctrl-attrib) :
     // elle tient sur une ligne, autant l'afficher tout le temps.
     carte.current.addControl(
-      new maplibregl.AttributionControl({ compact: false }),
+      new maplibregl.AttributionControl({ compact: false, customAttribution: ATTRIBUTION_MAISON }),
       'bottom-left',
     )
     // mini (récap) : pas de contrôles, on laisse la carte respirer
