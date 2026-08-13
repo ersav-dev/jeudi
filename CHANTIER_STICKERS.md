@@ -125,6 +125,23 @@ Le geste doit vivre là où on regarde, pas au fond des réglages :
 
 ---
 
+## Compléments de la note d'Ersan (13/08, analysée ensemble)
+
+- **La 3ᵉ entrée du « + »** : à côté de « un spot » et « un sticker », la
+  **note** (« quartier à éviter ! ») — elle fusionnera avec le chantier des
+  QUARTIERS (voir `CHANTIER_QUARTIERS.md`) : une zone dessinée peut porter
+  sa note manuscrite.
+- **Distance minimale de pose** : on ne colle pas un sticker libre à moins
+  de ~X m d'un monument (le mécanisme anti-empilement existe, l'appliquer
+  au moment de la POSE — refus doux, « trop près de la tour »).
+- **La modération, tranchée à deux niveaux** : tant que les stickers sont
+  STRICTEMENT PERSONNELS → zéro modération (la règle n°1, c'est sa force).
+  L'idée « % de ressemblance au monument » est écartée : les gens collent
+  leur photo de SOIRÉE sur la tour, pas une photo de la tour — un selfie
+  légitime serait refusé. Le jour du PARTAGE (v2) : détecteur NSFW **sur
+  l'appareil** (~3 Mo, rien n'est envoyé) + signaler/bloquer (en prod
+  depuis le 12/08). Jamais de comparaison au monument.
+
 ## Les questions à trancher AVANT de coder (Ersan)
 
 1. **Le bord du sticker v1** : déchiré automatique (reco) — ou tu veux
