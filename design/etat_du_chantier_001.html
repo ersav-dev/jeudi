@@ -259,12 +259,12 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.</p>
 <!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
 <h2>le contrôle — les faits, pas les impressions</h2>
 <div class="ctrl">
-  <div><div class="n">502</div><div class="q">tests verts, 36 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">505</div><div class="q">tests verts, 36 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de lint — <b>une première</b><br><code>eslint --max-warnings 0</code></div></div>
   <div><div class="n">20/20</div><div class="q">migrations appliquées<br><em>0020 collée ce soir</em></div></div>
   <div><div class="n">37<small style="font-size:13px"> k</small></div><div class="q">lignes dans <code>app/src</code><br>124 fichiers</div></div>
-  <div><div class="n gris">410</div><div class="q">stations de transport<br><em>+108 le 12 août</em></div></div>
+  <div><div class="n gris">708</div><div class="q">stations et arrêts sur la carte<br><em>600 avant le 12 août</em></div></div>
 </div>
 <p><b>Sondé dans la base ce soir, table par table.</b> <code>signalements</code>,
 <code>blocages</code> et <code>push_abonnements</code> répondent toutes les trois :
@@ -1012,10 +1012,13 @@ demander ; une relecture attrape ce qu'on n'avait pas pensé du tout ; ton pouce
 attrape le reste. Il faut les trois.</div>
 
 <p class="pied">
-jeudi — état du chantier, 12 août 2026. Vérifié à la main le jour même : 502 tests
+jeudi — état du chantier, 12 août 2026, chiffres re-vérifiés le 13 : 505 tests
 verts sur 36 fichiers, 0 erreur de type, <b>0 erreur de lint (une première)</b>,
-19 migrations sur 20 sondées dans la base (0020 t'attend), 124 fichiers et
-37 014 lignes dans <code>app/src</code>, arbre git poussé, sauvegarde datée.<br>
+<b>20 migrations sur 20</b> sondées dans la base, 124 fichiers et
+37 262 lignes dans <code>app/src</code>, la prod répond et sert le nouveau
+service worker. <em>(Le 13 août a déjà commencé : le chantier « la ville
+entière » — musées, théâtres, jeux — vit dans l'arbre de travail, pas encore
+commité.)</em><br>
 Les planches : navbas_ilot_001 · transport_repos_001 · couleurs_lignes_001 ·
 monuments_echelle_001 · dictionnaire_carte_001 · atelier_grammaire_001 ·
 atelier_glyphes_001 · atelier_diamant_001.<br>
