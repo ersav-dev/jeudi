@@ -223,8 +223,10 @@ summary .sq{font-size:11.5px;opacity:.45;display:block;margin-top:2px;font-weigh
 
 <h1>où on en est</h1>
 <svg class="trace" viewBox="0 0 206 11" aria-hidden="true"><path d="M3 7.5c22-3.4 47-4.6 71-4.2 26 .5 41 2.9 62 3.3 21 .4 43-1.2 67-3.1"/></svg>
-<p class="sous">jeudi — l'état du chantier au 12 août 2026. Ce que l'app sait
-faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.</p>
+<p class="sous">jeudi — l'état du chantier au <b>13 août 2026</b>. Ce que l'app sait
+faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.
+<span style="opacity:.6">Tous les chiffres de cette page ont été mesurés le
+13 août, pas repris d'hier.</span></p>
 
 <div class="jauge">
   <div><div class="pct">74 <small>%</small></div></div>
@@ -253,6 +255,18 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.</p>
       confiance — les deux anneaux, le geste de juger, la lentille. C'est la moitié
       qui reste, et c'est toujours la plus importante.
     </div>
+    <div class="jl" style="margin-top:12px;opacity:.5;font-size:12px">
+      <b>13 août : la jauge ne bouge pas — et c'est voulu.</b> La journée a livré
+      trois choses réelles : <b>la ville entière</b> est commitée et <em>en
+      production</em> (27 types de lieux, leurs glyphes, le lexique — la carte ne
+      connaît plus seulement les bars et les restos), le bas d'écran est réparé sur
+      ton iPhone (la mention légale ne se pose plus sur les noms, la carte descend
+      jusqu'au bord), et l'écran d'ajout a son <b>crayon</b> vers l'écriture à la
+      main. Plus cinq planches de maquettes pour les <b>quartiers dessinés</b>.
+      Rien de tout ça n'est la boucle de confiance : c'est de la largeur, du
+      dessin et de la finition. <em>Une journée peut être bonne sans faire monter
+      le chiffre — sinon le chiffre ne veut plus rien dire.</em>
+    </div>
   </div>
 </div>
 
@@ -262,9 +276,10 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.</p>
   <div><div class="n">505</div><div class="q">tests verts, 36 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de lint — <b>une première</b><br><code>eslint --max-warnings 0</code></div></div>
-  <div><div class="n">20/20</div><div class="q">migrations appliquées<br><em>0020 collée ce soir</em></div></div>
-  <div><div class="n">37<small style="font-size:13px"> k</small></div><div class="q">lignes dans <code>app/src</code><br>124 fichiers</div></div>
+  <div><div class="n">20/20</div><div class="q">migrations appliquées<br><em>aucun SQL ne t'attend</em></div></div>
+  <div><div class="n">37,4<small style="font-size:13px"> k</small></div><div class="q">lignes dans <code>app/src</code><br>124 fichiers</div></div>
   <div><div class="n gris">708</div><div class="q">stations et arrêts sur la carte<br><em>600 avant le 12 août</em></div></div>
+  <div><div class="n">27</div><div class="q">types de lieux sur la carte<br><em>en production le 13 août</em></div></div>
 </div>
 <p><b>Sondé dans la base ce soir, table par table.</b> <code>signalements</code>,
 <code>blocages</code> et <code>push_abonnements</code> répondent toutes les trois :
@@ -400,6 +415,38 @@ sont mortes.</p>
     </ul>
   </div>
 
+  <div class="etape f">
+    <div class="quand">13 août</div>
+    <div class="tt">La ville s'élargit, le bas d'écran se répare</div>
+    <ul>
+      <li><b>la ville entière est en production</b> — 27 types de lieux avec leur
+        glyphe au trait (musée, théâtre, ciné, concert, bibliothèque, karaoké,
+        escape, bowling, billard, bar à jeux, sport, piscine, spa, boutique, parc,
+        marché, friche/tiers-lieu, thé, vin, glace…) et le lexique complet
+        FR→EN. Sept glyphes redessinés à ton œil : le micro Shure du karaoké, le
+        triangle du billard, la Mona Lisa abstraite, la caméra, l'arbre + banc du
+        parc, le lotus, le panier du marché. <em>Le lot traînait non commité depuis
+        le matin ; il est commité, poussé et publié.</em></li>
+      <li><b>deux bugs de bas d'écran, sur ton iPhone</b> — la mention légale
+        (« © OpenStreetMap… ») se posait <em>sur les noms des lieux</em> : elle
+        était calée au pixel près sur le carrousel. Elle descend dans le coin, en
+        8 px, sous l'îlot. Et la carte ne descendait pas jusqu'au bord : une
+        hauteur en trop écrasait le collage aux quatre bords — sur un iPhone en
+        plein écran, elle valait la « petite » hauteur, celle qui exclut le trait
+        d'accueil</li>
+      <li><b>le crayon de l'écran d'ajout</b> — en haut à droite, il déplie
+        l'écriture à la main et fait descendre l'écran dessus. Elle vivait tout en
+        bas, après les deux imports</li>
+      <li><b>les quartiers dessinés : cinq planches</b> (rien n'est codé) — deux
+        outils plutôt que quatre, six encres nommées où une encre = une zone, le
+        contour qui ne s'annonce qu'au doigt, la rature qui remplace la boîte de
+        dialogue, et l'atelier des lettres (41 caractères déjà sortis). Une
+        trouvaille au passage : le fond de carte est en <em>raster</em>, donc le
+        filtre annoncé pour teindre les rues ne peut pas fonctionner tel quel —
+        deux voies posées, la décision t'attend</li>
+    </ul>
+  </div>
+
   <div class="etape c">
     <div class="quand">à moitié</div>
     <div class="tt">La boucle de confiance</div>
@@ -408,7 +455,8 @@ sont mortes.</p>
       <li class="c">les jugements — <em>table posée, le <b>geste</b> de juger manque</em></li>
       <li class="c">la lentille « selon Karim » — <em>attend les deux au-dessus</em></li>
       <li class="c">l'enrichissement — <em>le SQL est écrit, il attend d'être collé</em></li>
-      <li class="c">les 4 glyphes — <em>vin, chope, thé, glace : à dessiner sur l'iPad</em></li>
+      <li>les 4 glyphes — <em>vin, chope, thé, glace : dessinés et en production le
+        13 août, avec les 23 autres (tes quatre choix d'atelier respectés)</em></li>
       <li class="c">le push — <em>codé et testé ; cinq gestes de ta main pour l'allumer</em></li>
     </ul>
   </div>
@@ -823,8 +871,9 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
  <em>aucun</em> chunk vendor Supabase séparé — la bibliothèque vit dans le chunk
  principal. Les ~175 ko annoncés depuis des jours ne correspondaient à rien.</td></tr>
 
-<tr><td>Vectoriser tes 4 glyphes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>tu dessines</td>
- <td>Contraintes fermées : viewBox 24, monoline 1,8, 4 tracés max, doit tenir à 18 px.</td></tr>
+<tr><td>Vectoriser tes 4 glyphes <b>— fait le 13 août</b></td><td class="mono" style="color:var(--sonnet)">agent</td><td>fait</td>
+ <td>Contraintes tenues : viewBox 24, monoline 1,8, 4 tracés max, lisible à 18 px. Livrés
+ avec les 27 types de « la ville entière » — vin, chope, thé, glace compris.</td></tr>
 
 <tr><td>Carte v2 — le contour dit le propriétaire</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Différé après le lancement, et c'est bien : plein / tirets / pointillé, spec écrite.</td></tr>
@@ -929,6 +978,13 @@ là coûte plus cher que d'attendre.</p>
     doigt, le « + » à deux choix, le catalogue de monuments (~18 gravures déjà prêtes)
     ou le monument libre, le cap, et le cloud. Une planche d'abord, puis une
     demi-journée de code.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les quartiers dessinés — 6 questions, toutes sur image</b>
+    <span><code>CHANTIER_QUARTIERS.md</code> + les cinq planches du 13 août. Le fond
+    de carte d'abord (le passer en vectoriel pour que <em>seules les rues</em> prennent
+    l'encre, ou garder l'image et accepter que la teinte déborde sur le bâti) ; puis
+    cinq ou six encres, l'aplat à 20 ou 28 %, la rature en appui long ou en glissé, le
+    cran de lissage, et les familles de lettres à sortir en entier. Tout est dessiné à
+    la vraie taille — il n'y a plus qu'à regarder et trancher.</span></div></div>
   <div class="k"><i class="case"></i><div><b>Le mot de marque de « bloquer »</b>
     <span>Le libellé à l'écran est provisoire. La piste du cadrage : « je ne veux plus
     le croiser ». C'est un mot de marque, il t'appartient.</span></div></div>
@@ -1012,17 +1068,19 @@ demander ; une relecture attrape ce qu'on n'avait pas pensé du tout ; ton pouce
 attrape le reste. Il faut les trois.</div>
 
 <p class="pied">
-jeudi — état du chantier, 12 août 2026, chiffres re-vérifiés le 13 : 505 tests
-verts sur 36 fichiers, 0 erreur de type, <b>0 erreur de lint (une première)</b>,
+jeudi — état du chantier, <b>13 août 2026</b>, tout mesuré le jour même :
+505 tests verts sur 36 fichiers, 0 erreur de type, <b>0 erreur de lint</b>,
 <b>20 migrations sur 20</b> sondées dans la base, 124 fichiers et
-37 262 lignes dans <code>app/src</code>, la prod répond et sert le nouveau
-service worker. <em>(Le 13 août a déjà commencé : le chantier « la ville
-entière » — musées, théâtres, jeux — vit dans l'arbre de travail, pas encore
-commité.)</em><br>
+37 372 lignes dans <code>app/src</code>, 182 commits, la prod répond et sert
+le nouveau service worker. <em>(« La ville entière » n'est plus dans l'arbre
+de travail : commitée, poussée, publiée — vérifiée dans le paquet servi en
+production, pas seulement dans le dépôt.)</em><br>
 Les planches : navbas_ilot_001 · transport_repos_001 · couleurs_lignes_001 ·
 monuments_echelle_001 · dictionnaire_carte_001 · atelier_grammaire_001 ·
-atelier_glyphes_001 · atelier_diamant_001.<br>
-Les documents de fond : CONCEPT · DESIGN_AUDIT_GLOBAL · DESIGN_TRANSPORT_HIERARCHIE ·
+atelier_glyphes_001 · atelier_diamant_001 · <b>quartiers_outils_001 ·
+quartiers_encres_001 · quartiers_zone_001 · quartiers_edition_001 ·
+quartiers_lettres_001 · attribution_bas_001</b>.<br>
+Les documents de fond : CONCEPT · <b>CHANTIER_QUARTIERS</b> · DESIGN_AUDIT_GLOBAL · DESIGN_TRANSPORT_HIERARCHIE ·
 DESIGN_TIRAGE_CHEZ_UN_POTE · CHANTIER_STICKERS · CHANTIER_SIGNALER_BLOQUER ·
 CHANTIER_PUSH · PANEL_VELIB_BUS_2026-08-10 · AVANT_LANCEMENT · CHANTIER_PELLICULE ·
 CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
