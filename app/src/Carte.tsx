@@ -1517,8 +1517,12 @@ export default function Carte({
         majGrappesRef.current()
       }
     })
+    // la mention légale : PAS en mode compact (le ⓘ qu'il faut taper pour
+    // voir la mention). Depuis le 13/08 elle est descendue dans le coin
+    // bas-gauche, sous l'îlot, en 8 px (index.css .maplibregl-ctrl-attrib) :
+    // elle tient sur une ligne, autant l'afficher tout le temps.
     carte.current.addControl(
-      new maplibregl.AttributionControl({ compact: true }),
+      new maplibregl.AttributionControl({ compact: false }),
       'bottom-left',
     )
     // mini (récap) : pas de contrôles, on laisse la carte respirer

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — où se pose l'attribution (banc d'essai)</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1400px}
+  .bancs{display:flex;gap:34px;align-items:flex-start}
+  .tel{position:relative;width:375px;height:812px;overflow:hidden;border-radius:6px;
+       border:1px solid rgba(239,233,216,.18);background:#0d0d0d;--navbas-h:92px}
+  .tel .fond{position:absolute;inset:0;background-size:512px;background-position:-60px -120px;
+             background-image:url('_tuiles/d15_16599_11271.png');filter:brightness(1.05)}
+  .lg{font-size:11px;color:var(--encre-2);margin-bottom:8px;letter-spacing:.05em}
+  .lg b{color:var(--encre)}
+  .cap{font-size:11px;color:var(--encre-3);line-height:1.55;margin-top:10px;width:375px}
+  .cap b{color:var(--encre-2);font-weight:400}
+
+  /* ── les morceaux réels, copiés d'index.css ─────────────────── */
+  .carrousel{position:absolute;left:0;right:0;bottom:calc(var(--navbas-h) + var(--sab));
+    z-index:4;display:flex;gap:8px;overflow:hidden;padding:10px 12px;
+    background:linear-gradient(to top,rgba(20,18,14,.9),transparent)}
+  .card{flex:0 0 auto;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;
+    min-width:150px;max-width:190px;height:78px;background:#1B1813;border-radius:3px;
+    padding:8px 10px;box-shadow:0 1px 0 rgba(0,0,0,.5);opacity:.85}
+  .card .n{font-family:'Instrument Serif',serif;font-style:italic;font-size:17px;color:var(--encre)}
+  .card .d{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--encre-3)}
+  .ilot{position:absolute;left:50%;bottom:calc(8px + var(--sab));z-index:12;
+    transform:translateX(-50%) rotate(-.3deg);width:min(452px,calc(100% - 20px));
+    display:flex;justify-content:space-around;align-items:center;padding:4px 2px 2px;
+    border:solid transparent;border-width:10px 14px 8px;
+    border-image:url('../app/public/ilot-dechire.webp') 72 140 48 132 fill stretch;
+    filter:drop-shadow(0 8px 18px rgba(0,0,0,.5));font-size:21px;color:var(--encre)}
+  .ilot .i{opacity:.45;padding:8px 6px;font-size:19px}
+  .ilot .plus{width:50px;height:50px;border-radius:13px;background:#5d8dff;color:#0e1116;
+    font-size:30px;display:grid;place-items:center;transform:rotate(1.5deg);
+    box-shadow:0 3px 10px rgba(93,141,255,.32),0 1px 0 rgba(0,0,0,.5)}
+  .echelle{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--encre-2);
+    background:rgba(20,18,14,.55);border:1px solid rgba(239,233,216,.3);border-radius:3px;
+    padding:1px 6px;opacity:.85;width:82px;border-top-color:rgba(239,233,216,.3)}
+
+  /* AVANT — l'attribution empilée avec l'échelle, au ras du carrousel */
+  .avant .basgauche{position:absolute;left:12px;bottom:calc(var(--navbas-h) + var(--sab));
+    z-index:3;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:4px}
+  .avant .attrib{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(239,233,216,.72);
+    background:rgba(20,18,14,.5);padding:1px 5px;border-radius:3px;white-space:nowrap}
+
+  /* APRÈS — l'échelle reste où elle est, l'attribution descend dans le coin */
+  .apres .basgauche{position:absolute;left:12px;bottom:calc(var(--navbas-h) + var(--sab));
+    z-index:3;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:4px}
+  .apres .attrib{position:absolute;left:10px;bottom:2px;z-index:11;
+    font-family:'JetBrains Mono',monospace;font-size:8px;line-height:11px;
+    color:rgba(239,233,216,.42);background:none;white-space:nowrap;
+    text-shadow:0 0 3px rgba(13,13,13,.9),0 0 6px rgba(13,13,13,.7)}
+  .apres .attrib i{font-style:normal;opacity:.8}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div><div class="fil">jeudi · banc d'essai · 13 août</div>
+    <h1>Où se pose « © OpenStreetMap ».</h1></div>
+  <div class="droite">375 × 812, à l'échelle 1:1 · l'îlot est la VRAIE texture<br>
+    <b>sab</b> = <code style="font-size:11px">env(safe-area-inset-bottom)</code> —
+    la barre gestuelle du téléphone</div>
+</div>
+
+<div class="bancs" id="bancs"></div>
+<div class="pied" id="reco"></div>
+
+<script>
+const carte = (cls, sab, avec) => `
+  <div class="tel ${cls}" style="--sab:${sab}px">
+    <div class="fond"></div>
+    <div class="carrousel">
+      <div class="card"><span class="n">Frog Hop House</span><span class="d">87 m · 1 min</span></div>
+      <div class="card"><span class="n">Restaurant Le C…</span><span class="d">131 m</span></div>
+      <div class="card"><span class="n">Harry's New York</span><span class="d">180 m</span></div>
+    </div>
+    ${avec === 'avant' ? `
+      <div class="basgauche"><div class="attrib">© OpenStreetMap, © CARTO, © Île-de-France Mobilités</div>
+        <div class="echelle">100 m</div></div>` : `
+      <div class="basgauche"><div class="echelle">100 m</div></div>
+      <div class="attrib">© OpenStreetMap · © CARTO · <i>© Île-de-France Mobilités</i></div>`}
+    <div class="ilot"><span class="i">✧</span><span class="i">⌕</span><span class="i">▤</span>
+      <span class="plus">+</span><span class="i">‹›</span><span class="i">☰</span></div>
+  </div>`
+
+document.getElementById('bancs').innerHTML = [
+  ['AUJOURD\'HUI — sous les noms', 'avant', 'avant', 34,
+   "L'attribution est calée sur <code>--navbas-h</code>, exactement là où le carrousel commence : elle passe <b>derrière les étiquettes</b> et se mélange aux noms de lieux. C'est ce qu'Ersan voit."],
+  ['APRÈS — dans le coin, sous l\'îlot (barre gestuelle)', 'apres', 'apres', 34,
+   "Descendue à <b>2 px du bas, à gauche</b>, en 8 px, sans cadre, avec un halo d'ombre pour tenir sur n'importe quelle rue. Elle vit dans la bande libre <b>sous l'îlot</b>. L'échelle, elle, ne bouge pas."],
+  ['APRÈS — le cas dur : téléphone SANS barre gestuelle', 'apres', 'apres', 0,
+   "Ici la bande sous l'îlot ne fait plus que 8 px : l'attribution passe <b>sous le bord déchiré</b> (z-index 11 contre 12). Elle reste lisible parce que la déchirure est irrégulière, mais c'est le seul cas limite."],
+].map(([t, cls, avec, sab, c]) =>
+  `<div><div class="lg">${t}</div>${carte(cls, sab, avec)}<div class="cap">${c}</div></div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que ça change dans le code (une seule règle CSS, aucun composant touché).</b><br>
+  <span class="q">1.</span> L'attribution sort de la pile bas-gauche : <code>position:fixed ; left:10px ;
+  bottom:2px ; z-index:11</code> — elle passe <b>sous l'îlot</b> (z 12) et se pose dans le coin.<br>
+  <span class="q">2.</span> Elle maigrit : <b>8 px</b>, encre à 42 %, plus de cadre ni de fond — juste
+  une ombre portée pour rester lisible sur une rue claire. Les liens restent tapables (obligation OSM/CARTO).<br>
+  <span class="q">3.</span> <b>L'échelle ne bouge pas</b> : elle garde sa place au-dessus de la bande,
+  c'est un instrument de lecture, pas une mention légale.<br>
+  <span class="q">→ à trancher :</span> sur un téléphone sans barre gestuelle, la bande libre ne fait que
+  8 px et la mention passe sous la déchirure. Deux sorties possibles : on <b>remonte l'îlot de 6 px</b>
+  (il passerait de 8 à 14 px du bas — ça se voit à peine), ou on laisse tel quel et la mention se
+  cache un peu sur ces appareils-là. Dis-moi.`
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>
