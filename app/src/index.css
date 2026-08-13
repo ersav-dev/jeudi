@@ -3723,6 +3723,221 @@ button {
   pointer-events: none;
 }
 
+/* ── LES QUARTIERS DESSINÉS (13/08) ─────────────────────────────────
+   Le crayon d'entrée, le calque de tracé, et la fiche de la zone. Tout
+   en style « instrument » : filets, rayon 3 px, aucune couleur qui ne soit
+   pas une encre. */
+.quartier-crayon {
+  position: fixed;
+  right: 12px;
+  bottom: calc(var(--navbas-h) + 176px + env(safe-area-inset-bottom));
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.25);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.quartier-crayon:active {
+  color: var(--encre);
+  background: var(--nuit-3);
+}
+.quartier-msg {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--navbas-h) + 130px + env(safe-area-inset-bottom));
+  z-index: 6;
+  background: var(--encre);
+  color: var(--nuit);
+  font-size: 12px;
+  padding: 9px 14px;
+  border-radius: var(--rayon);
+  max-width: 88vw;
+  text-align: center;
+}
+/* le mot du quartier, posé sur la carte — écrit à la main, jamais un label */
+.quartier-mot {
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: rotate(-3.5deg);
+  paint-order: stroke;
+  -webkit-text-stroke: 3.5px rgba(10, 10, 10, 0.75);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.quartier-mot::selection {
+  background: none;
+}
+
+/* le mode dessin : il prend tout l'écran, la carte est gelée dessous */
+.dessin-quartier {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+.dessin-bandeau {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+  background: rgba(20, 18, 14, 0.9);
+  border-bottom: 1px solid rgba(239, 233, 216, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--encre-2);
+}
+.dessin-calque {
+  position: absolute;
+  inset: 0;
+  /* SANS ça, iOS prend le geste pour un scroll et le tracé se coupe */
+  touch-action: none;
+  cursor: crosshair;
+}
+.dessin-trace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.dessin-msg {
+  position: absolute;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%);
+  background: rgba(20, 18, 14, 0.9);
+  border: 1px solid rgba(239, 233, 216, 0.2);
+  border-radius: var(--rayon);
+  padding: 9px 13px;
+  font-size: 12px;
+  color: var(--encre-2);
+  max-width: 84vw;
+  text-align: center;
+}
+/* la fiche : elle se pose en bas, comme toutes les feuilles du carnet */
+.dessin-fiche {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--paper-2);
+  border-top: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon) var(--rayon) 0 0;
+  padding: 16px 18px calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: inkIn 150ms var(--pose) backwards;
+}
+.dessin-fiche .lbl {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+  margin-top: 12px;
+}
+.dessin-encres {
+  display: flex;
+  gap: 10px;
+}
+.dessin-encre {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  flex: none;
+}
+.dessin-encre.choisie {
+  box-shadow:
+    0 0 0 2px var(--paper-2),
+    0 0 0 3.5px var(--encre);
+}
+.dessin-mot {
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 26px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(239, 233, 216, 0.22);
+  color: var(--encre);
+  padding: 2px 0 6px;
+  width: 100%;
+}
+.dessin-crans {
+  display: flex;
+  gap: 7px;
+}
+.dessin-cran {
+  flex: 1;
+  min-height: 52px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.dessin-cran.choisi {
+  border-color: var(--encre);
+  background: var(--nuit-3);
+  color: var(--encre);
+}
+.dessin-cran .p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+.dessin-cran .m {
+  font-size: 9.5px;
+  color: var(--encre-3);
+  line-height: 1.2;
+  text-align: center;
+}
+.dessin-coeur {
+  margin-top: 10px;
+  min-height: 44px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon);
+  color: var(--encre-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 13px;
+}
+.dessin-coeur.allume {
+  color: var(--encre);
+  border-color: var(--encre);
+}
+.dessin-coeur:disabled {
+  opacity: 0.35;
+}
+.dessin-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
 /* bandeau dégradé derrière l'entête en vue carte */
 .voile-haut {
   position: fixed;

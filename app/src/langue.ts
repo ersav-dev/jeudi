@@ -395,6 +395,23 @@ const EN: Record<string, string> = {
   'ou écris-en un à la main →': 'or write one by hand →',
   // le crayon en haut de l'écran d'ajout (13/08)
   'écrire un spot à la main': 'write a spot by hand',
+  // les quartiers dessinés (13/08)
+  'entoure ton quartier au doigt': 'draw around your neighbourhood',
+  'ta zone est prête.': 'your zone is ready.',
+  'il faut entourer un vrai bout de ville — recommence.':
+    'you need to circle a real piece of the city — try again.',
+  'l’encre': 'the ink',
+  'le mot': 'the word',
+  'mon quartier': 'my neighbourhood',
+  'me recommander ici ?': 'send me here?',
+  'jamais ici': 'never here',
+  'rarement': 'rarely',
+  'un peu moins': 'a bit less',
+  "comme d'habitude": 'as usual',
+  'en priorité': 'first',
+  'dessiner un quartier': 'draw a neighbourhood',
+  'la carte est pleine — rature une zone d’abord.':
+    'the map is full — cross out a zone first.',
   'un spot, écrit à la main — le nom, où c’est, et ce que c’est.':
     'one spot, written by hand — the name, where it is, what it is.',
   'le nom du spot': 'the name of the spot',

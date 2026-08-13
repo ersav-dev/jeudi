@@ -121,8 +121,14 @@ import {
 import { MONUMENTS } from './monuments'
 import { lireStickers, revoquerStickers, SEUIL_PHOTO } from './mesMonuments'
 import { REPERES } from './reperes'
-import { IAnneau, IBallon } from './icones'
+import { IAnneau, IBallon, ICrayon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
+// ── les quartiers dessinés (13/08) : la zone tracée au doigt qui teint les
+// rues. Le rendu vit dans quartiersCarte.ts, le geste dans DessinQuartier.
+import type { Quartier } from './quartiers'
+import { lireQuartiers, placeLibre } from './mesQuartiers'
+import { poserQuartiersSurCarte, poserEtiquettes, retirerEtiquettes } from './quartiersCarte'
+import DessinQuartier from './DessinQuartier'
 
 // ── LE FOND PASSE EN VECTORIEL (13/08) ──────────────────────────────
 // Avant : les tuiles RASTER « dark_all » de CARTO — une image. Le chantier
@@ -299,6 +305,28 @@ export default function Carte({
   // le panneau re-rendent tout seuls quand une marque bouge.
   const [marques, setMarques] = useState<Record<string, string>>(() => lireMarques())
   // le panneau de marque, ancré au point (appui long) — null = fermé
+  // ── les quartiers dessinés ────────────────────────────────────────
+  // Les zones vivent en LOCAL, scopées par compte (mesQuartiers.ts). On les
+  // repose sur la carte à chaque changement — et au premier style chargé,
+  // parce que les couches de routes n'existent pas avant.
+  const [quartiers, setQuartiers] = useState<Quartier[]>([])
+  const [dessine, setDessine] = useState(false)
+  const [msgQuartier, setMsgQuartier] = useState<string | null>(null)
+  useEffect(() => {
+    void lireQuartiers().then(setQuartiers)
+    return () => retirerEtiquettes()
+  }, [])
+  useEffect(() => {
+    const m = carte.current
+    if (!m || mini) return
+    const poser = () => {
+      poserQuartiersSurCarte(m, quartiers)
+      poserEtiquettes(m, quartiers)
+    }
+    if (m.isStyleLoaded()) poser()
+    else m.once('load', poser)
+  }, [quartiers, mini])
+
   const [panneauMarque, setPanneauMarque] = useState<{ id: string; x: number; y: number } | null>(
     null,
   )
@@ -1960,6 +1988,41 @@ export default function Carte({
   return (
     <>
       <div ref={conteneur} className={`carte${lieuActif ? ' carte-sel' : ''}`} />
+
+      {/* ── DESSINER UN QUARTIER (13/08) : l'entrée provisoire, sur la carte
+          elle-même. Elle rejoindra la trousse (le « + » à quatre choix) quand
+          la feuille des stickers sera écrite — d'ici là, c'est ici qu'on
+          teste. Le bouton s'efface pendant le dessin et quand un lieu a la
+          parole (deux voix en bas d'écran n'en font aucune). */}
+      {!dessine && !lieuActif && (
+        <button
+          className="quartier-crayon"
+          aria-label={t('dessiner un quartier')}
+          title={t('dessiner un quartier')}
+          onClick={() => {
+            if (!placeLibre(quartiers)) {
+              // le cap n'est pas un mur : on cure. Le dire ici, pas ailleurs.
+              setMsgQuartier(t('la carte est pleine — rature une zone d’abord.'))
+              window.setTimeout(() => setMsgQuartier(null), 2600)
+              return
+            }
+            setDessine(true)
+          }}
+        >
+          <ICrayon taille={20} />
+        </button>
+      )}
+      {msgQuartier && <p className="quartier-msg mono">{msgQuartier}</p>}
+      {dessine && (
+        <DessinQuartier
+          carteRef={carte}
+          zones={quartiers}
+          onFini={(pose) => {
+            setDessine(false)
+            if (pose) setQuartiers((z) => [...z, pose])
+          }}
+        />
+      )}
 
       {/* ── §1.9 LA LIGNE-BOUSSOLE : elle ne dit QUE ce que la carte ne
           montre pas (le hors-champ, le pas-encore-lu), elle nomme une chose

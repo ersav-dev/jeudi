@@ -262,6 +262,14 @@ interface JeudiDB extends DBSchema {
     key: string
     value: { blob: Blob; ajoute: string }
   }
+  /** LES QUARTIERS DESSINÉS (v3, 13/08) — tes zones tracées au doigt. Clé =
+   *  `<uid>:<id>`. STRICTEMENT LOCAL, comme les stickers : une zone dit où tu
+   *  vas et où tu ne vas pas, ça ne monte nulle part. Voir quartiers.ts pour
+   *  la géométrie et mesQuartiers.ts pour le rangement. */
+  quartiers: {
+    key: string
+    value: unknown
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<JeudiDB>> | null = null
@@ -273,7 +281,7 @@ export function getDB() {
     // `ancienne` distingue l'install neuve (0) de la base déjà en place (1) :
     // sans ce garde-fou, createObjectStore('lieux') relancerait sur une base
     // existante et l'ouverture échouerait, ce qui casserait TOUTE l'app.
-    dbPromise = openDB<JeudiDB>('jeudi', 2, {
+    dbPromise = openDB<JeudiDB>('jeudi', 3, {
       upgrade(db, ancienne) {
         if (ancienne < 1) {
           const lieux = db.createObjectStore('lieux', { keyPath: 'id' })
@@ -281,6 +289,9 @@ export function getDB() {
           db.createObjectStore('profil')
         }
         if (ancienne < 2) db.createObjectStore('stickers')
+        // v3 (13/08) : les quartiers dessinés. Additive elle aussi : on ne
+        // touche à rien de ce qui existe, donc rien à perdre.
+        if (ancienne < 3) db.createObjectStore('quartiers')
       },
     })
   }
