@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 4 : éditer, raturer</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .bloc{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:26px 0;
+        border-top:1px solid rgba(239,233,216,.12)}
+  .bloc .no{font-size:11px;letter-spacing:.14em;color:var(--encre-3)}
+  .bloc h3{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+           font-size:27px;line-height:1.05;margin:4px 0 12px}
+  .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
+  .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .frames{display:grid;grid-template-columns:repeat(3,300px);gap:16px}
+  .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
+  .dit{width:300px}
+  .verdict{margin-top:14px}
+
+  /* la fiche de la zone (bottom-sheet) */
+  .fiche{width:300px;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);
+         border-radius:var(--rayon);box-shadow:0 1px 0 rgba(0,0,0,.5);padding:16px 16px 8px;position:relative}
+  .fiche::after{content:'';position:absolute;top:0;right:0;width:16px;height:16px;
+                background:linear-gradient(225deg,var(--nuit) 50%,transparent 50%)}
+  .f-tete{display:flex;align-items:center;gap:10px}
+  .f-past{width:22px;height:22px;border-radius:50%;background:#8E76B4;flex:none}
+  .f-nom{font-family:'Caveat',cursive;font-weight:600;font-size:28px;line-height:1}
+  .f-meta{font-size:10.5px;color:var(--encre-3);margin:8px 0 14px}
+  .f-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;
+           border-top:1px solid rgba(239,233,216,.09);padding:11px 0}
+  .lb{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--encre-3);flex:none}
+  .mini{display:flex;gap:7px}
+  .mini i{width:20px;height:20px;border-radius:50%;display:block}
+  .mini i.on{box-shadow:0 0 0 1.5px var(--nuit-2),0 0 0 3px var(--encre)}
+  .mini i.pris{opacity:.3}
+  .cran{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--encre-3)}
+  .cran .b{width:54px;height:1px;background:rgba(239,233,216,.3);position:relative}
+  .cran .b::after{content:'';position:absolute;right:0;top:-3.5px;width:8px;height:8px;
+                  border-radius:50%;background:var(--encre)}
+  .f-act{border-top:1px solid rgba(239,233,216,.09);padding:13px 0;font-family:'Instrument Serif',serif;
+         font-style:italic;font-size:19px}
+  .f-act span{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:10.5px;
+              color:var(--encre-3);display:block;margin-top:2px}
+  .f-act.cire{color:var(--cire)}
+  .toast{position:absolute;left:12px;right:12px;bottom:12px;background:var(--encre);color:var(--nuit);
+         font-size:11px;padding:9px 12px;border-radius:var(--rayon);display:flex;
+         justify-content:space-between;align-items:center}
+  .toast b{font-weight:400}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 4 sur 4</div>
+    <h1>Éditer : refaire, raturer.</h1>
+  </div>
+  <div class="droite">13 août 2026 · maquette — rien n'est codé<br>
+    la question du cadrage : <b>retoucher, ou redessiner ?</b><br>
+    réponse de la planche : <b>redessiner en v1</b>, poignées en v2
+  </div>
+</div>
+
+<p class="chapo">Le cadrage prévient que l'édition par poignées est « le morceau le plus dur », et propose
+  de la reporter. Cette planche le vérifie <b>par le geste</b> — et elle règle surtout la vraie question
+  laissée ouverte : <b>comment on efface</b>. Un carnet ne connaît pas la boîte de dialogue
+  « êtes-vous sûr ? ». Il connaît la rature : un trait qu'on tire, qu'on peut arrêter, et qui se voit.</p>
+
+<div id="planche"></div>
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const V = [310,288], W = 300, H = 348, E = '#8E76B4'
+const MOT = { nom:'mon quartier', nx:462, ny:506, nt:24 }
+const f = (etape, html, dit) => `<div><div class="et">${etape}</div>${html}<div class="dit">${dit}</div></div>`
+const C = (o) => cadre({ vue:V, w:W, h:H, ...o })
+// deux poignées trop proches : le cas d'échec de l'édition au doigt
+const SERRE = [...QUARTIER.slice(0,4), [560,492], ...QUARTIER.slice(4)]
+const RATURE = (t) => `M 348 572 L ${348 + 214*t} ${572 - 206*t}`
+
+const FICHE = `<div class="fiche">
+  <div class="f-tete"><span class="f-past"></span><span class="f-nom">mon quartier</span></div>
+  <div class="f-meta">dessiné le 13 août · 12 points · 4 spots dedans</div>
+  <div class="f-ligne"><span class="lb">l'encre</span>
+    <span class="mini">${ENCRES.map((e,i)=>`<i class="${i===2?'on':''} ${i===1||i===3?'pris':''}" style="background:${e.c}"></i>`).join('')}</span></div>
+  <div class="f-ligne"><span class="lb">le tracé</span>
+    <span class="cran">souple<span class="b"></span>net</span></div>
+  <div class="f-act">refaire le tracé<span>l'ancien reste en guide</span></div>
+  <div class="f-act cire">raturer la zone<span>appui long — le trait se tire</span></div>
+</div>`
+
+const BLOCS = [
+{
+  no:'entrée', nom:'La fiche<br>de la zone', tampon:['t-garde','une seule porte'],
+  lignes:[
+    ['le geste',"un tap sur la zone (n'importe où dedans) ouvre sa fiche."],
+    ['ce qu\'on y fait',"changer l'encre, changer le mot, régler le cran de lissage, refaire, raturer."],
+    ['ce qu\'on n\'y fait pas',"déplacer la zone (un glissé sur la carte, c'est un pan — jamais un déplacement)."],
+  ],
+  frames:[
+    f('① tap dans la zone', C({ zones:[{c:E, teinte:true, trait:2.2, vif:true, ...MOT}], doigt:[440,470] }),
+      "Le tap tombe dans la zone : <b>pas de poignée à viser</b>, la cible fait tout le quartier."),
+    f('② la fiche se pose', FICHE,
+      "Le mot en Caveat (c'est toi qui l'as écrit), l'encre, le cran de lissage — et les deux seules actions."),
+    f('③ le cran de lissage', C({ zones:[{c:'rgba(239,233,216,.4)', k:'brut', seed:7, fantome:true},
+        {c:E, teinte:true, trait:2.2, vif:true}] }),
+      "« souple » garde le tremblé (en clair), « net » le range. <b>C'est ici que vit la forme libre</b> — un réglage, pas un outil."),
+  ],
+},
+{
+  no:'v1 · corriger', nom:'Refaire<br>le tracé', tampon:['t-garde','gardé pour la v1'],
+  lignes:[
+    ['le geste',"« refaire le tracé » → l'ancienne zone passe en fantôme et on redessine par-dessus."],
+    ['ce qu\'on perd',"le tracé, rien d'autre : le mot, l'encre, la note et la date restent."],
+    ['pourquoi',"redessiner une forme prend 3 secondes. Réparer douze poignées au pouce en prend trente."],
+  ],
+  frames:[
+    f("① l'ancien passe en fantôme", C({ bandeau:'redessine ta zone',
+        zones:[{c:E, fantome:true, trait:2}] }),
+      "Le contour d'avant reste en pointillé : c'est un <b>calque de guidage</b>, pas une zone."),
+    f('② on retrace par-dessus', C({ zones:[{c:E, fantome:true, trait:2},
+        {c:E, part:.5, doigtSuit:true, seed:21}] }),
+      "Le doigt suit à peu près l'ancien bord et <b>mord au bon endroit</b> — c'est tout l'intérêt du guide."),
+    f('③ la nouvelle prend la place', C({ zones:[{c:E, pts:QUARTIER.map(([x,y],i)=>i>4&&i<9?[x+26,y+16]:[x,y]),
+        teinte:true, trait:2.2, vif:true, ...MOT}] }),
+      "Même encre, même mot, même note. <b>Seul le tracé a changé</b> — et Oberkampf est passé dedans."),
+  ],
+},
+{
+  no:'v1 · effacer', nom:'La rature', tampon:['t-garde','la suppression du carnet'],
+  lignes:[
+    ['le geste',"appui long sur « raturer » : le trait de cire se tire pendant qu'on appuie."],
+    ['la sécurité',"on lâche avant la fin → le trait se rétracte. Aucune modale, aucun « êtes-vous sûr ? »."],
+    ['après',"la zone part en 150 ms (--pose) et son encre <b>redevient libre</b> dans la palette."],
+  ],
+  frames:[
+    f("① on appuie — le trait se tire", C({ zones:[{c:E, teinte:true, trait:2.2, vif:true, ...MOT, rature:RATURE(.55)}],
+        doigt:[452,660], doigtOpt:{r:26} }),
+      "Le trait de <b>cire</b> traverse la zone à la vitesse du doigt qui tient. On voit ce qu'on est en train de faire."),
+    f('② on lâche trop tôt', C({ zones:[{c:E, teinte:true, trait:2.2, vif:true, ...MOT, rature:RATURE(.18)}] }),
+      "Le trait <b>se rétracte</b> et la zone reste. Le geste est réversible tant qu'il n'est pas fini."),
+    f('③ tenu jusqu\'au bout', C({ zones:[], bas:`<div class="toast"><span>raturé — <b>« mon quartier »</b></span><b>annuler</b></div>` }),
+      "La zone s'en va. Le <b>bandeau d'annulation</b> reste quelques secondes : c'est le vrai filet, pas la modale."),
+  ],
+},
+{
+  no:'v2', nom:'Les poignées', tampon:['t-second','v2 — et sous condition'],
+  lignes:[
+    ['le geste',"tap long sur la zone → les 12 poignées ; on en tire une, on en ajoute une sur un milieu."],
+    ['le mur',"12 poignées sur un contour de 700 m tombent parfois à 15 px l'une de l'autre. Le doigt en fait 44."],
+    ['la condition',"n'afficher que les poignées <b>écartées d'au moins 32 px à l'écran</b> — les autres se fondent, et réapparaissent en zoomant."],
+  ],
+  frames:[
+    f('① les poignées apparaissent', C({ zones:[{c:E, teinte:true, trait:2.2, vif:true, poignees:true, milieux:true}] }),
+      "Pleines = les points du tracé. Creuses = les milieux, <b>tape pour ajouter un point</b>."),
+    f('② on en tire une', C({ zones:[{c:E, fantome:true, trait:1.6},
+        {c:E, pts:QUARTIER.map(([x,y],i)=>i===3?[x+26,y-8]:[x,y]), teinte:true, trait:2.2, vif:true, poignees:true, actif:3}],
+        doigt:[586,402], doigtOpt:{r:22} }),
+      "La forme suit. <b>Mais le doigt masque la poignée qu'il déplace</b> — on ne voit le résultat qu'en levant."),
+    f('③ le cas d\'échec', C({ zones:[{c:E, teinte:true, trait:2.2, vif:true, pts:SERRE, poignees:true}],
+        doigt:[560,490], doigtOpt:{r:22} }),
+      "Deux poignées à 15 px sous une pulpe de 44 px : <b>impossible de savoir laquelle on attrape</b>. C'est ça, le morceau dur."),
+  ],
+},
+]
+
+document.getElementById('planche').innerHTML = BLOCS.map((b) => `
+  <div class="bloc">
+    <div><div class="no">${b.no}</div><h3>${b.nom}</h3>
+      ${b.lignes.map((l) => `<div class="ligne"><i>${l[0]}</i>${l[1]}</div>`).join('')}
+      <div class="verdict"><span class="tampon ${b.tampon[0]}">${b.tampon[1]}</span></div></div>
+    <div class="frames">${b.frames.join('')}</div>
+  </div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que la planche dit — on ne retouche pas, on refait ; et on efface en raturant.</b><br>
+  <span class="q">1.</span> <b>Une seule porte : la fiche de la zone</b> (tap dedans). Elle porte l'encre,
+  le mot, le cran de lissage, « refaire », « raturer ». Rien n'est caché derrière un appui long.<br>
+  <span class="q">2.</span> <b>Refaire &gt; retoucher en v1</b> : l'ancien tracé sert de guide, et on ne perd
+  jamais le mot ni l'encre. Zéro nouveau composant à écrire — c'est le mode dessin, rejoué.<br>
+  <span class="q">3.</span> <b>La rature EST la confirmation.</b> Le trait de cire se tire pendant l'appui,
+  il se rétracte si on lâche — pas de modale, et l'irréversible garde sa couleur (la cire, comme partout ailleurs).<br>
+  <span class="q">4.</span> <b>Les poignées passent en v2</b>, et seulement avec la règle d'écartement
+  (32 px minimum à l'écran, sinon on ne saisit jamais celle qu'on vise).<br>
+  <span class="q">→ à trancher :</span> la rature s'obtient par un <b>appui long sur le bouton</b> (ce qui est
+  dessiné ici) ou par un <b>glissé du doigt en travers de la zone</b> — plus « carnet », mais invisible
+  pour qui ne le devine pas.`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

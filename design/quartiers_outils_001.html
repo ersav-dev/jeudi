@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 1 : les quatre outils</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .intro{display:grid;grid-template-columns:1fr 300px;gap:44px;align-items:start;margin-bottom:10px}
+  .feuille{background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+           box-shadow:0 1px 0 rgba(0,0,0,.5);overflow:hidden}
+  .fh{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);
+      padding:12px 14px 10px;border-bottom:1px solid rgba(239,233,216,.1)}
+  .fi{padding:11px 14px;border-bottom:1px solid rgba(239,233,216,.07);
+      font-family:'Instrument Serif',serif;font-style:italic;font-size:19px}
+  .fi:last-child{border-bottom:0}
+  .fi span{display:block;font-family:'JetBrains Mono',monospace;font-style:normal;
+           font-size:10.5px;color:var(--encre-3);margin-top:3px}
+  .fi.on{background:var(--nuit-3);box-shadow:inset 2px 0 0 #8E76B4}
+  .fpied{padding:10px 2px;font-size:10.5px;color:var(--encre-3);line-height:1.55}
+  .bloc{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:24px 0;
+        border-top:1px solid rgba(239,233,216,.12)}
+  .bloc .no{font-size:11px;letter-spacing:.14em;color:var(--encre-3)}
+  .bloc h3{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+           font-size:28px;line-height:1.05;margin:4px 0 12px}
+  .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
+  .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .bloc .verdict{margin-top:14px}
+  .frames{display:grid;grid-template-columns:repeat(4,272px);gap:14px}
+  .frames .dit{width:272px}
+  .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 1 sur 4</div>
+    <h1>Les quatre outils, au doigt.</h1>
+  </div>
+  <div class="droite">13 août 2026 · maquette — rien n'est codé<br>
+    fond : <b>les vraies tuiles de l'app</b> (CARTO dark, © OpenStreetMap)<br>
+    échelle <b>1:1</b> — 272 px de large = 272 px de téléphone, z15<br>
+    encre de démo : violet d'aniline
+  </div>
+</div>
+
+<div class="intro">
+  <div>
+    <p class="chapo">Le même quartier quatre fois : <b>République ↔ Oberkampf ↔ Parmentier</b>, celui
+      qu'on appelle « chez moi » sans savoir où il s'arrête. À chaque étape on regarde <b>le doigt</b>
+      (ce qu'on fait) et <b>l'encre</b> (ce qui reste). La reco du cadrage — « le lasso qui se lisse » —
+      est mise à l'épreuve, pas recopiée.</p>
+    <p class="chapo">Le doigt est dessiné à sa vraie taille : la pulpe fait ~44 px de diamètre à l'écran.
+      <b>Il cache ce qu'il touche</b> — c'est le juge de paix de cette planche.</p>
+  </div>
+  <div>
+    <div class="feuille">
+      <div class="fh">la porte d'entrée · le « + » de la bande</div>
+      <div class="fi">un spot<span>le chemin habituel</span></div>
+      <div class="fi">un sticker<span>une photo, n'importe où</span></div>
+      <div class="fi">une note<span>trois mots à un endroit</span></div>
+      <div class="fi on">un quartier<span>une zone, une encre, un mot</span></div>
+    </div>
+    <div class="fpied">le « + » à deux choix du chantier stickers en accueille quatre : c'est le même
+      verbe — <i>j'ajoute au carnet</i>.</div>
+  </div>
+</div>
+
+<div id="planche"></div>
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const V = [310, 288], W = 272, H = 348          // la fenêtre de travail (z15)
+const V14 = [176, 128]                          // la même zone, au dézoom (z14)
+const E = '#8E76B4'
+const f = (etape, html, dit) =>
+  `<div><div class="et">${etape}</div>${html}<div class="dit">${dit}</div></div>`
+const C = (o) => cadre({ vue: V, w: W, h: H, ...o })
+
+const BLOCS = [
+{
+  no:'outil 1', nom:'Le lasso<br>qui se lisse', tampon:['t-garde','gardé — le geste par défaut'],
+  lignes:[
+    ['le geste',"on entoure au doigt, comme au feutre. Un seul appui, jamais levé."],
+    ['au pouce',"le plus tolérant : le tremblé est absorbé après coup."],
+    ['le rendu',"une courbe. Ça ressemble à un quartier, pas à une parcelle."],
+    ['le coût',"~12 points gardés au lieu de 190."],
+  ],
+  frames:[
+    f('① la carte se fige', C({ bandeau:'dessine ta zone', doigt:[372,350] }),
+      "On entre par le « + ». La carte <b>ne bouge plus</b> : le doigt ne sert plus qu'à dessiner."),
+    f('② on trace', C({ zones:[{c:E, part:.55, doigtSuit:true, seed:7}] }),
+      "Le trait suit le doigt en <b>encre vive</b>. On longe le canal, on descend sur Oberkampf."),
+    f('③ on lève le doigt', C({ zones:[{c:E, part:.96, ferme:true, seed:7}] }),
+      "La zone <b>se referme toute seule</b> (le pointillé) : pas besoin de revenir au départ."),
+    f("④ l'encre se range", C({ zones:[{c:'rgba(239,233,216,.5)', k:'brut', seed:7, fantome:true},
+        {c:E, teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Le tremblé (en clair) se range : <b>190 points → 12</b>. Les rues de la zone prennent l'encre."),
+  ],
+},
+{
+  no:'outil 2', nom:'La plume', tampon:['t-hors','écartée — outil de souris'],
+  lignes:[
+    ['le geste',"tap, tap, tap… puis tap-glissé pour courber chaque segment."],
+    ['au pouce',"le doigt cache le point qu'il pose : on vise à l'aveugle, on corrige, on recommence."],
+    ['le rendu',"le plus net des quatre. Personne ne le verra : personne n'ira au bout."],
+    ['le coût',"~10 taps précis + 5 glissés dosés. Sur un banc, la nuit : non."],
+  ],
+  frames:[
+    f('① le premier point', C({ zones:[{c:E, k:'droit', pts:[[380,336]], ouvert:true, poignees:true, contour:false}],
+        doigt:[380,336] }),
+      "Un tap = un point d'ancrage. <b>Le doigt masque exactement l'endroit visé.</b>"),
+    f('② les suivants', C({ zones:[{c:E, k:'droit', pts:QUARTIER_PLUME.slice(0,3), ouvert:true, poignees:true, vif:true}],
+        doigt:[430,616] }),
+      "Chaque tap tire un segment droit. On <b>vise des carrefours</b> au lieu de suivre la ville."),
+    f('③ on courbe', C({ zones:[{c:E, k:'droit', pts:QUARTIER_PLUME.slice(0,3), ouvert:true, poignees:true, vif:true}],
+        doigt:[512,600], doigtOpt:{r:22},
+        sus:`<path d="M 556 372 Q 570 470, 556 570" fill="none" stroke="${E}" stroke-width="2.4" opacity=".95"/>
+             <line x1="556" y1="570" x2="512" y2="600" stroke="${E}" stroke-width="1.3" opacity=".75"/>
+             <circle cx="512" cy="600" r="4" fill="${E}"/>` }),
+      "Le tap-glissé sort une poignée de tangente : <b>Illustrator sur un téléphone</b>."),
+    f('④ on ferme', C({ zones:[{c:E, pts:QUARTIER_PLUME, teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Résultat impeccable… en 15 gestes précis. <b>Le tracé est juste, le geste est faux.</b>"),
+  ],
+},
+{
+  no:'outil 3', nom:'Les traits<br>droits', tampon:['t-second','gardé en second — « au cordeau »'],
+  lignes:[
+    ['le geste',"tap, tap, tap — rien à glisser, rien à doser."],
+    ['au pouce',"le plus simple des quatre, et le seul qui marche <b>à une main, debout</b>."],
+    ['le rendu',"anguleux : le quartier a l'air d'une parcelle de cadastre."],
+    ['le coût',"8 taps. C'est un mode de secours, pas le mode par défaut."],
+  ],
+  frames:[
+    f('① premier tap', C({ zones:[{c:E, k:'droit', pts:[[372,350]], ouvert:true, poignees:true, contour:false}],
+        doigt:[372,350] }),
+      "Même départ que la plume — mais <b>on ne devra plus jamais glisser</b>."),
+    f('② on tourne autour', C({ zones:[{c:E, k:'droit', pts:QUARTIER_DROIT.slice(0,5), ouvert:true, poignees:true, vif:true}],
+        doigt:[452,616] }),
+      "Le polygone se remplit tap après tap. Le point posé <b>reste visible</b> une fois le doigt levé."),
+    f('③ on referme', C({ zones:[{c:E, k:'droit', pts:QUARTIER_DROIT, ouvert:true, poignees:true, vif:true}],
+        doigt:[372,350], doigtOpt:{r:22} }),
+      "On retape le <b>premier point</b> (cible 44 px) — ou on lève : après 3 points, la zone se ferme seule."),
+    f('④ le résultat', C({ zones:[{c:E, k:'droit', pts:QUARTIER_DROIT, teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Lisible, honnête… et <b>raide</b>. Personne ne dessine son quartier à la règle."),
+  ],
+},
+{
+  no:'outil 4', nom:'La forme<br>libre', tampon:['t-hors','pas un outil — un cran'],
+  lignes:[
+    ['le geste',"exactement le même que le lasso : au doigt, aucune différence."],
+    ['au pouce',"identique — ce n'est donc pas un choix à faire porter à quelqu'un."],
+    ['le rendu',"le tremblé du poignet gardé tel quel : vivant de près, sale de loin."],
+    ['le coût',"190 points × 6 zones à stocker, reprojeter et redessiner à chaque mouvement."],
+  ],
+  frames:[
+    f('① le même tracé', C({ zones:[{c:E, part:.55, doigtSuit:true, seed:11}] }),
+      "<b>Rigoureusement le même geste</b> que l'outil 1. La différence est en aval, pas dans la main."),
+    f('② le tremblé gardé', C({ zones:[{c:E, k:'brut', seed:11, teinte:true, trait:2.2, vif:true}] }),
+      "De près c'est joli : ça <b>a l'air écrit</b>, le bord ondule comme un feutre."),
+    f('③ au dézoom (z14)', cadre({ z:14, vue:V14, w:W, h:H, noms:2,
+        zones:[{c:E, k:'brut', seed:11, aplat:.2, trait:2}] }),
+      "À l'échelle de la ville, l'ondulation devient du <b>bruit</b> : le bord bave, la forme perd son dessin."),
+    f('④ le même, lissé', cadre({ z:14, vue:V14, w:W, h:H, noms:2,
+        zones:[{c:E, aplat:.2, trait:2, nom:'mon quartier', nx:456, ny:546}] }),
+      "Lissé, la forme <b>tient à toutes les échelles</b>. Le tremblé n'était pas de l'âme, c'était du bruit."),
+  ],
+},
+]
+
+document.getElementById('planche').innerHTML = BLOCS.map((b) => `
+  <div class="bloc">
+    <div>
+      <div class="no">${b.no}</div><h3>${b.nom}</h3>
+      ${b.lignes.map((l) => `<div class="ligne"><i>${l[0]}</i>${l[1]}</div>`).join('')}
+      <div class="verdict"><span class="tampon ${b.tampon[0]}">${b.tampon[1]}</span></div>
+    </div>
+    <div class="frames">${b.frames.join('')}</div>
+  </div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que la planche dit — deux outils, pas quatre.</b><br>
+  <span class="q">1.</span> <b>Le lasso qui se lisse</b> est le geste par défaut : le seul qui s'apprend
+  sans qu'on l'explique, et le lissage lui donne après coup la propreté de la plume.<br>
+  <span class="q">2.</span> <b>La forme libre n'est pas un outil</b> : c'est le même geste, lissage à zéro.
+  Elle devient un <b>cran</b> (souple ↔ net) dans la fiche de la zone — on ne demande rien avant d'avoir vu.<br>
+  <span class="q">3.</span> <b>La plume est écartée</b> : son seul avantage — la précision — est déjà rendu
+  par les poignées, après coup, quand le doigt ne masque plus rien.<br>
+  <span class="q">4.</span> <b>Les traits droits restent</b> en second, sous un bouton « au cordeau » :
+  le mode qui marche debout dans le métro, à une main.<br>
+  <span class="q">→ à trancher :</span> est-ce qu'on montre le cran de lissage dès le premier tracé,
+  ou seulement dans la fiche de la zone ? (reco : la fiche)`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

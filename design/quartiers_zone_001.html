@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 3 : la zone sur la carte habitée</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .r1{display:grid;grid-template-columns:390px 390px 1fr;gap:26px;align-items:start}
+  .lg{font-size:10.5px;letter-spacing:.06em;color:var(--encre-2);margin-bottom:7px}
+  .lg b{color:var(--encre)}
+  .sous{font-size:11.5px;line-height:1.55;color:var(--encre-3);margin-top:9px;width:390px}
+  .sous b{color:var(--encre-2);font-weight:400}
+  .tech{border:1px solid rgba(239,233,216,.16);border-radius:var(--rayon);padding:16px 18px;
+        background:var(--nuit-2);box-shadow:0 1px 0 rgba(0,0,0,.5)}
+  .tech h4{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:22px;margin-bottom:8px}
+  .tech p{font-size:11.5px;line-height:1.6;color:var(--encre-2);margin-bottom:10px}
+  .tech p b{color:var(--encre);font-weight:400}
+  .tech .voie{border-left:1px solid rgba(239,233,216,.2);padding-left:12px;margin-bottom:10px}
+  .tech code{font-size:11px;color:var(--encre);background:rgba(239,233,216,.07);padding:1px 4px;border-radius:2px}
+  .r2{display:grid;grid-template-columns:440px 424px 240px;gap:26px;align-items:start}
+  .g4{display:grid;grid-template-columns:repeat(2,200px);gap:24px}
+  .g1{display:grid;gap:14px}
+  .cap{font-size:10.5px;color:var(--encre-3);margin-top:6px;line-height:1.5}
+  .cap b{color:var(--encre-2);font-weight:400}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 3 sur 4</div>
+    <h1>Une zone finie, sur une carte habitée.</h1>
+  </div>
+  <div class="droite">13 août 2026 · maquette — rien n'est codé<br>
+    tout est à l'échelle <b>1:1</b> · fond CARTO dark (© OpenStreetMap)<br>
+    encre : violet d'aniline · le mot : « mon quartier »
+  </div>
+</div>
+
+<div class="r1">
+  <div>
+    <div class="lg"><b>de près (z15)</b> — les rues prennent l'encre</div>
+    <div id="a"></div>
+    <div class="sous">Les spots, les plaques de station et les noms de rues continuent leur vie :
+      la zone <b>passe dessous</b>. On lit « je suis chez moi » avant d'avoir lu le mot —
+      c'est la teinte qui le dit, pas l'étiquette. Le mot, lui, est écrit à la main
+      (Caveat, réservée à l'humain), posé au centre optique, tourné de 3,5°.</div>
+  </div>
+  <div>
+    <div class="lg"><b>on recule (z14)</b> — la teinte s'éteint, l'aplat s'allume</div>
+    <div id="b"></div>
+    <div class="sous">Entre z14,5 et z13,5 la teinte des rues descend pendant que l'aplat monte :
+      un seul <b>fondu croisé</b>, jamais les deux à fond (ce serait une tache). Ici le moment exact
+      du passage — teinte à 50 %, aplat à 12 %. Le mot grandit un peu et reste lisible :
+      c'est lui qui porte la zone quand le détail disparaît.</div>
+  </div>
+  <div><div class="tech">
+    <h4>Le point dur : le fond est en raster.</h4>
+    <p>Le cadrage annonce que <code>within</code> teinte les rues « proprement ». C'est vrai
+      <b>sur des tuiles vectorielles</b> — or <code>Carte.tsx:129</code> charge
+      <code>dark_all</code> de CARTO en <b>raster</b> : une image. Aucun filtre d'expression
+      ne peut repeindre une rue dans une image.</p>
+    <div class="voie"><p><b>Voie A — passer le fond en vectoriel (reco).</b>
+      Le style gratuit « Dark Matter » de CARTO existe en vectoriel sans clé d'API
+      (vérifié le 13/08 : il expose bien <code>road_minor_fill</code>, <code>road_sec_fill</code>…).
+      On duplique ces couches avec un filtre <code>within</code> et l'encre — et <b>seules les rues</b>
+      changent de couleur. C'est exactement la note d'Ersan, sans compromis.</p></div>
+    <div class="voie"><p><b>Voie B — garder le raster.</b> Une <b>copie de la carte</b> découpée au
+      polygone (<code>clip-path</code>), éclaircie puis multipliée par l'encre :
+      <b>c'est ce que montrent ces images</b>. Ça marche, mais ça teinte aussi le bâti et les
+      libellés (regarde « Voûte du Temple »), et ça redessine les tuiles une deuxième fois.</p></div>
+    <p>L'aplat au dézoom, lui, ne pose aucun problème : une couche <code>fill</code> classique,
+      elle marche déjà sur le fond actuel.</p>
+    <p style="color:var(--encre-3)">→ à trancher : voie A (on change de fond, un chantier en soi)
+      ou voie B (on ne touche à rien, mais la teinte déborde des rues) ?</p>
+  </div>
+    <div class="lg" style="margin-top:24px">le contour : au repos, puis sous le doigt</div>
+    <div style="display:flex;gap:20px" id="ab"></div>
+    <div class="cap" style="width:100%">Au repos, la zone <b>n'est qu'une teinte</b> : le bord existe
+      (1,4 px à 38 %) mais il ne se fait pas remarquer — sinon on ajoute un trait de plus à une carte
+      qui en a déjà beaucoup. Sous le doigt il monte à <b>2,2 px pleine encre</b>, le temps du contact
+      plus 150 ms (--pose) : c'est le seul moment où on a besoin de savoir exactement où passe le bord.
+      Même règle au dézoom : l'aplat porte la zone, le contour ne se réveille qu'au toucher.</div>
+  </div>
+</div>
+
+<h2>toute la ville — trois zones se partagent le carnet</h2>
+<div class="r2">
+  <div>
+    <div id="c"></div>
+    <div class="cap">z13 · <b>trois zones, trois encres, trois mots.</b> Aucune ne se confond avec une autre
+      (une encre ne sert qu'une fois) et aucune ne masque la ville : à cette échelle, la carte de jeudi
+      reste une carte — <b>on y a juste posé ses habitudes</b>.</div>
+  </div>
+  <div>
+    <div class="lg">combien d'aplat, au juste ? (z14)</div>
+    <div class="g4" id="op"></div>
+    <div class="cap">Le cadrage dit « opacité 20 ». À 12 % la zone n'existe que par son contour ;
+      à 20 % elle tient tout juste (c'est le mot et le trait qui la portent) ; <b>à 28 % c'est la forme
+      elle-même qui se lit</b>, d'un coup d'œil, sans manger les rues ; à 36 % ça devient une tache.
+      <b>Reco : 28 %.</b> À trancher à l'œil, ici.</div>
+  </div>
+  <div>
+    <div class="lg">où se pose le mot</div>
+    <div class="g1" id="mot"></div>
+    <div class="cap"><b>b — posé, légèrement tourné</b> (reco) : c'est une écriture, pas un label.
+      À plat (a) ça redevient un libellé de carte ; accroché au bord (c) ça se fait manger par le contour.</div>
+  </div>
+</div>
+
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const E = '#8E76B4'
+const MOT = { nom:'mon quartier', nx:462, ny:506 }
+
+// A — de près, z15 : les rues teintées + le mot + la note en marge
+document.getElementById('a').innerHTML = cadre({ vue:[255,190], w:390, h:560,
+  zones:[{ c:E, teinte:true, trait:2.2, ...MOT, nt:26 }],
+  sus:`<text x="466" y="542" class="etq" transform="rotate(-3.5 466 542)"
+        style="font-size:17px;fill:rgba(239,233,216,.7)">— le mien depuis 2019</text>` })
+
+// B — on recule, z14 : le fondu croisé teinte↓ / aplat↑
+document.getElementById('b').innerHTML = cadre({ z:14, vue:[120,0], w:390, h:560, noms:1,
+  zones:[{ c:E, teinte:.5, aplat:.12, trait:2, ...MOT, nt:24 }] })
+
+// le contour au repos / sous le doigt (même fenêtre, à cheval sur le bord)
+document.getElementById('ab').innerHTML = [
+  ['au repos', {}, null],
+  ['sous le doigt', { vif:true, trait:2.2 }, [498,470]],
+].map(([n, o, d]) => `<div>${cadre({ vue:[424,376], w:280, h:212, noms:0,
+    zones:[{ c:E, teinte:true, ...o }], doigt:d, doigtOpt:{ r:22 } })}
+  <div class="cap">${n}</div></div>`).join('')
+
+// C — z13, les trois zones du carnet
+document.getElementById('c').innerHTML = cadre({ z:13, vue:[-272,-296], w:440, h:420, spots:false, plaques:false,
+  zones:[{ c:E, aplat:.28, trait:1.8, nom:'mon quartier', nx:452, ny:474, nt:19 },
+    ...AILLEURS.map((a) => ({ c:a.c, pts:a.pts, aplat:.28, trait:1.8, nom:a.nom, nx:a.nx, ny:a.ny, nt:19 }))] })
+
+// l'échelle d'opacité
+document.getElementById('op').innerHTML = [.12, .2, .28, .36].map((o) => `
+  <div>${cadre({ z:14, vue:[240,300], w:200, h:200, spots:false, plaques:false,
+      zones:[{ c:E, aplat:o, trait:2, nom:'mon quartier', nx:452, ny:474, nt:22 }] })}
+   <div class="cap">aplat ${Math.round(o*100)} %${o===.28?' — <b>reco</b>':''}</div></div>`).join('')
+
+// où se pose le mot
+document.getElementById('mot').innerHTML = [
+  ['a · à plat, au centre', { rot:0, nx:452, ny:474 }],
+  ['b · posé, tourné de 4,5°', { rot:-4.5, nx:452, ny:474 }],
+  ['c · dans la marge, au-dessus', { rot:-4.5, nx:452, ny:296 }],
+].map(([n, z]) => `<div>${cadre({ z:14, vue:[240,260], w:240, h:150, spots:false, plaques:false,
+    zones:[{ c:E, aplat:.28, trait:2, nom:'mon quartier', nt:22, ...z }] })}
+  <div class="cap">${n}</div></div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que la planche dit.</b><br>
+  <span class="q">1.</span> <b>La teinte des rues suffit à dire « chez moi »</b> — le mot n'est qu'une
+  signature. C'est pour ça qu'il est manuscrit et petit : s'il devait expliquer la zone, la zone serait ratée.<br>
+  <span class="q">2.</span> <b>Le fondu croisé</b> (teinte ↓ / aplat ↑ entre z14,5 et z13,5) évite la tache :
+  jamais les deux à pleine force en même temps.<br>
+  <span class="q">3.</span> <b>L'aplat : 28 % plutôt que 20 %.</b> À 20 % la zone tient encore, mais grâce
+  au contour et au mot ; à 28 % c'est sa forme qui se lit. Contour à 2 px, mot en Caveat qui grossit au dézoom.<br>
+  <span class="q">4.</span> <b>Trois zones cohabitent sans bruit</b> ; six (la palette entière) resterait
+  lisible parce que chacune a une encre unique.<br>
+  <span class="q">→ à trancher :</span> voie A (fond vectoriel, la teinte ne touche que les rues) ou
+  voie B (on garde le raster, la teinte déborde sur le bâti et les libellés) ?`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

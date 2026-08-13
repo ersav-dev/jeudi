@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 5 : l'atelier des lettres</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .intro{display:grid;grid-template-columns:1fr 340px;gap:44px;align-items:start}
+  .jeu{display:flex;flex-wrap:wrap;gap:9px;margin:2px 0 10px}
+  .jeu img{width:56px;height:56px;display:block}
+  .jeu.petit img{width:40px;height:40px}
+  .fam{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:6px}
+  .fam .t{font-family:'Instrument Serif',serif;font-style:italic;font-size:22px;margin-bottom:2px}
+  .fam .r{font-size:10.5px;color:var(--encre-3);line-height:1.5;margin-bottom:10px}
+  .fam .r b{color:var(--encre-2);font-weight:400}
+  .mot{display:flex;align-items:center}
+  .mot img{display:block}
+  .lg{font-size:10.5px;letter-spacing:.06em;color:var(--encre-2);margin:0 0 8px}
+  .cap{font-size:11px;color:var(--encre-3);line-height:1.55;margin-top:8px}
+  .cap b{color:var(--encre-2);font-weight:400}
+  .r3{display:grid;grid-template-columns:330px 390px 1fr;gap:26px;align-items:start;margin-top:6px}
+  .feuille{background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+           box-shadow:0 1px 0 rgba(0,0,0,.5);padding:16px;position:relative}
+  .feuille::before{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);
+                   width:34px;height:3px;background:rgba(239,233,216,.2);border-radius:2px}
+  .fh{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);margin:6px 0 12px}
+  .champ{border-bottom:1px solid rgba(239,233,216,.22);padding-bottom:10px;margin-bottom:12px;min-height:44px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1px solid rgba(239,233,216,.18);border-radius:var(--rayon);padding:7px 6px 6px;
+        display:flex;flex-direction:column;gap:5px;align-items:center;width:66px}
+  .chip.on{border-color:var(--encre);background:var(--nuit-3)}
+  .chip img{width:22px;height:22px;display:block}
+  .chip span{font-size:9px;color:var(--encre-3);letter-spacing:.04em}
+  .chip .l{display:flex;gap:2px}
+  .surcarte{position:absolute;transform-origin:center}
+  .tailles{display:flex;gap:22px;align-items:flex-end;margin-top:4px}
+  code{font-size:11px;color:var(--encre);background:rgba(239,233,216,.07);padding:1px 4px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 5</div>
+    <h1>L'atelier des lettres.</h1>
+  </div>
+  <div class="droite">13 août 2026 · maquette — <b>41 fichiers PNG déjà sortis</b><br>
+    un caractère = un fichier (<code>design/lettres/perles/A.png</code>…)<br>
+    fond transparent, 256 px (@2x) · générés par recette, pas à la main
+  </div>
+</div>
+
+<div class="intro">
+  <div>
+    <p class="chapo">Le nom d'un quartier ne s'écrit plus : il <b>se compose</b>. On pioche des lettres
+      dans un sachet et on les pose sur la carte — c'est le carnet qui se scrapbooke, exactement comme
+      les stickers. La conséquence est jolie : <b>personne n'écrit pareil</b>, deux « chez moi » ne se
+      ressemblent jamais.</p>
+    <p class="chapo">Première famille sortie en entier — <b>les perles</b> : 26 lettres, 10 chiffres,
+      5 signes. Chaque caractère est <b>un fichier PNG séparé</b>, à fond transparent, produit par une
+      recette (<code>_gen_lettre.html</code> + une boucle). Refaire une famille = relancer la boucle ;
+      corriger une lettre = corriger la recette, pas 41 images.</p>
+  </div>
+  <div>
+    <div class="lg">le sachet, en vrai (à la taille de pose)</div>
+    <div class="jeu petit" id="sachet"></div>
+    <div class="cap">Les signes suivent tes images : ♥ &amp; ! # et la perle jaune. Ils servent aux mots
+      qu'on n'écrit pas (« ♥ » pour le quartier qu'on aime, « ! » pour celui qu'on évite).</div>
+  </div>
+</div>
+
+<h2>1 · les perles — l'alphabet complet, en fichiers séparés</h2>
+<div class="jeu" id="alpha"></div>
+<div class="jeu" id="chiffres"></div>
+
+<h2>2 · les trois autres familles (échantillon — à sortir en entier quand tu auras tranché)</h2>
+<div class="fam" id="familles"></div>
+
+<h2>3 · comment on nomme un quartier</h2>
+<div class="r3">
+  <div>
+    <div class="feuille">
+      <div class="fh">la fiche de la zone — le mot</div>
+      <div class="champ"><div class="mot" id="champ-mot"></div></div>
+      <div class="lg" style="margin-bottom:8px">l'écriture</div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="cap">On tape au clavier, <b>ça se compose tout seul</b> — on ne choisit pas les lettres
+      une par une (24 taps pour « mon quartier », personne ne le ferait deux fois). Le seul choix,
+      c'est <b>la famille</b> : quatre pastilles, comme les encres.</div>
+  </div>
+  <div>
+    <div class="lg">de près (z15) — le mot posé sur la zone</div>
+    <div id="carte-pres"></div>
+    <div class="cap">Les perles sont <b>posées</b>, pas centrées au pixel : chacune tourne d'un ou deux
+      degrés, la ligne ondule légèrement. Une ombre de contact les décolle de la carte —
+      c'est un objet sur une page, pas un calque de texte.</div>
+  </div>
+  <div>
+    <div class="lg">au dézoom (z14) — et la limite de lisibilité</div>
+    <div id="carte-loin"></div>
+    <div class="tailles" id="tailles"></div>
+    <div class="cap">Sous <b>18 px de haut</b>, une perle n'est plus une lettre, c'est un caillou.
+      Donc le mot ne rétrécit jamais : au dézoom il <b>passe sur deux lignes</b>, comme un cachet posé
+      sur la zone, et il grandit par rapport à elle jusqu'à devenir l'objet qui la porte.</div>
+  </div>
+</div>
+
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const LET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const NUM = '0123456789'.split('')
+const SIG = [['coeur','♥'],['et','&'],['excl','!'],['diese','#'],['sourire','☺']]
+const fich = (c) => ({ '♥':'coeur','&':'et','!':'excl','#':'diese','☺':'sourire' }[c] || c.toUpperCase())
+const img = (f, c, h) => `<img src="lettres/${f}/${fich(c)}.png" style="height:${h}px;width:${h}px">`
+
+document.getElementById('alpha').innerHTML = LET.map((c) => img('perles', c, 56)).join('')
+document.getElementById('chiffres').innerHTML =
+  NUM.map((c) => img('perles', c, 56)).join('') +
+  SIG.map(([, c]) => img('perles', c, 56)).join('')
+document.getElementById('sachet').innerHTML =
+  [...'JEUDI'].map((c) => img('perles', c, 40)).join('') + SIG.map(([, c]) => img('perles', c, 40)).join('')
+
+// un mot composé : les perles sont POSÉES (rotation et hauteur qui respirent)
+const compose = (txt, h, f = 'perles', serre = -0.1) => {
+  let i = 0
+  return `<div class="mot">` + [...txt].map((c) => {
+    if (c === ' ') return `<span style="width:${h * .3}px;display:inline-block"></span>`
+    const r = [-2.5, 1.5, -1, 2, -1.8, .8][i++ % 6], d = [1, -1.5, .5, -.8, 1.2, 0][i % 6]
+    return `<img src="lettres/${f}/${fich(c)}.png" style="height:${h}px;width:${h}px;
+      margin-left:${h * serre}px;transform:rotate(${r}deg) translateY(${d}px)">`
+  }).join('') + `</div>`
+}
+
+// les familles : échantillon + recette
+const FAM = [
+  ['les perles', 'le cube blanc gravé — <b>Century Gothic</b> sur plastique. Neutre, lisible sur le sombre : la famille par défaut.', 'perles', 'JEUDI'],
+  ['les touches', "la machine à écrire — <b>Courier</b> sur une touche cerclée de métal. Sérieux, un peu administratif : le quartier qu'on subit.", 'touches', 'JEUDI'],
+  ['les découpées', "l'affiche massicotée — <b>Bernard Condensed</b> sur papier coloré. La seule famille qui apporte sa propre couleur : à surveiller face aux encres.", 'decoupees', 'JEUDI'],
+  ['les timbres', "le papier crème déchiré — <b>Rockwell</b>, bord irrégulier. La plus « carnet » des quatre.", 'timbres', 'JEUDI'],
+]
+document.getElementById('familles').innerHTML = FAM.map(([t, r, f, m]) =>
+  `<div><div class="t">${t}</div><div class="r">${r}</div>${compose(m, 52, f, f === 'decoupees' ? -0.02 : -0.08)}</div>`).join('')
+
+// la fiche : le mot composé + le choix de la famille
+document.getElementById('champ-mot').innerHTML = compose('MON QUARTIER', 30).replace('<div class="mot">', '').replace('</div>', '')
+document.getElementById('chips').innerHTML = FAM.map(([t, , f], i) =>
+  `<div class="chip ${i === 0 ? 'on' : ''}"><div class="l">${[...'JEU'].map((c) => img(f, c, 20)).join('')}</div>
+   <span>${t.replace('les ', '')}</span></div>`).join('')
+
+// sur la carte
+const E = '#8E76B4'
+const pose = (html, x, y, rot) =>
+  `<div class="surcarte" style="left:${x}px;top:${y}px;transform:translate(-50%,-50%) rotate(${rot}deg);
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))">${html}</div>`
+document.getElementById('carte-pres').innerHTML = cadre({ vue:[255,190], w:390, h:430, noms:2,
+  zones:[{ c:E, teinte:true }],
+  bas: pose(compose('MON QUARTIER', 24, 'perles', -0.17), 196, 288, -3) })
+// au dézoom le mot ne rétrécit pas : il passe sur deux lignes, comme un cachet
+document.getElementById('carte-loin').innerHTML = cadre({ z:14, vue:[168,120], w:390, h:300, noms:0,
+  zones:[{ c:E, aplat:.28 }],
+  bas: pose(`<div style="display:grid;gap:1px;justify-items:center">
+      ${compose('MON', 21, 'perles', -0.17)}${compose('QUARTIER', 21, 'perles', -0.17)}</div>`, 194, 152, -3) })
+
+// l'échelle de lisibilité
+document.getElementById('tailles').innerHTML = [26, 18, 12].map((h) =>
+  `<div><div style="opacity:${h === 12 ? .55 : 1}">${compose('JEUDI', h)}</div>
+   <div class="cap" style="margin-top:6px">${h} px${h === 18 ? ' — <b>le plancher</b>' : h === 12 ? ' — illisible' : ''}</div></div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que la planche dit.</b><br>
+  <span class="q">1.</span> <b>Le nom du quartier devient un objet composé</b>, plus une ligne de texte.
+  Le Caveat ne disparaît pas pour autant : il reste <b>la note en marge</b> (« — le mien depuis 2019 »).
+  Les deux écritures cohabitent — l'une nomme, l'autre commente.<br>
+  <span class="q">2.</span> <b>On tape, ça se compose.</b> Piocher les lettres une à une est joli une fois
+  et pénible la deuxième ; le seul vrai choix, c'est la famille — quatre pastilles, comme les encres.<br>
+  <span class="q">3.</span> <b>Une famille = une recette, pas 41 dessins.</b>
+  <code>_gen_lettre.html</code> sort un PNG par caractère à fond transparent ; les perles sont faites
+  (41 fichiers), les trois autres attendent ton feu vert.<br>
+  <span class="q">4.</span> <b>Plancher de 18 px</b> : sous cette taille les perles ne se lisent plus.
+  Le mot grandit donc au dézoom au lieu de rétrécir.<br>
+  <span class="q">→ à trancher :</span> les quatre familles, ou trois (les découpées apportent leur
+  propre couleur et peuvent se battre avec l'encre de la zone) ? · les majuscules seules, ou aussi les
+  minuscules (× 2 le nombre d'assets) ? · les accents (É, È, À) : nécessaires pour « L'ÉTÉ », « CHEZ MÉMÉ » ?`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

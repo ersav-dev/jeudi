@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 2 : les encres</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .intro{display:grid;grid-template-columns:1fr 330px;gap:44px;align-items:start}
+  .cols{display:grid;grid-template-columns:repeat(6,208px);gap:16px}
+  .col .past{display:flex;align-items:center;gap:10px;margin-bottom:9px;height:58px}
+  .rond{width:44px;height:44px;border-radius:50%;flex:none;position:relative}
+  .rond::after{content:'';position:absolute;inset:-5px;border-radius:50%;
+               border:1px solid rgba(239,233,216,.16)}
+  .col .nom{font-family:'Instrument Serif',serif;font-style:italic;font-size:19px;line-height:1.1}
+  .col .dit{font-size:10.5px;color:var(--encre-3);margin:0;min-height:0}
+  .col .lg{font-size:10px;color:var(--encre-3);margin:6px 0 4px;letter-spacing:.06em}
+  .cadre+.lg{margin-top:8px}
+
+  /* la feuille de choix (le picker du carnet) */
+  .feuille{background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);border-radius:var(--rayon);
+           box-shadow:0 1px 0 rgba(0,0,0,.5);padding:16px 16px 18px;position:relative}
+  .feuille::before{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);
+                   width:34px;height:3px;background:rgba(239,233,216,.2);border-radius:2px}
+  .fh{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);margin:6px 0 14px}
+  .encres{display:flex;gap:12px;margin-bottom:16px}
+  .enc{width:44px;height:44px;border-radius:50%;position:relative;flex:none}
+  .enc.pris::after{content:'';position:absolute;inset:0;border-radius:50%;
+                   background:linear-gradient(135deg,transparent 46%,rgba(239,233,216,.75) 46%,
+                   rgba(239,233,216,.75) 54%,transparent 54%)}
+  .enc.pris{opacity:.34}
+  .enc.choisi{box-shadow:0 0 0 2px var(--nuit-2),0 0 0 3.5px var(--encre)}
+  .champ{border-bottom:1px solid rgba(239,233,216,.22);padding-bottom:6px;margin-bottom:6px}
+  .champ .lb{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--encre-3)}
+  .champ .val{font-family:'Caveat',cursive;font-weight:600;font-size:26px;color:var(--encre);margin-top:2px}
+  .fpied{font-size:10.5px;color:var(--encre-3);line-height:1.6;margin-top:12px}
+  .hors{display:flex;gap:26px;margin-top:6px}
+  .hors .h{display:flex;gap:11px;align-items:flex-start}
+  .hors .p{width:34px;height:34px;border-radius:50%;flex:none;position:relative}
+  .hors .p::after{content:'';position:absolute;left:-3px;right:-3px;top:50%;height:1.5px;
+                  background:var(--cire);transform:rotate(-38deg)}
+  .hors .t{font-size:11px;line-height:1.5;color:var(--encre-2)}
+  .hors .t b{color:var(--encre);font-weight:400;display:block;font-size:12px}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 2 sur 4</div>
+    <h1>Les encres du carnet.</h1>
+  </div>
+  <div class="droite">13 août 2026 · maquette — rien n'est codé<br>
+    <b>six encres nommées</b>, jamais un nuancier RVB<br>
+    chaque encre ne sert qu'<b>une fois</b> — la palette EST le plafond
+  </div>
+</div>
+
+<div class="intro">
+  <div>
+    <p class="chapo">Un carnet n'a pas de sélecteur de couleur : il a <b>les encres qu'on a achetées</b>.
+      Six, nommées comme des pigments, tirées vers le gris pour tenir sur le charbon —
+      des couleurs de <b>papeterie</b>, pas de LED.</p>
+    <p class="chapo"><b>La règle qui remplace un cap arbitraire :</b> une encre = une zone. Quand les six
+      sont prises, la carte est pleine — inutile d'inventer « ~8 zones ». Pour en dessiner une septième,
+      on rature une zone : on <b>cure</b>, exactement comme les proches et les stickers.
+      Bénéfice secondaire : deux zones ne peuvent jamais se confondre.</p>
+    <p class="chapo">Chaque encre est montrée deux fois, à la vraie taille : <b>les rues teintées</b>
+      (de près, z15) et <b>l'aplat à 20 %</b> (de loin, z14). C'est le seul test qui vaille :
+      une couleur qui ne survit pas au fond sombre n'est pas une encre.</p>
+  </div>
+  <div>
+    <div class="feuille">
+      <div class="fh">après le tracé — la fiche de la zone</div>
+      <div class="encres" id="choix"></div>
+      <div class="champ"><div class="lb">le mot</div><div class="val">mon quartier</div></div>
+      <div class="fpied">Le nom est écrit à la main (Caveat) — c'est un humain qui l'écrit,
+        jamais l'app. Deux encres barrées : déjà prises par « le dimanche » et « les courses ».</div>
+    </div>
+    <div class="fpied" style="padding:0 2px">44 px de cible, l'écart de 12 px : on choisit au pouce,
+      dans le noir, sans viser.</div>
+  </div>
+</div>
+
+<h2>les six encres, sur la carte</h2>
+<div class="cols" id="cols"></div>
+
+<h2>ce qui n'entre pas dans la palette</h2>
+<div class="hors">
+  <div class="h"><div class="p" style="background:#A8322A"></div>
+    <div class="t"><b>la cire — #A8322A</b>L'accent unique de la V5 : le tampon, le sceau, l'irréversible.
+      Si une zone pouvait être rouge cire, la rature (planche 4) ne voudrait plus rien dire.</div></div>
+  <div class="h"><div class="p" style="background:#5d8dff"></div>
+    <div class="t"><b>le bleu jeudi — #5d8dff</b>L'identité de l'app, tranchée le 07/08 : il est partout
+      (le « + », les actifs). Une zone bleu jeudi se lirait comme un élément d'interface, pas comme ta main.</div></div>
+  <div class="h"><div class="p" style="background:linear-gradient(90deg,#ff0080,#00e0ff,#7cff00)"></div>
+    <div class="t"><b>le nuancier RVB</b>Le rond arc-en-ciel de Photoshop : il produit du fluo,
+      il ne se nomme pas, et il fait entrer dans le carnet une couleur qui n'existe dans aucun encrier.</div></div>
+</div>
+
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+// la feuille de choix : 6 pastilles, 2 déjà prises, 1 choisie
+document.getElementById('choix').innerHTML = ENCRES.map((e, i) =>
+  `<div class="enc ${i===1||i===3?'pris':''} ${i===2?'choisi':''}" style="background:${e.c}"></div>`).join('')
+
+// pour chaque encre : les rues teintées (z15) puis l'aplat au dézoom (z14)
+document.getElementById('cols').innerHTML = ENCRES.map((e) => `
+  <div class="col">
+    <div class="past"><div class="rond" style="background:${e.c}"></div>
+      <div><div class="nom">${e.nom}</div><div class="dit">${e.dit}</div></div></div>
+    <div class="lg">de près — les rues (z15)</div>
+    ${cadre({ vue:[352,332], w:208, h:196, noms:1, plaques:false,
+      zones:[{c:e.c, teinte:true, trait:2.2}] })}
+    <div class="lg">de loin — l'aplat 20 % (z14)</div>
+    ${cadre({ z:14, vue:[240,322], w:208, h:170, spots:false, plaques:false,
+      zones:[{c:e.c, aplat:.2, trait:2, nom:'mon quartier', nx:450, ny:492, nt:20}] })}
+  </div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que la planche dit.</b><br>
+  <span class="q">1.</span> <b>Six encres nommées</b>, tirées vers le gris : bleu de Prusse, vert-de-gris,
+  violet d'aniline, ocre brûlée, rose indien, graphite. Aucun nuancier, aucune saisie hexadécimale.<br>
+  <span class="q">2.</span> <b>Une encre = une zone.</b> La palette remplace le cap : six zones, pas « ~8 ».
+  Une septième zone oblige à en raturer une — la contrainte est visible, elle n'a pas à être expliquée.<br>
+  <span class="q">3.</span> <b>Le graphite est le refuge</b> : la zone qu'on veut poser sans qu'elle crie
+  (« jamais après minuit ») — c'est le crayon de la V5, déjà dans les tokens.<br>
+  <span class="q">4.</span> <b>La cire et le bleu jeudi restent dehors.</b> Ils ont déjà un métier.<br>
+  <span class="q">5.</span> <b>Les six n'ont pas le même volume sonore</b> : l'ocre et le rose crient,
+  le prusse et le vert chuchotent. C'est utile (on choisit selon ce qu'on veut dire de la zone) —
+  mais si ça déséquilibre la carte, on baisse la luminance de l'ocre plutôt que d'ajouter une règle.<br>
+  <span class="q">→ à trancher :</span> six, ou cinq en sortant le rose indien (le plus proche de la cire
+  sur un écran de nuit) ? Regarde la colonne 5 et la colonne « hors palette » côte à côte.`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>essai — teinter les rues sur du raster</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1560px}
+  .rangee{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:24px}
+  .cadre{width:360px;height:360px;position:relative}
+  .plan{position:absolute;top:0;left:0;width:768px;height:768px;display:grid;
+        grid-template-columns:repeat(3,256px);grid-template-rows:repeat(3,256px)}
+  .plan img{width:256px;height:256px;display:block}
+  .teinte{position:absolute;top:0;left:0;width:768px;height:768px;isolation:isolate;overflow:hidden}
+  .teinte .plan{mix-blend-mode:multiply}
+  .lg{font-size:11px;color:var(--encre-2);margin-top:6px;line-height:1.5}
+  .grille{position:absolute;inset:0}
+</style></head><body>
+<div class="tete"><div><div class="fil">essai technique</div><h1>Teinter les rues sans changer de fond.</h1></div></div>
+
+<div class="rangee" id="essais"></div>
+<h2>repérage — le quartier en coordonnées (mosaïque 768, z15)</h2>
+<div style="position:relative;width:768px;height:768px" id="reperage"></div>
+
+<script>
+const TUILES = (dec) => {
+  let h = ''
+  for (let y = 11270; y <= 11272; y++) for (let x = 16598; x <= 16600; x++)
+    h += `<img src="_tuiles/d15_${x}_${y}.png" style="grid-column:${x-16597};grid-row:${y-11269}">`
+  return `<div class="plan" style="transform:translate(${-dec[0]}px,${-dec[1]}px)">${h}</div>`
+}
+const ZONE = 'M 250 300 C 330 250, 430 260, 470 330 C 505 400, 500 500, 450 560 C 400 615, 300 610, 250 560 C 200 505, 195 360, 250 300 Z'
+const DEC = [180, 230]
+const RECETTES = [
+  ['témoin — rien', ''],
+  ['multiply · brightness 2.6', 'filter:grayscale(1) brightness(2.6)'],
+  ['multiply · brightness 3.6', 'filter:grayscale(1) brightness(3.6)'],
+  ['multiply · b4.6 contrast 1.3', 'filter:grayscale(1) brightness(4.6) contrast(1.3)'],
+]
+document.getElementById('essais').innerHTML = RECETTES.map(([nom, f]) => `
+  <div><div class="cadre">
+    ${TUILES(DEC)}
+    ${f ? `<div class="teinte" style="background:#8E76B4;clip-path:path('${ZONE}');transform:translate(${-DEC[0]}px,${-DEC[1]}px)">
+        <div class="plan" style="${f};transform:none">${TUILES([0,0]).replace(/^<div class="plan"[^>]*>/, '').replace(/<\/div>$/, '')}</div></div>` : ''}
+    <svg viewBox="${DEC[0]} ${DEC[1]} 360 360" width="360" height="360" style="position:absolute;inset:0">
+      <path d="${ZONE}" class="contour" style="--enc:#8E76B4;stroke-width:2"/></svg>
+  </div><div class="lg">${nom}</div></div>`).join('')
+
+// repérage : la mosaïque + une grille tous les 64 px pour choisir les ancres
+let g = ''
+for (let i = 0; i <= 768; i += 64) g += `<line x1="${i}" y1="0" x2="${i}" y2="768" stroke="rgba(239,233,216,.25)"/>
+  <line x1="0" y1="${i}" x2="768" y2="${i}" stroke="rgba(239,233,216,.25)"/>
+  <text x="${i+3}" y="12" fill="#EFE9D8" style="font-size:10px;font-family:monospace">${i}</text>
+  <text x="2" y="${i+12}" fill="#EFE9D8" style="font-size:10px;font-family:monospace">${i}</text>`
+document.getElementById('reperage').innerHTML = TUILES([0,0]) +
+  `<svg viewBox="0 0 768 768" width="768" height="768" style="position:absolute;inset:0">${g}
+   <path d="${ZONE}" class="contour" style="--enc:#8E76B4;stroke-width:2"/></svg>`
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script></body></html>

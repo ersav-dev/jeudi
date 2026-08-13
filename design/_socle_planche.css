@@ -1,0 +1,99 @@
+/* socle commun des planches « quartiers » — 13/08/2026
+   fontes LOCALES (l'export PNG tourne en headless, hors réseau) */
+@font-face{font-family:'Caveat';src:url('../app/public/fonts/caveat-regular.woff2') format('woff2');font-weight:400;font-display:block}
+@font-face{font-family:'Caveat';src:url('../app/public/fonts/caveat-600.woff2') format('woff2');font-weight:600;font-display:block}
+@font-face{font-family:'Instrument Serif';src:url('../app/public/fonts/instrument-serif-italic.woff2') format('woff2');font-style:italic;font-display:block}
+@font-face{font-family:'Instrument Serif';src:url('../app/public/fonts/instrument-serif-regular.woff2') format('woff2');font-style:normal;font-display:block}
+@font-face{font-family:'JetBrains Mono';src:url('../app/public/fonts/jetbrains-mono-regular.woff2') format('woff2');font-weight:400;font-display:block}
+@font-face{font-family:'JetBrains Mono';src:url('../app/public/fonts/jetbrains-mono-700.woff2') format('woff2');font-weight:700;font-display:block}
+
+:root{
+  --nuit:#14120E; --nuit-2:#1B1813; --nuit-3:#23201A;
+  --encre:#EFE9D8; --encre-2:rgba(239,233,216,.62); --encre-3:rgba(239,233,216,.34);
+  --cire:#A8322A; --graphite:#8A857A; --bleu:#5d8dff; --rayon:3px;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.05'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box;margin:0}
+body{
+  background:var(--nuit); color:var(--encre); width:1280px;
+  font-family:'JetBrains Mono',monospace; -webkit-font-smoothing:antialiased;
+  padding:40px 40px 48px;
+}
+body::before{content:'';position:fixed;inset:0;background:var(--grain);pointer-events:none;z-index:9}
+
+/* ── en-tête de planche ─────────────────────────────────────── */
+.tete{border-bottom:1px solid rgba(239,233,216,.14);padding-bottom:18px;margin-bottom:26px;
+      display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+.tete h1{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;font-size:38px;line-height:1.02}
+.tete .fil{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);margin-bottom:8px}
+.tete .droite{text-align:right;font-size:11px;color:var(--encre-3);line-height:1.7;flex:none}
+.tete .droite b{color:var(--encre-2);font-weight:400}
+
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);font-weight:400;
+   margin:34px 0 12px;display:flex;align-items:center;gap:12px}
+h2::after{content:'';flex:1;height:1px;background:rgba(239,233,216,.12)}
+.chapo{font-size:13px;line-height:1.65;color:var(--encre-2);max-width:820px;margin:-4px 0 18px}
+.chapo b{color:var(--encre);font-weight:400}
+
+/* ── la main du carnet (Caveat) : ce qu'un humain écrit ───────── */
+.main{font-family:'Caveat',cursive;font-weight:600;color:var(--encre-2);font-size:20px;line-height:1.25}
+
+/* ── le cadre d'écran : les VRAIES tuiles (CARTO dark, © OSM) ──── */
+.cadre{position:relative;background:#0d0d0d;border:1px solid rgba(239,233,216,.13);
+       border-radius:var(--rayon);overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.5)}
+.plan{position:absolute}
+.plan img{position:absolute;width:256px;height:256px;display:block}
+.teinte{position:absolute;isolation:isolate;background:var(--enc);overflow:hidden}
+.teinte .plan{filter:grayscale(1) brightness(3.6);mix-blend-mode:multiply;left:0;top:0}
+.cadre svg{position:absolute;inset:0;display:block}
+.bandeau{position:absolute;top:0;left:0;right:0;height:28px;background:rgba(20,18,14,.88);
+         border-bottom:1px solid rgba(239,233,216,.13);display:flex;align-items:center;
+         justify-content:space-between;padding:0 10px;font-size:10.5px;color:var(--encre-2)}
+.bandeau span{color:var(--encre-3)}
+.etape{position:absolute;bottom:8px;left:8px;font-size:10px;letter-spacing:.1em;color:var(--encre-2);
+       background:rgba(20,18,14,.82);padding:3px 7px;border-radius:2px}
+.dit{font-size:11.5px;line-height:1.5;color:var(--encre-2);margin-top:8px;min-height:32px}
+.dit b{color:var(--encre);font-weight:400}
+
+/* ── tampons de verdict ───────────────────────────────────────── */
+.tampon{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+        border:1px solid currentColor;padding:3px 8px;border-radius:2px;transform:rotate(-1.5deg)}
+.t-garde{color:#8FAE83}
+.t-second{color:var(--encre-2)}
+.t-hors{color:var(--cire)}
+
+/* ── l'encre par-dessus la carte (SVG, échelle 1:1 écran) ─────── */
+.aplat{fill:var(--enc);stroke:none}
+/* au repos le contour ne s'annonce pas : c'est la teinte qui porte la zone.
+   il se réveille sous le doigt (.contour-vif) — le seul moment où on a
+   besoin de savoir exactement où passe le bord. */
+.contour{fill:none;stroke:var(--enc);stroke-linejoin:round;stroke-linecap:round;opacity:.38}
+.contour-vif{fill:none;stroke:var(--enc);stroke-linejoin:round;stroke-linecap:round;opacity:1}
+.contour-fantome{fill:none;stroke:var(--enc);stroke-linejoin:round;opacity:.34;
+                 stroke-width:1.6px;stroke-dasharray:5 5}
+.trace-vive{fill:none;stroke:var(--enc);stroke-linecap:round;stroke-linejoin:round;
+            stroke-width:2.6px;opacity:.92}
+.trace-ferme{fill:none;stroke:var(--enc);opacity:.45;stroke-width:1.6px;stroke-dasharray:4 4}
+.rature{fill:none;stroke:var(--cire);stroke-linecap:round;stroke-width:3.4px;opacity:.95}
+.poignee{fill:#101010;stroke:var(--enc);stroke-width:1.8px}
+.po-actif{fill:var(--enc)}
+.milieu{fill:none;stroke:var(--enc);opacity:.55;stroke-width:1.3px}
+.etq{font-family:'Caveat',cursive;font-weight:600;fill:var(--enc);text-anchor:middle;
+     paint-order:stroke;stroke:rgba(10,10,10,.82);stroke-width:4px}
+.pin-rond{fill:#0f0f0f;stroke:rgba(239,233,216,.72);stroke-width:1.6px}
+.pin-oeil{fill:rgba(239,233,216,.72)}
+.pin-pied{fill:rgba(239,233,216,.5)}
+.pin-nom{font-family:'JetBrains Mono',monospace;font-size:10px;fill:rgba(239,233,216,.8);
+         paint-order:stroke;stroke:rgba(10,10,10,.85);stroke-width:3px}
+.plq rect{fill:rgba(14,14,14,.9);stroke:rgba(239,233,216,.3);stroke-width:1px}
+.plq-nom{font-family:'JetBrains Mono',monospace;font-size:9.5px;fill:rgba(239,233,216,.72)}
+.dt-pulpe{fill:rgba(239,233,216,.1);stroke:rgba(239,233,216,.26);stroke-width:1.3px}
+.dt-point{fill:rgba(239,233,216,.9)}
+.dt-fleche{fill:none;stroke:rgba(239,233,216,.55);stroke-width:1.5px;stroke-linecap:round}
+
+/* ── le filet de note en marge ────────────────────────────────── */
+.marge{border-left:1px solid rgba(239,233,216,.16);padding-left:14px;margin-top:14px}
+.pied{margin-top:40px;border-top:1px solid rgba(239,233,216,.14);padding-top:16px;
+      font-size:12px;line-height:1.7;color:var(--encre-2);max-width:900px}
+.pied b{color:var(--encre);font-weight:400}
+.pied .q{color:var(--encre-3)}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>gen lettre</title>
+<style>
+  /* GÉNÉRATEUR D'UN SEUL CARACTÈRE — un fichier PNG par caractère.
+     usage : _gen_lettre.html?f=perles&c=A  (rendu 128x128, fond transparent)
+     c'est le pipeline « propre » : une famille = une recette ici, et la
+     boucle bash sort l'alphabet entier en assets séparés. */
+  html,body{margin:0;background:transparent}
+  body{width:128px;height:128px;display:grid;place-items:center;overflow:hidden}
+  .c{position:relative;display:grid;place-items:center}
+
+  /* ── 1 · LES PERLES (le cube blanc gravé) ───────────────────── */
+  .perles{width:104px;height:104px;border-radius:26px;
+    background:linear-gradient(145deg,#ffffff 0%,#f6f3ec 46%,#dedad0 100%);
+    box-shadow:inset 0 3px 5px rgba(255,255,255,.95), inset 0 -4px 7px rgba(150,144,130,.42),
+               0 2px 4px rgba(0,0,0,.16);}
+  /* le caractère est GRAVÉ, pas imprimé : un liseré clair sous le trait
+     (la lumière qui tombe dans le creux) + une ombre courte au-dessus */
+  .perles b{font-family:'Century Gothic','Questrial',sans-serif;font-weight:400;font-size:58px;
+    color:#231e18;line-height:1;letter-spacing:0;
+    text-shadow:0 1.5px 0 rgba(255,255,255,.95), 0 -1px 1.5px rgba(96,88,74,.5);}
+  .perles.jaune{background:linear-gradient(145deg,#ffe14e 0%,#fbd022 50%,#e0ae00 100%);border-radius:50%}
+
+  /* ── 2 · LES TOUCHES (la machine à écrire) ──────────────────── */
+  .touches{width:110px;height:110px;border-radius:50%;
+    background:conic-gradient(from 210deg,#8d8f92,#e8e9ea 18%,#9a9c9f 38%,#f2f3f4 58%,#7e8083 78%,#d5d6d8 100%);
+    box-shadow:0 2px 5px rgba(0,0,0,.3);}
+  .touches::after{content:'';position:absolute;inset:9px;border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#f7f1e2,#e6dcc6 70%,#cfc3a8 100%);
+    box-shadow:inset 0 2px 4px rgba(90,78,56,.35);}
+  .touches b{position:relative;z-index:2;font-family:'Courier New',monospace;font-weight:700;
+    font-size:44px;color:#1b1813;line-height:1}
+
+  /* ── 3 · LES DÉCOUPÉES (l'affiche massicotée) ───────────────── */
+  .decoupees{width:96px;height:120px;background:var(--pap,#f0d79a);
+    box-shadow:0 2px 4px rgba(0,0,0,.28);}
+  .decoupees::after{content:'';position:absolute;inset:0;opacity:.5;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23g)' opacity='.22'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply}
+  .decoupees b{font-family:'Bernard MT Condensed','Haettenschweiler',Impact,sans-serif;font-weight:400;
+    font-size:104px;color:var(--enc,#1f4f5e);line-height:.86;position:relative;z-index:2}
+
+  /* ── 4 · LES TIMBRES (le papier crème déchiré) ──────────────── */
+  .timbres{width:106px;height:106px;background:#efe9d6;
+    clip-path:polygon(2% 3%,97% 0%,100% 96%,96% 100%,4% 98%,0% 6%);
+    box-shadow:0 1px 3px rgba(0,0,0,.22)}
+  .timbres::after{content:'';position:absolute;inset:0;opacity:.55;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23g)' opacity='.3'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply}
+  .timbres b{font-family:Rockwell,'Bookman Old Style',Georgia,serif;font-weight:400;font-size:62px;
+    color:#3a2f20;line-height:1;position:relative;z-index:2}
+</style></head>
+<body>
+<script>
+const p = new URLSearchParams(location.search)
+const f = p.get('f') || 'perles'
+const c = p.get('c') || 'A'
+// les papiers des lettres découpées : une couleur par lettre, stable
+const PAP = ['#f0d79a','#f6e7c1','#efb95a','#f3ddb0','#e9c98a','#f7e9cd']
+const ENC = ['#1f4f5e','#c0392b','#2f6b5a','#7a4a9e','#1b3f6b','#b8541f','#4a4a1f','#d4453a']
+const i = (c.charCodeAt(0) * 7) % 6, j = (c.charCodeAt(0) * 5) % 8
+const jaune = c === '☺'
+document.body.innerHTML =
+  `<div class="c ${f} ${jaune ? 'jaune' : ''}" style="--pap:${PAP[i]};--enc:${ENC[j]}"><b>${c}</b></div>`
+document.title = 'ok'
+</script>
+</body></html>
