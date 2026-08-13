@@ -56,32 +56,59 @@ export interface PointZone {
 // avait tort : entre « j'évite » et « j'adore » il y a « ça m'est égal »,
 // qui est l'état de 90 % de la ville.
 //
-// Trois niveaux, et c'est la PASTILLE du carnet — celle des critères
-// gradués, jamais des étoiles (règle de la lentille) :
-//   1 · ●○○  jamais ici        → on ne me le propose plus, jamais
-//   2 · ●●○  ça m'est égal     → rien ne change (le défaut)
-//   3 · ●●●  en priorité       → ça remonte quand c'est possible
+// Sa graduation (0/1/2/3), avec UNE correction : le 0 n'est pas un cran,
+// c'est une sortie de barème. « Jamais ici ou alors très peu » mélangeait
+// deux choses — si « très peu » restait possible, la promesse « ne me le
+// propose plus » ne tenait plus. Donc : 0 = zéro, et « très peu », c'est
+// exactement ce que dit le cran 1.
+//
+// UN CADRAN PLEIN PAR DÉFAUT, ET UN CŒUR ÉTEINT À CÔTÉ (Ersan, 13/08 :
+// « de base c'est les 3 qui sont actives, et le cœur est éteint »). C'est
+// le bon sens de lecture : une zone qu'on vient de tracer ne DIMINUE rien
+// — l'app fait comme d'habitude. On baisse le cadran pour être proposé
+// moins souvent, et on l'éteint complètement pour ne plus l'être du tout.
+//
+//   3 · ●●●   comme d'habitude → LE DÉFAUT : rien ne change
+//   2 · ●●○   un peu moins     → ça descend un peu
+//   1 · ●○○   rarement         → ça descend beaucoup
+//   0 · ○○○   jamais ici       → RETIRÉ. Le cadran éteint EST le retrait.
+//   ♥ (à côté, éteint par défaut) → en priorité : ça remonte
+//
+// Le cœur n'est pas un quatrième cran, c'est un INTERRUPTEUR au-dessus du
+// plein. Il est dessiné à l'encre, monoline (ICoeur) — jamais un emoji, la
+// DA l'interdit — et il existe déjà dans l'alphabet des perles. Ce n'est
+// PAS une étoile : on ne note pas un quartier, on dit à l'app à quel point
+// on veut qu'elle nous y envoie.
 //
 // La COULEUR n'a aucun sens : elle est à l'utilisateur (c'est son carnet,
 // il met les encres qu'il veut). C'est la MATIÈRE qui porte le poids —
-// hachuré / aplat / rues teintées. Une couleur ne dit jamais une règle.
-export type PoidsZone = 1 | 2 | 3
+// hachuré / pointillé / filet / rues teintées. Une couleur ne dit jamais
+// une règle.
+export type PoidsZone = 0 | 1 | 2 | 3
 
-/** le défaut d'une zone qu'on vient de tracer : elle ne pèse sur rien */
-export const POIDS_DEFAUT: PoidsZone = 2
+/** le cadran d'une zone qu'on vient de tracer : PLEIN — elle ne diminue rien */
+export const POIDS_DEFAUT: PoidsZone = 3
 
 export const POIDS = [
-  { n: 1 as const, pastille: '●○○', mot: 'jamais ici', dit: 'on ne te le propose plus' },
-  { n: 2 as const, pastille: '●●○', mot: "ça m'est égal", dit: 'rien ne change' },
-  { n: 3 as const, pastille: '●●●', mot: 'en priorité', dit: 'ça remonte quand c’est possible' },
+  { n: 0 as const, pastille: '○○○', mot: 'jamais ici', dit: 'on ne te le propose plus' },
+  { n: 1 as const, pastille: '●○○', mot: 'rarement', dit: 'ça descend beaucoup' },
+  { n: 2 as const, pastille: '●●○', mot: 'un peu moins', dit: 'ça descend un peu' },
+  { n: 3 as const, pastille: '●●●', mot: "comme d'habitude", dit: 'rien ne change (le défaut)' },
 ]
+
+/** le cœur, à côté du cadran : éteint par défaut. Il ne remplace aucun cran,
+    il ajoute UN étage au-dessus du plein. Éteindre le cadran l'éteint aussi
+    (on ne met pas en priorité un endroit où on ne va jamais). */
+export const COEUR_DEFAUT = false
 
 export interface Quartier {
   id: string
   /** le mot, écrit (ou composé en lettres) par un humain — jamais par l'app */
   nom: string
-  /** ●○○ jamais · ●●○ égal · ●●● en priorité — « me recommander ici ? » */
+  /** le cadran : ●●● comme d'habitude (défaut) → ○○○ jamais ici */
   poids: PoidsZone
+  /** le cœur, à côté : « en priorité ». Éteint par défaut. */
+  coeur?: boolean
   /** où elle vit. « cercle » = proposée aux super potes (10 max), jamais
       au-delà : ce n'est pas une publication, c'est une conversation. */
   partage: 'moi' | 'cercle'
@@ -281,41 +308,51 @@ export function lieuxDeLaZone<T extends { lat: number; lng: number }>(
 }
 
 // ── la pondération ───────────────────────────────────────────────────
-// « jamais » ne se négocie pas : c'est un retrait, pas un malus. Personne
+// Le 0 ne se négocie pas : c'est un retrait, pas un malus. Personne
 // n'entoure un endroit pour qu'on le lui propose un soir de fatigue.
-// « en priorité » ne se négocie pas non plus, dans l'autre sens : ça ne
-// FILTRE rien (on ne réduit pas la ville à trois quartiers), ça REMONTE.
+// Le 3 ne se négocie pas non plus, dans l'autre sens : ça ne FILTRE rien
+// (on ne réduit pas la ville à trois quartiers), ça REMONTE. Et entre les
+// deux, le 1 et le 2 penchent le classement sans jamais rien supprimer.
 
-type ZonePesee = Pick<Quartier, 'points' | 'poids'>
+type ZonePesee = Pick<Quartier, 'points' | 'poids'> & { coeur?: boolean }
 
-/** le poids qui s'applique à un lieu : le plus BAS l'emporte (un « jamais »
-    gagne toujours sur un « en priorité » qui se chevauche — le retrait est
-    une décision, la préférence est un souhait) */
+/** le cadran qui s'applique à un lieu : le plus BAS l'emporte (un « jamais »
+    gagne toujours sur un cœur qui le chevauche — le retrait est une
+    décision, la préférence est un souhait) */
 export function poidsDuLieu(p: { lat: number; lng: number }, zones: ZonePesee[]): PoidsZone {
   const dedans = zones.filter((z) => dansLaZone(p, z.points))
   if (!dedans.length) return POIDS_DEFAUT
   return dedans.reduce<PoidsZone>((min, z) => (z.poids < min ? z.poids : min), 3)
 }
 
-/** retire les lieux tombés dans un « jamais » — appliqué en permanence */
+/** le rang qui sert à classer : le cadran, plus l'étage du cœur (4) quand
+    il est allumé ET que la zone n'est pas éteinte */
+export function rangDuLieu(p: { lat: number; lng: number }, zones: ZonePesee[]): number {
+  const cadran = poidsDuLieu(p, zones)
+  if (cadran === 0) return 0
+  const aimee = zones.some((z) => z.coeur && z.poids > 0 && dansLaZone(p, z.points))
+  return aimee ? 4 : cadran
+}
+
+/** retire les lieux tombés dans un « jamais » (0) — appliqué en permanence */
 export function ecarterLesJamais<T extends { lat: number; lng: number }>(
   lieux: T[],
   zones: ZonePesee[],
 ): T[] {
-  const jamais = zones.filter((z) => z.poids === 1)
+  const jamais = zones.filter((z) => z.poids === 0)
   if (!jamais.length) return lieux
   return lieux.filter((l) => !jamais.some((z) => dansLaZone(l, z.points)))
 }
 
-/** l'ordre du soir : on écarte les « jamais », puis les « en priorité »
-    remontent — SANS casser l'ordre d'origine à poids égal (le tri est
-    stable : la distance et l'ouverture continuent de décider en dessous) */
+/** l'ordre du soir : on écarte les « jamais », puis les autres penchent —
+    SANS casser l'ordre d'origine à poids égal (le tri est stable : la
+    distance et l'ouverture continuent de décider en dessous) */
 export function classerParZones<T extends { lat: number; lng: number }>(
   lieux: T[],
   zones: ZonePesee[],
 ): T[] {
   return ecarterLesJamais(lieux, zones)
-    .map((l, i) => ({ l, i, p: poidsDuLieu(l, zones) }))
+    .map((l, i) => ({ l, i, p: rangDuLieu(l, zones) }))
     .sort((a, b) => b.p - a.p || a.i - b.i)
     .map((x) => x.l)
 }

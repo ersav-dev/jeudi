@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   ENCRES, CAP_ZONES, encreSuggeree, metres, simplifier, depuisTrace, depuisTaps,
   bulleAutour, retournerPoint, contour, enGeoJSON, dansLaZone, lieuxDeLaZone,
-  POIDS, POIDS_DEFAUT, poidsDuLieu, ecarterLesJamais, classerParZones,
+  POIDS, POIDS_DEFAUT, COEUR_DEFAUT, poidsDuLieu, rangDuLieu, ecarterLesJamais, classerParZones,
   filtrerParZones, zonesQuiContiennent, CAP_SUPER_CERCLE, zonesActives,
   metresParPixel, pointsSaisissables, TOLERANCE_M, type PointZone,
 } from '../quartiers'
@@ -33,28 +33,52 @@ describe('les encres', () => {
   })
 })
 
-describe('le poids — « me recommander ce quartier ? », sur trois crans', () => {
-  const TAF = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const }
-  const JAMAIS = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 1 as const }
+describe('le poids — « me recommander ce quartier ? », de 0 à 3', () => {
+  const TAF = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const, coeur: true }
+  const JAMAIS = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 0 as const }
   const EGAL = { points: bulleAutour({ lng: 2.3200, lat: 48.8600 }, 300), poids: 2 as const }
+  const UNPEU = { points: bulleAutour({ lng: 2.3522, lat: 48.8566 }, 250), poids: 1 as const }
   const lieux = [
     { id: 'ailleurs', lat: 48.8566, lng: 2.3522 },
     { id: 'dans le jamais', lat: 48.8698, lng: 2.3661 },
     { id: 'au taf', lat: 48.8720, lng: 2.3350 },
   ]
 
-  it('trois crans, et le défaut ne pèse sur rien', () => {
-    expect(POIDS).toHaveLength(3)
-    expect(POIDS_DEFAUT).toBe(2)
-    expect(poidsDuLieu({ lat: 48.80, lng: 2.30 }, [TAF, JAMAIS])).toBe(2)
+  it('le cadran est PLEIN par défaut, et le cœur éteint', () => {
+    expect(POIDS).toHaveLength(4)
+    expect(POIDS.map((p) => p.n)).toEqual([0, 1, 2, 3])
+    expect(POIDS.map((p) => p.pastille)).toEqual(['○○○', '●○○', '●●○', '●●●'])
+    // aucune étoile nulle part : on ne note pas un quartier
+    expect(POIDS.some((p) => p.pastille.includes('★'))).toBe(false)
+    // une zone qu'on vient de tracer ne diminue RIEN
+    expect(POIDS_DEFAUT).toBe(3)
+    expect(COEUR_DEFAUT).toBe(false)
+    expect(poidsDuLieu({ lat: 48.80, lng: 2.30 }, [TAF, JAMAIS])).toBe(3)
   })
-  it('« jamais » retire, toujours, sans rien allumer', () => {
+  it('le cœur ajoute un étage AU-DESSUS du plein', () => {
+    const aimee = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const, coeur: true }
+    expect(rangDuLieu({ lat: 48.8720, lng: 2.3350 }, [aimee])).toBe(4)
+    expect(rangDuLieu({ lat: 48.80, lng: 2.30 }, [aimee])).toBe(3)
+  })
+  it('un cadran éteint éteint le cœur : on ne met pas en priorité où on ne va jamais', () => {
+    const contradictoire = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 0 as const, coeur: true }
+    expect(rangDuLieu({ lat: 48.8698, lng: 2.3661 }, [contradictoire])).toBe(0)
+    expect(ecarterLesJamais(lieux, [contradictoire]).map((l) => l.id))
+      .toEqual(['ailleurs', 'au taf'])
+  })
+  it('« jamais » (0) retire, toujours, sans rien allumer', () => {
     expect(ecarterLesJamais(lieux, [TAF, JAMAIS]).map((l) => l.id))
       .toEqual(['ailleurs', 'au taf'])
     expect(ecarterLesJamais(lieux, [TAF, EGAL])).toHaveLength(3)
     expect(ecarterLesJamais(lieux, [])).toHaveLength(3)
   })
-  it('« en priorité » REMONTE, il ne filtre pas — la ville reste entière', () => {
+  it('« rarement » (1) fait DESCENDRE, il ne retire pas — c’est ça la nuance', () => {
+    const ordre = classerParZones(lieux, [UNPEU, TAF]).map((l) => l.id)
+    expect(ordre).toHaveLength(3)              // rien n'a disparu
+    expect(ordre[0]).toBe('au taf')            // le 3 remonte
+    expect(ordre[ordre.length - 1]).toBe('ailleurs') // le 1 tombe en dernier
+  })
+  it('le cœur REMONTE, il ne filtre pas — la ville reste entière', () => {
     const ordre = classerParZones(lieux, [TAF, JAMAIS]).map((l) => l.id)
     expect(ordre[0]).toBe('au taf')
     expect(ordre).toContain('ailleurs') // rien n'a été réduit à la zone
@@ -68,9 +92,9 @@ describe('le poids — « me recommander ce quartier ? », sur trois crans', () 
     ]
     expect(classerParZones(memes, [TAF]).map((l) => l.id)).toEqual(['a', 'b', 'c'])
   })
-  it('le plus BAS l’emporte : un « jamais » gagne sur un « en priorité »', () => {
-    const large = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 900), poids: 3 as const }
-    expect(poidsDuLieu({ lat: 48.8698, lng: 2.3661 }, [large, JAMAIS])).toBe(1)
+  it('le plus BAS l’emporte : un « jamais » gagne sur un cœur qui le chevauche', () => {
+    const large = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 900), poids: 3 as const, coeur: true }
+    expect(poidsDuLieu({ lat: 48.8698, lng: 2.3661 }, [large, JAMAIS])).toBe(0)
     expect(classerParZones(lieux, [large, JAMAIS]).some((l) => l.id === 'dans le jamais')).toBe(false)
   })
   it('restreindre à une zone reste possible — « ce soir près du taf »', () => {
@@ -86,7 +110,7 @@ describe('le partage au super cercle — une proposition, jamais un filtre', () 
   const MIENNE = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const }
   const RECUE = {
     de: 'Karim', acceptee: false, nom: 'jamais ici', encre: 'graphite' as const,
-    points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 1 as const,
+    points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 0 as const,
   }
   const lieux = [
     { id: 'au taf', lat: 48.8720, lng: 2.3350 },

@@ -14,9 +14,10 @@
   .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
   .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
                  letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
-  .frames{display:grid;grid-template-columns:repeat(3,300px);gap:16px}
+  .frames{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,max-content));gap:16px}
   .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
-  .dit{width:300px}
+  .dit{width:232px}
+  .bloc:nth-child(2) .dit{width:300px}
   .verdict{margin-top:14px}
   .feuille{width:300px;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);
            border-radius:var(--rayon);box-shadow:0 1px 0 rgba(0,0,0,.5);padding:16px;position:relative}
@@ -58,16 +59,19 @@
     <h1>La pastille, et le carnet qu'on se passe.</h1>
   </div>
   <div class="droite">13 août 2026 · d'après tes deux corrections<br>
-    la couleur est à toi · le poids se règle <b>à côté</b>, sur trois crans<br>
+    la couleur est à toi · le cadran est <b>plein par défaut</b>, le cœur <b>éteint</b><br>
     partage : <b>le super cercle, 10 max</b> — et rien au-delà
   </div>
 </div>
 
 <p class="chapo">Mon binaire « on y va / on l'évite » est mort en une phrase, et il avait tort :
-  entre « j'évite » et « j'adore », il y a <b>« ça m'est égal »</b> — l'état de 90 % de la ville.
-  Trois crans, donc, et c'est exactement la <b>pastille du carnet</b> : celle des critères gradués,
-  jamais des étoiles. Et la couleur ne dit plus rien : elle est à toi. C'est la <b>matière</b> qui
-  porte le poids.</p>
+  entre « j'évite » et « j'adore », il y a <b>« oui, vas-y »</b> et <b>« un peu »</b> — l'état de
+  90 % de la ville. Ta graduation <b>0/1/2/3</b>, donc, avec une seule correction de ma part : le
+  <b>0 n'est pas un cran qu'on choisit, c'est le cadran ÉTEINT</b> — et c'est ça, « ne me le
+  propose plus ». Le cadran est <b>plein au départ</b> (une zone qu'on vient de tracer ne diminue
+  rien : l'app fait comme d'habitude) et on le baisse pour être proposé moins souvent. Le <b>cœur
+  vit à côté, éteint</b> : ce n'est pas un quatrième cran, c'est un étage au-dessus du plein. Et la couleur ne dit plus rien : elle est à toi. C'est la <b>matière</b> qui porte
+  le poids.</p>
 
 <div id="planche"></div>
 <div class="pied" id="reco"></div>
@@ -84,27 +88,32 @@ const Z = bulle(452, 452, 112)
 
 const BLOCS = [
 {
-  no:'les trois crans', nom:'La pastille,<br>pas l’étoile', tampon:['t-garde','●○○ ●●○ ●●●'],
+  no:'le cadran', nom:'Plein au départ,<br>cœur éteint', tampon:['t-garde','●●● par défaut · ♥ éteint'],
   lignes:[
-    ['●○○ jamais ici',"on ne te le propose plus. Jamais. Ça ne se négocie pas et ça ne s'oublie pas."],
-    ['●●○ ça m’est égal',"le défaut d'une zone qu'on vient de tracer : elle existe, elle porte un mot, et elle ne pèse sur rien."],
-    ['●●● en priorité',"ça REMONTE quand c'est possible — ça ne filtre pas. On ne réduit pas la ville à trois quartiers."],
-    ['la règle',"le cran le plus bas gagne : un « jamais » l'emporte sur un « en priorité » qui le chevauche. Le retrait est une décision, la préférence est un souhait."],
+    ['●●● comme d’habitude',"3 — LE DÉFAUT. Une zone qu'on vient de tracer ne diminue rien : l'app continue comme avant."],
+    ['●●○ un peu moins',"2 — ça descend un peu dans la liste. Rien ne disparaît."],
+    ['●○○ rarement',"1 — ça descend beaucoup. « J'y vais, mais pas souvent. »"],
+    ['○○○ jamais ici',"0 — le cadran éteint EST le retrait : on ne te le propose plus. Pas une note : une décision."],
+    ['♥ le cœur',"à côté, éteint par défaut. Un étage AU-DESSUS du plein : ça remonte. Éteindre le cadran l'éteint aussi — on ne met pas en priorité un endroit où on ne va jamais."],
   ],
   frames:[
-    f('●○○ jamais ici', C({ zones:[{c:G, pts:Z, hachure:true, trait:2, nom:'jamais ici', nx:452, ny:452, nt:20}] }),
-      "Hachuré, rues grises. La zone <b>se retire</b> — c'est cohérent : ce qui est dedans ne remonte plus."),
-    f('●●○ ça m’est égal', C({ zones:[{c:A, pts:Z, trait:1.4, nom:'le passage', nx:452, ny:452, nt:20}] }),
-      "Rien qu'un filet et un mot. Une zone qui ne pèse sur rien <b>ne doit rien peser à l'écran</b> non plus."),
-    f('●●● en priorité', C({ zones:[{c:A, pts:Z, teinte:true, trait:2, nom:'mon quartier', nx:452, ny:452, nt:20}] }),
-      "Les rues prennent l'encre. La seule zone qui ait le droit de briller, c'est celle qu'on préfère."),
+    f('○○○ jamais ici', C({ w:232, zones:[{c:G, pts:Z, hachure:true, trait:2, nom:'jamais ici', nx:452, ny:452, nt:19}] }),
+      "Hachuré, rues grises : la zone <b>se retire</b>. Ce qui est dedans ne remonte plus, jamais."),
+    f('●○○ rarement', C({ w:232, zones:[{c:A, pts:Z, trait:1.4, pointille:true, nom:'les Halles', nx:452, ny:452, nt:19}] }),
+      "Un filet <b>discontinu</b> : j'y passe, mais rarement. Ça descend dans la liste, ça ne disparaît pas. <em>Le cran 2 partage ce dessin : le cadran a quatre crans, la carte en montre trois.</em>"),
+    f('●●● comme d’habitude — le défaut', C({ w:232, zones:[{c:A, pts:Z, trait:1.4, nom:'le passage', nx:452, ny:452, nt:19}] }),
+      "L'état de départ. Une zone qui ne diminue rien <b>ne pèse rien à l'écran</b> non plus — un filet, un mot."),
+    f('♥ en priorité', C({ w:232, zones:[{c:A, pts:Z, teinte:true, trait:2, nom:'mon quartier', nx:452, ny:434, nt:19}],
+        sus:`<path transform="translate(444,452) scale(.62)" d="M12 20s-7.2-4.4-7.2-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.2 2.6c0 5-7.2 9.4-7.2 9.4z"
+              fill="${A}" stroke="rgba(10,10,10,.8)" stroke-width="1.6" paint-order="stroke"/>` }),
+      "Les rues prennent l'encre, et <b>le cœur se pose sous le mot</b>. La seule zone qui ait le droit de briller."),
   ],
 },
 {
   no:'la fiche', nom:'La couleur<br>est à toi', tampon:['t-garde','le poids se règle à côté'],
   lignes:[
     ['la couleur',"six encres, aucune ne veut dire quoi que ce soit. Tu prends celle qui te plaît, tu peux la répéter — c'est le MOT qui distingue."],
-    ['le poids',"juste en dessous, sur trois crans. Deux réglages indépendants : une zone rouge n'est pas une zone dangereuse, c'est une zone rouge."],
+    ['le poids',"juste en dessous : le cadran (plein au départ) et le cœur (éteint). Indépendants de la couleur — une zone rouge n'est pas une zone dangereuse, c'est une zone rouge."],
     ['le partage',"« proposer aux super potes » — l'anneau intérieur, dix personnes maximum, choisies une par une."],
   ],
   frames:[
@@ -117,9 +126,17 @@ const BLOCS = [
         <div class="encres">${ENCRES.map((e,i)=>`<i class="${i===5?'on':''}" style="background:${e.c}"></i>`).join('')}</div>
         <span class="lbl">me recommander ici ?</span>
         <div class="crans">
-          <div class="cran on"><div class="p">●○○</div><div class="m">jamais</div></div>
-          <div class="cran"><div class="p">●●○</div><div class="m">égal</div></div>
-          <div class="cran"><div class="p">●●●</div><div class="m">en priorité</div></div>
+          <div class="cran"><div class="p">○○○</div><div class="m">jamais</div></div>
+          <div class="cran"><div class="p">●○○</div><div class="m">rarement</div></div>
+          <div class="cran"><div class="p">●●○</div><div class="m">un peu moins</div></div>
+          <div class="cran on"><div class="p">●●●</div><div class="m">comme d’habitude</div></div>
+        </div>
+        <div class="ligne-act" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span>en priorité<span style="display:block">le cœur — éteint par défaut</span></span>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(239,233,216,.45)"
+               stroke-width="1.6" stroke-linejoin="round" style="flex:none">
+            <path d="M12 20s-7.2-4.4-7.2-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.2 2.6c0 5-7.2 9.4-7.2 9.4z"/>
+          </svg>
         </div>
         <div class="ligne-act">proposer aux super potes<span>l’anneau intérieur — 10 max</span></div>
         <div class="ligne-act" style="color:var(--cire)">raturer la zone<span>appui long — le trait se tire</span></div>
@@ -129,7 +146,7 @@ const BLOCS = [
       <div class="feuille recue">
         <div class="fh">Karim te propose une zone</div>
         <div class="mot">jamais ici</div>
-        <div class="meta">8 points · autour de Belleville · il l’a mise en ●○○</div>
+        <div class="meta">8 points · autour de Belleville · il a éteint le cadran</div>
         <p style="font-size:11.5px;line-height:1.6;color:var(--encre-2);margin-top:10px">
           Tant que tu n’as pas dit oui, <b style="color:var(--encre);font-weight:400">elle ne
           change rien</b> à ce que tu vois. Une zone reçue est une proposition, jamais un filtre.</p>
@@ -162,12 +179,15 @@ document.getElementById('planche').innerHTML = BLOCS.map((b) => `
 
 document.getElementById('reco').innerHTML = `
   <b>Ce que tes deux corrections changent — et c’est déjà codé (539 tests verts).</b><br>
-  <span class="q">1.</span> <b>Trois crans, pas deux sens.</b> <code>poidsDuLieu()</code>,
-  <code>ecarterLesJamais()</code>, <code>classerParZones()</code> : « jamais » retire toujours,
-  « en priorité » remonte sans filtrer, et à poids égal l’ordre d’origine tient — la distance et
-  l’ouverture continuent de décider en dessous.<br>
-  <span class="q">2.</span> <b>La couleur ne dit rien, la matière dit tout</b> : filet seul
-  (égal) · hachuré (jamais) · rues teintées (en priorité). Une zone qui ne pèse sur rien ne pèse
+  <span class="q">1.</span> <b>Un cadran plein par défaut, un cœur éteint à côté</b> — et non un
+  barème où il faudrait choisir sa note.
+  <code>poidsDuLieu()</code>,
+  <code>rangDuLieu()</code>, <code>ecarterLesJamais()</code>, <code>classerParZones()</code> :
+  le cadran éteint retire toujours, le cœur remonte sans filtrer, les crans 1 et 2 font descendre
+  sans supprimer, et à rang égal l’ordre d’origine tient — la distance et l’ouverture continuent
+  de décider en dessous.<br>
+  <span class="q">2.</span> <b>La couleur ne dit rien, la matière dit tout</b> : hachuré (éteint) ·
+  filet discontinu (diminué) · filet plein (comme d’habitude) · rues teintées (♥). Une zone qui ne pèse sur rien ne pèse
   rien à l’écran.<br>
   <span class="q">3.</span> <b>Le partage existe — au super cercle, dix maximum.</b> Tu m’as fait
   reculer sur mon interdit, et tu as raison sur le principe : dix personnes choisies une par une,
@@ -176,8 +196,12 @@ document.getElementById('reco').innerHTML = `
   comme une <b>proposition</b> (<code>ZoneRecue.acceptee</code>) : tant qu’elle n’est pas
   acceptée, elle ne pèse sur rien — sinon le jugement d’un ami retirerait des lieux de ta vie
   sans que tu le saches.<br>
-  <span class="q">→ à trancher :</span> les mots des trois crans. « <b>jamais ici · ça m’est
-  égal · en priorité</b> » (ma reco), ou les tiens.`
+  <span class="q">4.</span> <b>Le cœur est un interrupteur, pas un cran</b> : il s’allume
+  au-dessus du plein et s’éteint tout seul si le cadran tombe à zéro. Il est dessiné à l’encre
+  (<code>ICoeur</code>, monoline), jamais un emoji : la DA les interdit dans le chrome. Et ce
+  n’est pas une étoile — on ne note pas un quartier, on dit à l’app à quel point on veut y aller.<br>
+  <span class="q">→ à trancher :</span> les mots des crans — « <b>jamais ici · rarement · un peu
+  moins · comme d’habitude</b> », plus « <b>en priorité</b> » pour le cœur (ma reco), ou les tiens.`
 
 document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
 </script>

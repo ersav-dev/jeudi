@@ -132,6 +132,17 @@ export const ITrombone = ({ taille, actif }: { taille?: number; actif?: boolean 
 )
 // le crayon (corriger) : la mine, le corps, le trait qu'on vient de poser —
 // on ne raye pas ce qui est écrit, on le reprend.
+// le cœur du carnet — tracé à l'encre, PAS un emoji (la DA les interdit dans
+// le chrome). Il dit le cran haut des zones : « en priorité », le quartier
+// qu'on aime. `plein` quand le cran est choisi.
+export const ICoeur = ({ taille, plein }: { taille?: number; plein?: boolean }) => (
+  <Svg taille={taille}>
+    <path
+      d="M12 20s-7.2-4.4-7.2-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.2 2.6c0 5-7.2 9.4-7.2 9.4z"
+      fill={plein ? 'currentColor' : 'none'}
+    />
+  </Svg>
+)
 export const ICrayon = ({ taille }: { taille?: number }) => (
   <Svg taille={taille}><path d="M4 20h3.2L18.6 8.6a2.3 2.3 0 0 0-3.2-3.2L4 16.8z" /><path d="M14.4 6.6l3.2 3.2" /></Svg>
 )

@@ -191,20 +191,34 @@ Mon binaire `vers/contre` est mort, et il avait tort : entre « j'évite » et
 « j'adore » il y a **« ça m'est égal »**, l'état de 90 % de la ville. C'est
 la **pastille du carnet** — les critères gradués, jamais des étoiles :
 
-| cran | mot | ce que ça fait |
-|---|---|---|
-| ●○○ | jamais ici | **retire**, toujours, sans rien allumer |
-| ●●○ | ça m'est égal | rien (le défaut d'une zone qu'on vient de tracer) |
-| ●●● | en priorité | **remonte** quand c'est possible — ne filtre pas |
+**Puis précisé dans la foulée** — « de base c'est les 3 qui sont actives, et
+le cœur est éteint » : le cadran est **plein au départ** (une zone qu'on
+vient de tracer ne diminue rien), on le **baisse** pour être proposé moins
+souvent, et l'**éteindre** est le retrait. Le **cœur** est un interrupteur à
+côté, éteint, qui ajoute un étage **au-dessus** du plein.
 
-Le cran **le plus bas gagne** : un « jamais » l'emporte sur un « en
-priorité » qui le chevauche (le retrait est une décision, la préférence un
-souhait). À poids égal, l'ordre d'origine tient — la distance et l'ouverture
+| cadran | mot | ce que ça fait |
+|---|---|---|
+| ●●● | comme d'habitude | **le défaut** — rien ne change |
+| ●●○ | un peu moins | ça descend un peu |
+| ●○○ | rarement | ça descend beaucoup |
+| ○○○ | jamais ici | **retire**, toujours, sans rien allumer |
+| ♥ | en priorité | **remonte** — ne filtre pas. S'éteint si le cadran tombe à zéro |
+
+Le cœur est dessiné à l'encre (`ICoeur`, monoline) — **jamais un emoji**, la
+DA les interdit dans le chrome — et ce n'est **pas une étoile** : on ne note
+pas un quartier, on dit à l'app à quel point on veut qu'elle nous y envoie.
+
+Le cran **le plus bas gagne** : un cadran éteint l'emporte sur un cœur qui
+le chevauche (le retrait est une décision, la préférence un souhait). À rang
+égal, l'ordre d'origine tient — la distance et l'ouverture
 continuent de décider en dessous. Planche 8 : `design/quartiers_poids_001.png`.
 
 **La couleur ne veut plus rien dire** : elle est à l'utilisateur, il la
 choisit et peut la répéter. C'est la **matière** qui porte le poids —
-filet seul (égal) · hachuré (jamais) · rues teintées (en priorité). Deux
+hachuré (éteint) · filet discontinu (diminué) · filet plein (comme
+d'habitude) · rues teintées (♥). Le cadran a quatre crans, la carte en
+montre trois. Deux
 réglages indépendants dans la fiche : *une zone rouge n'est pas une zone
 dangereuse, c'est une zone rouge.*
 
@@ -261,8 +275,8 @@ jamais, et n'influencent jamais ce que voit quelqu'un d'autre.**
 
 - **le mot des outils** : « la plume » et « le lasso », ou « la plume » et
   « le doigt » ;
-- **les mots des trois crans** : « jamais ici · ça m'est égal · en priorité » (ma reco), ou les tiens ; (ancienne question : « j'y vais / j'évite », ça
-  se comprend sans mode d'emploi), « pour moi / jamais », ou le tien ;
+- **les mots des crans** : « jamais ici · rarement · un peu moins · comme
+  d'habitude », plus « en priorité » pour le cœur (ma reco), ou les tiens ;
 - **les lettres** : trois familles ou quatre · majuscules seules ou aussi
   les minuscules · les accents (É È À) — se tranche quand on y sera, pas
   avant.

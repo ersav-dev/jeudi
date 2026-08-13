@@ -175,7 +175,8 @@ function cadre(o) {
       ${zz.hachure ? `<path d="${zz.d}" fill="url(#${id}h${iz})" stroke="none"/>` : ''}
       ${zz.contour === false ? '' : `<path d="${zz.d}"
           class="${zz.fantome ? 'contour-fantome' : zz.vif ? 'contour-vif' : 'contour'}"
-          style="stroke-width:${zz.fantome ? 1.6 : zz.vif ? (zz.trait || 2.2) : (zz.repos || 1.4)}"/>`}
+          style="stroke-width:${zz.fantome ? 1.6 : zz.vif ? (zz.trait || 2.2) : (zz.repos || 1.4)}${
+            zz.pointille ? ';stroke-dasharray:3 4' : ''}"/>`}
       ${zz.rature ? `<path d="${zz.rature}" class="rature"/>` : ''}
       ${zz.poignees ? zz.P.map((p, i) => {
         const r = zz.actif === i ? 7 : 5, cl = `poignee ${zz.actif === i ? 'po-actif' : ''}`
