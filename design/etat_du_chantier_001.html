@@ -223,32 +223,35 @@ summary .sq{font-size:11.5px;opacity:.45;display:block;margin-top:2px;font-weigh
 
 <h1>où on en est</h1>
 <svg class="trace" viewBox="0 0 206 11" aria-hidden="true"><path d="M3 7.5c22-3.4 47-4.6 71-4.2 26 .5 41 2.9 62 3.3 21 .4 43-1.2 67-3.1"/></svg>
-<p class="sous">jeudi — l'état du chantier au 10 août 2026. Ce que l'app sait
-faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
+<p class="sous">jeudi — l'état du chantier au 12 août 2026. Ce que l'app sait
+faire, ce qui manque avant d'ouvrir, et qui fait quoi maintenant.</p>
 
 <div class="jauge">
-  <div><div class="pct">67 <small>%</small></div></div>
+  <div><div class="pct">74 <small>%</small></div></div>
   <div class="jc">
     <div class="jl">du chemin vers une ouverture publique. Le produit est <b>debout et
       vérifié</b> ; ce qui manque, c'est précisément <b>ce qui distingue jeudi de
       Google Maps</b> — le jugement des gens en qui tu as confiance.</div>
     <div class="barre">
-      <i style="width:67%;background:var(--fait)"></i>
-      <i style="width:12%;background:var(--cours)"></i>
-      <i style="width:21%;background:var(--afaire)"></i>
+      <i style="width:74%;background:var(--fait)"></i>
+      <i style="width:10%;background:var(--cours)"></i>
+      <i style="width:16%;background:var(--afaire)"></i>
     </div>
     <div class="leg">
-      <span><i class="pastille" style="background:var(--fait)"></i> debout — 67 %</span>
-      <span><i class="pastille" style="background:var(--cours)"></i> à moitié — 12 %</span>
-      <span><i class="pastille" style="background:var(--afaire)"></i> à faire — 21 %</span>
+      <span><i class="pastille" style="background:var(--fait)"></i> debout — 74 %</span>
+      <span><i class="pastille" style="background:var(--cours)"></i> à moitié — 10 %</span>
+      <span><i class="pastille" style="background:var(--afaire)"></i> à faire — 16 %</span>
     </div>
     <div class="jl" style="margin-top:14px;opacity:.5;font-size:12px">
-      <b>Le chiffre n'a bougé que d'un point en deux jours, et c'est la vérité.</b>
-      Le 9 il était descendu de 69 à 66 parce que l'audit d'empaquetage avait trouvé
-      un trou qu'aucune liste ne comptait (on ne peut pas bloquer quelqu'un). Le 10 a
-      été une journée de <b>réparations et de finitions</b> — trois bugs sérieux, les
-      monuments soldés, l'app allégée de 619 ko — plus une petite fonction. Rien de
-      tout ça n'est un pilier. Une jauge honnête monte lentement.
+      <b>+7 points en un jour — la plus grosse montée depuis le début, et c'est la
+      seule fois où je l'assume.</b> Le 12 août a levé le <b>verrou de l'ouverture
+      publique</b> : signaler et bloquer existent pour de vrai, migrations collées,
+      la règle dans les policies. C'était la seule ligne du calcul qui touchait à la
+      <em>sécurité des gens</em>. Et le push est codé et testé de bout en bout — il
+      attend cinq gestes de ta main. Deux piliers dans la même journée : la jauge a
+      le droit de bouger. <b>Ce qui ne monte pas d'un pouce :</b> la boucle de
+      confiance — les deux anneaux, le geste de juger, la lentille. C'est la moitié
+      qui reste, et c'est toujours la plus importante.
     </div>
   </div>
 </div>
@@ -256,20 +259,21 @@ faire, ce qui manque avant d'ouvrir, et qui fait quoi cette semaine.</p>
 <!-- ═══ LE CONTRÔLE ═══════════════════════════════════════════════════ -->
 <h2>le contrôle — les faits, pas les impressions</h2>
 <div class="ctrl">
-  <div><div class="n">495</div><div class="q">tests verts, 35 fichiers<br><code>vitest run</code></div></div>
+  <div><div class="n">502</div><div class="q">tests verts, 36 fichiers<br><code>vitest run</code></div></div>
   <div><div class="n">0</div><div class="q">erreur de type<br><code>tsc -b --noEmit</code></div></div>
-  <div><div class="n">17/17</div><div class="q">migrations appliquées<br>sondées une par une</div></div>
-  <div><div class="n">0</div><div class="q">commit en retard<br>poussé sur GitHub</div></div>
-  <div><div class="n">418<small style="font-size:13px"> ko</small></div><div class="q">la carte au premier affichage<br><em>1 037 ko avant</em></div></div>
-  <div><div class="n gris">302</div><div class="q">spots réels dans le cloud<br>plus un seul faux profil</div></div>
+  <div><div class="n">0</div><div class="q">erreur de lint — <b>une première</b><br><code>eslint --max-warnings 0</code></div></div>
+  <div><div class="n">20/20</div><div class="q">migrations appliquées<br><em>0020 collée ce soir</em></div></div>
+  <div><div class="n">37<small style="font-size:13px"> k</small></div><div class="q">lignes dans <code>app/src</code><br>124 fichiers</div></div>
+  <div><div class="n gris">410</div><div class="q">stations de transport<br><em>+108 le 12 août</em></div></div>
 </div>
-<p><b>Une correction importante.</b> Trois notes de suivi disaient encore que des
-migrations attendaient d'être collées (0011 super 8, 0012 étiquettes, 0014 pellicule).
-J'ai interrogé la base ce soir, table par table : <code>photos.clip_path</code>,
-<code>lieux.etiquettes</code>, <code>vues_pellicule</code>, <code>rayures</code>,
-<code>super_potes</code>, <code>jugements</code> — <b>tout répond</b>. Les 17 migrations
-sont passées. <b>Aucun SQL de schéma ne t'attend</b> ; il ne reste que le fichier de
-données de l'enrichissement.</p>
+<p><b>Sondé dans la base ce soir, table par table.</b> <code>signalements</code>,
+<code>blocages</code> et <code>push_abonnements</code> répondent toutes les trois :
+les deux chantiers du jour sont <b>vraiment</b> en production, pas seulement dans le
+dépôt — et tu as collé la 0020 pendant que j'écrivais cette page, donc
+<b>aucun SQL de schéma ne t'attend plus</b>. Le lint passe à zéro pour la première
+fois depuis le début du projet : les deux erreurs qui traînaient (un
+<code>setState</code> dans un effet, un composant logé dans le fichier d'entrée)
+sont mortes.</p>
 
 <!-- ═══ LA FRISE ══════════════════════════════════════════════════════ -->
 <h2>ce qui tient debout</h2>
@@ -366,6 +370,36 @@ données de l'enrichissement.</p>
     </ul>
   </div>
 
+  <div class="etape f">
+    <div class="quand">12 août · la plus grosse journée</div>
+    <div class="tt">Le verrou tombe, l'app se relit</div>
+    <ul>
+      <li><b>signaler et bloquer, pour de vrai</b> — deux migrations (0018, 0019)
+        <b>collées et sondées</b> : un signalement s'écrit en base, un blocage est
+        symétrique et silencieux, et il vit <em>dans les policies</em> — pas dans
+        l'écran, qui pourrait mentir. Il traverse lieux, tips, photos, rayures,
+        jugements et les deux buckets d'un coup</li>
+      <li>deux trous anciens réparés au passage : la règle d'ancienneté de la 0013
+        ne gardait <b>jamais</b> la table des lieux, et n'importe qui pouvait écrire
+        un tip sur n'importe quel lieu, même privé</li>
+      <li><b>le push est codé</b> — service worker maison (le précache est identique,
+        vérifié entrée par entrée), interrupteur « me prévenir », fonction d'envoi,
+        cron du soir, clés VAPID. Le flux de mise à jour testé en cycle complet : il
+        a révélé deux bugs qui <em>préexistaient</em> — le toast ne s'affichait
+        jamais sur l'écran de connexion, et une course au démarrage l'avalait</li>
+      <li><b>la relecture du code écrit sans moi</b> (9→11 août) : 6 bugs, dont
+        « manger seul » qui perdait l'envie de manger, et le Vélib' qui pouvait
+        cacher une station pleine derrière deux vides</li>
+      <li><b>eslint à zéro</b> — les deux erreurs qui traînaient depuis toujours</li>
+      <li><b>Auber existe enfin</b> : +108 stations récupérées d'OSM (Luxembourg,
+        Vincennes, la branche Orly), et la pastille du RER B revient à Gare du Nord.
+        Les 30 couleurs de lignes vérifiées contre le référentiel IDFM : zéro écart</li>
+      <li>le <b>méga-audit visuel</b> — trois regards indépendants, 20 trouvailles</li>
+      <li>la <b>bande déchirée</b> : la barre du bas devient un îlot de vrai papier,
+        le « + » au centre — six itérations à ton œil</li>
+    </ul>
+  </div>
+
   <div class="etape c">
     <div class="quand">à moitié</div>
     <div class="tt">La boucle de confiance</div>
@@ -375,7 +409,7 @@ données de l'enrichissement.</p>
       <li class="c">la lentille « selon Karim » — <em>attend les deux au-dessus</em></li>
       <li class="c">l'enrichissement — <em>le SQL est écrit, il attend d'être collé</em></li>
       <li class="c">les 4 glyphes — <em>vin, chope, thé, glace : à dessiner sur l'iPad</em></li>
-      <li class="b">signaler et bloquer — <em>un signalement ne quitte pas le téléphone, et personne ne peut être bloqué</em></li>
+      <li class="c">le push — <em>codé et testé ; cinq gestes de ta main pour l'allumer</em></li>
     </ul>
   </div>
 
@@ -418,84 +452,71 @@ en parallèle pendant que tu fais autre chose.</p>
 </div>
 
 <!-- ═══ LES JOURS ═════════════════════════════════════════════════════ -->
-<h2>la semaine, telle que je la propose</h2>
+<h2>ce qui vient — et dans quel ordre</h2>
 <div class="jours">
 
   <div class="jour">
-    <div class="j-tete"><div class="j-date">lundi 10 août</div>
-      <div class="j-titre">le geste de juger</div></div>
-    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
-      <span class="t">Les pastilles signées</span>
-      <span class="d">Les tables sont en base. Reste le geste : ●○○ ●●○ ●●● sur un
-        critère, signé par une personne. Jamais d'étoiles, jamais une moyenne. Maquette
-        avant code.</span></div>
-    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
-      <span class="t">Le bug des spots archivés</span>
-      <span class="d">Confirmé ce soir : <code>tousLesLieux</code> ne lit que
-        <code>statut='actif'</code> (db.ts, deux endroits) — l'écran « restaurer » ne
-        peut rien afficher.</span></div>
-    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
-      <span class="t">Les petites dettes</span>
-      <span class="d">Le cap des super potes affiche encore 20 au lieu de 10 ·
-        <code>erreurTip</code> non traduit · FormAjout court-circuite la file
-        Nominatim.</span></div>
-    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
-      <span class="t">Le dernier gros chunk</span>
-      <span class="d">Le vendor Supabase, ~175 ko. Motif déjà établi (714 → 597 ko la
-        semaine dernière) : rien à inventer.</span></div>
+    <div class="j-tete"><div class="j-date">tout de suite</div>
+      <div class="j-titre">ce que personne ne peut faire à ta place</div></div>
+    <div class="tache"><span class="puce f-toi">toi · 10 minutes</span>
+      <span class="t">L'attaque du blocage</span>
+      <span class="d">Deux jetons, une commande. Tant qu'elle n'a pas rendu
+        <b>zéro fuite</b>, le verrou de sécurité n'est pas levé — seulement écrit.</span></div>
+    <div class="tache"><span class="puce f-toi">toi · 20 minutes</span>
+      <span class="t">Les quatre gestes restants du push</span>
+      <span class="d">La clé sur Vercel, les secrets, la fonction, le cron. Puis la
+        notification reçue app fermée — le seul test qui compte.</span></div>
+    <div class="tache"><span class="puce f-toi">toi · une soirée</span>
+      <span class="t">Le test à deux comptes</span>
+      <span class="d">Toujours le trou le plus large du document, et maintenant il
+        peut aussi éprouver le blocage pour de vrai. Ce sont les cinq points que je
+        retire à la jauge.</span></div>
   </div>
 
   <div class="jour">
-    <div class="j-tete"><div class="j-date">mardi 11 août</div>
-      <div class="j-titre">voir par les yeux d'un autre</div></div>
-    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
-      <span class="t">« selon Karim » sur la fiche</span>
-      <span class="d">Un lieu regardé à travers les critères d'un proche. C'est la
-        moitié qui manque au produit — celle qu'aucune carte ne sait faire.</span></div>
-    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
-      <span class="t">L'anneau intérieur, à l'écran</span>
-      <span class="d">Choisir ses 10 super potes, et que ça débloque leur regard.</span></div>
-    <div class="tache"><span class="puce f-opus seul">opus · seul</span>
-      <span class="t">Le lexique d'intentions</span>
-      <span class="d">manger → resto · danser → nuit · bizarre → insolite. Table écrite
-        à la main, jamais devinée. C'est le prérequis n°2 de la refonte
-        <i class="q">trouver</i>, après l'enrichissement.</span></div>
-    <div class="tache"><span class="puce f-toi">toi</span>
-      <span class="t">Les 4 glyphes sur l'iPad</span>
-      <span class="d">Le verre à vin, la chope, le thé lisible, la glace à deux boules
-        — sur le gabarit 1200 px. Tu dessines, un agent vectorise le soir même.</span></div>
-  </div>
-
-  <div class="jour">
-    <div class="j-tete"><div class="j-date">mercredi 12 août</div>
-      <div class="j-titre">ce qui ne se rattrape pas</div></div>
-    <div class="tache"><span class="puce f-fable">fable 5 · session dédiée</span>
-      <span class="t">Les notifications push</span>
-      <span class="d">Une demi-journée pleine, seule. Le piège n°1 : le service worker
-        porte aussi la mise à jour de l'app — s'il casse, tout le monde reste bloqué
-        sur une vieille version, silencieusement. Plan écrit dans
-        <code>CHANTIER_PUSH.md</code>.</span></div>
-    <div class="tache"><span class="puce f-fable">fable 5 · valider d'abord</span>
+    <div class="j-tete"><div class="j-date">la prochaine session</div>
+      <div class="j-titre">au choix — tout est prêt à démarrer</div></div>
+    <div class="tache"><span class="puce f-fable">fable · tu réponds d'abord</span>
       <span class="t">Le tirage chez un pote</span>
-      <span class="d">Aujourd'hui une photo prise sur le spot d'un ami reste sur ton
-        téléphone. Ouvrir ça, c'est toucher aux policies des photos : le design se
-        valide <b>avant</b> une ligne de SQL.</span></div>
-    <div class="tache"><span class="puce f-fable">fable 5 · ta décision</span>
-      <span class="t">« publier = prouver »</span>
-      <span class="d">Le sujet du bas de page. À trancher avec un modèle qui sait dire
-        non.</span></div>
-    <div class="tache"><span class="puce f-fable">fable 5 · ta décision</span>
-      <span class="t">Le profil découvrable</span>
-      <span class="d">Trois lettres suffisent à tomber sur de vrais gens. Réglage ?
-        prénom exact ? amis d'amis ? Rien n'est tranché — et c'est de la vie privée.</span></div>
+      <span class="d">Trois questions, puis la migration et le code dans la foulée.
+        Le Storage est déjà prêt.</span></div>
+    <div class="tache"><span class="puce f-opus">opus · à coder</span>
+      <span class="t">La hiérarchie du transport</span>
+      <span class="d">Tranchée sur planche : le cachet à l'encre, le nom qui se tait,
+        la couleur en récompense du tap. Tout est localisé — une session.</span></div>
+    <div class="tache"><span class="puce f-sonnet seul">agents · en parallèle</span>
+      <span class="t">Le P0 de l'audit</span>
+      <span class="d">Les états vides qui mentent, les cinq cibles tactiles sous
+        44 px, « signaler ce lieu » à remettre dans la fiche. Motif connu, chacun son
+        agent. <em>(Les toasts qui s'écrasaient sont déjà réparés.)</em></span></div>
+    <div class="tache"><span class="puce f-opus">opus · avec toi</span>
+      <span class="t">Le geste de juger, enfin</span>
+      <span class="d">Les tables attendent depuis le 9 août. C'est <b>la</b> pièce qui
+        fait monter la boucle de confiance — la ligne à 30 % qui pèse 15.</span></div>
+  </div>
+
+  <div class="jour">
+    <div class="j-tete"><div class="j-date">quand tu veux</div>
+      <div class="j-titre">cadré, en attente de ton feu vert</div></div>
+    <div class="tache"><span class="puce f-toi">toi · une planche d'abord</span>
+      <span class="t">Les stickers</span>
+      <span class="d">Cinq questions, puis une planche, puis une demi-journée. Le
+        catalogue de monuments ne coûte presque rien : les gravures existent déjà.</span></div>
+    <div class="tache"><span class="puce f-sonnet seul">agent · seul</span>
+      <span class="t">Le pipeline des 120 lieux</span>
+      <span class="d">Géocodage, dédupe contre tes 302, horaires par OSM — puis trois
+        éclaireurs éditoriaux. Une demi-journée de moulinette, motif déjà en place.</span></div>
+    <div class="tache"><span class="puce f-fable">fable · ta décision</span>
+      <span class="t">« publier = prouver » et le profil découvrable</span>
+      <span class="d">Les deux arbitrages de fond, toujours ouverts. Ils ne se
+        délèguent pas et ils ne se devinent pas.</span></div>
   </div>
 
 </div>
-<p><i class="q">Les jours sont une proposition, pas un engagement : les agents du lundi
-peuvent tourner ce soir, et rien de ce qui est chez Fable ne devrait démarrer avant
-mercredi. <b>Jeudi et vendredi sont déjà pris</b> par le chantier qui est sorti de
-l'audit de ce soir — signaler et bloquer pour de vrai (2 à 3 jours, chez Fable aussi :
-c'est de la sécurité des gens).</i></p>
+<p><i class="q">L'ordre est une proposition, pas un engagement — mais la première
+colonne, elle, commande tout : deux chantiers sont <b>écrits, testés et éteints</b>
+tant que tu n'as pas fait tes gestes. C'est la première fois du projet que le code
+attend la main plutôt que l'inverse.</i></p>
 
 <!-- ═══ LES DATES ═════════════════════════════════════════════════════ -->
 <h2>les dates — quatre ouvertures, pas une</h2>
@@ -752,11 +773,11 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <div class="tw"><table>
 <tr><th>chantier</th><th>qui</th><th>avec toi ?</th><th>ce qu'il faut savoir</th></tr>
 
-<tr><td>Les notifications push</td><td class="mono" style="color:var(--fable)">fable</td><td>au départ</td>
- <td>Le seul chantier d'infrastructure qui reste. Bascule du service worker, clés VAPID, une fonction Edge, un cron à 18 h. Ligne éditoriale stricte : demande de cercle, anniversaire, verdict d'hier, le rendez-vous du jeudi — rien d'autre, jamais de réengagement.</td></tr>
+<tr><td>Les notifications push</td><td class="mono" style="color:var(--cours)">codé le 12/08</td><td><b>5 gestes</b></td>
+ <td><b>Tout est écrit et vérifié.</b> Le service worker est passé en mode « maison » (précache identique, vérifié entrée par entrée), l'interrupteur « me prévenir » vit dans le centre de notifications, la fonction d'envoi et le cron du soir sont prêts, les clés VAPID générées. Ligne éditoriale tenue : demande de cercle, le rendez-vous du jeudi — rien d'autre. <b>Le test du flux de mise à jour a payé</b> : il a révélé deux bugs qui préexistaient (le toast invisible sur l'écran de connexion, une course au démarrage). Reste tes cinq gestes — voir l'encadré plus bas.</td></tr>
 
-<tr><td>RLS « tirage chez un pote »</td><td class="mono" style="color:var(--fable)">fable</td><td>valider le design</td>
- <td>Écrire une photo sur le lieu d'un ami sans pouvoir toucher aux siennes. <code>syncPhotosLieu</code> réécrit tout aujourd'hui : incompatible avec plusieurs auteurs sur un même lieu.</td></tr>
+<tr><td>RLS « tirage chez un pote »</td><td class="mono" style="color:var(--toi)">3 questions</td><td><b>ta décision</b></td>
+ <td><b>Le design est écrit</b> (<code>DESIGN_TIRAGE_CHEZ_UN_POTE.md</code>) et vérifié dans le code : le Storage est <b>déjà prêt</b> (les chemins portent l'identité du déposant), seule la table des photos bloque. Les policies proposées, le chemin d'écriture ciblé qui remplace la réécriture globale, et le garde-fou pour que la synchro du propriétaire n'efface jamais les lignes des autres. Je code dès que tu réponds aux trois questions.</td></tr>
 
 <tr><td>« publier = prouver »</td><td class="mono" style="color:var(--fable)">fable</td><td><b>ta décision</b></td>
  <td>Les 3 photos ne sont pas exigées, et 302 spots importés n'ont jamais été prouvés. Voir la note rouge.</td></tr>
@@ -764,8 +785,8 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Le profil découvrable</td><td class="mono" style="color:var(--fable)">fable</td><td><b>ta décision</b></td>
  <td>Plus les notifications « demande reçue » et « demande acceptée », qui manquent.</td></tr>
 
-<tr><td>Signaler et bloquer, pour de vrai</td><td class="mono" style="color:var(--fable)">fable</td><td>oui</td>
- <td><b>Verrou de l'ouverture publique. Cadré le 10 août : <code>CHANTIER_SIGNALER_BLOQUER.md</code></b> — mercredi n'a plus à découvrir le terrain. L'état réel : signaler un lieu n'écrit que dans le <code>localStorage</code> du téléphone, signaler une photo part vers une boîte qui n'existe pas, et « retirer de mon cercle » n'est pas un blocage (la personne revient aussitôt et voit toujours les 302 spots publics). Le document liste les <b>dix tables</b> que le blocage traverse et le piège principal : la lecture des lieux se fait <b>sans filtre <code>owner_id</code></b> — c'est la RLS qui décide seule, donc un filtre côté client ne servirait à rien. <b>Quatre décisions t'attendent</b> dedans.</td></tr>
+<tr><td>Signaler et bloquer, pour de vrai</td><td class="mono" style="color:var(--fait)">LIVRÉ · en base</td><td>l'attaque</td>
+ <td><b>Le verrou de l'ouverture publique est levé côté code, le 12 août.</b> Deux migrations collées et sondées : un signalement <b>s'écrit en base</b> (chacun crée et lit les siens, jamais de compteur), et bloquer est symétrique, silencieux, et vit <b>dans les policies</b> — pas dans l'écran. Il traverse les lieux, les tips, les photos, les rayures, les jugements et les deux buckets d'un coup, parce qu'il est glissé dans les trois fonctions que toutes les lectures partagent. Tes décisions sont dedans : le passé disparaît, un match en cours finit puis plus jamais. <b>Il reste l'attaque à deux jetons</b> — tant qu'elle n'a pas rendu zéro fuite, on ne considère rien comme acquis.</td></tr>
 
 <tr class="sep"><td>Le geste de juger</td><td class="mono" style="color:var(--opus)">opus</td><td>maquette d'abord</td>
  <td>Pastilles 3 niveaux signées, jamais d'étoiles — la mécanique des WC généralisée. Les tables sont en base depuis ce soir.</td></tr>
@@ -797,8 +818,10 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr><td>Les petites dettes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
  <td>Cap 20 → 10 · <code>erreurTip</code> non traduit · FormAjout vs AjoutMain · la file Nominatim court-circuitée.</td></tr>
 
-<tr><td>Le chunk vendor Supabase</td><td class="mono" style="color:var(--sonnet)">agent</td><td>non</td>
- <td>~175 ko. Chantier déjà documenté, motif déjà appliqué une fois.</td></tr>
+<tr><td>Le chunk vendor Supabase</td><td class="mono" style="color:var(--fait)">sans objet</td><td>—</td>
+ <td><b>La note était fausse et je la retire.</b> Vérifié le 11 août : il n'existe
+ <em>aucun</em> chunk vendor Supabase séparé — la bibliothèque vit dans le chunk
+ principal. Les ~175 ko annoncés depuis des jours ne correspondaient à rien.</td></tr>
 
 <tr><td>Vectoriser tes 4 glyphes</td><td class="mono" style="color:var(--sonnet)">agent</td><td>tu dessines</td>
  <td>Contraintes fermées : viewBox 24, monoline 1,8, 4 tracés max, doit tenir à 18 px.</td></tr>
@@ -809,8 +832,14 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 <tr class="sep"><td><b>L'happy hour, partout</b></td><td class="mono" style="opacity:.5">à écrire</td><td>—</td>
  <td><b>Idée du 10 août.</b> C'est LE fait économique de la nuit, et il traverse tout : le deck (« il est 18h40, celui-là finit son happy hour à 19h »), la météo du porte-monnaie (l'happy hour change de tranche de prix), le moment (régler « ce soir 20h » peut le faire tomber), la fiche, la recherche. Le nœud n'est pas le code mais <b>la donnée</b> : ni OSM ni Google ne la portent — elle vit sur l'Instagram des lieux. Donc elle viendra des gens, comme la propreté des WC : un champ qu'on remplit quand on y est. Ça la range du côté des critères, pas des horaires.</td></tr>
 
-<tr><td><b>Les stickers du carnet</b></td><td class="mono" style="color:var(--cours)">1ʳᵉ tranche livrée</td><td>—</td>
- <td><b>Idée du 10 août, la plus forte de la semaine — et « mes monuments » est en ligne le soir même.</b> Réglages → mes monuments : ta photo remplace la gravure, sur <b>ta</b> carte seulement, et elle ne quitte pas ton téléphone. La gravure tient l'échelle de la ville, ta photo prend le relais au-dessus de 64 px : <em>la carte se développe quand on zoome.</em> La taille du monument ne change pas d'un pixel (mesuré : 60 px de large avec ou sans photo).<br><b>Ce qui reste :</b> le <b>détourage</b> — sans fond retiré, une photo à 30 px est de la boue, et c'est la pièce à prototyper avant d'aller plus loin ; puis les stickers sur les <em>spots</em> (pas seulement les monuments) ; puis le partage, qui est une v2 et exige signaler/bloquer.</td></tr>
+<tr><td><b>Les stickers du carnet</b></td><td class="mono" style="color:var(--toi)">cadré · 5 questions</td><td><b>ta décision</b></td>
+ <td><b>Idée du 10 août, cadrée le 12 : <code>CHANTIER_STICKERS.md</code>.</b> La 1ʳᵉ tranche est en ligne depuis le 10 (réglages → mes monuments : ta photo remplace la gravure, sur <b>ta</b> carte, sans jamais quitter ton téléphone — donc <b>zéro modération à écrire</b>). Le cadrage ouvre trois gestes : <b>changer</b> ses monuments (~18 gravures <em>déjà</em> prêtes — tes 8 monuments plus les points de rendez-vous qui ont leur vignette), le <b>bord déchiré automatique</b> (un masque au moment de la réduction — jamais de détourage par IA : ça rate moche, le déchiré rate toujours bien), et le <b>sticker libre</b> collé où tu veux. Trois portes d'entrée décidées avec toi : le « + » de la bande, le tap sur un monument, l'appui long sur la carte.</td></tr>
+
+<tr><td>La hiérarchie du transport</td><td class="mono" style="color:var(--opus)">tranché · à coder</td><td>fait</td>
+ <td><b>Ton intuition était juste et elle se mesure</b> : au repos la carte affiche jusqu'à 14 étiquettes de transport contre ~8 noms de spots — le filigrane est plus nombreux que le contenu. Et l'aplat coloré reste un badge même à 30 % d'opacité, pendant que la luminance inverse la hiérarchie voulue (le vert du tram perce devant le bleu-nuit du métro). Tu as tranché sur planche : <b>cachet à l'encre</b> au repos, le nom se tait avant z14,5, la couleur pleine devient la <b>récompense du tap</b>, Batobus seulement à son heure. Reste à coder. <em>Le cas 7/8 : les deux roses sont</em> officiels <em>— IDFM réutilise ses couleurs (la 6 et la 7bis ont le même vert exact). Le remède est la pastille de numéro, pas une trahison de la charte.</em></td></tr>
+
+<tr><td>Les 20 trouvailles du méga-audit</td><td class="mono" style="color:var(--sonnet)">à répartir</td><td>1 décision</td>
+ <td><b>Trois auditeurs indépendants le 12 août</b> (la DA, les flux, les parcours) : <code>DESIGN_AUDIT_GLOBAL.md</code>. Les plus fortes — les trois toasts s'écrasaient au même pixel <em>(réparé le soir même)</em> · les états vides <b>mentent</b> selon le filtre actif · l'écran d'entrée ne dit rien de ce qu'est jeudi avant de demander un mail · « signaler ce lieu » est introuvable depuis la fiche · 5 cibles tactiles sous 44 px · ~24 tailles de police contre les 5 corps décrétés. <b>La leçon transverse :</b> chaque manque a déjà son remède ailleurs dans l'app — c'est de la propagation, pas de la conception. Et aucun des trois n'a trouvé un écran qui trahit la voix.</td></tr>
 
 <tr><td>Où tu seras — les ancres</td><td class="mono" style="opacity:.5">plus tard</td><td>—</td>
  <td>Et leurs stickers — voir la ligne au-dessus, le mécanisme est le même.</td></tr>
@@ -827,11 +856,30 @@ des inconnus l'utilisent, et ça peut se faire sur le web.</i></p>
 
 <!-- ═══ TA MAIN ═══════════════════════════════════════════════════════ -->
 <h2>ce qui n'attend que toi</h2>
-<p>Aucun modèle ne peut cocher ces cases. Les quatre premières débloquent du code
-qui est déjà écrit et qui attend.</p>
+<p>Aucun modèle ne peut cocher ces cases. Les premières débloquent du code
+<b>déjà écrit, testé, et qui dort</b>.</p>
+
+<div class="note"><b>Les gestes qui allument les notifications — <span style="color:var(--fait)">1 sur 5 fait</span></b>
+<b><s style="opacity:.5">1. coller la migration 0020</s> — fait le 12 août au soir,
+sondé dans la base.</b> Restent quatre actions, dans cet ordre :
+<b>2.</b> ajouter <code>VITE_VAPID_PUBLIC_KEY</code> aux variables Vercel puis
+redéployer (la valeur est dans <code>.env.push-vapid</code>, hors dépôt — sans elle
+l'interrupteur « me prévenir » se déclare indisponible) · <b>3.</b> poser les trois
+secrets Supabase (clé publique, clé privée, <code>mailto:</code>) · <b>4.</b> déployer
+la fonction <code>envoyer-push</code> · <b>5.</b> coller
+<code>supabase/cron_envoyer_push.sql</code>. Puis le vrai test : une notification
+reçue <b>app fermée</b> — sur iPhone, la PWA doit être installée sur l'écran
+d'accueil. Le détail pas à pas est dans <code>CHANTIER_PUSH.md</code>.</div>
+
 <div class="main">
+  <div class="k"><i class="case"></i><div><b>L'attaque du blocage — le verrou n'est pas levé sans elle</b>
+    <span>Deux jetons de session (tes deux comptes), une commande :
+    <code>node ../_verification/attaque_blocage.mjs</code>. Le script bloque, puis
+    interroge l'API REST table par table <b>avec le jeton de l'autre</b>. Zéro fuite
+    exigé — l'écran, lui, pourrait mentir. C'est la dernière marche du chantier
+    sécurité.</span></div></div>
   <div class="k"><i class="case"></i><div><b>Coller <code>_enrichissement/fusion_2026-08-08.sql</code></b>
-    <span>Le seul SQL en attente, et ce n'est même pas une migration. 12 descriptions,
+    <span>Le seul SQL de données en attente. 12 descriptions,
     6 glyphes, 5 tampons. SQL Editor → Run.</span></div></div>
   <div class="k"><i class="case"></i><div><b>La clé Google Places</b>
     <span>Compte dédié, API restreinte, quota bas, alerte à 5 €. C'est <b>le</b> gisement
@@ -842,11 +890,12 @@ qui est déjà écrit et qui attend.</p>
   <div class="k"><i class="case"></i><div><b>Le premier tas</b>
     <span>Un tirage, une heure de séchage. Toute la pellicule est codée et n'a jamais
     vu une vraie photo arriver.</span></div></div>
-  <div class="k"><i class="case"></i><div><b>Rouvrir l'app et confirmer les réparations du 10</b>
-    <span>Ferme-la complètement (balaye-la de la liste), rouvre. Trois choses à vérifier :
-    les cinq chips de « sortir » sont revenues · les sorties de métro s'affichent quand tu
-    touches une station et que tu zoomes · la ligne « rentrer » apparaît sous l'adresse
-    d'un spot.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Rouvrir l'app et confirmer le 12 août</b>
+    <span>Ferme-la complètement, rouvre : le toast « nouvelle version » doit se lever
+    (c'est aussi le test du nouveau service worker). Puis vérifie la bande déchirée et
+    son « + » au centre, l'échelle au-dessus d'elle, « bloquer » dans la feuille d'un
+    membre, le vrai formulaire de signalement d'une photo, et la section « bloqués »
+    des réglages.</span></div></div>
   <div class="k"><i class="case"></i><div><b>Le test à deux comptes</b>
     <span>Invitation → cercle → photo → visibilité privé/cercle → suppression du compte.
     C'est le trou le plus large de tout ce document.</span></div></div>
@@ -865,6 +914,35 @@ qui est déjà écrit et qui attend.</p>
     par <code>supprimer_mon_compte()</code>. Jamais à la main dans la table : cascades.</span></div></div>
 </div>
 
+<h2>les décisions qui bloquent du code prêt à écrire</h2>
+<p>Trois documents t'attendent avec leurs questions déjà posées. Chacun débloque une
+session de code immédiate — je ne commence pas sans la réponse, parce que se tromper
+là coûte plus cher que d'attendre.</p>
+<div class="main">
+  <div class="k"><i class="case"></i><div><b>Le tirage chez un pote — 3 questions</b>
+    <span><code>DESIGN_TIRAGE_CHEZ_UN_POTE.md</code>. Le périmètre (seulement la photo
+    du soir ?), qui peut décrocher un tirage de son propre spot, et chez qui on peut
+    coller (le cercle seulement ?). Le Storage est déjà prêt — seule la table des
+    photos bloque. Mes recommandations sont dans le document.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les stickers — 5 questions</b>
+    <span><code>CHANTIER_STICKERS.md</code>. Le bord déchiré automatique ou le lasso au
+    doigt, le « + » à deux choix, le catalogue de monuments (~18 gravures déjà prêtes)
+    ou le monument libre, le cap, et le cloud. Une planche d'abord, puis une
+    demi-journée de code.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Le mot de marque de « bloquer »</b>
+    <span>Le libellé à l'écran est provisoire. La piste du cadrage : « je ne veux plus
+    le croiser ». C'est un mot de marque, il t'appartient.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les réglages : ligne pointillée ou carte bordée ?</b>
+    <span>L'audit a trouvé une règle CSS déclarée deux fois : l'écran rend en « carte
+    bordée » alors que ta doc dit « ligne pointillée, zéro carte ». Dix lignes à
+    corriger — mais ça change un écran que tu connais.</span></div></div>
+  <div class="k"><i class="case"></i><div><b>Les 120 lieux de tes profils GPT</b>
+    <span>Mise à l'abri faite. Ma reco : en faire <b>trois éclaireurs</b> du décor
+    public (Inès le budget, Jules l'image, Nora l'espace) — leurs obsessions sont
+    déjà écrites comme des critères. Pipeline obligatoire avant : géocodage, dédupe
+    contre tes 302, horaires par OSM. Et deux lieux fermés à purger.</span></div></div>
+</div>
+
 <!-- ═══ LE CALCUL ═════════════════════════════════════════════════════ -->
 <h2>le calcul — pour qu'on puisse me contredire</h2>
 <p>Chaque chantier est pesé selon ce qu'il coûte <b>avant une ouverture publique</b> —
@@ -875,22 +953,25 @@ les stickers pèsent zéro parce qu'on peut ouvrir sans eux.</p>
 <tr><td>le carnet</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
 <tr><td>le moteur — deck, swipe, rayon</td><td class="n">20</td><td class="n">100 %</td><td class="n">20,0</td></tr>
 <tr><td>le cercle et le match</td><td class="n">12</td><td class="n">90 %</td><td class="n">10,8</td></tr>
-<tr><td>la carte</td><td class="n">14</td><td class="n">94 %</td><td class="n">13,2</td></tr>
+<tr><td>la carte</td><td class="n">14</td><td class="n">95 %</td><td class="n">13,3</td></tr>
 <tr><td>la boucle de confiance</td><td class="n">15</td><td class="n">30 %</td><td class="n">4,5</td></tr>
 <tr><td>la preuve par la photo</td><td class="n">7</td><td class="n">40 %</td><td class="n">2,8</td></tr>
-<tr><td>la modération — signaler, bloquer</td><td class="n">5</td><td class="n">20 %</td><td class="n">1,0</td></tr>
-<tr><td>notifications et rétention</td><td class="n">7</td><td class="n">0 %</td><td class="n">0,0</td></tr>
-<tr class="sep"><td><b>total</b></td><td class="n"><b>100</b></td><td></td><td class="n"><b>72,3</b></td></tr>
+<tr><td>la modération — signaler, bloquer</td><td class="n">5</td><td class="n">75 %</td><td class="n">3,8</td></tr>
+<tr><td>notifications et rétention</td><td class="n">7</td><td class="n">50 %</td><td class="n">3,5</td></tr>
+<tr class="sep"><td><b>total</b></td><td class="n"><b>100</b></td><td></td><td class="n"><b>78,7</b></td></tr>
 </table></div>
-<p><i class="q">La ligne « modération » est apparue le 9 août, et elle a coûté trois points
-aux autres : quand on ajoute un poids, il faut en retirer ailleurs, sinon on triche.
-Le 10, seule « la carte » a bougé (88 → 94 %) : les monuments sont soldés et les
-transports allégés. Les trois bugs réparés ne font pas monter la jauge — ils
-empêchaient seulement le produit d'être ce qu'il prétendait déjà être. Et je n'ai
-pas bougé la ligne pour les vraies couleurs ni pour les numéros de ligne, alors
-que c'est du travail réel : pour la même raison. Une carte dont les couleurs sont
-justes ne fait pas plus de choses qu'avant — elle cesse de mentir.</i></p>
-<p><b>72 sur le papier, 67 en conscience.</b> Je retire cinq points pour une raison
+<p><i class="q">Deux lignes bougent beaucoup le 12 août, et une seule un peu. La
+<b>modération</b> passe de 20 à 75 % : signaler et bloquer sont écrits, collés et
+sondés — mais je ne mets pas 100 %, parce que l'attaque à deux jetons n'a pas encore
+tourné, que la boîte de contact n'existe pas (c'est la 4ᵉ obligation d'Apple) et que
+le filtre de contenu, la 1ʳᵉ, reste un chantier à part. Les <b>notifications</b>
+passent de 0 à 50 % : tout est codé et le flux de mise à jour est testé, mais
+<em>personne ne reçoit encore rien</em> — la moitié qui manque est une moitié de
+gestes, pas de code. La <b>carte</b> gagne un point pour les 108 stations retrouvées
+(Auber manquait en plein centre). Et comme toujours : les six bugs de la relecture ne
+font pas monter la jauge — ils empêchaient seulement le produit d'être ce qu'il
+prétendait déjà être.</i></p>
+<p><b>79 sur le papier, 74 en conscience.</b> Je retire cinq points pour une raison
 précise, toujours la même : <b>rien de tout ça n'a été éprouvé par quelqu'un d'autre
 que toi.</b> Une app de sorties qui n'a jamais vu deux vrais cercles se croiser garde
 des trous qu'aucune relecture de code ne révèle. Ces cinq points se regagnent en une
@@ -919,14 +1000,28 @@ réécrivait ton profil, les bouches de métro devenues invisibles, les cinq chi
 pour la porte du 27 août — trente personnes qui l'utilisent une soirée trouveront ce
 qu'aucune vérification ne voit.</div>
 
+<div class="note"><b>Ce que le 12 août ajoute à cette leçon</b>
+Une <b>relecture froide</b> du code écrit les jours précédents a trouvé six bugs que
+502 tests verts laissaient passer — dont « manger seul » qui perdait l'envie de
+manger, et le Vélib' qui pouvait cacher une station pleine derrière deux stations
+vides. Deux d'entre eux étaient la <em>même faute répétée</em> : un stockage local
+qui n'était pas séparé par compte, si bien qu'un second compte sur ton téléphone
+voyait les photos du premier. La leçon est devenue une règle : <b>tout ce qui se
+range en local se range par compte.</b> Les tests attrapent ce qu'on a pensé à leur
+demander ; une relecture attrape ce qu'on n'avait pas pensé du tout ; ton pouce
+attrape le reste. Il faut les trois.</div>
+
 <p class="pied">
-jeudi — état du chantier, 10 août 2026. Vérifié à la main : 495 tests, 0 erreur de
-type, 17 migrations sur 17 sondées dans la base, arbre git propre et poussé,
-sauvegarde en trois exemplaires (main, branche du jour, archive de 174 Mo).<br>
-Les planches : couleurs_lignes_001 · monuments_echelle_001 · dictionnaire_carte_001 ·
-atelier_grammaire_001 · atelier_glyphes_001 · atelier_diamant_001.<br>
-Les documents de fond : CONCEPT · PANEL_VELIB_BUS_2026-08-10 ·
-CHANTIER_SIGNALER_BLOQUER · CHANTIER_PUSH · ETAT_2026-08-08 · AVANT_LANCEMENT ·
-CHANTIER_PELLICULE · CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
+jeudi — état du chantier, 12 août 2026. Vérifié à la main le jour même : 502 tests
+verts sur 36 fichiers, 0 erreur de type, <b>0 erreur de lint (une première)</b>,
+19 migrations sur 20 sondées dans la base (0020 t'attend), 124 fichiers et
+37 014 lignes dans <code>app/src</code>, arbre git poussé, sauvegarde datée.<br>
+Les planches : navbas_ilot_001 · transport_repos_001 · couleurs_lignes_001 ·
+monuments_echelle_001 · dictionnaire_carte_001 · atelier_grammaire_001 ·
+atelier_glyphes_001 · atelier_diamant_001.<br>
+Les documents de fond : CONCEPT · DESIGN_AUDIT_GLOBAL · DESIGN_TRANSPORT_HIERARCHIE ·
+DESIGN_TIRAGE_CHEZ_UN_POTE · CHANTIER_STICKERS · CHANTIER_SIGNALER_BLOQUER ·
+CHANTIER_PUSH · PANEL_VELIB_BUS_2026-08-10 · AVANT_LANCEMENT · CHANTIER_PELLICULE ·
+CHANTIER_SUPER8 · PROMPTS_CHANTIERS.
 </p>
 </body></html>
