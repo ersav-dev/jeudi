@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   ENCRES, CAP_ZONES, encreSuggeree, metres, simplifier, depuisTrace, depuisTaps,
   bulleAutour, retournerPoint, contour, enGeoJSON, dansLaZone, lieuxDeLaZone,
-  ecarterLesEvitees, filtrerParZones, zonesQuiContiennent,
+  POIDS, POIDS_DEFAUT, poidsDuLieu, ecarterLesJamais, classerParZones,
+  filtrerParZones, zonesQuiContiennent, CAP_SUPER_CERCLE, zonesActives,
   metresParPixel, pointsSaisissables, TOLERANCE_M, type PointZone,
 } from '../quartiers'
 
@@ -32,37 +33,78 @@ describe('les encres', () => {
   })
 })
 
-describe('les deux sens — on y va, ou on l’évite', () => {
-  const TAF = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), sens: 'vers' as const }
-  const EVITE = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), sens: 'contre' as const }
+describe('le poids — « me recommander ce quartier ? », sur trois crans', () => {
+  const TAF = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const }
+  const JAMAIS = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 1 as const }
+  const EGAL = { points: bulleAutour({ lng: 2.3200, lat: 48.8600 }, 300), poids: 2 as const }
   const lieux = [
-    { id: 'au taf', lat: 48.8720, lng: 2.3350 },
-    { id: 'dans la zone évitée', lat: 48.8698, lng: 2.3661 },
     { id: 'ailleurs', lat: 48.8566, lng: 2.3522 },
+    { id: 'dans le jamais', lat: 48.8698, lng: 2.3661 },
+    { id: 'au taf', lat: 48.8720, lng: 2.3350 },
   ]
 
-  it('« j’évite » s’applique TOUJOURS, sans qu’on le redemande', () => {
-    expect(ecarterLesEvitees(lieux, [TAF, EVITE]).map((l) => l.id))
-      .toEqual(['au taf', 'ailleurs'])
+  it('trois crans, et le défaut ne pèse sur rien', () => {
+    expect(POIDS).toHaveLength(3)
+    expect(POIDS_DEFAUT).toBe(2)
+    expect(poidsDuLieu({ lat: 48.80, lng: 2.30 }, [TAF, JAMAIS])).toBe(2)
   })
-  it('« j’y vais » ne s’applique QUE si on l’allume', () => {
-    // sans demande : avoir tracé son bureau ne réduit pas tout à son bureau
-    expect(filtrerParZones(lieux, [TAF, EVITE])).toHaveLength(2)
-    // avec demande : « ce soir près du taf »
-    expect(filtrerParZones(lieux, [TAF, EVITE], TAF).map((l) => l.id)).toEqual(['au taf'])
+  it('« jamais » retire, toujours, sans rien allumer', () => {
+    expect(ecarterLesJamais(lieux, [TAF, JAMAIS]).map((l) => l.id))
+      .toEqual(['ailleurs', 'au taf'])
+    expect(ecarterLesJamais(lieux, [TAF, EGAL])).toHaveLength(3)
+    expect(ecarterLesJamais(lieux, [])).toHaveLength(3)
   })
-  it('l’évitement gagne même sur une zone qu’on allume', () => {
-    const chevauche = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 600), sens: 'vers' as const }
-    expect(filtrerParZones(lieux, [chevauche, EVITE], chevauche)
-      .some((l) => l.id === 'dans la zone évitée')).toBe(false)
+  it('« en priorité » REMONTE, il ne filtre pas — la ville reste entière', () => {
+    const ordre = classerParZones(lieux, [TAF, JAMAIS]).map((l) => l.id)
+    expect(ordre[0]).toBe('au taf')
+    expect(ordre).toContain('ailleurs') // rien n'a été réduit à la zone
+    expect(ordre).toHaveLength(2)
   })
-  it('sans zone évitée, rien n’est retiré', () => {
-    expect(ecarterLesEvitees(lieux, [TAF])).toHaveLength(3)
-    expect(ecarterLesEvitees(lieux, [])).toHaveLength(3)
+  it('à poids égal, l’ordre d’origine tient (distance et ouverture décident)', () => {
+    const memes = [
+      { id: 'a', lat: 48.8566, lng: 2.3522 },
+      { id: 'b', lat: 48.8570, lng: 2.3530 },
+      { id: 'c', lat: 48.8575, lng: 2.3540 },
+    ]
+    expect(classerParZones(memes, [TAF]).map((l) => l.id)).toEqual(['a', 'b', 'c'])
+  })
+  it('le plus BAS l’emporte : un « jamais » gagne sur un « en priorité »', () => {
+    const large = { points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 900), poids: 3 as const }
+    expect(poidsDuLieu({ lat: 48.8698, lng: 2.3661 }, [large, JAMAIS])).toBe(1)
+    expect(classerParZones(lieux, [large, JAMAIS]).some((l) => l.id === 'dans le jamais')).toBe(false)
+  })
+  it('restreindre à une zone reste possible — « ce soir près du taf »', () => {
+    expect(filtrerParZones(lieux, [TAF, JAMAIS], TAF).map((l) => l.id)).toEqual(['au taf'])
   })
   it('dit dans quelles zones on se trouve — « tu es dans : le taf »', () => {
-    expect(zonesQuiContiennent({ lat: 48.8720, lng: 2.3350 }, [TAF, EVITE])).toEqual([TAF])
-    expect(zonesQuiContiennent({ lat: 48.8000, lng: 2.3000 }, [TAF, EVITE])).toEqual([])
+    expect(zonesQuiContiennent({ lat: 48.8720, lng: 2.3350 }, [TAF, JAMAIS])).toEqual([TAF])
+    expect(zonesQuiContiennent({ lat: 48.8000, lng: 2.3000 }, [TAF, JAMAIS])).toEqual([])
+  })
+})
+
+describe('le partage au super cercle — une proposition, jamais un filtre', () => {
+  const MIENNE = { points: bulleAutour({ lng: 2.3350, lat: 48.8720 }, 300), poids: 3 as const }
+  const RECUE = {
+    de: 'Karim', acceptee: false, nom: 'jamais ici', encre: 'graphite' as const,
+    points: bulleAutour({ lng: 2.3661, lat: 48.8698 }, 300), poids: 1 as const,
+  }
+  const lieux = [
+    { id: 'au taf', lat: 48.8720, lng: 2.3350 },
+    { id: 'chez Karim c’est non', lat: 48.8698, lng: 2.3661 },
+  ]
+
+  it('l’anneau reste à dix — ce n’est pas une publication', () => {
+    expect(CAP_SUPER_CERCLE).toBe(10)
+  })
+  it('tant qu’elle n’est pas acceptée, la zone d’un pote ne pèse sur RIEN', () => {
+    const actives = zonesActives([MIENNE], [RECUE])
+    expect(actives).toHaveLength(1)
+    expect(ecarterLesJamais(lieux, actives)).toHaveLength(2)
+  })
+  it('acceptée, elle pèse comme les miennes', () => {
+    const actives = zonesActives([MIENNE], [{ ...RECUE, acceptee: true }])
+    expect(actives).toHaveLength(2)
+    expect(ecarterLesJamais(lieux, actives).map((l) => l.id)).toEqual(['au taf'])
   })
 })
 

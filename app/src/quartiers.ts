@@ -17,19 +17,24 @@
 //
 //   2. « on trace TOUS les quartiers, pas que le sien — le taf, dating
 //      area, alerte dealers, no go » (13/08 au soir). Une zone n'est donc
-//      pas une identité mais une INTENTION, et elle n'a que deux sens :
-//      on y va, ou on l'évite. Ça a tué la règle « une encre = une zone »
-//      (six ne suffisent plus) et ça donne enfin aux zones un usage réel —
-//      ce que le panel réclamait : « j'évite » retire des résultats.
+//      pas une identité mais une INTENTION. Ça a tué la règle « une encre =
+//      une zone » (six ne suffisent plus) et ça donne enfin aux zones un
+//      usage réel — ce que le panel réclamait.
 //
-// ⚠ LA RÈGLE N°1 DEVIENT NON NÉGOCIABLE À CAUSE DE ÇA. Une zone « alerte »
-// ou « no go » est un jugement porté sur un bout de ville. Dans un carnet
-// privé, c'est une note personnelle, et ça ne regarde personne. Partagé,
-// agrégé ou synchronisé, ça devient une carte des « quartiers dangereux » —
-// ce qui n'est ni le produit (« un carnet, pas un mur », cadrage du 13/08),
-// ni tenable juridiquement. Donc : les zones ne quittent pas l'appareil, ne
-// se partagent pas, ne s'agrègent jamais, et n'influencent JAMAIS ce que
-// voit quelqu'un d'autre. Ce fichier ne contient aucun chemin de sortie.
+//   3. « l'utilisateur met des couleurs… et à côté : me recommander ce
+//      quartier ? et on pondère, genre sur 3 ». La couleur ne veut rien
+//      dire (elle est à lui) ; le poids se règle à part, sur la pastille à
+//      trois niveaux du carnet. Voir PoidsZone.
+//
+// ⚠ CE QUI SORT, ET CE QUI NE SORT PAS. Une zone « jamais ici » est un
+// jugement porté sur un bout de ville où des gens habitent. Elle peut être
+// proposée aux SUPER POTES (10 max, choisis un par un) : ça, c'est une
+// conversation, pas une publication — et une zone reçue n'est jamais un
+// filtre, seulement une proposition à accepter (`ZoneRecue`). Ce qui reste
+// interdit et ne bougera pas : au-delà de l'anneau (aucun public, aucun
+// inconnu, aucun export), et TOUTE AGRÉGATION entre utilisateurs — jamais
+// de carte de chaleur, jamais de « 4 personnes évitent ce quartier ».
+// C'est la frontière entre un carnet qu'on se passe et un mur.
 //
 // Et une exigence du panel du 13/08 (PANEL_QUARTIERS_2026-08-13.md) : une
 // zone qui ne sert à rien n'est qu'un dessin. `dansLaZone()` est donc écrite
@@ -45,19 +50,41 @@ export interface PointZone {
   dur?: boolean
 }
 
-// LE SENS D'UNE ZONE (Ersan, 13/08 : « on trace tous les quartiers, pas que
-// le sien — genre le taf, dating area, alerte dealers, no go »). Une zone
-// n'est plus une identité, c'est une INTENTION, et elle n'a que deux sens :
-// on y va, ou on l'évite. Deux états valent mieux qu'un catalogue de
-// catégories : personne ne range ses habitudes dans les cases d'un autre.
-export type SensZone = 'vers' | 'contre'
+// LE POIDS D'UNE ZONE (Ersan, 13/08 au soir : « l'utilisateur met des
+// couleurs… et il met à côté : me recommander ce quartier ? et on pondère,
+// genre sur 3 »). Mon binaire vers/contre est mort en une phrase, et il
+// avait tort : entre « j'évite » et « j'adore » il y a « ça m'est égal »,
+// qui est l'état de 90 % de la ville.
+//
+// Trois niveaux, et c'est la PASTILLE du carnet — celle des critères
+// gradués, jamais des étoiles (règle de la lentille) :
+//   1 · ●○○  jamais ici        → on ne me le propose plus, jamais
+//   2 · ●●○  ça m'est égal     → rien ne change (le défaut)
+//   3 · ●●●  en priorité       → ça remonte quand c'est possible
+//
+// La COULEUR n'a aucun sens : elle est à l'utilisateur (c'est son carnet,
+// il met les encres qu'il veut). C'est la MATIÈRE qui porte le poids —
+// hachuré / aplat / rues teintées. Une couleur ne dit jamais une règle.
+export type PoidsZone = 1 | 2 | 3
+
+/** le défaut d'une zone qu'on vient de tracer : elle ne pèse sur rien */
+export const POIDS_DEFAUT: PoidsZone = 2
+
+export const POIDS = [
+  { n: 1 as const, pastille: '●○○', mot: 'jamais ici', dit: 'on ne te le propose plus' },
+  { n: 2 as const, pastille: '●●○', mot: "ça m'est égal", dit: 'rien ne change' },
+  { n: 3 as const, pastille: '●●●', mot: 'en priorité', dit: 'ça remonte quand c’est possible' },
+]
 
 export interface Quartier {
   id: string
   /** le mot, écrit (ou composé en lettres) par un humain — jamais par l'app */
   nom: string
-  /** on y va (« le taf », « mon quartier ») ou on l'évite (« jamais ici ») */
-  sens: SensZone
+  /** ●○○ jamais · ●●○ égal · ●●● en priorité — « me recommander ici ? » */
+  poids: PoidsZone
+  /** où elle vit. « cercle » = proposée aux super potes (10 max), jamais
+      au-delà : ce n'est pas une publication, c'est une conversation. */
+  partage: 'moi' | 'cercle'
   /** l'identifiant d'encre (voir ENCRES), pas une valeur hexadécimale */
   encre: EncreId
   points: PointZone[]
@@ -253,32 +280,80 @@ export function lieuxDeLaZone<T extends { lat: number; lng: number }>(
   return lieux.filter((l) => dansLaZone(l, points))
 }
 
-// ── les deux sens ne se filtrent PAS de la même façon ────────────────
-// « j'y vais » est un filtre qu'on ALLUME (« ce soir près du taf ») : il ne
-// s'applique que si on le demande, sinon avoir tracé son bureau réduirait
-// toutes les recherches à son bureau.
-// « j'évite » s'applique TOUJOURS, sans qu'on le redemande : quelqu'un qui
-// a entouré un endroit pour ne plus y aller ne veut pas qu'on le lui
-// propose un soir de fatigue. L'évitement gagne sur tout le reste.
+// ── la pondération ───────────────────────────────────────────────────
+// « jamais » ne se négocie pas : c'est un retrait, pas un malus. Personne
+// n'entoure un endroit pour qu'on le lui propose un soir de fatigue.
+// « en priorité » ne se négocie pas non plus, dans l'autre sens : ça ne
+// FILTRE rien (on ne réduit pas la ville à trois quartiers), ça REMONTE.
 
-/** retire les lieux tombés dans une zone « j'évite » — appliqué en permanence */
-export function ecarterLesEvitees<T extends { lat: number; lng: number }>(
-  lieux: T[],
-  zones: Pick<Quartier, 'points' | 'sens'>[],
-): T[] {
-  const contre = zones.filter((z) => z.sens === 'contre')
-  if (!contre.length) return lieux
-  return lieux.filter((l) => !contre.some((z) => dansLaZone(l, z.points)))
+type ZonePesee = Pick<Quartier, 'points' | 'poids'>
+
+/** le poids qui s'applique à un lieu : le plus BAS l'emporte (un « jamais »
+    gagne toujours sur un « en priorité » qui se chevauche — le retrait est
+    une décision, la préférence est un souhait) */
+export function poidsDuLieu(p: { lat: number; lng: number }, zones: ZonePesee[]): PoidsZone {
+  const dedans = zones.filter((z) => dansLaZone(p, z.points))
+  if (!dedans.length) return POIDS_DEFAUT
+  return dedans.reduce<PoidsZone>((min, z) => (z.poids < min ? z.poids : min), 3)
 }
 
-/** le filtre complet : on écarte toujours, on restreint seulement si demandé */
+/** retire les lieux tombés dans un « jamais » — appliqué en permanence */
+export function ecarterLesJamais<T extends { lat: number; lng: number }>(
+  lieux: T[],
+  zones: ZonePesee[],
+): T[] {
+  const jamais = zones.filter((z) => z.poids === 1)
+  if (!jamais.length) return lieux
+  return lieux.filter((l) => !jamais.some((z) => dansLaZone(l, z.points)))
+}
+
+/** l'ordre du soir : on écarte les « jamais », puis les « en priorité »
+    remontent — SANS casser l'ordre d'origine à poids égal (le tri est
+    stable : la distance et l'ouverture continuent de décider en dessous) */
+export function classerParZones<T extends { lat: number; lng: number }>(
+  lieux: T[],
+  zones: ZonePesee[],
+): T[] {
+  return ecarterLesJamais(lieux, zones)
+    .map((l, i) => ({ l, i, p: poidsDuLieu(l, zones) }))
+    .sort((a, b) => b.p - a.p || a.i - b.i)
+    .map((x) => x.l)
+}
+
+/** restreindre à UNE zone — « ce soir près du taf », allumé à la demande */
 export function filtrerParZones<T extends { lat: number; lng: number }>(
   lieux: T[],
-  zones: Pick<Quartier, 'points' | 'sens'>[],
+  zones: ZonePesee[],
   dans?: Pick<Quartier, 'points'>,
 ): T[] {
-  const restants = ecarterLesEvitees(lieux, zones)
+  const restants = classerParZones(lieux, zones)
   return dans ? lieuxDeLaZone(restants, dans.points) : restants
+}
+
+// ── le partage au super cercle (Ersan, 13/08 : « peut-être qu'on partagera
+// nos quartiers avec nos amis… mais c'est 10 max, dans le super cercle ») ─
+// Ce que ça change par rapport à l'interdit que j'avais écrit : dix
+// personnes choisies une par une, ce n'est pas une publication, c'est une
+// conversation — dire « évite ce coin » à ses potes, tout le monde le fait.
+// Ce qui reste interdit et ne bougera pas : au-delà de l'anneau (aucun
+// public, aucun inconnu), et TOUTE AGRÉGATION entre utilisateurs — jamais
+// de carte de chaleur, jamais de « 4 personnes évitent ce quartier ».
+export const CAP_SUPER_CERCLE = 10
+
+/** une zone reçue d'un pote n'est JAMAIS un filtre : c'est une proposition.
+    Tant qu'elle n'est pas acceptée, elle ne pèse sur rien — sinon le
+    jugement d'un ami retirerait des lieux de ta vie sans que tu le saches. */
+export interface ZoneRecue extends Pick<Quartier, 'nom' | 'poids' | 'points' | 'encre'> {
+  de: string
+  acceptee: boolean
+}
+
+/** les zones qui pèsent vraiment : les miennes + celles que J'AI acceptées */
+export function zonesActives(
+  miennes: ZonePesee[],
+  recues: (ZoneRecue & ZonePesee)[] = [],
+): ZonePesee[] {
+  return [...miennes, ...recues.filter((z) => z.acceptee)]
 }
 
 /** dans quelles zones tombe ce point — pour dire « tu es dans : le taf » */

@@ -179,12 +179,57 @@ lettres-objets** (les perles sont sorties, 41 fichiers) · le « + » devient
 > « On trace TOUS les quartiers, pas que le sien ! Genre le taf, dating
 > area, alerte dealers, no go… »
 
-Une zone n'est plus une identité, c'est une **intention** — et elle n'a que
-**deux sens** : on y va (`vers`) ou on l'évite (`contre`). Deux états valent
-mieux qu'un catalogue de catégories : personne ne range ses habitudes dans
-les cases d'un autre. Planche 7 : `design/quartiers_sens_001.png`.
+Une zone n'est plus une identité, c'est une **intention**.
+Planche 7 : `design/quartiers_sens_001.png`.
 
-- **le sens se dit par la MATIÈRE, jamais par la couleur** : plein (les rues
+### Corrigé une heure après (Ersan) — TROIS CRANS, pas deux sens
+
+> « L'utilisateur met des couleurs… et il met à côté : me recommander ce
+> quartier ? et on pondère, genre sur 3. »
+
+Mon binaire `vers/contre` est mort, et il avait tort : entre « j'évite » et
+« j'adore » il y a **« ça m'est égal »**, l'état de 90 % de la ville. C'est
+la **pastille du carnet** — les critères gradués, jamais des étoiles :
+
+| cran | mot | ce que ça fait |
+|---|---|---|
+| ●○○ | jamais ici | **retire**, toujours, sans rien allumer |
+| ●●○ | ça m'est égal | rien (le défaut d'une zone qu'on vient de tracer) |
+| ●●● | en priorité | **remonte** quand c'est possible — ne filtre pas |
+
+Le cran **le plus bas gagne** : un « jamais » l'emporte sur un « en
+priorité » qui le chevauche (le retrait est une décision, la préférence un
+souhait). À poids égal, l'ordre d'origine tient — la distance et l'ouverture
+continuent de décider en dessous. Planche 8 : `design/quartiers_poids_001.png`.
+
+**La couleur ne veut plus rien dire** : elle est à l'utilisateur, il la
+choisit et peut la répéter. C'est la **matière** qui porte le poids —
+filet seul (égal) · hachuré (jamais) · rues teintées (en priorité). Deux
+réglages indépendants dans la fiche : *une zone rouge n'est pas une zone
+dangereuse, c'est une zone rouge.*
+
+### Le partage : le super cercle, 10 max
+
+> « Peut-être qu'on partagera nos quartiers avec nos amis… mais c'est 10
+> max je te rappelle, dans le super cercle. »
+
+J'avais écrit un interdit total ; il tombe, et Ersan a raison sur le
+principe : **dix personnes choisies une par une, ce n'est pas une
+publication, c'est une conversation.** Dire « évite ce coin » à ses potes,
+tout le monde le fait.
+
+Ce qui l'encadre, et qui ne bougera pas :
+1. **une zone reçue est une PROPOSITION, jamais un filtre** — tant qu'elle
+   n'est pas acceptée elle ne pèse sur rien (`ZoneRecue.acceptee`), sinon le
+   jugement d'un ami retirerait des lieux de ta vie sans que tu le saches.
+   Le silence vaut non ;
+2. **rien au-delà de l'anneau** : aucun public, aucun inconnu, aucun export ;
+3. **aucune agrégation entre utilisateurs, jamais** : pas de carte de
+   chaleur, pas de « 4 personnes évitent ce quartier ». C'est la frontière
+   entre un carnet qu'on se passe et un mur — et c'est elle qui fait qu'il
+   n'y a rien à modérer.
+
+- **le poids se dit par la MATIÈRE, jamais par la couleur** : plein (les rues
   prennent l'encre) = j'y vais · **hachuré** (les rues restent grises) =
   j'évite. Le rouge appartient à la cire, et une carte qui vire au rouge
   devient une carte d'alerte. Bonus : plein/hachuré se distingue en noir et
@@ -216,7 +261,7 @@ jamais, et n'influencent jamais ce que voit quelqu'un d'autre.**
 
 - **le mot des outils** : « la plume » et « le lasso », ou « la plume » et
   « le doigt » ;
-- **le mot des deux sens** : « j'y vais / j'évite » (reco : deux verbes, ça
+- **les mots des trois crans** : « jamais ici · ça m'est égal · en priorité » (ma reco), ou les tiens ; (ancienne question : « j'y vais / j'évite », ça
   se comprend sans mode d'emploi), « pour moi / jamais », ou le tien ;
 - **les lettres** : trois familles ou quatre · majuscules seules ou aussi
   les minuscules · les accents (É È À) — se tranche quand on y sera, pas

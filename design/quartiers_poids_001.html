@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 8 : la pastille et le partage</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .bloc{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:26px 0;
+        border-top:1px solid rgba(239,233,216,.12)}
+  .bloc .no{font-size:11px;letter-spacing:.14em;color:var(--encre-3)}
+  .bloc h3{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+           font-size:27px;line-height:1.05;margin:4px 0 12px}
+  .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
+  .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .frames{display:grid;grid-template-columns:repeat(3,300px);gap:16px}
+  .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
+  .dit{width:300px}
+  .verdict{margin-top:14px}
+  .feuille{width:300px;background:var(--nuit-2);border:1px solid rgba(239,233,216,.14);
+           border-radius:var(--rayon);box-shadow:0 1px 0 rgba(0,0,0,.5);padding:16px;position:relative}
+  .feuille::before{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);
+                   width:34px;height:3px;background:rgba(239,233,216,.2);border-radius:2px}
+  .fh{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--encre-3);margin:6px 0 12px}
+  .mot{font-family:'Caveat',cursive;font-weight:600;font-size:27px;line-height:1;margin-bottom:3px}
+  .meta{font-size:10.5px;color:var(--encre-3);margin-bottom:13px}
+  .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--encre-3);
+       margin:13px 0 7px;display:block}
+  .encres{display:flex;gap:9px}
+  .encres i{width:30px;height:30px;border-radius:50%;display:block}
+  .encres i.on{box-shadow:0 0 0 2px var(--nuit-2),0 0 0 3.5px var(--encre)}
+  .crans{display:flex;gap:7px}
+  .cran{flex:1;border:1px solid rgba(239,233,216,.18);border-radius:var(--rayon);
+        padding:9px 6px;text-align:center}
+  .cran.on{border-color:var(--encre);background:var(--nuit-3)}
+  .cran .p{font-size:13px;letter-spacing:.12em;color:var(--encre-2)}
+  .cran.on .p{color:var(--encre)}
+  .cran .m{font-size:9.5px;color:var(--encre-3);margin-top:4px;line-height:1.3}
+  .ligne-act{border-top:1px solid rgba(239,233,216,.09);margin-top:14px;padding-top:12px;
+             font-family:'Instrument Serif',serif;font-style:italic;font-size:18px}
+  .ligne-act span{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:10.5px;
+                  color:var(--encre-3);display:block;margin-top:2px}
+  .recue{border-left:2px solid #8E76B4}
+  .btn{display:flex;gap:8px;margin-top:14px}
+  .btn b{flex:1;text-align:center;font-weight:400;font-size:12px;padding:10px 0;
+         border:1px solid rgba(239,233,216,.25);border-radius:var(--rayon)}
+  .btn b.oui{background:var(--encre);color:var(--nuit);border-color:var(--encre)}
+  .mur{font-size:11.5px;line-height:1.65;color:var(--encre-2)}
+  .mur b{color:var(--encre);font-weight:400}
+  .mur .non{color:var(--cire)}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 8</div>
+    <h1>La pastille, et le carnet qu'on se passe.</h1>
+  </div>
+  <div class="droite">13 août 2026 · d'après tes deux corrections<br>
+    la couleur est à toi · le poids se règle <b>à côté</b>, sur trois crans<br>
+    partage : <b>le super cercle, 10 max</b> — et rien au-delà
+  </div>
+</div>
+
+<p class="chapo">Mon binaire « on y va / on l'évite » est mort en une phrase, et il avait tort :
+  entre « j'évite » et « j'adore », il y a <b>« ça m'est égal »</b> — l'état de 90 % de la ville.
+  Trois crans, donc, et c'est exactement la <b>pastille du carnet</b> : celle des critères gradués,
+  jamais des étoiles. Et la couleur ne dit plus rien : elle est à toi. C'est la <b>matière</b> qui
+  porte le poids.</p>
+
+<div id="planche"></div>
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const V = [310,288], W = 300, H = 348
+const A = '#8E76B4', G = '#9A948A', P = '#5C88A6'
+const f = (etape, html, dit) => `<div><div class="et">${etape}</div>${html}<div class="dit">${dit}</div></div>`
+const C = (o) => cadre({ vue:V, w:W, h:H, ...o })
+const bulle = (cx, cy, r, n = 8) => Array.from({length:n}, (_, i) => {
+  const a = (i/n)*Math.PI*2; return [cx + Math.cos(a)*r, cy + Math.sin(a)*r] })
+const Z = bulle(452, 452, 112)
+
+const BLOCS = [
+{
+  no:'les trois crans', nom:'La pastille,<br>pas l’étoile', tampon:['t-garde','●○○ ●●○ ●●●'],
+  lignes:[
+    ['●○○ jamais ici',"on ne te le propose plus. Jamais. Ça ne se négocie pas et ça ne s'oublie pas."],
+    ['●●○ ça m’est égal',"le défaut d'une zone qu'on vient de tracer : elle existe, elle porte un mot, et elle ne pèse sur rien."],
+    ['●●● en priorité',"ça REMONTE quand c'est possible — ça ne filtre pas. On ne réduit pas la ville à trois quartiers."],
+    ['la règle',"le cran le plus bas gagne : un « jamais » l'emporte sur un « en priorité » qui le chevauche. Le retrait est une décision, la préférence est un souhait."],
+  ],
+  frames:[
+    f('●○○ jamais ici', C({ zones:[{c:G, pts:Z, hachure:true, trait:2, nom:'jamais ici', nx:452, ny:452, nt:20}] }),
+      "Hachuré, rues grises. La zone <b>se retire</b> — c'est cohérent : ce qui est dedans ne remonte plus."),
+    f('●●○ ça m’est égal', C({ zones:[{c:A, pts:Z, trait:1.4, nom:'le passage', nx:452, ny:452, nt:20}] }),
+      "Rien qu'un filet et un mot. Une zone qui ne pèse sur rien <b>ne doit rien peser à l'écran</b> non plus."),
+    f('●●● en priorité', C({ zones:[{c:A, pts:Z, teinte:true, trait:2, nom:'mon quartier', nx:452, ny:452, nt:20}] }),
+      "Les rues prennent l'encre. La seule zone qui ait le droit de briller, c'est celle qu'on préfère."),
+  ],
+},
+{
+  no:'la fiche', nom:'La couleur<br>est à toi', tampon:['t-garde','le poids se règle à côté'],
+  lignes:[
+    ['la couleur',"six encres, aucune ne veut dire quoi que ce soit. Tu prends celle qui te plaît, tu peux la répéter — c'est le MOT qui distingue."],
+    ['le poids',"juste en dessous, sur trois crans. Deux réglages indépendants : une zone rouge n'est pas une zone dangereuse, c'est une zone rouge."],
+    ['le partage',"« proposer aux super potes » — l'anneau intérieur, dix personnes maximum, choisies une par une."],
+  ],
+  frames:[
+    `<div><div class="et">la fiche de la zone</div>
+      <div class="feuille">
+        <div class="fh">la zone</div>
+        <div class="mot">jamais ici</div>
+        <div class="meta">tracée le 13 août · 8 points · 12 lieux dedans</div>
+        <span class="lbl">l’encre — celle que tu veux</span>
+        <div class="encres">${ENCRES.map((e,i)=>`<i class="${i===5?'on':''}" style="background:${e.c}"></i>`).join('')}</div>
+        <span class="lbl">me recommander ici ?</span>
+        <div class="crans">
+          <div class="cran on"><div class="p">●○○</div><div class="m">jamais</div></div>
+          <div class="cran"><div class="p">●●○</div><div class="m">égal</div></div>
+          <div class="cran"><div class="p">●●●</div><div class="m">en priorité</div></div>
+        </div>
+        <div class="ligne-act">proposer aux super potes<span>l’anneau intérieur — 10 max</span></div>
+        <div class="ligne-act" style="color:var(--cire)">raturer la zone<span>appui long — le trait se tire</span></div>
+      </div>
+      <div class="dit">Deux réglages, deux lignes. Rien n’est déduit : ni le poids depuis la couleur, ni l’inverse.</div></div>`,
+    `<div><div class="et">ce que reçoit un super pote</div>
+      <div class="feuille recue">
+        <div class="fh">Karim te propose une zone</div>
+        <div class="mot">jamais ici</div>
+        <div class="meta">8 points · autour de Belleville · il l’a mise en ●○○</div>
+        <p style="font-size:11.5px;line-height:1.6;color:var(--encre-2);margin-top:10px">
+          Tant que tu n’as pas dit oui, <b style="color:var(--encre);font-weight:400">elle ne
+          change rien</b> à ce que tu vois. Une zone reçue est une proposition, jamais un filtre.</p>
+        <div class="btn"><b class="oui">je la prends</b><b>non merci</b></div>
+      </div>
+      <div class="dit">C’est la seule façon de partager un jugement sans l’imposer : le pote propose, tu décides. <b>Le silence vaut non.</b></div></div>`,
+    `<div><div class="et">la frontière, écrite dans le code</div>
+      <div class="mur">
+        <p><b>Ce qui peut sortir :</b> une zone proposée à ton <b>super cercle</b> — dix personnes
+        que tu as choisies une par une. Dire « évite ce coin » à ses potes, tout le monde le fait ;
+        ce n’est pas une publication, c’est une conversation.</p>
+        <p style="margin-top:12px"><b class="non">Ce qui ne sortira jamais :</b> au-delà de
+        l’anneau — aucun public, aucun inconnu, aucun export. Et surtout <b class="non">aucune
+        agrégation entre utilisateurs</b> : jamais de carte de chaleur, jamais de « 4 personnes
+        évitent ce quartier ».</p>
+        <p style="margin-top:12px">C’est ça, la frontière entre un carnet qu’on se passe et un mur
+        — et c’est elle qui fait qu’il n’y a rien à modérer.</p>
+      </div></div>`,
+  ],
+},
+]
+
+document.getElementById('planche').innerHTML = BLOCS.map((b) => `
+  <div class="bloc">
+    <div><div class="no">${b.no}</div><h3>${b.nom}</h3>
+      ${b.lignes.map((l) => `<div class="ligne"><i>${l[0]}</i>${l[1]}</div>`).join('')}
+      <div class="verdict"><span class="tampon ${b.tampon[0]}">${b.tampon[1]}</span></div></div>
+    <div class="frames">${b.frames.join('')}</div>
+  </div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que tes deux corrections changent — et c’est déjà codé (539 tests verts).</b><br>
+  <span class="q">1.</span> <b>Trois crans, pas deux sens.</b> <code>poidsDuLieu()</code>,
+  <code>ecarterLesJamais()</code>, <code>classerParZones()</code> : « jamais » retire toujours,
+  « en priorité » remonte sans filtrer, et à poids égal l’ordre d’origine tient — la distance et
+  l’ouverture continuent de décider en dessous.<br>
+  <span class="q">2.</span> <b>La couleur ne dit rien, la matière dit tout</b> : filet seul
+  (égal) · hachuré (jamais) · rues teintées (en priorité). Une zone qui ne pèse sur rien ne pèse
+  rien à l’écran.<br>
+  <span class="q">3.</span> <b>Le partage existe — au super cercle, dix maximum.</b> Tu m’as fait
+  reculer sur mon interdit, et tu as raison sur le principe : dix personnes choisies une par une,
+  ce n’est pas une publication. Je garde deux verrous, et ceux-là je ne les lâche pas : rien
+  au-delà de l’anneau, et <b>aucune agrégation entre utilisateurs</b>. Une zone reçue arrive
+  comme une <b>proposition</b> (<code>ZoneRecue.acceptee</code>) : tant qu’elle n’est pas
+  acceptée, elle ne pèse sur rien — sinon le jugement d’un ami retirerait des lieux de ta vie
+  sans que tu le saches.<br>
+  <span class="q">→ à trancher :</span> les mots des trois crans. « <b>jamais ici · ça m’est
+  égal · en priorité</b> » (ma reco), ou les tiens.`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>
