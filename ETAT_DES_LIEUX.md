@@ -1,5 +1,12 @@
 # jeudi. — ÉTAT DES LIEUX
-*6 août 2026 · prod : https://jeudi-seven.vercel.app · dernier commit `a412722` · 127 tests verts*
+*Dernière publication : **13 août 2026**, prod https://jeudi-seven.vercel.app ·
+commit `c6b9f8b` · 505 tests verts (36 fichiers) · tsc et eslint à zéro.
+Mesuré le jour même, avant et après la mise en ligne.*
+
+> ⚠ Le tableau ci-dessous date du **6 août** et n'a pas été revérifié depuis :
+> il ne contient ni la ville entière (27 types de lieux), ni le signalement,
+> ni le push, ni la navbas en îlot. Pour l'avancement à jour, voir
+> `design/etat_du_chantier_001.html` (12/08).
 
 Statuts vérifiés **dans le code**, pas dans les notes de session.
 ✅ livré · 🟡 partiel · ⬜ à faire · ⛔ bloquant avant ouverture publique
