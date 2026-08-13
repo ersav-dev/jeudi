@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jeudi — quartiers · planche 6 : le point décide</title>
+<link rel="stylesheet" href="_socle_planche.css">
+<style>
+  body{width:1440px}
+  .bloc{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:26px 0;
+        border-top:1px solid rgba(239,233,216,.12)}
+  .bloc .no{font-size:11px;letter-spacing:.14em;color:var(--encre-3)}
+  .bloc h3{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
+           font-size:27px;line-height:1.05;margin:4px 0 12px}
+  .bloc .ligne{font-size:11.5px;line-height:1.55;color:var(--encre-2);margin-bottom:8px}
+  .bloc .ligne i{font-style:normal;color:var(--encre-3);display:block;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .frames{display:grid;grid-template-columns:repeat(3,300px);gap:16px}
+  .et{font-size:10.5px;letter-spacing:.08em;color:var(--encre-2);margin-bottom:7px}
+  .dit{width:300px}
+  .verdict{margin-top:14px}
+  .legende{display:flex;gap:26px;margin:2px 0 16px;font-size:11.5px;color:var(--encre-2)}
+  .legende b{color:var(--encre);font-weight:400}
+  .legende span{display:flex;align-items:center;gap:9px}
+  .sq,.rd{width:14px;height:14px;border:1.8px solid #8E76B4;background:#101010;flex:none}
+  .rd{border-radius:50%}
+</style>
+</head>
+<body>
+<div class="tete">
+  <div>
+    <div class="fil">jeudi · chantier quartiers · planche 6</div>
+    <h1>Le point décide, pas l'outil.</h1>
+  </div>
+  <div class="droite">13 août 2026 · d'après ta correction<br>
+    « à chaque point, on choisit : <b>angle droit ou angle doux</b> »<br>
+    2 outils · 2 états de point · <b>zéro réglage</b>
+  </div>
+</div>
+
+<p class="chapo">Tu as raison, et ça simplifie tout : je faisais choisir <b>un outil pour
+  obtenir un résultat</b> (le lasso pour du mou, les traits droits pour du net) ; tu fais
+  choisir <b>le résultat, point par point</b>. Conséquence directe : le cran de lissage
+  disparaît — il n'a plus rien à régler. Et l'outil « traits droits » disparaît aussi :
+  c'est simplement <b>une zone dont tous les points sont durs</b>.</p>
+<div class="legende">
+  <span><i class="sq"></i> <b>le point dur</b> — un carré : l'angle est net</span>
+  <span><i class="rd"></i> <b>le point doux</b> — un rond : la courbe passe au travers</span>
+  <span>un <b>tap</b> sur le point le retourne. C'est tout le vocabulaire.</span>
+</div>
+
+<div id="planche"></div>
+<div class="pied" id="reco"></div>
+
+<script src="_socle_carte.js"></script>
+<script>
+const V = [310,288], W = 300, H = 348, E = '#8E76B4'
+const f = (etape, html, dit) => `<div><div class="et">${etape}</div>${html}<div class="dit">${dit}</div></div>`
+const C = (o) => cadre({ vue:V, w:W, h:H, ...o })
+const TOUS = QUARTIER.map((_, i) => i)
+// le vrai usage : droit le long du boulevard (nord-est), mou le long du canal
+const MIXTE = [1,2,3,4]
+
+const BLOCS = [
+{
+  no:'les deux gestes', nom:'La plume<br>et le lasso', tampon:['t-garde','les deux, et rien d\'autre'],
+  lignes:[
+    ['la plume',"on TAPE, point par point. Chaque point naît <b>dur</b> : c'est ce qu'on vient chercher."],
+    ['le lasso',"on TRACE au doigt, ça se ferme. Les points naissent <b>doux</b> : c'est ce qu'on vient chercher."],
+    ['la nuance',"« au doigt » n'est pas un troisième outil — c'est le geste DU lasso. Deux outils = deux gestes physiques : taper, ou glisser."],
+    ['après',"les deux rendent le même objet : une suite de points, chacun dur ou doux. Donc <b>une seule édition</b> à écrire."],
+  ],
+  frames:[
+    f('la plume — on tape', C({ zones:[{c:E, pts:QUARTIER_DROIT, durs:QUARTIER_DROIT.map((_,i)=>i), teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Huit taps, huit <b>points durs</b> : le résultat est net, anguleux, volontaire."),
+    f('le lasso — on trace', C({ zones:[{c:E, durs:[], teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Un seul geste, douze <b>points doux</b> : le tremblé est rangé, la forme reste la tienne."),
+    f('le même objet', C({ zones:[{c:E, durs:MIXTE, teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "Et rien n'empêche de mélanger : <b>c'est le sujet de cette planche</b>."),
+  ],
+},
+{
+  no:'le point', nom:'Dur,<br>ou doux', tampon:['t-garde','un tap suffit'],
+  lignes:[
+    ['le geste',"un tap sur un point le retourne : carré ↔ rond. Pas de menu, pas d'appui long."],
+    ['ce que ça fait',"dur = la tangente est cassée, l'angle est net. Doux = la courbe traverse le point sans s'arrêter."],
+    ['la lecture',"carré et rond, c'est la convention de tous les outils vectoriels — et ça se distingue au pouce, de nuit."],
+    ['le défaut',"la plume pose des durs, le lasso pose des doux. On ne retourne que ce qui le mérite."],
+  ],
+  frames:[
+    f('tous doux — le canal', C({ zones:[{c:E, durs:[], teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "La zone épouse la ville. Bien pour un quartier qui n'a pas de frontière franche."),
+    f('on tape quatre points', C({ zones:[{c:E, durs:MIXTE, teinte:true, poignees:true, trait:2.2, vif:true}],
+        doigt:[524,352], doigtOpt:{r:22} }),
+      "Les quatre points du <b>nord-est</b> passent en carré : la zone se cale sur le boulevard."),
+    f('tous durs — le cordeau', C({ zones:[{c:E, durs:TOUS, teinte:true, poignees:true, trait:2.2, vif:true}] }),
+      "C'est <b>exactement</b> l'ancien outil « traits droits ». Il n'a plus besoin d'exister : c'est un état."),
+  ],
+},
+{
+  no:'le vrai usage', nom:'Un bord<br>par raison', tampon:['t-garde','ce que ça débloque'],
+  lignes:[
+    ['pourquoi',"un quartier n'est pas homogène : il a des bords <b>décidés</b> (un boulevard, une voie ferrée) et des bords <b>flous</b> (là où ça s'arrête sans qu'on sache)."],
+    ['avant',"il fallait choisir un seul régime pour toute la zone — donc mentir sur la moitié des bords."],
+    ['maintenant',"le bord dur dit « ça s'arrête ici », le bord doux dit « à peu près par là ». La forme raconte quelque chose."],
+  ],
+  frames:[
+    f('de près (z15)', C({ zones:[{c:E, durs:MIXTE, teinte:true, trait:2.2, vif:true,
+        nom:'mon quartier', nx:462, ny:506, nt:24}] }),
+      "Net le long du boulevard, mou vers Oberkampf. <b>Personne n'a à l'expliquer</b> : ça se voit."),
+    f('au dézoom (z14)', cadre({ z:14, vue:[176,128], w:W, h:H, noms:1,
+        zones:[{c:E, durs:MIXTE, aplat:.28, trait:2, nom:'mon quartier', nx:456, ny:546, nt:22}] }),
+      "L'aplat garde la même signature : un côté taillé, l'autre posé."),
+    f("l'ancien réglage, mort", C({ zones:[{c:'rgba(239,233,216,.4)', k:'brut', seed:7, fantome:true},
+        {c:E, durs:MIXTE, teinte:true, trait:2.2, vif:true}] }),
+      "Le <b>cran de lissage</b> (souple ↔ net) n'a plus d'objet : le lissage n'est plus global, il est par point."),
+  ],
+},
+{
+  no:'la conséquence', nom:'Les poignées<br>passent en v1', tampon:['t-second','avec sa règle'],
+  lignes:[
+    ['pourquoi',"si le point se retourne au tap, il faut pouvoir le toucher — donc les poignées existent dès la v1."],
+    ['le mur',"douze points sur 700 m tombent parfois à 15 px l'un de l'autre. Le doigt en fait 44."],
+    ['la règle',"on n'affiche que les points <b>écartés d'au moins 32 px à l'écran</b>. Les autres se fondent et reviennent en zoomant."],
+    ['le reste',"déplacer un point reste en v2 : retourner (un tap) est facile, déplacer (un glissé précis) ne l'est pas."],
+  ],
+  frames:[
+    f('le cas d\'échec', C({ zones:[{c:E, pts:[...QUARTIER.slice(0,4),[560,492],...QUARTIER.slice(4)],
+        durs:[2,3], teinte:true, poignees:true, trait:2.2, vif:true}], doigt:[556,486], doigtOpt:{r:22} }),
+      "Deux points à 15 px sous une pulpe de 44 : <b>impossible de savoir lequel on retourne</b>."),
+    f('la règle appliquée', C({ zones:[{c:E, durs:MIXTE, teinte:true, poignees:true, trait:2.2, vif:true}],
+        doigt:[556,540], doigtOpt:{r:22} }),
+      "À 32 px minimum, chaque point a sa cible. Les points cachés <b>ne sont pas perdus</b> — ils reviennent au zoom."),
+    f('ce qui reste en v2', C({ zones:[{c:E, fantome:true, trait:1.6},
+        {c:E, pts:QUARTIER.map(([x,y],i)=>i===3?[x+26,y-8]:[x,y]), durs:MIXTE, teinte:true,
+         poignees:true, actif:3, trait:2.2, vif:true}], doigt:[586,402], doigtOpt:{r:22} }),
+      "<b>Déplacer</b> un point : le doigt masque ce qu'il déplace. Un tap se vise, un glissé se dose — pas la même affaire."),
+  ],
+},
+]
+
+document.getElementById('planche').innerHTML = BLOCS.map((b) => `
+  <div class="bloc">
+    <div><div class="no">${b.no}</div><h3>${b.nom}</h3>
+      ${b.lignes.map((l) => `<div class="ligne"><i>${l[0]}</i>${l[1]}</div>`).join('')}
+      <div class="verdict"><span class="tampon ${b.tampon[0]}">${b.tampon[1]}</span></div></div>
+    <div class="frames">${b.frames.join('')}</div>
+  </div>`).join('')
+
+document.getElementById('reco').innerHTML = `
+  <b>Ce que ta correction change — et pourquoi elle est meilleure que ma reco.</b><br>
+  <span class="q">1.</span> <b>Deux outils : la plume (on tape) et le lasso (on trace).</b> « Au doigt »
+  n'est pas un troisième outil, c'est le geste du lasso — il n'y a que deux gestes physiques sur un
+  téléphone : taper, ou glisser. Si tu tiens au mot « doigt », alors c'est lui qui remplace « lasso » ;
+  mais il en faut deux, pas trois, sinon on demande à quelqu'un de choisir entre deux mots pour le
+  même geste.<br>
+  <span class="q">2.</span> <b>Le cran de lissage est mort</b> — remplacé par l'état du point. Un réglage
+  global en moins, et un contrôle plus fin : c'est le bon échange.<br>
+  <span class="q">3.</span> <b>L'outil « traits droits » est mort aussi</b> : c'est une zone dont tous
+  les points sont durs. On passe de <b>4 outils + 1 réglage</b> à <b>2 outils + 1 bascule</b>.<br>
+  <span class="q">4.</span> <b>Les poignées remontent en v1</b> (c'est le prix de ton idée, et il est
+  juste) : pour retourner un point, il faut le toucher. Avec la règle des 32 px, obligatoire cette
+  fois. Déplacer un point reste en v2 — taper, ça se vise ; glisser, ça se dose.<br>
+  <span class="q">→ ce que j'attends de toi :</span> juste le mot. <b>« la plume » et « le lasso »</b>,
+  ou <b>« la plume » et « le doigt »</b> ? Le reste est tranché.`
+
+document.body.dataset.h = Math.ceil(document.documentElement.scrollHeight)
+</script>
+</body>
+</html>

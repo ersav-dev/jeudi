@@ -29,6 +29,10 @@ peut porter une **note** (la 3ᵉ entrée du « + », voir CHANTIER_STICKERS) ;
 la recherche pourra un jour comprendre « dans mon quartier ».
 
 ## LA question de design : les outils de dessin
+*(TRANCHÉE le 13/08 au soir — voir la section « TRANCHÉ PAR ERSAN » plus
+bas. Ce qui suit est le cadrage d'origine, gardé pour la mémoire du
+raisonnement : deux des quatre outils sont morts, et le choix est descendu
+dans le point.)*
 
 C'est le cœur de la session maquettes. Quatre outils envisagés (les mots
 d'Ersan) — à trancher SUR PLANCHE, pas en l'air :
@@ -134,23 +138,48 @@ l'échelle **1:1** (272 px de planche = 272 px de téléphone).
    règles de pose : `design/lettres/REFERENCES.md`. Le Caveat ne meurt pas :
    il garde la note en marge — l'une nomme, l'autre commente.
 
-### Ce qu'Ersan doit trancher (sur image)
+## TRANCHÉ PAR ERSAN — 13/08 au soir
 
-- **le fond** : voie A (vectoriel, seules les rues prennent l'encre) ou
-  voie B (on ne touche à rien, la teinte déborde sur le bâti et les
-  libellés) ;
-- **les encres** : six, ou cinq en sortant le rose indien (le plus proche
-  de la cire sur un écran de nuit) ;
-- **l'aplat** : 20 % (la note) ou 28 % (la planche) ;
-- **la rature** : appui long sur le bouton (dessiné) ou glissé du doigt en
-  travers de la zone (plus « carnet », moins découvrable) ;
-- **le cran de lissage** : visible dès le premier tracé, ou seulement dans
-  la fiche de la zone (reco : la fiche) ;
-- **les lettres** : quatre familles ou trois · majuscules seules ou aussi
-  les minuscules · les accents (É È À) ;
-- **le nom du « + »** : la feuille d'ajout du carnet — proposition
-  « la trousse » (on l'ouvre pour ajouter), l'écran des lettres devenant
-  « le sachet » (on y pioche).
+**La correction qui commande tout (et qui vaut mieux que ma reco) :**
+« je veux un outil plume et un lasso… et à chaque point, on choisit si on
+veut un angle 90 degrés ou une courbe — angle doux ou angle droit. »
+
+Le choix quitte l'OUTIL et descend dans le POINT. Voir
+`design/quartiers_points_001.png` (planche 6). Conséquences :
+
+- **deux outils, et deux seulement** : **la plume** (on tape, le point naît
+  DUR) et **le lasso** (on trace au doigt, les points naissent DOUX). « Au
+  doigt » n'est pas un troisième outil : c'est le geste DU lasso — sur un
+  téléphone il n'existe que deux gestes, taper ou glisser. *(Seul mot encore
+  ouvert : « le lasso » ou « le doigt ». Rien d'autre n'attend.)*
+- **le point se retourne au tap** : carré = dur (tangente cassée, angle
+  net), rond = doux (la courbe traverse). La convention de tous les outils
+  vectoriels, obtenue par un tap au lieu d'une touche de clavier.
+- **mort : l'outil « traits droits »** — c'est une zone dont tous les points
+  sont durs. **Mort : la forme libre.** **Mort : le cran de lissage** — le
+  lissage n'est plus global, il est par point. On passe de *4 outils + 1
+  réglage* à *2 outils + 1 bascule*.
+- **les poignées remontent en v1** (c'est le prix, et il est juste : pour
+  retourner un point il faut le toucher), **avec la règle des 32 px**
+  d'écartement minimum à l'écran — obligatoire, plus optionnelle. Les points
+  masqués reviennent en zoomant. **Déplacer** un point reste en v2 : un tap
+  se vise, un glissé se dose.
+
+**Et tout le reste des recos est validé tel quel :** voie A (le fond passe
+en vectoriel, et on le fait AVANT de coder les quartiers) · six encres, une
+encre = une zone · aplat **28 %** + fondu croisé · contour discret (1,4 px à
+38 %) qui ne se réveille que sous le doigt · la **rature** en appui long
+(le trait de cire se tire, il se rétracte si on lâche) · « refaire le
+tracé » avec l'ancien en fantôme · le mot du quartier **composé en
+lettres-objets** (les perles sont sorties, 41 fichiers) · le « + » devient
+**la trousse**, l'écran des lettres **le sachet**.
+
+### Ce qui reste à trancher
+
+- **le mot** : « la plume » et « le lasso », ou « la plume » et « le doigt » ;
+- **les lettres** : trois familles ou quatre · majuscules seules ou aussi
+  les minuscules · les accents (É È À) — se tranche quand on y sera, pas
+  avant.
 
 ## Ce qu'on n'y met PAS (décidé le 13/08)
 

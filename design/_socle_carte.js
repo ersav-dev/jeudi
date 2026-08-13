@@ -68,8 +68,32 @@ const partiel = (p, part, seed = 7) => {
   const e = echantillons(p, 190, seed), n = Math.max(2, Math.round(e.length * part))
   return { d: `M ${e.slice(0, n).map((q) => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(' L ')}`, fin: e[n - 1], debut: e[0] }
 }
-const forme = (k, p, ferme = true, seed = 7) =>
-  k === 'droit' ? droit(p, ferme) : k === 'brut' ? brut(p, seed, ferme ? 1 : 0.999) : catmull(p, ferme)
+// LE POINT DÉCIDE (Ersan, 13/08) : chaque ancre est DURE (angle net) ou
+// DOUCE (la courbe passe au travers). Une poignée nulle d'un côté suffit à
+// casser la tangente — c'est le point d'angle des vrais outils vectoriels,
+// obtenu ici par un tap au lieu d'une touche du clavier.
+const mixte = (p, durs = []) => {
+  const n = p.length
+  const dur = (i) => durs.includes(((i % n) + n) % n)
+  const tan = (i) => {
+    const a = p[(i - 1 + n) % n], b = p[(i + 1) % n]
+    return [(b[0] - a[0]) / 6, (b[1] - a[1]) / 6]
+  }
+  let d = `M ${p[0][0]} ${p[0][1]}`
+  for (let i = 0; i < n; i++) {
+    const a = p[i], b = p[(i + 1) % n]
+    const ta = dur(i) ? [0, 0] : tan(i)
+    const tb = dur(i + 1) ? [0, 0] : tan(i + 1)
+    d += ` C ${(a[0] + ta[0]).toFixed(1)} ${(a[1] + ta[1]).toFixed(1)},` +
+         ` ${(b[0] - tb[0]).toFixed(1)} ${(b[1] - tb[1]).toFixed(1)}, ${b[0]} ${b[1]}`
+  }
+  return d + ' Z'
+}
+const forme = (k, p, ferme = true, seed = 7, durs) =>
+  k === 'mixte' ? mixte(p, durs)
+  : k === 'droit' ? droit(p, ferme)
+  : k === 'brut' ? brut(p, seed, ferme ? 1 : 0.999)
+  : catmull(p, ferme)
 
 /* ── ce qui habite la carte ────────────────────────────────────── */
 // des spots plausibles du quartier (coordonnées posées sur les rues)
@@ -121,7 +145,8 @@ function cadre(o) {
   const v = pt(o.vue || [314, 296], z)          // coin haut-gauche de la fenêtre
   const zones = (o.zones || []).map((zz) => ({
     ...zz, P: pts(zz.pts || QUARTIER, z),
-    d: forme(zz.k || 'lisse', pts(zz.pts || QUARTIER, z), !zz.ouvert, zz.seed),
+    d: forme(zz.durs ? 'mixte' : zz.k || 'lisse', pts(zz.pts || QUARTIER, z),
+       !zz.ouvert, zz.seed, zz.durs),
   }))
   const plan = (cls, style) =>
     `<div class="plan ${cls}" style="width:${m.s}px;height:${m.s}px;left:${-v[0]}px;top:${-v[1]}px;${style || ''}">${tuiles(z)}</div>`
@@ -144,7 +169,14 @@ function cadre(o) {
           class="${zz.fantome ? 'contour-fantome' : zz.vif ? 'contour-vif' : 'contour'}"
           style="stroke-width:${zz.fantome ? 1.6 : zz.vif ? (zz.trait || 2.2) : (zz.repos || 1.4)}"/>`}
       ${zz.rature ? `<path d="${zz.rature}" class="rature"/>` : ''}
-      ${zz.poignees ? zz.P.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${zz.actif === i ? 7 : 5}" class="poignee ${zz.actif === i ? 'po-actif' : ''}"/>`).join('') : ''}
+      ${zz.poignees ? zz.P.map((p, i) => {
+        const r = zz.actif === i ? 7 : 5, cl = `poignee ${zz.actif === i ? 'po-actif' : ''}`
+        // le point DUR est un carré, le point DOUX un rond : la convention
+        // de tous les outils vectoriels, lisible à la taille du pouce
+        return (zz.durs || []).includes(i)
+          ? `<rect x="${p[0] - r}" y="${p[1] - r}" width="${r * 2}" height="${r * 2}" class="${cl}"/>`
+          : `<circle cx="${p[0]}" cy="${p[1]}" r="${r}" class="${cl}"/>`
+      }).join('') : ''}
       ${zz.milieux ? zz.P.map((p, i, a) => { const q = a[(i + 1) % a.length]
           return `<circle cx="${(p[0] + q[0]) / 2}" cy="${(p[1] + q[1]) / 2}" r="3" class="milieu"/>` }).join('') : ''}
       ${zz.nom ? `<text x="${pt([zz.nx, zz.ny], z)[0]}" y="${pt([zz.nx, zz.ny], z)[1]}" class="etq"
