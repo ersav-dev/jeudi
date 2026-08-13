@@ -35,6 +35,38 @@ describe('typeDeLieu — la description fait foi', () => {
     expect(typeDeLieu(lieu('Bar à vin, planches'))).toBe('vin')
   })
 
+  it('la ville entière (13/08) : culture, jeux, corps, plein air', () => {
+    expect(typeDeLieu(lieu('Musée d’art moderne, expo permanente'))).toBe('musee')
+    expect(typeDeLieu(lieu('Théâtre de poche, impro le jeudi'))).toBe('theatre')
+    expect(typeDeLieu(lieu('Cinéma d’art et d’essai'))).toBe('cine')
+    expect(typeDeLieu(lieu('Salle de concert, jazz le soir'))).toBe('concert')
+    expect(typeDeLieu(lieu('Bibliothèque historique'))).toBe('biblio')
+    expect(typeDeLieu(lieu('Librairie-café du quartier'))).toBe('biblio')
+    expect(typeDeLieu(lieu('Karaoké privatif'))).toBe('karaoke')
+    expect(typeDeLieu(lieu('Escape game entre potes'))).toBe('escape')
+    expect(typeDeLieu(lieu('Bowling rétro'))).toBe('bowling')
+    expect(typeDeLieu(lieu('Billard et snooker'))).toBe('billard')
+    expect(typeDeLieu(lieu('Bar à jeux de société'))).toBe('jeux')
+    expect(typeDeLieu(lieu('Salle de sport, cours collectifs'))).toBe('sport')
+    expect(typeDeLieu(lieu('Padel et squash'))).toBe('sport')
+    expect(typeDeLieu(lieu('Piscine art déco'))).toBe('piscine')
+    expect(typeDeLieu(lieu('Hammam traditionnel'))).toBe('spa')
+    expect(typeDeLieu(lieu('Friperie vintage du Marais'))).toBe('boutique')
+    expect(typeDeLieu(lieu('Parc avec grande pelouse'))).toBe('parc')
+    expect(typeDeLieu(lieu('Marché couvert, producteurs'))).toBe('marche')
+  })
+
+  it('le spécifique ne vole pas les bars (13/08)', () => {
+    // « bar des sports » : un bar — seule la SALLE de sport est un sport
+    expect(typeDeLieu(lieu('Bar des sports, écran géant'))).toBe('bar')
+    // « guinguette du jardin » : le bar gagne, le jardin est un décor
+    expect(typeDeLieu(lieu('Guinguette au bord du jardin'))).toBe('bar')
+    // le bar à jeux, lui, est bien un jeu (jeux AVANT bar)
+    expect(typeDeLieu(lieu('Bar à jeux, 500 boîtes'))).toBe('jeux')
+    // le jazz club est une scène (concert AVANT club)
+    expect(typeDeLieu(lieu('Jazz club en sous-sol'))).toBe('concert')
+  })
+
   it('le spécifique gagne sur le générique (l’ordre des regex)', () => {
     // « bar » ET « vins » dans la même description → la bouteille, pas le verre
     expect(typeDeLieu(lieu('Bar à vins et cocktails'))).toBe('vin')
@@ -54,6 +86,9 @@ describe('typeDeLieu — la description fait foi', () => {
 })
 
 describe('les glyphes et les mots', () => {
+  it('la bibliothèque compte 27 types (13/08 : la ville entière + la friche)', () => {
+    expect(TYPES_LIEU).toHaveLength(27)
+  })
   it('chaque type a son glyphe monoline et son mot', () => {
     for (const t of TYPES_LIEU) {
       expect(svgTypeLieu(t)).toContain('<svg')
@@ -101,7 +136,7 @@ describe('cuisineDeLieu — le tampon de douane (jamais un drapeau émoji)', () 
 // le garde-fou du script de fusion, porté dans les tests : chaque couple
 // (type, tampon) écrit par decrireLieu() DOIT se relire à l'identique.
 describe('decrireLieu — écrire un choix que la lecture rend exactement', () => {
-  it('les 10 mots de type se relisent, seuls', () => {
+  it('les 26 mots de type se relisent, seuls', () => {
     for (const type of TYPES_LIEU) {
       expect(typeDeLieu({ description: MOT_TYPE[type], envies: [] })).toBe(type)
     }
@@ -113,7 +148,7 @@ describe('decrireLieu — écrire un choix que la lecture rend exactement', () =
     }
   })
 
-  it('les 10 types × les 22 tampons (aucun compris) : 220 couples relus juste', () => {
+  it('les 26 types × les 22 tampons (aucun compris) : 572 couples relus juste', () => {
     const tampons: (string | null)[] = [null, ...Object.keys(ADJ_CUISINE)]
     for (const type of TYPES_LIEU) {
       for (const cuisine of tampons) {

@@ -10,7 +10,7 @@ import { t } from './langue'
 import { formatHeure } from './db'
 import { TYPES_LIEU, TAMPONS_CUISINE, labelTypeLieu, svgTypeLieu, type TypeLieu } from './typesLieu'
 
-/** les 10 glyphes, ceux-là mêmes qui marquent la carte */
+/** les 26 glyphes, ceux-là mêmes qui marquent la carte */
 export function PickerType({
   valeur,
   onChoisir,

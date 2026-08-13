@@ -865,6 +865,22 @@ const EN: Record<string, string> = {
   'glacier': 'ice cream shop',
   'pâtisserie': 'pastry shop',
   'grande table': 'fine dining',
+  // la ville entière (13/08) — « bowling », « spa », « sport » et
+  // « escape game » se disent pareil : pas d'entrée, repli fr.
+  'musée': 'museum',
+  'théâtre': 'theatre',
+  'cinéma': 'cinema',
+  'concert': 'live music',
+  'bibliothèque': 'library',
+  'karaoké': 'karaoke',
+  'billard': 'pool hall',
+  'bar à jeux': 'game bar',
+  'tiers-lieu': 'third place',
+  'Tiers-lieu': 'Third place',
+  'piscine': 'swimming pool',
+  'boutique': 'shop',
+  'parc': 'park',
+  'marché': 'market',
 }
 
 /** traduit une chaîne de la voix de jeudi. fr = la clé, en = le dictionnaire,

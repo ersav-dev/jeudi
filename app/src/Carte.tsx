@@ -1532,17 +1532,11 @@ export default function Carte({
         new maplibregl.GeolocateControl({ trackUserLocation: true }),
         'bottom-right',
       )
-      // l'échelle éphémère (Ersan, 08/08) : un repère de distance jamais posé
-      // en permanence — visible UNIQUEMENT pendant le geste de zoom. Style
-      // carnet surchargé plus bas (index.css .maplibregl-ctrl-scale), placée
-      // discrètement en bas-gauche, au-dessus de l'attribution.
+      // l'échelle PERMANENTE (Ersan, 12/08 — « je ne vois pas l'échelle ! »,
+      // qui remplace son choix éphémère du 08/08) : toujours posée, discrète,
+      // style carnet (index.css .maplibregl-ctrl-scale), en bas-gauche
+      // au-dessus de l'attribution et de la bande déchirée (--navbas-h).
       carte.current.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left')
-      const elEchelle = cont.querySelector<HTMLElement>('.maplibregl-ctrl-scale')
-      // apparaît sur zoomstart (instantané) ; s'efface en fondu ~1 s dès
-      // zoomend — la durée du fondu vit dans le CSS (.maplibregl-ctrl-scale),
-      // ici on ne fait que poser/retirer la classe au bon moment du geste.
-      carte.current.on('zoomstart', () => elEchelle?.classList.add('s-visible'))
-      carte.current.on('zoomend', () => elEchelle?.classList.remove('s-visible'))
     }
     // ── les MONUMENTS-REPÈRES : le croquis s'oriente comme un vrai carnet ──
     // des silhouettes à l'encre graphite, discrètes, jamais tapables — elles

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jeudi. — la bibliothèque des glyphes (26) — planche 001</title>
+<style>
+  /* ── le papier du carnet ── */
+  :root {
+    --papier: #f3ead8;
+    --papier-2: #ece1cb;
+    --encre: #15130f;
+    --encre-2: rgba(21, 19, 15, 0.55);
+    --trait: rgba(21, 19, 15, 0.18);
+    --nuit: #0d1420;
+    --nuit-2: #111a2a;
+    --lueur: #33a7ff;
+    --contour: #628ef3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--papier);
+    color: var(--encre);
+    font: 15px/1.5 Georgia, 'Times New Roman', serif;
+    padding: 40px 5vw 80px;
+  }
+  .mono { font-family: 'Courier New', monospace; }
+
+  header { max-width: 1100px; margin: 0 auto 8px; }
+  h1 { font-size: 30px; font-weight: normal; letter-spacing: -0.5px; }
+  h1 b { font-weight: bold; }
+  .sous { color: var(--encre-2); margin-top: 6px; max-width: 72ch; }
+  .compte { display: inline-block; margin-top: 10px; padding: 3px 10px;
+    border: 1px solid var(--trait); border-radius: 999px; font-size: 12.5px;
+    color: var(--encre-2); }
+
+  section { max-width: 1100px; margin: 42px auto 0; }
+  h2 {
+    font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--encre-2); font-weight: normal;
+    border-bottom: 1px solid var(--trait); padding-bottom: 8px; margin-bottom: 18px;
+  }
+  h2 .n { float: right; letter-spacing: 0; }
+
+  .grille {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  }
+  .carte-g {
+    background: var(--papier-2);
+    border: 1px solid var(--trait);
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+  }
+  .haut { display: flex; align-items: center; gap: 12px; }
+
+  /* l'encre du carnet — le grand format */
+  .encre-grand { width: 56px; height: 56px; flex: 0 0 auto; }
+  .encre-grand svg { width: 100%; height: 100%; }
+
+  /* la nuit de la carte — le pin à VRAIE taille (30 px) */
+  .nuit-boite {
+    margin-left: auto; flex: 0 0 auto;
+    width: 62px; height: 62px; border-radius: 8px;
+    background: radial-gradient(circle at 35% 30%, var(--nuit-2), var(--nuit));
+    display: grid; place-items: center;
+  }
+  .pin {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--contour);
+    background: rgba(115, 115, 115, 0.1);
+    box-shadow: 0 0 16px rgba(69, 153, 232, 0.35);
+    display: grid; place-items: center;
+  }
+  .pin svg {
+    width: 19px; height: 19px;
+    stroke: var(--lueur) !important;
+    filter: drop-shadow(0 0 4px rgba(69, 153, 232, 0.6));
+  }
+
+  .nom { font-size: 17px; }
+  .cle { font-size: 11.5px; color: var(--encre-2); }
+  .mots { margin-top: 10px; font-size: 11.5px; color: var(--encre-2);
+    border-top: 1px dashed var(--trait); padding-top: 8px; line-height: 1.6; }
+  .mots b { color: var(--encre); font-weight: normal;
+    border-bottom: 1px solid var(--trait); }
+
+  /* la règle du bas */
+  .regle { max-width: 1100px; margin: 56px auto 0; padding: 18px 22px;
+    border: 1px solid var(--trait); border-radius: 10px; color: var(--encre-2);
+    font-size: 13.5px; }
+  .regle b { color: var(--encre); font-weight: normal; }
+</style>
+</head>
+<body>
+<header>
+  <h1><b>jeudi.</b> — la bibliothèque des glyphes <span class="mono">001</span></h1>
+  <p class="sous">Les 26 traits de la carte — un par type de lieu, monoline à l'encre,
+  viewBox 24, trait 1,8. À gauche l'écriture du carnet (picker, fiche) ;
+  à droite la même ligne sur la carte de nuit, dans le pin à <b>vraie taille (30 px)</b>.
+  La couleur dit « à qui », le glyphe dit « quoi » — jamais l'inverse.</p>
+  <span class="compte mono">13/08/2026 · typesLieu.ts · 10 familles d'origine + 16 nouvelles</span>
+</header>
+
+<div id="planche"></div>
+
+<div class="regle">
+  <b>Ce qui ne change pas :</b> jamais d'émoji, jamais de logo — que du trait.
+  Le mot du carnet (« Bar à jeux », « Salle de sport »…) s'écrit dans la description
+  et se relit exactement par typeDeLieu() — 572 couples type×tampon vérifiés par les tests.
+  <b>Le bar des sports reste un bar</b>, la guinguette garde son jardin :
+  le spécifique ne vole pas les grandes familles.
+</div>
+
+<script>
+// ── copie de TRAITS (typesLieu.ts, 13/08) — planche jetable, la vérité vit dans le code ──
+const TRAITS = {
+  bar: '<path d="M6 5h12l-6 7z"/><path d="M12 12v6"/><path d="M9 20h6"/>',
+  vin: '<path d="M10.6 4h2.8v3.6c1.3.9 2.1 2.1 2.1 3.9V19a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-7.5c0-1.8.8-3 2.1-3.9z"/><path d="M10.6 5.6h2.8"/>',
+  club: '<circle cx="9" cy="17" r="2.5"/><path d="M11.5 17V6l6.5 2"/>',
+  cafe: '<path d="M5 9h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/>',
+  the: '<path d="M7 12h10l-.8 4.2a4.5 4.5 0 0 1-4.4 3.8h.4a4.5 4.5 0 0 1-4.4-3.8z"/><path d="M7 13l-2.6-1.8"/><path d="M9.4 12a2.6 2.6 0 0 1 5.2 0"/><path d="M12 9.4V8"/>',
+  glace: '<path d="M8 10h8l-4 10z"/><path d="M8 10a4 4 0 0 1 8 0"/>',
+  patisserie: '<path d="M7 13h10l-1.3 6.5H8.3z"/><path d="M7 13a5 5 0 0 1 10 0"/><path d="M10.4 13.2v6"/><path d="M13.6 13.2v6"/><circle cx="12" cy="6.6" r="1.2"/>',
+  street: '<path d="M5 11a7 5.5 0 0 1 14 0z"/><path d="M5 14h14"/><path d="M5.8 17h12.4"/>',
+  gastro: '<path d="M5 16a7 7 0 0 1 14 0z"/><path d="M12 9V7"/><path d="M4 19h16"/>',
+  resto: '<path d="M9 4v16"/><path d="M7 4v4a2 2 0 0 0 4 0V4"/><path d="M15.5 20V4c-2.4 1.8-2.4 6 0 7.8"/>',
+  musee: '<rect x="4" y="5.5" width="16" height="13" rx="1"/><path d="M7 15.5l3.4-4 2.4 2.8 2-2.3 2.2 3.5"/><circle cx="9.2" cy="9" r="1"/>',
+  theatre: '<path d="M6 5c2 .9 4 1.3 6 1.3S16 5.9 18 5v6.5a6 6 0 0 1-12 0z"/><path d="M9 9.3h1.7M13.3 9.3H15"/><path d="M9.4 12.6a3.2 3.2 0 0 0 5.2 0"/>',
+  cine: '<rect x="4" y="10" width="16" height="8.5" rx="1"/><path d="M4.6 10 6 5.6l14 2.1-.8 2.3"/><path d="M9.2 6.1l1.7 3M13.7 6.8l1.7 3"/>',
+  concert: '<rect x="7" y="4" width="10" height="16" rx="1.5"/><circle cx="12" cy="8.5" r="1.4"/><circle cx="12" cy="14.5" r="2.8"/>',
+  biblio: '<path d="M12 6.2C10.2 4.9 7.8 4.3 4 4.3v13.4c3.8 0 6.2.6 8 2 1.8-1.4 4.2-2 8-2V4.3c-3.8 0-6.2.6-8 1.9z"/><path d="M12 6.2v13.5"/>',
+  karaoke: '<rect x="9.4" y="3.5" width="5.2" height="9" rx="2.6"/><path d="M6.8 10.5a5.2 5.2 0 0 0 10.4 0"/><path d="M12 15.7V19"/><path d="M9.2 19h5.6"/>',
+  escape: '<circle cx="8.2" cy="8.2" r="3.7"/><path d="M10.9 10.9 19.4 19.4"/><path d="M15.2 15.2l2.3-2.3M17.7 17.7l1.9-1.9"/>',
+  bowling: '<circle cx="12" cy="12.5" r="7.8"/><circle cx="10" cy="10" r=".9"/><circle cx="14" cy="10" r=".9"/><circle cx="12" cy="7.4" r=".9"/>',
+  billard: '<path d="M4.5 19.5 17 7"/><path d="M17 7l2.5-2.5"/><circle cx="16.8" cy="16.8" r="2.9"/>',
+  jeux: '<rect x="4.5" y="4.5" width="15" height="15" rx="3"/><circle cx="8.8" cy="8.8" r=".9"/><circle cx="15.2" cy="8.8" r=".9"/><circle cx="12" cy="12" r=".9"/><circle cx="8.8" cy="15.2" r=".9"/><circle cx="15.2" cy="15.2" r=".9"/>',
+  sport: '<path d="M4.5 9.8v4.4M7.8 7.8v8.4M16.2 7.8v8.4M19.5 9.8v4.4"/><path d="M7.8 12h8.4"/>',
+  piscine: '<circle cx="16.2" cy="7" r="1.9"/><path d="M4.5 11.5 10 7.8l3 2.6"/><path d="M3.5 15.6c1.4-1.1 2.9-1.1 4.3 0s2.8 1.1 4.2 0 2.9-1.1 4.3 0 2.8 1.1 4.2 0"/><path d="M3.5 19.2c1.4-1.1 2.9-1.1 4.3 0s2.8 1.1 4.2 0 2.9-1.1 4.3 0 2.8 1.1 4.2 0"/>',
+  spa: '<path d="M4.5 12.8a7.5 7.5 0 0 0 15 0z"/><path d="M8.6 4.5c-.9 1.3.9 2.3 0 3.6M12 4.5c-.9 1.3.9 2.3 0 3.6M15.4 4.5c-.9 1.3.9 2.3 0 3.6"/>',
+  boutique: '<path d="M10 5a2 2 0 1 1 2 2v1.2"/><path d="M12 8.2 3.8 14.5h16.4z"/>',
+  parc: '<circle cx="12" cy="8.8" r="4.8"/><path d="M12 13.6V20"/><path d="M8.8 20h6.4"/>',
+  marche: '<path d="M4.5 9.5 5.6 5h12.8l1.1 4.5"/><path d="M4.5 9.5a1.87 1.87 0 0 0 3.75 0 1.87 1.87 0 0 0 3.75 0 1.87 1.87 0 0 0 3.75 0 1.87 1.87 0 0 0 3.75 0"/><path d="M6 12v7.5h12V12"/>',
+}
+
+const FAMILLES = [
+  ['boire & manger — les 10 d’origine', [
+    ['bar', 'bar', 'le verre à pied', 'bar · pub · cocktail · speakeasy · guinguette'],
+    ['vin', 'cave à vin', 'la bouteille', 'bar à vins · cave · vin nature'],
+    ['club', 'club', 'la note', 'club · boîte · dancefloor · dj'],
+    ['cafe', 'café', 'la tasse', 'café · coffee · brunch'],
+    ['the', 'salon de thé', 'la théière', 'salon de thé · matcha · bubble tea'],
+    ['glace', 'glacier', 'le cornet', 'glacier · gelato · sorbet'],
+    ['patisserie', 'pâtisserie', 'le cupcake', 'pâtisserie · boulangerie · crêperie'],
+    ['street', 'rapido', 'le burger', 'kebab · tacos · burger · food court'],
+    ['gastro', 'grande table', 'la cloche', 'gastronomique · étoilé · palace'],
+    ['resto', 'resto', 'les couverts', 'restaurant · bistro · cantine'],
+  ]],
+  ['la culture & la scène — nouveau 13/08', [
+    ['musee', 'musée', 'le tableau encadré', '<b>Musée</b> · expo · galerie d’art · fondation'],
+    ['theatre', 'théâtre', 'le masque de comédie', '<b>Théâtre</b> · spectacle · stand-up · cabaret · impro'],
+    ['cine', 'cinéma', 'le clap', '<b>Cinéma</b> · film · projection'],
+    ['concert', 'concert', 'l’enceinte', '<b>Salle de concert</b> · live · jazz · philharmonie'],
+    ['biblio', 'bibliothèque', 'le livre ouvert', '<b>Bibliothèque</b> · médiathèque · librairie'],
+  ]],
+  ['les jeux & la nuit — nouveau 13/08', [
+    ['karaoke', 'karaoké', 'le micro', '<b>Karaoké</b>'],
+    ['escape', 'escape game', 'la clé', '<b>Escape game</b> · énigme · laser game · VR'],
+    ['bowling', 'bowling', 'la boule à trois trous', '<b>Bowling</b> · quilles'],
+    ['billard', 'billard', 'la queue et la boule', '<b>Billard</b> · snooker · pool'],
+    ['jeux', 'bar à jeux', 'le dé, face cinq', '<b>Bar à jeux</b> · jeux de société · arcade · flipper · pétanque'],
+  ]],
+  ['le corps — nouveau 13/08', [
+    ['sport', 'sport', 'l’haltère', '<b>Salle de sport</b> · five · padel · tennis · escalade · patinoire'],
+    ['piscine', 'piscine', 'le nageur', '<b>Piscine</b> · natation · baignade'],
+    ['spa', 'spa', 'le bassin qui fume', '<b>Spa</b> · hammam · sauna · massage'],
+  ]],
+  ['le reste de la ville — nouveau 13/08', [
+    ['boutique', 'boutique', 'le cintre', '<b>Boutique</b> · concept-store · friperie · disquaire'],
+    ['parc', 'parc', 'l’arbre', '<b>Parc</b> · jardin · bois · pelouse'],
+    ['marche', 'marché', 'l’étal à festons', '<b>Marché</b> · halles'],
+  ]],
+]
+
+const svg = (traits, encre) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="${encre}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${traits}</svg>`
+
+const planche = document.getElementById('planche')
+for (const [titre, types] of FAMILLES) {
+  const sec = document.createElement('section')
+  sec.innerHTML = `<h2>${titre}<span class="n mono">${types.length}</span></h2>`
+  const grille = document.createElement('div')
+  grille.className = 'grille'
+  for (const [cle, nom, trait, mots] of types) {
+    const c = document.createElement('div')
+    c.className = 'carte-g'
+    c.innerHTML = `
+      <div class="haut">
+        <div class="encre-grand">${svg(TRAITS[cle], '#15130f')}</div>
+        <div class="nuit-boite"><div class="pin">${svg(TRAITS[cle], '#33a7ff')}</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="nom">${nom} <span class="cle mono">· ${cle}</span></div>
+        <div class="cle">${trait}</div>
+      </div>
+      <div class="mots">${mots}</div>`
+    grille.appendChild(c)
+  }
+  sec.appendChild(grille)
+  planche.appendChild(sec)
+}
+</script>
+</body>
+</html>

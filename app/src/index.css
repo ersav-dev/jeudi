@@ -3649,18 +3649,11 @@ button {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9.5px;
   padding: 1px 6px;
-  opacity: 0;
+  /* PERMANENTE depuis le 12/08 (« je ne vois pas l'échelle ! ») — l'éphémère
+     du 08/08 (opacity 0 hors zoom + fondu) est mort : un repère de distance
+     qu'on ne voit jamais ne repère rien. Discrète par le style, pas cachée. */
+  opacity: 0.85;
   pointer-events: none;
-  transition: opacity 1000ms ease;
-}
-.maplibregl-ctrl-scale.s-visible {
-  opacity: 1;
-  transition: opacity 120ms ease; /* apparition quasi instantanée au zoomstart */
-}
-@media (prefers-reduced-motion: reduce) {
-  .maplibregl-ctrl-scale {
-    transition: none; /* apparition/disparition nettes, pas de fondu */
-  }
 }
 
 /* bandeau dégradé derrière l'entête en vue carte */

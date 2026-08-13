@@ -7,7 +7,7 @@
 // recherche cherche donc des mots au lieu de comprendre une envie.
 //
 // Ce fichier traduit du français libre vers le vocabulaire que l'app connaît
-// déjà, et rien d'autre : les 7 ENVIES (db.ts), les 10 TYPES_LIEU
+// déjà, et rien d'autre : les 7 ENVIES (db.ts), les 26 TYPES_LIEU
 // (typesLieu.ts) et les 21 CUISINES (leur code de tampon). Il n'invente
 // aucune catégorie nouvelle.
 //
@@ -192,6 +192,101 @@ const LEXIQUE: Regle[] = [
       'viennoiserie', 'boulangerie', 'flan', 'chou', 'mille feuille', 'tarte',
     ],
     types: ['patisserie'],
+  },
+
+  // ── LA VILLE ENTIÈRE (13/08) : culture, jeux, corps, plein air ───────
+  {
+    mots: ['musee', 'expo', 'exposition', 'galerie', 'vernissage', 'fondation'],
+    types: ['musee'],
+  },
+  {
+    mots: ['theatre', 'piece', 'spectacle', 'stand up', 'comedie', 'impro', 'cabaret'],
+    types: ['theatre'],
+  },
+  {
+    mots: ['cinema', 'cine', 'film', 'seance', 'toile', 'se faire une toile'],
+    types: ['cine'],
+  },
+  {
+    mots: ['concert', 'live', 'jazz', 'scene', 'gig', 'musique live'],
+    types: ['concert'],
+  },
+  {
+    mots: ['bibliotheque', 'mediatheque', 'librairie', 'bouquins'],
+    types: ['biblio'],
+  },
+  {
+    mots: ['karaoke', 'chanter', 'pousser la chansonnette'],
+    types: ['karaoke'],
+  },
+  {
+    mots: ['escape game', 'escape', 'enigme', 'enigmes', 'laser game', 'realite virtuelle'],
+    types: ['escape'],
+  },
+  {
+    mots: ['bowling', 'quilles', 'strike'],
+    types: ['bowling'],
+  },
+  {
+    mots: ['billard', 'snooker', 'queue de billard'],
+    types: ['billard'],
+  },
+  {
+    mots: [
+      'jeux', 'bar a jeux', 'jeux de societe', 'arcade', 'flipper', 'ludotheque',
+      'petanque', 'flechettes',
+    ],
+    types: ['jeux'],
+  },
+  {
+    mots: [
+      'sport', 'salle de sport', 'fitness', 'five', 'futsal', 'padel', 'tennis',
+      'escalade', 'grimpe', 'bloc', 'karting', 'patinoire', 'squash', 'ping pong',
+      'badminton', 'foot',
+    ],
+    types: ['sport'],
+  },
+  {
+    mots: ['piscine', 'nager', 'natation', 'baignade', 'piquer une tete'],
+    types: ['piscine'],
+  },
+  {
+    mots: ['spa', 'hammam', 'sauna', 'massage', 'thalasso', 'se detendre'],
+    types: ['spa'],
+  },
+  {
+    mots: ['boutique', 'shopping', 'friperie', 'fripes', 'concept store', 'disquaire', 'vinyles'],
+    types: ['boutique'],
+  },
+  {
+    mots: ['parc', 'jardin', 'pelouse', 'pique nique', 'picnic', 'verdure', 'plein air'],
+    types: ['parc'],
+  },
+  {
+    mots: ['marche', 'halles', 'brocante', 'puces', 'vide grenier', 'vide greniers'],
+    types: ['marche'],
+  },
+  {
+    // la guinguette : un bar au bord de l'eau, par définition — le fait
+    // surLeau vient avec le mot (complément du 13/08)
+    mots: ['guinguette', 'guinguettes'],
+    types: ['bar'],
+    faits: ['surLeau'],
+  },
+  {
+    // la friche / le tiers-lieu (Ersan, 13/08) : Ground Control, la Felicità
+    mots: ['friche', 'tiers lieu', 'tiers lieux', 'food court', 'halle gourmande'],
+    types: ['friche'],
+  },
+  {
+    // la chicha se vit comme un bar — pas de type dédié, le mot suffit
+    mots: ['chicha', 'narguile', 'shisha'],
+    types: ['bar'],
+  },
+  {
+    // les soirées à jouer ASSIS avec un verre : le bar à jeux les porte
+    mots: ['quiz', 'blind test', 'soiree quiz'],
+    types: ['jeux'],
   },
 
   // ── L'AMBIANCE (les envies, pas les types) ───────────────────────────
