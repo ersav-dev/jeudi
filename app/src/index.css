@@ -1761,7 +1761,11 @@ button {
   /* maplibre.css est importée AVANT la nôtre (main.tsx) : nos règles gagnent */
   position: fixed;
   inset: 0;
-  height: 100dvh;
+  /* PAS de height:100dvh (Ersan, 13/08 : « l'app ne descend pas jusqu'en bas
+     du tel »). `inset: 0` colle déjà l'élément aux quatre bords du viewport ;
+     y ajouter une hauteur ÉCRASE le bottom:0 — et sur un iPhone en PWA
+     plein écran (viewport-fit=cover), 100dvh vaut la « petite » hauteur,
+     hors zone du trait d'accueil : d'où la bande noire en bas. */
   z-index: 0;
 }
 /* P1 — on tire le fond Carto (gris-bleu générique) vers le charbon du carnet */
@@ -3644,18 +3648,29 @@ button {
    et maigrit : une ligne de crayon qu'on ne lit que si on la cherche.
    Elle reste visible et tapable — c'est une obligation OSM/CARTO, pas une
    décoration. Banc d'essai : design/attribution_bas_001.png */
-.maplibregl-ctrl-attrib {
-  position: fixed;
+/* ⚠ maplibre pose `.maplibregl-ctrl-attrib.maplibregl-compact` : DEUX classes
+   (0-2-0) avec background #fff, color #000, border-radius 12px, margin 10px
+   ET position:relative. Une règle à une seule classe perd — c'est la pastille
+   blanche vue par Ersan le 13/08 sur son iPhone. On écrit donc les deux
+   variantes ET on force les propriétés qui comptent : comme ça le rendu est
+   le même que le contrôle soit en mode compact ou non (utile quand le
+   service worker sert un mélange d'ancien JS et de nouveau CSS). */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib.maplibregl-compact,
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  position: fixed !important;
   left: 10px;
   bottom: 2px;
   z-index: 11;
-  margin: 0;
-  padding: 0;
-  background: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
+  border-radius: 0 !important;
+  background: none !important;
   font-family: 'JetBrains Mono', monospace;
   font-size: 8px;
   line-height: 11px;
-  color: rgba(239, 233, 216, 0.42);
+  color: rgba(239, 233, 216, 0.42) !important;
   /* pas de cadre : une ombre suffit à la tenir sur une rue claire */
   text-shadow:
     0 0 3px rgba(20, 18, 14, 0.9),
@@ -3664,10 +3679,23 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* iOS : ni surlignage de sélection, ni éclair gris au toucher */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
-.maplibregl-ctrl-attrib a {
-  color: inherit;
+.maplibregl-ctrl-attrib a,
+.maplibregl-ctrl-attrib a:visited {
+  color: inherit !important;
   text-decoration: none;
+}
+/* le ⓘ n'a plus de raison d'être (la mention tient sur une ligne) : on le
+   supprime et on montre toujours le texte, même si le JS demandait compact */
+.maplibregl-ctrl-attrib-button {
+  display: none !important;
+}
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-inner {
+  display: inline !important;
 }
 /* le récap (carte mini) n'a pas d'îlot : la mention y reste dans son coin
    à elle, sinon le `fixed` l'enverrait au bas de l'écran entier. */
