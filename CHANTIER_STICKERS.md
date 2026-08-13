@@ -93,6 +93,11 @@ Le geste doit vivre là où on regarde, pas au fond des réglages :
   (les appuis longs cachés ne s'apprennent jamais seuls). Variante à
   trancher : tap = spot direct, appui long = sticker (zéro friction,
   zéro découvrabilité).
+- **Le crayon de l'écran d'ajout** (livré le 13/08, à garder quand la
+  feuille à quatre choix arrivera) : en haut à droite de l'écran d'ajout,
+  un crayon déplie « écrire à la main » et fait descendre l'écran jusqu'à
+  lui. L'ajout manuel vit tout en bas, après les deux imports : celui qui
+  sait déjà ce qu'il veut écrire n'a plus à traverser l'écran.
 - **Taper un monument** sur la carte : sa petite feuille s'ouvre —
   « **ta photo ici** » (galerie → déchiré → posée), et s'il porte déjà
   ta photo : « remplacer · retirer · revoir la gravure ». Fini le détour

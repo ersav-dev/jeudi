@@ -393,6 +393,8 @@ const EN: Record<string, string> = {
   "c'est corrigé.": 'fixed.',
   // « à la main » : la troisième voie de l'écran d'ajout (08/08)
   'ou écris-en un à la main →': 'or write one by hand →',
+  // le crayon en haut de l'écran d'ajout (13/08)
+  'écrire un spot à la main': 'write a spot by hand',
   'un spot, écrit à la main — le nom, où c’est, et ce que c’est.':
     'one spot, written by hand — the name, where it is, what it is.',
   'le nom du spot': 'the name of the spot',

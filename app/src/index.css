@@ -7711,6 +7711,42 @@ button {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+/* la tête de l'écran d'ajout : la ligne de géoloc à gauche, le crayon à
+   droite (Ersan, 13/08). Le crayon reste COLLÉ EN HAUT quand on fait
+   défiler : il est le raccourci vers le bas de l'écran, il doit rester
+   sous le pouce à tout moment. */
+.form-tete {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--paper-2);
+  /* le fond du panneau remonte sous le crayon pour que le texte qui défile
+     ne passe pas derrière lui */
+  padding-bottom: 6px;
+  margin-bottom: -6px;
+}
+.form-crayon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  /* la cible reste à 44 px avec le padding du panneau autour */
+  margin: -6px -4px 0 0;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.22);
+  border-radius: var(--rayon);
+  color: var(--encre-2);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.form-crayon:active {
+  color: var(--encre);
+  background: var(--nuit-3);
+}
 /* la zone de dépôt : une étiquette claire découpée, prête à recevoir le fichier */
 .takeout-depot {
   display: block;

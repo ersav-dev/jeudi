@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 // ════════════════════════════════════════════════════════════════
 // jeudi. — « À LA MAIN » : la troisième voie, à côté des imports.
 //
@@ -25,8 +25,33 @@ interface Piste extends AdresseTrouvee {
   station?: boolean
 }
 
-export default function AjoutMain({ onAjoute }: { onAjoute?: () => void }) {
-  const [ouvert, setOuvert] = useState(false)
+export default function AjoutMain({
+  onAjoute,
+  demandeOuverture = 0,
+}: {
+  onAjoute?: () => void
+  /** compteur : à chaque incrément (le crayon de l'écran d'ajout), le
+      panneau s'ouvre et l'écran descend jusqu'ici. Un compteur plutôt
+      qu'un booléen : on peut le redemander autant de fois qu'on veut. */
+  demandeOuverture?: number
+}) {
+  const [deplie, setDeplie] = useState(false)
+  // le panneau est ouvert si on a tapé le lien OU si le crayon l'a demandé :
+  // un état DÉRIVÉ, pas un état recopié dans un effet (la règle des hooks —
+  // et ça évite la désynchro classique entre la prop et le state).
+  const ouvert = deplie || demandeOuverture > 0
+  const bloc = useRef<HTMLDivElement | HTMLButtonElement | null>(null)
+
+  // le crayon appelle : le panneau est déjà déplié par le rendu, on n'a plus
+  // qu'à descendre — 60 ms, le temps que le dépliage soit peint.
+  useEffect(() => {
+    if (!demandeOuverture) return
+    const doux = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const id = window.setTimeout(() => {
+      bloc.current?.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'center' })
+    }, 60)
+    return () => window.clearTimeout(id)
+  }, [demandeOuverture])
   const [nom, setNom] = useState('')
   const [ou, setOu] = useState('')
   const [type, setType] = useState<TypeLieu>('resto')
@@ -119,14 +144,18 @@ export default function AjoutMain({ onAjoute }: { onAjoute?: () => void }) {
 
   if (!ouvert) {
     return (
-      <button className="takeout-lien lien" onClick={() => setOuvert(true)}>
+      <button
+        ref={bloc as React.Ref<HTMLButtonElement>}
+        className="takeout-lien lien"
+        onClick={() => setDeplie(true)}
+      >
         {t('ou écris-en un à la main →')}
       </button>
     )
   }
 
   return (
-    <div className="ajout-main">
+    <div className="ajout-main" ref={bloc as React.Ref<HTMLDivElement>}>
       <p className="mono import-liste-hint">
         {t('un spot, écrit à la main — le nom, où c’est, et ce que c’est.')}
       </p>

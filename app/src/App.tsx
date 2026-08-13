@@ -5383,6 +5383,9 @@ function FormAjout({
 }) {
   const [nom, setNom] = useState('')
   const [note, setNote] = useState('')
+  // le crayon d'en haut : un compteur, pas un booléen — on peut le
+  // redemander (l'écran a pu remonter entre-temps)
+  const [versLaMain, setVersLaMain] = useState(0)
   const [visibilite, setVisibilite] = useState<Visibilite>('prive')
   const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null)
   const [geoEtat, setGeoEtat] = useState<'attente' | 'ok' | 'refus'>('attente')
@@ -5496,14 +5499,29 @@ function FormAjout({
 
   return (
     <div className="form">
-      <div className="mono geo">
-        {adresseChoisie
-          ? adresseChoisie
-          : geoEtat === 'attente'
-            ? 'on te localise…'
-            : geoEtat === 'ok'
-              ? `${position!.lat.toFixed(4)}, ${position!.lng.toFixed(4)} — ou tape une adresse`
-              : "pas de géoloc — tape le nom ou l'adresse."}
+      {/* le crayon (Ersan, 13/08) : « tout en haut à droite, qui nous descend
+          direct là où se trouve l'ajout manuel ». L'écran d'ajout propose
+          d'abord la capture assistée (géoloc + suggestions), et l'écriture à
+          la main vit tout en bas, après les deux imports — celui qui SAIT ce
+          qu'il veut écrire n'a plus à traverser l'écran pour y arriver. */}
+      <div className="form-tete">
+        <div className="mono geo">
+          {adresseChoisie
+            ? adresseChoisie
+            : geoEtat === 'attente'
+              ? 'on te localise…'
+              : geoEtat === 'ok'
+                ? `${position!.lat.toFixed(4)}, ${position!.lng.toFixed(4)} — ou tape une adresse`
+                : "pas de géoloc — tape le nom ou l'adresse."}
+        </div>
+        <button
+          className="form-crayon"
+          onClick={() => setVersLaMain((n) => n + 1)}
+          aria-label={t('écrire un spot à la main')}
+          title={t('écrire un spot à la main')}
+        >
+          <ICrayon taille={20} />
+        </button>
       </div>
       <input
         autoFocus
@@ -5614,8 +5632,9 @@ function FormAjout({
       <ImportGoogle ouvertParDefaut={importOuvert} onImporte={() => setTimeout(onFini, 1100)} />
       {/* l'import universel : des noms collés depuis n'importe où */}
       <ImportListe onImporte={() => setTimeout(onFini, 300)} />
-      {/* et la troisième voie : une entrée écrite à la main, sans import */}
-      <AjoutMain onAjoute={() => setTimeout(onFini, 700)} />
+      {/* et la troisième voie : une entrée écrite à la main, sans import.
+          Le crayon d'en haut la déplie et descend jusqu'ici. */}
+      <AjoutMain onAjoute={() => setTimeout(onFini, 700)} demandeOuverture={versLaMain} />
       <div className="form-actions">
         <button className="lien" onClick={onAnnule}>
           laisse tomber
