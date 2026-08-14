@@ -12,7 +12,7 @@ import { useState } from 'react'
 // ════════════════════════════════════════════════════════════════
 import { t } from './langue'
 import { etatHoraire, majLieu, type Lieu } from './db'
-import { cuisineDeLieu, decrireLieu, typeDeLieu, type TypeLieu } from './typesLieu'
+import { cuisineDeLieu, decrireLieu, typeDuLieu, type TypeLieu } from './typesLieu'
 import { PickerType, PickerTampon, PickerHeure } from './PickersLieu'
 
 export default function CorrigerLieu({
@@ -56,7 +56,7 @@ export default function CorrigerLieu({
   const [nom, setNom] = useState(lieu.nom)
   const [adresse, setAdresse] = useState(lieu.adresse ?? '')
   const [note, setNote] = useState(lieu.note)
-  const [type, setType] = useState<TypeLieu>(() => typeDeLieu(lieu))
+  const [type, setType] = useState<TypeLieu>(() => typeDuLieu(lieu))
   const [code, setCode] = useState<string | null>(() => cuisineDeLieu(lieu)?.code ?? null)
   // les deux bornes d'horaire, séparément : null = « je sais pas » pour
   // CELLE-LÀ (le modèle porte exactement ça, cf. db.ts `horaires`)
@@ -89,6 +89,9 @@ export default function CorrigerLieu({
       adresse: adresse.trim() || undefined,
       note: note.trim(),
       description,
+      // le type devient une DONNÉE (13/08) : celui que la main vient de
+      // choisir, plus une devinette relue dans la prose
+      type,
       horaires,
     }
     try {

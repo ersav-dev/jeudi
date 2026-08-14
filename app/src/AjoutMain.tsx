@@ -116,9 +116,11 @@ export default function AjoutMain({
         // pour un numéro de rue — le spot vivra sans, le reverse la trouvera.
         adresse: place.station ? undefined : place.adresse,
         note: '',
-        // le type et le tampon n'ont pas de colonne : ils s'écrivent dans la
-        // description, en mots que le carnet relit (decrireLieu).
+        // le mot du carnet reste dans la description (c'est ce qui se lit),
+        // mais le type est AUSSI posé en clair depuis le 13/08 : c'est lui
+        // qui rend la recherche par catégorie possible.
         description: decrireLieu(undefined, type, code),
+        type,
         visibilite: 'prive',
         envies: [],
         compagnies: [],

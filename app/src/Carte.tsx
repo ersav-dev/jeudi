@@ -81,7 +81,7 @@ const SEUIL_VIGN = 14
  *  la lumière : part^0,55 du plafond. La tour ne fait plus 6,6 fois l'Arc
  *  mais 2,9 fois, et les deux se lisent. */
 const GAMMA_VIGN = 0.42
-import { typeDeLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
+import { typeDuLieu, svgTypeLieu, cuisineDeLieu } from './typesLieu'
 import {
   grouperTas,
   eventailGrappe,
@@ -529,12 +529,12 @@ export default function Carte({
       // un sapin. Jamais un émoji dans le chrome (DA).
       const glyphe = document.createElement('span')
       glyphe.className = 'pin-type'
-      glyphe.innerHTML = svgTypeLieu(typeDeLieu(l))
+      glyphe.innerHTML = svgTypeLieu(typeDuLieu(l))
       el.appendChild(glyphe)
       // le TAMPON DE DOUANE : la nationalité de la cuisine en deux lettres
       // au crayon (IT, JP, LB…) — jamais un drapeau émoji (DA). Réservé aux
       // lieux où l'on mange ; la cuisine française n'a pas de tampon.
-      const type = typeDeLieu(l)
+      const type = typeDuLieu(l)
       if (type === 'resto' || type === 'gastro' || type === 'street') {
         const cuisine = cuisineDeLieu(l)
         if (cuisine) {

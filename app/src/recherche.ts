@@ -17,6 +17,8 @@ import {
   etatHoraire,
 } from './db'
 import { signalProche } from './deck'
+import { typeDuLieu, cuisineDeLieu, type TypeLieu } from './typesLieu'
+import type { Fait } from './intentions'
 
 // ── normalisation texte (minuscule + sans accent) pour la recherche ──
 function norm(s: string): string {
@@ -96,6 +98,26 @@ export interface Requete {
   texte?: string
   /** ne garder que les lieux ouverts maintenant */
   ouvertSeulement?: boolean
+  /** LES TYPES DEMANDÉS (13/08) — « un tiers-lieu », « un bowling ». C'est un
+   *  FILTRE, pas un bonus : quand on demande un musée, on ne veut pas d'un
+   *  bar bien classé. Rempli par `lireIntention()` depuis la phrase. */
+  types?: TypeLieu[]
+  /** les codes cuisine demandés : THA, ITA, JPN… (même règle : un filtre) */
+  cuisines?: string[]
+  /** les faits binaires réclamés — terrasse, rooftop, sur l'eau, match, seul */
+  faits?: Fait[]
+}
+
+/** un lieu porte-t-il ce fait ? Les faits sont des FAITS : on ne les devine
+ *  pas, on les lit. `terrasse` n'existe pas encore comme champ — une photo de
+ *  terrasse en tient lieu (c'est une preuve, pas un avis), et `seul` se lit
+ *  dans les compagnies. */
+function porteLeFait(lieu: Lieu, f: Fait): boolean {
+  if (f === 'rooftop') return lieu.rooftop === true
+  if (f === 'surLeau') return lieu.surLeau === true
+  if (f === 'match') return lieu.match != null
+  if (f === 'seul') return lieu.compagnies.includes('solo')
+  return lieu.photos.some((p) => p.type === 'terrasse')
 }
 
 export interface Resultat {
@@ -155,6 +177,16 @@ export function rechercher(
   for (const lieu of lieux) {
     const ouvert = ouvertMaintenant(lieu, maintenant)
     if (requete.ouvertSeulement && ouvert === false) continue
+
+    // ── les FILTRES de catégorie (13/08) : ils excluent, ils ne pondèrent
+    // pas. Quand quelqu'un demande un tiers-lieu, lui rendre un bar mieux
+    // classé n'est pas une réponse — c'est un changement de sujet.
+    if (requete.types?.length && !requete.types.includes(typeDuLieu(lieu))) continue
+    if (requete.cuisines?.length) {
+      const c = cuisineDeLieu(lieu)?.code
+      if (!c || !requete.cuisines.includes(c)) continue
+    }
+    if (requete.faits?.length && !requete.faits.every((f) => porteLeFait(lieu, f))) continue
 
     // recherche texte : si présente, on exige une correspondance minimale
     let tScore = 1

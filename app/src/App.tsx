@@ -15,7 +15,7 @@ import { suivre } from './analytique'
 import { srcPhoto, photoIndisponible } from './photos'
 import { ICadenas, ICercle, IGlobe, IEtincelle, ICarnet, ILoupe, IAppareil, ISoleil, INuage, IPluie, ITampon, IBallon, IRefuge, ICloche, IAnneau, ISceau, ICrayon } from './icones'
 import { fusionnerPhotos } from './tirage'
-import { typeDeLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
+import { typeDuLieu, labelTypeLieu, cuisineDeLieu } from './typesLieu'
 import BandeauMatch from './BandeauMatch'
 import { lireSortieActive, ajouterCandidat, type MatchOuvert } from './sortieGroupe'
 // le grand jeudi n'est pas une option : le 1ᵉʳ jeudi du mois, la date décide
@@ -4443,7 +4443,7 @@ function Fiche({
               <span className="affiche-grave ag-hg">
                 {lieu.nom}
                 <br />
-                {t(labelTypeLieu(typeDeLieu(lieu)))}
+                {t(labelTypeLieu(typeDuLieu(lieu)))}
                 {/* le tampon de douane, en toutes lettres sur la couverture */}
                 {cuisineDeLieu(lieu) ? ` · ${t(cuisineDeLieu(lieu)!.mot)}` : ''}
               </span>

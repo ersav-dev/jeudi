@@ -138,6 +138,26 @@ const MOTS: Record<TypeLieu, string> = {
   marche: 'marché',
   friche: 'tiers-lieu',
 }
+// ── LA LECTURE DU TYPE (13/08) ──────────────────────────────────────
+// Tout le monde passe par ici : le type STOCKÉ gagne, la déduction ne sert
+// que de repli pour les lieux d'avant. Et elle ne tourne qu'UNE FOIS par
+// objet (WeakMap par référence, comme le cache de la recherche) : avant, les
+// ~30 regex repartaient à chaque repose d'épingle.
+const cacheType = new WeakMap<object, TypeLieu>()
+
+export function typeDuLieu(l: {
+  type?: TypeLieu
+  description?: string
+  envies: readonly string[]
+}): TypeLieu {
+  if (l.type) return l.type
+  const su = cacheType.get(l)
+  if (su) return su
+  const t = typeDeLieu(l)
+  cacheType.set(l, t)
+  return t
+}
+
 export function labelTypeLieu(t: TypeLieu): string {
   return MOTS[t]
 }

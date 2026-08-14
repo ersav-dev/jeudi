@@ -9,6 +9,10 @@ import {
   distanceM,
 } from './db'
 import { rechercher, pourToi, profilDeGout, type Requete } from './recherche'
+// la phrase devient une intention (types, cuisines, faits) — le module
+// existait depuis le 10/08, il n'était branché nulle part (audit du 13/08)
+import { lireIntention } from './intentions'
+import { labelTypeLieu } from './typesLieu'
 import { POINTS_REPERE, type Repere } from './autour'
 import { chercherAdresse } from './nominatim'
 import { chargerStations, chercherStations, stationsChargees, type Station } from './stations'
@@ -145,9 +149,18 @@ export default function Recherche({
     if (!aIntention)
       return pourToi(vivier, gout, { exclureVus: vus, topN: 12, cercle, depuis: point }, dateEffective)
     // avec intention : on RÉPOND (peu, ciblé, confiance d'abord, autour du repère)
+    // La phrase est LUE avant d'aller au moteur : « un tiers-lieu tranquille »
+    // devient {types:['friche'], envies:['tranquilo']} au lieu de trois mots
+    // qu'on irait chercher dans la prose des fiches.
+    const lu = lireIntention(texteRetarde)
     const req: Requete = {
-      texte: texteRetarde.trim() || undefined,
-      envies: envie ? [envie] : undefined,
+      // seul le RESTE part en recherche texte : ce que la phrase a déjà dit
+      // est devenu un filtre, l'exiger aussi dans le texte viderait la liste
+      texte: lu.reste.join(' ') || undefined,
+      envies: envie ? [envie] : lu.envies.length ? lu.envies : undefined,
+      types: lu.types.length ? lu.types : undefined,
+      cuisines: lu.cuisines.length ? lu.cuisines : undefined,
+      faits: lu.faits.length ? lu.faits : undefined,
       ouvertSeulement: ouvertSeul,
     }
     return rechercher(vivier, req, gout, cercle, point, dateEffective).slice(0, 15)
@@ -175,6 +188,20 @@ export default function Recherche({
 
   // V5 bloc 4 : les styles inline (pilules 999px, coins 8-10px, corps hors
   // échelle) ont migré vers les classes .labo-* en fin d'index.css
+  // ce que l'app a compris de la phrase — dit en clair, jamais deviné dans
+  // le dos de celui qui cherche
+  const compris = useMemo(() => {
+    if (!texteRetarde.trim()) return null
+    const lu = lireIntention(texteRetarde)
+    const mots = [
+      ...lu.types.map((t2) => labelTypeLieu(t2)),
+      ...lu.cuisines,
+      ...lu.envies,
+      ...lu.faits,
+    ]
+    return mots.length ? mots : null
+  }, [texteRetarde])
+
   const chip = (actif: boolean) => `labo-chip${actif ? ' on' : ''}`
 
   // la promesse du grand jeudi : une ligne, pas un bouton (le jour J, c'est
@@ -372,6 +399,9 @@ export default function Recherche({
         {aIntention
           ? `${resultats.length} ${t(resultats.length > 1 ? 'réponses' : 'réponse')}`
           : t('pour toi · tape ou choisis une envie pour chercher')}
+        {/* ce que l'app a compris : dit en clair. Si elle n'a rien compris,
+            elle ne dit rien — elle ne fait pas semblant. */}
+        {compris && <span className="rech-compris">{t('compris')} : {compris.join(' · ')}</span>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -3723,6 +3723,15 @@ button {
   pointer-events: none;
 }
 
+/* ce que la recherche a compris de la phrase — une note en marge, pas un
+   badge : elle informe, elle ne se vante pas */
+.rech-compris {
+  display: block;
+  margin-top: 3px;
+  color: var(--encre-3);
+  font-style: italic;
+}
+
 /* ── LES QUARTIERS DESSINÉS (13/08) ─────────────────────────────────
    Le crayon d'entrée, le calque de tracé, et la fiche de la zone. Tout
    en style « instrument » : filets, rayon 3 px, aucune couleur qui ne soit

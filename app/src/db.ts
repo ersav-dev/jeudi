@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import type { TypeLieu } from './typesLieu'
 import { supabase } from './supabase'
 import { adresseDepuis } from './nominatim'
 import { fusionnerTips } from './tips'
@@ -144,6 +145,12 @@ export interface Lieu {
   /** description factuelle courte du lieu (type/ambiance) : « bar à cocktails,
    *  ambiance prohibition ». PAS un avis — juste de quoi situer le lieu. */
   description?: string
+  /** LE TYPE, posé une fois pour toutes (13/08). Avant, il était DEVINÉ à
+   *  chaque affichage par ~30 regex sur la description : impossible à
+   *  filtrer, et instable — écrire « le bar du musée » transformait le musée
+   *  en bar. Il reste facultatif : les lieux d'avant se lisent toujours par
+   *  déduction (`typeDuLieu()`), et le premier qui l'écrit gagne. */
+  type?: TypeLieu
   /** le tip — 2-3 phrases dans la voix du membre, jamais un avis */
   note: string
   visibilite: Visibilite

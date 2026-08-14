@@ -395,6 +395,8 @@ const EN: Record<string, string> = {
   'ou écris-en un à la main →': 'or write one by hand →',
   // le crayon en haut de l'écran d'ajout (13/08)
   'écrire un spot à la main': 'write a spot by hand',
+  // ce que la recherche a compris (audit du 13/08)
+  'compris': 'understood',
   // les quartiers dessinés (13/08)
   'entoure ton quartier au doigt': 'draw around your neighbourhood',
   'ta zone est prête.': 'your zone is ready.',
