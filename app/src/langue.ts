@@ -412,6 +412,15 @@ const EN: Record<string, string> = {
   "comme d'habitude": 'as usual',
   'en priorité': 'first',
   'dessiner un quartier': 'draw a neighbourhood',
+  'la zone': 'the zone',
+  'refaire le tracé': 'redraw the outline',
+  'l’ancien reste en guide': 'the old one stays as a guide',
+  'raturer la zone': 'cross the zone out',
+  'tiens appuyé — le trait se tire': 'hold — the stroke draws itself',
+  'raturé —': 'crossed out —',
+  'redessine ta zone — l’ancienne reste en guide': 'redraw your zone — the old one stays as a guide',
+  'voir tes quartiers': 'show your neighbourhoods',
+  'cacher tes quartiers': 'hide your neighbourhoods',
   'la carte est pleine — rature une zone d’abord.':
     'the map is full — cross out a zone first.',
   'un spot, écrit à la main — le nom, où c’est, et ce que c’est.':

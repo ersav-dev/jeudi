@@ -158,7 +158,12 @@ function premiereNonRoute(m: maplibregl.Map): string | undefined {
 // ── les étiquettes : un marqueur DOM par zone, écrit à la main ──
 const etiquettes = new Map<string, maplibregl.Marker>()
 
-export function poserEtiquettes(m: maplibregl.Map, zones: Quartier[]): void {
+export function poserEtiquettes(
+  m: maplibregl.Map,
+  zones: Quartier[],
+  /** LE MOT EST LA POIGNÉE (14/08) : taper le mot ouvre la fiche de la zone */
+  onTap?: (z: Quartier) => void,
+): void {
   for (const [id, mk] of etiquettes) {
     if (!zones.some((z) => z.id === id)) {
       mk.remove()
@@ -166,7 +171,6 @@ export function poserEtiquettes(m: maplibregl.Map, zones: Quartier[]): void {
     }
   }
   for (const z of zones) {
-    if (!z.nom.trim()) continue
     const c = contour(z.points)
     const centre: [number, number] = [
       c.reduce((s, p) => s + p.lng, 0) / c.length,
@@ -180,10 +184,31 @@ export function poserEtiquettes(m: maplibregl.Map, zones: Quartier[]): void {
       etiquettes.set(z.id, mk)
     }
     const el = mk.getElement()
-    el.textContent = z.nom
+    // une zone sans mot garde une poignée : trois points à la main
+    el.textContent = z.nom.trim() || '· · ·'
     el.style.color = hex(z.encre)
     el.style.opacity = z.poids === 0 ? '0.55' : '1'
+    el.onclick = (ev) => {
+      ev.stopPropagation()
+      onTap?.(z)
+    }
     mk.setLngLat(centre)
+  }
+}
+
+/** voir / cacher tous les calques d'un coup — le coin de calque (14/08).
+    On ne retire rien : on éteint (visibility), pour que le retour soit
+    instantané. Sert aussi au mode dessin : les autres feuilles s'écartent. */
+export function montrerQuartiers(m: maplibregl.Map, visible: boolean): void {
+  if (m.isStyleLoaded()) {
+    for (const c of m.getStyle().layers) {
+      if (c.id.startsWith(PREFIXE) || c.id === LAYER_APLAT || c.id === LAYER_TRAIT) {
+        m.setLayoutProperty(c.id, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+  }
+  for (const mk of etiquettes.values()) {
+    mk.getElement().style.display = visible ? '' : 'none'
   }
 }
 

@@ -1309,6 +1309,19 @@ export default function App() {
   // appui long = barré (sans foot / refuge). timer du long-press.
   const footPress = useRef<{ timer: number; fired: boolean } | null>(null)
   const [onglet, setOnglet] = useState<Onglet>('macarte')
+  // ── l'îlot qui se range (14/08) : la carte émet, la bande obéit ──
+  // Pendant qu'on fait glisser la carte, la navbas descend et ne laisse que
+  // sa tranche déchirée ; un tap (sur la carte ou sur la tranche) la fait
+  // remonter. Elle ne disparaît jamais : elle se range.
+  const [navRangee, setNavRangee] = useState(false)
+  useEffect(() => {
+    const ecoute = (e: Event) => setNavRangee((e as CustomEvent<boolean>).detail === true)
+    window.addEventListener('jeudi:nav-rangee', ecoute)
+    return () => window.removeEventListener('jeudi:nav-rangee', ecoute)
+  }, [])
+  // (pas d'effet de remise à zéro sur l'onglet : rangée, la bande
+  // intercepte le tap — on ne PEUT pas changer d'onglet sans l'avoir
+  // d'abord ressortie, et la carte émet `false` en se démontant)
   // journal de bord : l'écran affiché (pour situer un plantage iOS — quel
   // écran tue la page). N'écrit plus une fois la session déclarée stable.
   useEffect(() => {
@@ -3179,7 +3192,20 @@ export default function App() {
       </div>
 
       {!ajout && !fiche && (
-        <nav className="navbas">
+        <nav
+          className={`navbas${navRangee ? ' navbas-rangee' : ''}`}
+          onClickCapture={
+            navRangee
+              ? (e) => {
+                  // rangée, la tranche entière est UNE poignée : le tap la
+                  // fait remonter, il ne déclenche aucun onglet
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setNavRangee(false)
+                }
+              : undefined
+          }
+        >
           {/* le + EXACTEMENT au centre (Ersan, 12/08 — « comme Insta ») :
               deux moitiés de largeur ÉGALE de part et d'autre, le + entre les
               deux. Avec 3 onglets à gauche et 2 à droite, un flex naïf le

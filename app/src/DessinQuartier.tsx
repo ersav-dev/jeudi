@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type maplibregl from 'maplibre-gl'
 // ════════════════════════════════════════════════════════════════
 // jeudi. — DESSINER UN QUARTIER : le geste, puis la fiche.
@@ -20,7 +20,7 @@ import type maplibregl from 'maplibre-gl'
 import { t } from './langue'
 import { nouvelId } from './db'
 import {
-  ENCRES, POIDS, POIDS_DEFAUT, depuisTrace, encreSuggeree,
+  ENCRES, POIDS, POIDS_DEFAUT, contour, depuisTrace, encreSuggeree,
   type EncreId, type PointZone, type PoidsZone, type Quartier,
 } from './quartiers'
 import { poserQuartier } from './mesQuartiers'
@@ -31,23 +31,39 @@ type Point = { x: number; y: number }
 export default function DessinQuartier({
   carteRef,
   zones,
+  refaire = null,
   onFini,
 }: {
   /** la REF de la carte, pas sa valeur : on ne lit `.current` que dans les
       gestionnaires, jamais pendant le rendu (règle des hooks React) */
   carteRef: React.RefObject<maplibregl.Map | null>
   zones: Quartier[]
+  /** « refaire le tracé » (14/08) : la zone à redessiner. Son ancien contour
+      reste en FANTÔME (un guide, pas une zone), et le mot, l'encre, le
+      cadran et le cœur survivent — on ne perd que le tracé. */
+  refaire?: Quartier | null
   onFini: (pose?: Quartier) => void
 }) {
   const calque = useRef<HTMLDivElement | null>(null)
   const [trace, setTrace] = useState<Point[]>([])
   const [dessine, setDessine] = useState(false)
   const [points, setPoints] = useState<PointZone[] | null>(null)
-  const [nom, setNom] = useState('')
-  const [encre, setEncre] = useState<EncreId>(() => encreSuggeree(zones))
-  const [poids, setPoids] = useState<PoidsZone>(POIDS_DEFAUT)
-  const [coeur, setCoeur] = useState(false)
+  const [nom, setNom] = useState(refaire?.nom ?? '')
+  const [encre, setEncre] = useState<EncreId>(() => refaire?.encre ?? encreSuggeree(zones))
+  const [poids, setPoids] = useState<PoidsZone>(refaire?.poids ?? POIDS_DEFAUT)
+  const [coeur, setCoeur] = useState(refaire?.coeur ?? false)
   const [msg, setMsg] = useState<string | null>(null)
+
+  // l'ancien tracé, projeté UNE FOIS à l'écran : la carte est gelée pendant
+  // le dessin, la projection ne bouge donc pas
+  const [fantome, setFantome] = useState('')
+  useEffect(() => {
+    if (!refaire) return
+    const m = carteRef.current
+    if (!m) return
+    const pts = contour(refaire.points).map((q) => m.project([q.lng, q.lat]))
+    setFantome(`M ${pts.map((q) => `${q.x.toFixed(0)} ${q.y.toFixed(0)}`).join(' L ')} Z`)
+  }, [refaire, carteRef])
 
   // ── le tracé ────────────────────────────────────────────────
   const local = (e: React.PointerEvent): Point => {
@@ -95,15 +111,15 @@ export default function DessinQuartier({
   const noter = async () => {
     if (!points) return
     const q: Quartier = {
-      id: nouvelId(),
+      id: refaire?.id ?? nouvelId(),
       nom: nom.trim(),
       poids,
       coeur,
       encre,
       points,
-      creeLe: new Date().toISOString(),
-      source: 'lasso',
-      partage: 'moi',
+      creeLe: refaire?.creeLe ?? new Date().toISOString(),
+      source: refaire?.source ?? 'lasso',
+      partage: refaire?.partage ?? 'moi',
     }
     await poserQuartier(q)
     onFini(q)
@@ -118,7 +134,13 @@ export default function DessinQuartier({
     <div className="dessin-quartier">
       {/* le bandeau de mode : on sait où on est, et comment en sortir */}
       <div className="dessin-bandeau">
-        <span>{points ? t('ta zone est prête.') : t('entoure ton quartier au doigt')}</span>
+        <span>
+          {points
+            ? t('ta zone est prête.')
+            : refaire
+              ? t('redessine ta zone — l’ancienne reste en guide')
+              : t('entoure ton quartier au doigt')}
+        </span>
         <button className="lien" onClick={() => onFini()}>
           {t('annuler')}
         </button>
@@ -135,6 +157,7 @@ export default function DessinQuartier({
           onPointerCancel={fin}
         >
           <svg className="dessin-trace" style={{ ['--enc' as string]: teinte }}>
+            {fantome && <path d={fantome} className="trace-fantome" />}
             {chemin && <path d={chemin} className="trace-vive" />}
             {trace.length > 2 && (
               <path

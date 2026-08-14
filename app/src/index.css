@@ -3637,8 +3637,17 @@ button {
   flex-direction: column-reverse;
   align-items: flex-start;
   gap: 4px;
-  bottom: calc(var(--navbas-h) + env(safe-area-inset-bottom));
+  /* +112 comme la pile de droite (Ersan, 14/08 : « l'échelle a disparu ») —
+     à --navbas-h tout court, elle était pile DERRIÈRE le carrousel (z 4),
+     qui la recouvrait. Même maladie que la mention légale : mauvaise
+     référence, pas disparition. */
+  bottom: calc(var(--navbas-h) + 112px + env(safe-area-inset-bottom));
   left: 12px;
+}
+/* le récap (carte mini) n'a ni carrousel ni navbas : le coin normal */
+.carte-mini .maplibregl-ctrl-bottom-left {
+  bottom: 4px;
+  left: 4px;
 }
 /* la mention légale (© OpenStreetMap · CARTO · Île-de-France Mobilités) —
    Ersan, 13/08 : « tu peux pas le mettre sous l'îlot… là il est sous les
@@ -3736,24 +3745,17 @@ button {
    Le crayon d'entrée, le calque de tracé, et la fiche de la zone. Tout
    en style « instrument » : filets, rayon 3 px, aucune couleur qui ne soit
    pas une encre. */
-.quartier-crayon {
-  position: fixed;
-  right: 12px;
-  bottom: calc(var(--navbas-h) + 176px + env(safe-area-inset-bottom));
-  z-index: 5;
-  width: 40px;
-  height: 40px;
+/* le crayon des quartiers = un INSTRUMENT de la pile de droite (14/08 —
+   Ersan : « le crayon est sur le + du zoom »). En contrôle MapLibre, il
+   s'empile au-dessus de la géoloc et du zoom : il ne peut plus rien
+   chevaucher, à aucune taille d'écran. */
+.ctrl-crayon button {
   display: grid;
   place-items: center;
-  background: var(--paper-2);
-  border: 1px solid rgba(239, 233, 216, 0.25);
-  border-radius: var(--rayon);
   color: var(--encre-2);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
-.quartier-crayon:active {
+.ctrl-crayon button:active {
   color: var(--encre);
-  background: var(--nuit-3);
 }
 .quartier-msg {
   position: fixed;
@@ -3776,14 +3778,153 @@ button {
   font-size: 22px;
   line-height: 1;
   white-space: nowrap;
-  pointer-events: none;
+  /* LE MOT EST LA POIGNÉE (14/08) : on touche ce qu'on a écrit, et
+     l'envers de la feuille s'ouvre. Pas d'onglets, pas de menu. */
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  padding: 6px 8px;
+  margin: -6px -8px;
   transform: rotate(-3.5deg);
   paint-order: stroke;
   -webkit-text-stroke: 3.5px rgba(10, 10, 10, 0.75);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
+.quartier-mot:active {
+  opacity: 0.7;
+}
 .quartier-mot::selection {
   background: none;
+}
+
+/* le coin de calque (14/08) : UN objet, pas dix onglets — un bout de
+   papier-calque qui dépasse de la reliure, à gauche. Tap = voir / cacher
+   tous les quartiers. Il ne dit rien tant qu'on n'a pas de zone. */
+.coin-calque {
+  position: fixed;
+  left: 0;
+  bottom: calc(var(--navbas-h) + 172px + env(safe-area-inset-bottom));
+  z-index: 5;
+  width: 30px;
+  height: 40px;
+  padding: 0;
+  background: none;
+  border: none;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.55));
+}
+.coin-calque::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(239, 233, 216, 0.34), rgba(239, 233, 216, 0.16));
+  clip-path: polygon(0 0, 100% 16%, 84% 100%, 0 100%);
+  transition: opacity 150ms var(--pose);
+}
+/* replié = les calques sont cachés : le coin s'efface, il reste une amorce */
+.coin-calque.replie::before {
+  opacity: 0.32;
+}
+.coin-calque:active::before {
+  opacity: 0.9;
+}
+
+/* la fiche d'une zone existante : la même feuille que le dessin, posée
+   par-dessus tout (on touche le mot, on lit l'envers de la feuille) */
+.fiche-quartier {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 31;
+}
+.fiche-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fiche-actes {
+  border-top: 1px solid rgba(239, 233, 216, 0.09);
+  margin-top: 14px;
+  padding-top: 4px;
+}
+.acte-refaire {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 11px 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--encre);
+}
+.acte-refaire small {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--encre-3);
+  margin-top: 2px;
+}
+/* la rature : on TIENT, le trait de cire se tire ; on lâche, il se rétracte */
+.rature-hold {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(239, 233, 216, 0.09);
+  padding: 11px 0 13px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--cire);
+  touch-action: none;
+}
+.rature-hold small {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--encre-3);
+  margin-top: 2px;
+}
+.rature-hold i {
+  position: absolute;
+  left: 0;
+  top: 26px;
+  height: 2.5px;
+  width: 0;
+  background: var(--cire);
+  border-radius: 2px;
+  transition: width 120ms linear;
+  pointer-events: none;
+}
+.rature-hold.tenu i {
+  width: 100%;
+  transition: width 700ms linear;
+}
+.quartier-msg .lien {
+  color: inherit;
+  margin-left: 10px;
+  text-decoration: underline;
+}
+
+/* l'îlot qui se range (14/08) : pendant qu'on fait glisser la carte, la
+   bande descend et ne laisse que sa TRANCHE déchirée. Un tap — sur la
+   carte ou sur la tranche — la fait remonter. Elle ne disparaît jamais :
+   elle se range. */
+.navbas {
+  transition: transform 220ms var(--pose);
+}
+.navbas.navbas-rangee {
+  transform: translateX(-50%) translateY(calc(100% + env(safe-area-inset-bottom))) rotate(-0.3deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .navbas {
+    transition: none;
+  }
 }
 
 /* le mode dessin : il prend tout l'écran, la carte est gelée dessous */
@@ -3821,6 +3962,13 @@ button {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+/* « refaire » : l'ancien tracé reste en guide, jamais en zone */
+.trace-fantome {
+  fill: none;
+  stroke: rgba(239, 233, 216, 0.35);
+  stroke-width: 1.6px;
+  stroke-dasharray: 5 5;
 }
 .dessin-msg {
   position: absolute;

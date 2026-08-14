@@ -121,14 +121,17 @@ import {
 import { MONUMENTS } from './monuments'
 import { lireStickers, revoquerStickers, SEUIL_PHOTO } from './mesMonuments'
 import { REPERES } from './reperes'
-import { IAnneau, IBallon, ICrayon } from './icones'
+import { IAnneau, IBallon } from './icones'
 import { srcPhoto, photoIndisponible } from './photos'
 // ── les quartiers dessinés (13/08) : la zone tracée au doigt qui teint les
 // rues. Le rendu vit dans quartiersCarte.ts, le geste dans DessinQuartier.
 import type { Quartier } from './quartiers'
-import { lireQuartiers, placeLibre } from './mesQuartiers'
-import { poserQuartiersSurCarte, poserEtiquettes, retirerEtiquettes } from './quartiersCarte'
+import { lireQuartiers, placeLibre, poserQuartier, raturerQuartier } from './mesQuartiers'
+import {
+  poserQuartiersSurCarte, poserEtiquettes, retirerEtiquettes, montrerQuartiers,
+} from './quartiersCarte'
 import DessinQuartier from './DessinQuartier'
+import FicheQuartier from './FicheQuartier'
 
 // ── LE FOND PASSE EN VECTORIEL (13/08) ──────────────────────────────
 // Avant : les tuiles RASTER « dark_all » de CARTO — une image. Le chantier
@@ -311,6 +314,15 @@ export default function Carte({
   // parce que les couches de routes n'existent pas avant.
   const [quartiers, setQuartiers] = useState<Quartier[]>([])
   const [dessine, setDessine] = useState(false)
+  // « refaire le tracé » : la zone qu'on redessine (l'ancienne en fantôme)
+  const [refaireZone, setRefaireZone] = useState<Quartier | null>(null)
+  // LE MOT EST LA POIGNÉE : la fiche de la zone dont on a touché le mot
+  const [ficheZone, setFicheZone] = useState<Quartier | null>(null)
+  // le coin de calque : tous les quartiers, visibles ou rangés
+  const [calques, setCalques] = useState(true)
+  // la rature vient de passer : le bandeau d'annulation (quelques secondes)
+  const [rature, setRature] = useState<Quartier | null>(null)
+  const ratureTimer = useRef<number | null>(null)
   const [msgQuartier, setMsgQuartier] = useState<string | null>(null)
   useEffect(() => {
     void lireQuartiers().then(setQuartiers)
@@ -321,11 +333,78 @@ export default function Carte({
     if (!m || mini) return
     const poser = () => {
       poserQuartiersSurCarte(m, quartiers)
-      poserEtiquettes(m, quartiers)
+      poserEtiquettes(m, quartiers, (z) => setFicheZone(z))
+      // pendant le dessin, les autres feuilles S'ÉCARTENT (le crayonné
+      // d'atelier) ; et le coin de calque peut avoir tout rangé
+      montrerQuartiers(m, calques && !dessine)
     }
     if (m.isStyleLoaded()) poser()
     else m.once('load', poser)
-  }, [quartiers, mini])
+  }, [quartiers, mini, calques, dessine])
+
+  // ── l'îlot se range pendant qu'on bouge la carte (14/08) ──────────
+  // Carte émet, App écoute : la navbas descend et ne laisse que sa tranche.
+  // Un tap sur la carte la fait remonter — et ferme la fiche de zone.
+  useEffect(() => {
+    const m = carte.current
+    if (!m || mini) return
+    const ranger = (e: { originalEvent?: unknown }) => {
+      if (e.originalEvent) window.dispatchEvent(new CustomEvent('jeudi:nav-rangee', { detail: true }))
+    }
+    const sortir = () => {
+      window.dispatchEvent(new CustomEvent('jeudi:nav-rangee', { detail: false }))
+      setFicheZone(null)
+    }
+    m.on('movestart', ranger)
+    m.on('click', sortir)
+    return () => {
+      m.off('movestart', ranger)
+      m.off('click', sortir)
+      window.dispatchEvent(new CustomEvent('jeudi:nav-rangee', { detail: false }))
+    }
+  }, [mini])
+
+  // le crayon de la pile de droite appelle ici (l'IControl est créé une
+  // fois, le geste doit lire l'état du moment — d'où la ref)
+  const crayonAction = useRef<() => void>(() => {})
+  useEffect(() => {
+    crayonAction.current = () => {
+      if (!placeLibre(quartiers)) {
+        // le cap n'est pas un mur : on cure. Le dire ici, pas ailleurs.
+        setMsgQuartier(t('la carte est pleine — rature une zone d’abord.'))
+        window.setTimeout(() => setMsgQuartier(null), 2600)
+        return
+      }
+      setFicheZone(null)
+      setDessine(true)
+    }
+  }, [quartiers])
+  const crayonEl = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    if (crayonEl.current) crayonEl.current.style.display = dessine ? 'none' : ''
+  }, [dessine])
+
+  // ── ce que la fiche fait à la zone ────────────────────────────────
+  const majZone = (q: Quartier) => {
+    void poserQuartier(q)
+    setQuartiers((zs) => zs.map((z) => (z.id === q.id ? q : z)))
+    setFicheZone(q)
+  }
+  const raturerZone = (q: Quartier) => {
+    void raturerQuartier(q.id)
+    setQuartiers((zs) => zs.filter((z) => z.id !== q.id))
+    setFicheZone(null)
+    setRature(q)
+    if (ratureTimer.current) window.clearTimeout(ratureTimer.current)
+    ratureTimer.current = window.setTimeout(() => setRature(null), 5000)
+  }
+  const reprendreZone = () => {
+    if (!rature) return
+    void poserQuartier(rature)
+    setQuartiers((zs) => [...zs, rature].sort((a, b) => a.creeLe.localeCompare(b.creeLe)))
+    setRature(null)
+    if (ratureTimer.current) window.clearTimeout(ratureTimer.current)
+  }
 
   const [panneauMarque, setPanneauMarque] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -1121,6 +1200,20 @@ export default function Carte({
       const m = carte.current
       if (!m) return
       m.resize()
+      // ── le bâti repasse au crayon (Ersan, 14/08 : « c'est les bâtiments
+      // qui prennent toute l'attention »). Le style vectoriel peint
+      // building-top en #393939 sur un fond #0e0e0e — plein contraste dès
+      // z16, là où le raster d'avant le laissait presque noir. On le
+      // rapproche du fond : le bâti redevient une texture, pas un sujet.
+      try {
+        m.setPaintProperty('building-top', 'fill-color', '#181818')
+        m.setPaintProperty('building-top', 'fill-opacity', [
+          'interpolate', ['linear'], ['zoom'], 13, 0, 16, 0.8,
+        ])
+      } catch {
+        // le nom de couche appartient au style CARTO : s'il change un jour,
+        // la carte reste debout — juste plus contrastée
+      }
       // ── la poussière d'encre : tous les lieux en points GPU. Rayon ~2 px
       // à z11 → ~4 px à z14, encre (--encre #EFE9D8) à ~55 %, léger halo.
       // C'est la texture de la ville, toujours là sous les pins.
@@ -1562,6 +1655,33 @@ export default function Carte({
         new maplibregl.GeolocateControl({ trackUserLocation: true }),
         'bottom-right',
       )
+      // le crayon des quartiers, INSTRUMENT de la même pile (14/08 — il
+      // chevauchait le « + » du zoom quand il était posé en dur). Dans les
+      // coins bas, MapLibre insère chaque contrôle AU-DESSUS du précédent :
+      // ajouté en dernier, il coiffe la pile et ne chevauche jamais rien.
+      carte.current.addControl(
+        {
+          onAdd: () => {
+            const el = document.createElement('div')
+            el.className = 'maplibregl-ctrl maplibregl-ctrl-group ctrl-crayon'
+            const b = document.createElement('button')
+            b.type = 'button'
+            b.setAttribute('aria-label', t('dessiner un quartier'))
+            b.title = t('dessiner un quartier')
+            b.innerHTML =
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h3.2L18.6 8.6a2.3 2.3 0 0 0-3.2-3.2L4 16.8z"/><path d="M14.4 6.6l3.2 3.2"/></svg>'
+            b.onclick = () => crayonAction.current()
+            el.appendChild(b)
+            crayonEl.current = el
+            return el
+          },
+          onRemove: () => {
+            crayonEl.current?.remove()
+            crayonEl.current = null
+          },
+        },
+        'bottom-right',
+      )
       // l'échelle PERMANENTE (Ersan, 12/08 — « je ne vois pas l'échelle ! »,
       // qui remplace son choix éphémère du 08/08) : toujours posée, discrète,
       // style carnet (index.css .maplibregl-ctrl-scale), en bas-gauche
@@ -1989,37 +2109,56 @@ export default function Carte({
     <>
       <div ref={conteneur} className={`carte${lieuActif ? ' carte-sel' : ''}`} />
 
-      {/* ── DESSINER UN QUARTIER (13/08) : l'entrée provisoire, sur la carte
-          elle-même. Elle rejoindra la trousse (le « + » à quatre choix) quand
-          la feuille des stickers sera écrite — d'ici là, c'est ici qu'on
-          teste. Le bouton s'efface pendant le dessin et quand un lieu a la
-          parole (deux voix en bas d'écran n'en font aucune). */}
-      {!dessine && !lieuActif && (
+      {/* ── LE COIN DE CALQUE (14/08) : un bout de papier-calque qui dépasse
+          de la reliure, à gauche. Tap = voir / cacher tous les quartiers.
+          Il ne dit rien tant qu'on n'a pas de zone. */}
+      {quartiers.length > 0 && !dessine && (
         <button
-          className="quartier-crayon"
-          aria-label={t('dessiner un quartier')}
-          title={t('dessiner un quartier')}
-          onClick={() => {
-            if (!placeLibre(quartiers)) {
-              // le cap n'est pas un mur : on cure. Le dire ici, pas ailleurs.
-              setMsgQuartier(t('la carte est pleine — rature une zone d’abord.'))
-              window.setTimeout(() => setMsgQuartier(null), 2600)
-              return
-            }
-            setDessine(true)
-          }}
-        >
-          <ICrayon taille={20} />
-        </button>
+          className={`coin-calque${calques ? '' : ' replie'}`}
+          aria-pressed={!calques}
+          aria-label={calques ? t('cacher tes quartiers') : t('voir tes quartiers')}
+          title={calques ? t('cacher tes quartiers') : t('voir tes quartiers')}
+          onClick={() => setCalques((v) => !v)}
+        />
       )}
       {msgQuartier && <p className="quartier-msg mono">{msgQuartier}</p>}
+      {/* la rature vient de passer : le vrai filet, jamais une modale */}
+      {rature && (
+        <p className="quartier-msg mono">
+          {t('raturé —')} « {rature.nom.trim() || '· · ·'} »
+          <button className="lien" onClick={reprendreZone}>
+            {t('annuler')}
+          </button>
+        </p>
+      )}
+      {/* l'envers de la feuille : la fiche de la zone dont on a touché le mot */}
+      {ficheZone && !dessine && (
+        <FicheQuartier
+          key={ficheZone.id}
+          zone={ficheZone}
+          onMaj={majZone}
+          onRefaire={(q) => {
+            setFicheZone(null)
+            setRefaireZone(q)
+            setDessine(true)
+          }}
+          onRature={raturerZone}
+          onFermer={() => setFicheZone(null)}
+        />
+      )}
       {dessine && (
         <DessinQuartier
           carteRef={carte}
           zones={quartiers}
+          refaire={refaireZone}
           onFini={(pose) => {
             setDessine(false)
-            if (pose) setQuartiers((z) => [...z, pose])
+            const ancienne = refaireZone
+            setRefaireZone(null)
+            if (!pose) return
+            setQuartiers((z) =>
+              ancienne ? z.map((q) => (q.id === pose.id ? pose : q)) : [...z, pose],
+            )
           }}
         />
       )}
