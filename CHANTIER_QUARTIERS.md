@@ -271,6 +271,47 @@ habitent. Donc, écrit en tête de `app/src/quartiers.ts` et non contournable :
 **les zones ne quittent pas l'appareil, ne se partagent pas, ne s'agrègent
 jamais, et n'influencent jamais ce que voit quelqu'un d'autre.**
 
+## LE MODE ÉDITION — codé le 14/08 (`EditionQuartiers.tsx`)
+
+Ersan : « on doit pouvoir créer de nouveaux ou alors supprimer ou modifier
+les autres. Et si on clique sur un angle, on doit voir quel type d'angle on
+veut. »
+
+**La carte reste vivante.** C'est LA différence avec le mode dessin, qui la
+gèle : on édite en situation, donc on doit pouvoir aller voir la rue d'à
+côté. Le calque ne prend aucun événement ; seules les poignées en prennent,
+et elles se re-projettent à chaque `move` — elles collent au sol, pas à
+l'écran.
+
+Quatre gestes, pas un de plus :
+
+| geste | ce qui se passe | la fonction pure |
+| --- | --- | --- |
+| glisser une poignée | le point suit le doigt | `deplacerPoint` |
+| **taper** une poignée | le choix s'ouvre AU point : angle droit · angle doux · retirer | `poserAngle` / `retirerPoint` |
+| taper un « + » de milieu | un point de plus, **doux** (on épouse la courbe) | `ajouterPointApres` |
+| la barre du bas | changer de zone · nouvelle zone · raturer celle-ci · terminé | — |
+
+- **CARRÉ = dur, ROND = doux** (planche 6, sans traduction). La forme du
+  point EST sa légende ; le choix qui s'ouvre le redit en toutes lettres.
+- **On n'écrit qu'à la fin du geste** : pendant qu'on tire, seul le tracé
+  bouge — les rues teintées attendent le lâché.
+- **Trois points minimum** : en dessous, ce n'est plus une zone, c'est un
+  trait. Le bouton « retirer » se désactive et le dit.
+- Une poignée trop serrée à ce zoom disparaît (`pointsSaisissables`, 32 px) ;
+  un « + » n'apparaît que si le segment a 54 px pour l'accueillir.
+- **Le mot reste la poignée** : en édition, taper le mot d'une autre zone y
+  bascule au lieu d'ouvrir sa fiche.
+- Entrée par la fiche → « modifier la forme ». Elle est distincte de
+  « refaire le tracé » : on RETOUCHE (les poignées, le trait reste) ou on
+  REFAIT (on entoure à nouveau, l'ancien reste en guide).
+- « nouvelle zone » depuis l'édition passe par le lasso puis **y revient**,
+  la zone neuve déjà sélectionnée.
+
+À vérifier au pouce (Ersan) : la cible de 34 px sur les poignées, et le
+choix d'angle qui se pose au-dessus du point sans sortir de l'écran quand le
+point est près du bord.
+
 ### Ce qui reste à trancher
 
 - **le mot des outils** : « la plume » et « le lasso », ou « la plume » et

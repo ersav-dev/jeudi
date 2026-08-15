@@ -240,6 +240,47 @@ export function retournerPoint(points: PointZone[], i: number): PointZone[] {
   return points.map((p, j) => (j === i ? { ...p, dur: !p.dur } : p))
 }
 
+// ── ÉDITER LA FORME (14/08) ──────────────────────────────────────────
+// Ersan : « on doit pouvoir créer, supprimer, modifier les autres… et si on
+// clique sur un angle, voir quel type d'angle on veut ». Les trois gestes
+// de l'éditeur, en fonctions pures — l'écran ne fait que les appeler.
+
+/** on choisit l'angle, on ne le devine pas : dur (net) ou doux (la courbe passe) */
+export function poserAngle(points: PointZone[], i: number, dur: boolean): PointZone[] {
+  return points.map((p, j) => (j === i ? { ...p, dur } : p))
+}
+
+/** glisser une poignée : le point suit le doigt */
+export function deplacerPoint(points: PointZone[], i: number, vers: PointZone): PointZone[] {
+  return points.map((p, j) => (j === i ? { ...p, lng: vers.lng, lat: vers.lat } : p))
+}
+
+/** taper un MILIEU ajoute un point là — doux par défaut : on vient
+    d'épouser une courbe, pas de casser un angle */
+export function ajouterPointApres(points: PointZone[], i: number): PointZone[] {
+  const n = points.length
+  if (n < 2) return points
+  const a = points[i % n], b = points[(i + 1) % n]
+  const milieu: PointZone = { lng: (a.lng + b.lng) / 2, lat: (a.lat + b.lat) / 2 }
+  return [...points.slice(0, i + 1), milieu, ...points.slice(i + 1)]
+}
+
+/** retirer un point — jamais en dessous de trois : une zone à deux points
+    n'est plus une zone, c'est un trait */
+export function retirerPoint(points: PointZone[], i: number): PointZone[] {
+  if (points.length <= 3) return points
+  return points.filter((_, j) => j !== i)
+}
+
+/** les milieux, pour les afficher : le point AJOUTABLE entre i et i+1 */
+export function milieux(points: PointZone[]): PointZone[] {
+  const n = points.length
+  return points.map((a, i) => {
+    const b = points[(i + 1) % n]
+    return { lng: (a.lng + b.lng) / 2, lat: (a.lat + b.lat) / 2 }
+  })
+}
+
 // ── le contour rendu : la courbe, échantillonnée ────────────────────
 // Un point DOUX reçoit la tangente de Catmull-Rom (le tiers de la corde qui
 // le traverse) ; un point DUR reçoit une poignée nulle, ce qui casse la

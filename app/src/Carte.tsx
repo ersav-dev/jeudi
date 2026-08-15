@@ -132,6 +132,7 @@ import {
 } from './quartiersCarte'
 import DessinQuartier from './DessinQuartier'
 import FicheQuartier from './FicheQuartier'
+import EditionQuartiers from './EditionQuartiers'
 
 // ── LE FOND PASSE EN VECTORIEL (13/08) ──────────────────────────────
 // Avant : les tuiles RASTER « dark_all » de CARTO — une image. Le chantier
@@ -318,6 +319,11 @@ export default function Carte({
   const [refaireZone, setRefaireZone] = useState<Quartier | null>(null)
   // LE MOT EST LA POIGNÉE : la fiche de la zone dont on a touché le mot
   const [ficheZone, setFicheZone] = useState<Quartier | null>(null)
+  // le mode édition : la zone par laquelle on y entre (on peut ensuite
+  // passer aux autres depuis la barre du bas)
+  const [editeZone, setEditeZone] = useState<Quartier | null>(null)
+  // « nouvelle zone » depuis l'édition : on y RETOURNE une fois tracée
+  const [retourEdition, setRetourEdition] = useState(false)
   // le coin de calque : tous les quartiers, visibles ou rangés
   const [calques, setCalques] = useState(true)
   // la rature vient de passer : le bandeau d'annulation (quelques secondes)
@@ -328,12 +334,21 @@ export default function Carte({
     void lireQuartiers().then(setQuartiers)
     return () => retirerEtiquettes()
   }, [])
+  const tapMot = useRef<(z: Quartier) => void>(() => {})
+  useEffect(() => {
+    tapMot.current = (z) => {
+      if (editeZone) setEditeZone(z)
+      else setFicheZone(z)
+    }
+  }, [editeZone])
   useEffect(() => {
     const m = carte.current
     if (!m || mini) return
     const poser = () => {
       poserQuartiersSurCarte(m, quartiers)
-      poserEtiquettes(m, quartiers, (z) => setFicheZone(z))
+      // le mot reste la poignée — mais en édition il CHANGE de zone au lieu
+      // d'ouvrir la fiche (d'où la ref : les étiquettes ne se reposent pas)
+      poserEtiquettes(m, quartiers, (z) => tapMot.current(z))
       // pendant le dessin, les autres feuilles S'ÉCARTENT (le crayonné
       // d'atelier) ; et le coin de calque peut avoir tout rangé
       montrerQuartiers(m, calques && !dessine)
@@ -381,14 +396,16 @@ export default function Carte({
   }, [quartiers])
   const crayonEl = useRef<HTMLElement | null>(null)
   useEffect(() => {
-    if (crayonEl.current) crayonEl.current.style.display = dessine ? 'none' : ''
-  }, [dessine])
+    if (crayonEl.current) crayonEl.current.style.display = dessine || editeZone ? 'none' : ''
+  }, [dessine, editeZone])
 
   // ── ce que la fiche fait à la zone ────────────────────────────────
   const majZone = (q: Quartier) => {
     void poserQuartier(q)
     setQuartiers((zs) => zs.map((z) => (z.id === q.id ? q : z)))
-    setFicheZone(q)
+    // la fiche se met à jour si elle est ouverte — elle ne S'OUVRE jamais
+    // d'elle-même (l'édition écrit par ici aussi, et elle n'en veut pas)
+    setFicheZone((f) => (f && f.id === q.id ? q : f))
   }
   const raturerZone = (q: Quartier) => {
     void raturerQuartier(q.id)
@@ -2112,7 +2129,7 @@ export default function Carte({
       {/* ── LE COIN DE CALQUE (14/08) : un bout de papier-calque qui dépasse
           de la reliure, à gauche. Tap = voir / cacher tous les quartiers.
           Il ne dit rien tant qu'on n'a pas de zone. */}
-      {quartiers.length > 0 && !dessine && (
+      {quartiers.length > 0 && !dessine && !editeZone && (
         <button
           className={`coin-calque${calques ? '' : ' replie'}`}
           aria-pressed={!calques}
@@ -2132,11 +2149,16 @@ export default function Carte({
         </p>
       )}
       {/* l'envers de la feuille : la fiche de la zone dont on a touché le mot */}
-      {ficheZone && !dessine && (
+      {ficheZone && !dessine && !editeZone && (
         <FicheQuartier
           key={ficheZone.id}
           zone={ficheZone}
           onMaj={majZone}
+          onEditer={(q) => {
+            majZone(q) // le mot qu'on vient d'écrire ne se perd pas en route
+            setFicheZone(null)
+            setEditeZone(q)
+          }}
           onRefaire={(q) => {
             setFicheZone(null)
             setRefaireZone(q)
@@ -2144,6 +2166,33 @@ export default function Carte({
           }}
           onRature={raturerZone}
           onFermer={() => setFicheZone(null)}
+        />
+      )}
+      {/* le mode édition : la forme, et rien que la forme */}
+      {editeZone && !dessine && (
+        <EditionQuartiers
+          key={editeZone.id}
+          carteRef={carte}
+          zones={quartiers}
+          depart={editeZone}
+          onMaj={majZone}
+          onRature={(q) => {
+            raturerZone(q)
+            // on reste en édition s'il reste quelque chose à éditer
+            const reste = quartiers.find((z) => z.id !== q.id)
+            setEditeZone(reste ?? null)
+          }}
+          onNouvelle={() => {
+            if (!placeLibre(quartiers)) {
+              setMsgQuartier(t('la carte est pleine — rature une zone d’abord.'))
+              window.setTimeout(() => setMsgQuartier(null), 2600)
+              return
+            }
+            setEditeZone(null)
+            setRetourEdition(true)
+            setDessine(true)
+          }}
+          onFini={() => setEditeZone(null)}
         />
       )}
       {dessine && (
@@ -2155,10 +2204,16 @@ export default function Carte({
             setDessine(false)
             const ancienne = refaireZone
             setRefaireZone(null)
+            const revient = retourEdition
+            setRetourEdition(false)
             if (!pose) return
             setQuartiers((z) =>
               ancienne ? z.map((q) => (q.id === pose.id ? pose : q)) : [...z, pose],
             )
+            // venue de l'édition, la zone neuve y retourne : on enchaîne le
+            // tracé au doigt et la retouche à la poignée sans repasser par
+            // la carte
+            if (revient) setEditeZone(pose)
           }}
         />
       )}

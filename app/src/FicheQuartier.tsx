@@ -20,6 +20,7 @@ const DUREE_RATURE_MS = 700
 export default function FicheQuartier({
   zone,
   onMaj,
+  onEditer,
   onRefaire,
   onRature,
   onFermer,
@@ -27,6 +28,8 @@ export default function FicheQuartier({
   zone: Quartier
   /** chaque réglage s'écrit tout de suite — le carnet ne fait pas attendre */
   onMaj: (q: Quartier) => void
+  /** « modifier la forme » : le mode édition, poignée par poignée */
+  onEditer: (q: Quartier) => void
   onRefaire: (q: Quartier) => void
   onRature: (q: Quartier) => void
   onFermer: () => void
@@ -115,6 +118,13 @@ export default function FicheQuartier({
       </button>
 
       <div className="fiche-actes">
+        {/* deux façons de reprendre une forme, et elles ne servent pas à la
+            même chose : on RETOUCHE (les poignées, le trait reste) ou on
+            REFAIT (on entoure à nouveau, l'ancien reste en guide). */}
+        <button className="acte-refaire" onClick={() => onEditer({ ...zone, nom: nom.trim() })}>
+          {t('modifier la forme')}
+          <small>{t('tire les points, choisis les angles')}</small>
+        </button>
         <button className="acte-refaire" onClick={() => onRefaire({ ...zone, nom: nom.trim() })}>
           {t('refaire le tracé')}
           <small>{t('l’ancien reste en guide')}</small>

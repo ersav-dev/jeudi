@@ -4095,6 +4095,264 @@ button {
   margin-top: 16px;
 }
 
+/* ── LE MODE ÉDITION (14/08) ────────────────────────────────────────
+   La différence avec le dessin tient en une ligne de CSS : ce calque-ci
+   ne prend AUCUN événement. La carte reste vivante dessous (on édite en
+   situation, on doit pouvoir aller voir la rue d'à côté) — seules les
+   poignées, elles, en prennent. */
+.edition-quartiers {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.edition-bandeau {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+  background: rgba(20, 18, 14, 0.9);
+  border-bottom: 1px solid rgba(239, 233, 216, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--encre-2);
+  pointer-events: auto;
+}
+.edition-calque {
+  position: absolute;
+  inset: 0;
+}
+.edition-trace {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.edition-forme {
+  fill: color-mix(in srgb, var(--enc) 14%, transparent);
+  stroke: var(--enc);
+  stroke-width: 1.8px;
+  stroke-linejoin: round;
+}
+/* la poignée : la cible fait 34 px, la marque 12 — le doigt attrape
+   large, l'œil ne voit qu'un point posé à l'encre.
+   CARRÉ = angle dur · ROND = angle doux (planche 6, sans traduction) */
+.edition-poignee {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  padding: 0;
+  background: none;
+  border: none;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  touch-action: none;
+}
+.edition-poignee i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--enc);
+  transition:
+    transform 90ms var(--pose),
+    background 90ms linear;
+}
+.edition-poignee.dure i {
+  border-radius: 1px;
+}
+.edition-poignee.tiree i,
+.edition-poignee.ouverte i {
+  transform: scale(1.5);
+  background: var(--enc);
+}
+/* le « + » du milieu : discret, il n'existe que pour qui le cherche */
+.edition-milieu {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  padding: 0;
+  border: none;
+  background: none;
+  pointer-events: auto;
+  opacity: 0.5;
+}
+.edition-milieu::before,
+.edition-milieu::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--enc);
+}
+.edition-milieu::before {
+  width: 9px;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+}
+.edition-milieu::after {
+  width: 1.5px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+}
+.edition-milieu:active {
+  opacity: 1;
+}
+/* le choix d'angle : posé AU point, jamais une boîte au milieu de l'écran */
+.edition-choix {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 22px));
+  background: var(--paper-2);
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  pointer-events: auto;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+  animation: inkIn 120ms var(--pose) backwards;
+}
+.edition-choix.dessous {
+  transform: translate(-50%, 22px);
+}
+.edition-choix button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--encre-2);
+  border-radius: 2px;
+}
+.edition-choix .ch-angle.choisi {
+  background: rgba(239, 233, 216, 0.09);
+  color: var(--encre);
+}
+.ch-carre,
+.ch-rond {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 2px solid var(--enc);
+}
+.ch-rond {
+  border-radius: 50%;
+}
+.ch-carre {
+  border-radius: 1px;
+}
+.edition-choix .ch-retirer {
+  color: var(--cire);
+  border-top: 1px solid rgba(239, 233, 216, 0.09);
+  margin-top: 2px;
+  padding-top: 2px;
+}
+.edition-choix .ch-retirer:disabled {
+  color: var(--encre-3);
+}
+/* la barre du bas : les autres zones, en créer une, raturer celle-ci */
+.edition-barre {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--paper-2);
+  border-top: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: var(--rayon) var(--rayon) 0 0;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  pointer-events: auto;
+}
+.edition-zones {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.edition-zones::-webkit-scrollbar {
+  display: none;
+}
+.edition-zone {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  background: none;
+  border: 1px solid rgba(239, 233, 216, 0.18);
+  border-radius: 999px;
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--encre-2);
+  border-left: 3px solid var(--z, var(--encre-3));
+}
+.edition-zone.ici {
+  color: var(--encre);
+  border-color: var(--encre-3);
+  border-left-color: var(--z, var(--encre));
+  background: rgba(239, 233, 216, 0.07);
+}
+.edition-actes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.edition-neuve {
+  min-height: 44px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--encre);
+}
+.edition-rature {
+  position: relative;
+  min-height: 44px;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--cire);
+  touch-action: none;
+}
+.edition-rature i {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2.5px;
+  width: 0;
+  background: var(--cire);
+  border-radius: 2px;
+  transition: width 120ms linear;
+  pointer-events: none;
+}
+.edition-rature.tenu i {
+  width: 100%;
+  transition: width 700ms linear;
+}
+
 /* bandeau dégradé derrière l'entête en vue carte */
 .voile-haut {
   position: fixed;

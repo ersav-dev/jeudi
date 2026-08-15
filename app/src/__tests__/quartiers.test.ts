@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   ENCRES, CAP_ZONES, encreSuggeree, metres, simplifier, depuisTrace, depuisTaps,
   bulleAutour, retournerPoint, contour, enGeoJSON, dansLaZone, lieuxDeLaZone,
+  poserAngle, deplacerPoint, ajouterPointApres, retirerPoint, milieux,
   POIDS, POIDS_DEFAUT, COEUR_DEFAUT, poidsDuLieu, rangDuLieu, ecarterLesJamais, classerParZones,
   filtrerParZones, zonesQuiContiennent, CAP_SUPER_CERCLE, zonesActives,
   metresParPixel, pointsSaisissables, TOLERANCE_M, type PointZone,
@@ -217,6 +218,60 @@ describe('le point décide, pas l’outil', () => {
     // sur un côté droit, tous les échantillons sont alignés
     expect(c[1].lat).toBeCloseTo(carre[0].lat, 9)
     expect(c[2].lat).toBeCloseTo(carre[0].lat, 9)
+  })
+})
+
+describe('éditer la forme — les quatre gestes de l’éditeur', () => {
+  it('on POSE l’angle, on ne le devine pas', () => {
+    const dur = poserAngle(ZONE, 1, true)
+    expect(dur[1].dur).toBe(true)
+    // reposer le même angle est idempotent (contrairement au retournement)
+    expect(poserAngle(dur, 1, true)[1].dur).toBe(true)
+    expect(poserAngle(dur, 1, false)[1].dur).toBe(false)
+    // et ça ne touche personne d'autre
+    expect(dur.filter((p) => p.dur)).toHaveLength(1)
+  })
+  it('glisser une poignée déplace CE point, et lui seul', () => {
+    const bouge = deplacerPoint(ZONE, 2, { lng: 2.4, lat: 48.9 })
+    expect(bouge[2].lng).toBeCloseTo(2.4, 10)
+    expect(bouge[2].lat).toBeCloseTo(48.9, 10)
+    expect(bouge[0]).toEqual(ZONE[0])
+    expect(bouge).toHaveLength(ZONE.length)
+  })
+  it('le point ajouté tombe au milieu, et il est DOUX', () => {
+    const plus = ajouterPointApres(ZONE, 0)
+    expect(plus).toHaveLength(ZONE.length + 1)
+    expect(plus[1].lng).toBeCloseTo((ZONE[0].lng + ZONE[1].lng) / 2, 10)
+    expect(plus[1].dur).toBeUndefined()
+    // les voisins n'ont pas bougé
+    expect(plus[0]).toEqual(ZONE[0])
+    expect(plus[2]).toEqual(ZONE[1])
+  })
+  it('ajouter APRÈS le dernier point boucle sur le premier', () => {
+    const n = ZONE.length
+    const plus = ajouterPointApres(ZONE, n - 1)
+    expect(plus).toHaveLength(n + 1)
+    expect(plus[n].lng).toBeCloseTo((ZONE[n - 1].lng + ZONE[0].lng) / 2, 10)
+  })
+  it('retirer un point marche — mais jamais en dessous de trois', () => {
+    expect(retirerPoint(ZONE, 3)).toHaveLength(ZONE.length - 1)
+    expect(retirerPoint(ZONE, 3)[3]).toEqual(ZONE[4])
+    const triangle = ZONE.slice(0, 3)
+    expect(retirerPoint(triangle, 0)).toHaveLength(3) // refus : ce serait un trait
+  })
+  it('les milieux : un par segment, y compris celui qui referme la boucle', () => {
+    const m = milieux(ZONE)
+    expect(m).toHaveLength(ZONE.length)
+    const dernier = m[m.length - 1]
+    expect(dernier.lng).toBeCloseTo((ZONE[ZONE.length - 1].lng + ZONE[0].lng) / 2, 10)
+  })
+  it('la forme éditée reste une zone valable (le centre est toujours dedans)', () => {
+    let z = poserAngle(ZONE, 0, true)
+    z = ajouterPointApres(z, 2)
+    z = deplacerPoint(z, 4, { lng: CENTRE.lng + 0.004, lat: CENTRE.lat + 0.004 })
+    z = retirerPoint(z, 6)
+    expect(dansLaZone(CENTRE, z)).toBe(true)
+    expect(z.length).toBeGreaterThanOrEqual(3)
   })
 })
 
